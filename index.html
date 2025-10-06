@@ -16,14 +16,14 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:linear-gradient(180deg,var(--bg),#0b0f1400);color:var(--text);
+    body{margin:0;background:var(--bg);color:var(--text);
          font:15px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial}
     .wrap{max-width:1100px;margin:30px auto;padding:0 16px}
     header{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
     h1{font-size:20px;margin:0}
     .sub{color:var(--muted);font-size:14px}
     .toolbar{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap}
-    select, .pill, .switch{
+    select{
       border:1px solid var(--border);background:transparent;color:var(--text);
       padding:6px 10px;border-radius:10px;font:inherit
     }
@@ -49,10 +49,9 @@
     a{color:var(--accent);text-decoration:none}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .btn{border:1px solid var(--border);background:transparent;color:var(--text);padding:6px 10px;border-radius:10px;cursor:pointer}
+    #shockList{list-style:none;margin:6px 0 0;padding:0}
+    #shockList li{margin:4px 0}
     details{margin-top:8px}
-    /* Simple/Pro visibility */
-    body:not(.pro) .proOnly{display:none}
-    body.pro .simpleOnly{display:none}
   </style>
 </head>
 <body>
@@ -60,14 +59,13 @@
   <header>
     <h1>Fingerprint</h1><span class="sub">by morgunov.tech</span>
     <div class="toolbar">
-      <!-- mode -->
-      <label class="pill"><input type="radio" name="mode" value="simple" checked> Просто</label>
-      <label class="pill"><input type="radio" name="mode" value="pro"> Профи</label>
-      <!-- lang -->
-      <select id="lang"><option value="ru">Русский</option><option value="en">English</option><option value="uz">Oʻzbekcha</option></select>
-      <!-- IP opt-in -->
-      <label class="switch"><input id="ipOptIn" type="checkbox"> Гео по IP (/headers)</label>
-      <button class="btn" id="printBtn">PDF</button>
+      <select id="lang">
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="uz">🇺🇿 Oʻzbekcha</option>
+      </select>
+      <button class="btn" id="ipBtn"></button>
+      <button class="btn" id="printBtn"></button>
     </div>
   </header>
 
@@ -84,20 +82,13 @@
     <div id="shock" class="danger" style="display:none">
       <div class="small" id="shockTitle"></div>
       <ul id="shockList"></ul>
-      <!-- Simple steps -->
-      <div class="simpleOnly" id="simpleSteps" style="margin-top:8px">
-        <div class="title">3 шага защиты:</div>
-        <ol class="small" style="margin:6px 0 0 18px">
-          <li><b>Firefox:</b> about:config → <span class="mono">privacy.resistFingerprinting=true</span></li>
-          <li><b>Chrome/Edge:</b> «Замок» → Параметры сайта → Сбросить разрешения</li>
-          <li><b>iOS/Android:</b> Отключить межсайтовое отслеживание + блокировщик</li>
-        </ol>
-      </div>
+      <div id="ipInfo" class="small" style="margin-top:10px"></div>
+      <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
   </section>
 
   <!-- Block 3: Detailed cards -->
-  <section class="block proOnly">
+  <section class="block">
     <div id="detailTitle" style="font-weight:700;margin-bottom:6px"></div>
     <div class="cards" id="cards"></div>
   </section>
@@ -105,22 +96,15 @@
   <!-- Block 4: Methodology & Policy -->
   <section class="block">
     <details>
-      <summary><b>Методология</b> (энтропия и перцентиль)</summary>
-      <div class="small" style="margin-top:6px">
-        Энтропия отпечатка: <span class="mono">H = −∑ log₂ pᵢ(vᵢ)</span>, где pᵢ берутся из локальных частот.<br/>
-        «Уникальнее, чем X%» — перцентиль <span class="mono">CDF(H)</span>, интерполяция по квантилям.<br/>
-        Редкие значения — сглаживание Лапласа. Корреляции частично учтены (GPU↔платформа, экран↔DPR).
-      </div>
+      <summary id="methodSummary"></summary>
+      <div class="small" id="methodText" style="margin-top:6px"></div>
     </details>
     <details>
-      <summary><b>Политика приватности</b></summary>
-      <div class="small" style="margin-top:6px">
-        Всё считается локально, без сетевых запросов. Пункт «Гео по IP (/headers)» опционален и обращается только к вашему серверу.
-        Внешних шрифтов, аналитики и трекеров нет.
-      </div>
+      <summary id="policySummary"></summary>
+      <div class="small" id="policyText" style="margin-top:6px"></div>
     </details>
-    <details class="proOnly">
-      <summary><b>Заголовки безопасности (пример для Express)</b></summary>
+    <details>
+      <summary id="headersSummary"></summary>
       <pre class="small mono">app.use((req,res,next)=>{res.set({
 "Content-Security-Policy":"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 "Referrer-Policy":"no-referrer",
@@ -132,8 +116,8 @@
     </details>
   </section>
 
-  <footer class="small" style="text-align:center;color:var(--muted)">
-    © morgunov.tech • Локальный аудит отпечатка • <span class="proOnly">Версия: entropy-percentile</span>
+  <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
+    © morgunov.tech • Локальный аудит отпечатка • Версия: entropy-percentile
   </footer>
 </div>
 
@@ -141,33 +125,175 @@
 /* ================= I18N ================= */
 const I18N = {
   ru: {
+    langOption:'🇷🇺 Русский',
     introTitle:'Зачем это нужно',
-    introText:'Страница локально оценивает «уникальность» вашего браузера по энтропии признаков и показывает понятные шаги защиты. Никаких скрытых отправок. Гео/IP — только по вашему согласию.',
+    introText:'Страница локально оценивает «уникальность» вашего браузера по энтропии признаков и показывает понятные шаги защиты. Никаких скрытых отправок. Geo/IP выполняется только с вашего согласия.',
     legendTitle:'Легенда рисков:',
-    low:'низкий', med:'средний', high:'высокий',
-    uniqMeaning: pct => `Ваш отпечаток уникальнее, чем ${pct}% пользователей`,
+    risk:{low:'низкий', med:'средний', high:'высокий'},
+    uniqMeaning:pct=>`Ваш отпечаток уникальнее, чем ${pct}% пользователей`,
     detailTitle:'Подробный анализ по пунктам',
-    shockTitle:'Что уже ясно о вас (без имени):'
+    shockTitle:'Что уже ясно о вас (без имени):',
+    shock:{
+      region:city=>`🗺️ <b>Регион по IP:</b> ${city}`,
+      tzFallback:tz=>`🗺️ По часовому поясу вы около <b>${tz}</b>`,
+      device:(device,os)=>`💻 Устройство: <b>${device}</b> • ОС: <b>${os}</b>`,
+      gpuKnown:chip=>`🎮 GPU: <b>${chip}</b>`,
+      gpuUnknown:'🎮 GPU раскрывается через WebGL',
+      canvasActive:'🎯 Активны <b>canvas/audio-hash</b> — возможна склейка визитов',
+      canvasPassive:'🎯 Canvas/Audio могут склеивать визиты',
+      browser:browser=>`🌐 Браузер: <b>${browser}</b>`,
+      screen:(screen,depth)=>`🖥️ Экран: <b>${screen}</b> • глубина цвета ${depth}-бит`,
+      perms:perms=>`🔐 Разрешения: <b>${perms}</b>`
+    },
+    ip:{
+      button:'Определить IP и измерить скорость',
+      buttonLoading:'Определение…',
+      title:'Данные IP',
+      none:'IP ещё не определён.',
+      error:msg=>`Ошибка получения IP: ${msg}`,
+      address:ip=>`<b>IP:</b> ${ip||'—'}`,
+      geo:(city,country)=>`<b>Локация:</b> ${city?city:''}${city&&country?', ':''}${country||''}`,
+      rawTitle:'Исходные данные сервиса:',
+      noData:'Данные отсутствуют',
+      allFailed:'Не удалось получить информацию от сервисов',
+      sourceLabel:'Источник:'
+    },
+    speed:{
+      running:'Тест скорости выполняется…',
+      result:(mbps,ms)=>`⚡ Скорость: ${mbps} Мбит/с • задержка ≈ ${ms} мс`,
+      error:msg=>`Ошибка теста скорости: ${msg}`,
+      idle:''
+    },
+    saveButton:'Сохранить',
+    copy:{hint:'Нажмите, чтобы скопировать',done:'Скопировано'},
+    examplePrefix:'Пример:',
+    advicePrefix:'💡 Совет:',
+    methodSummary:'<b>Методология</b> (энтропия и перцентиль)',
+    methodText:'Энтропия отпечатка: <span class="mono">H = −∑ log₂ pᵢ(vᵢ)</span>, где pᵢ берутся из локальных частот.<br/>«Уникальнее, чем X%» — перцентиль <span class="mono">CDF(H)</span>, интерполяция по квантилям.<br/>Редкие значения — сглаживание Лапласа. Корреляции частично учтены (GPU↔платформа, экран↔DPR).',
+    policySummary:'<b>Политика приватности</b>',
+    policyText:'Всё считается локально, без лишних сетевых запросов. Кнопка IP по нажатию обращается к публичному сервису и показывает весь ответ.<br/>Внешних шрифтов, аналитики и трекеров нет.',
+    headersSummary:'<b>Заголовки безопасности (пример для Express)</b>',
+    footer:'© morgунов.tech • Локальный аудит отпечатка • Версия: entropy-percentile',
+    entropyUnit:'бит',
+    errorMessage:msg=>`Ошибка: ${msg}`,
+    units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
+    labels:{touchPoints:'касания',pointer:'указатель',latency:'задержка',storage:{local:'localStorage',session:'sessionStorage',idb:'indexedDB',cookies:'cookies'}},
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% (заполнено ${filled} из ~${total})`
   },
   en: {
+    langOption:'🇬🇧 English',
     introTitle:'Why this matters',
-    introText:'This page locally estimates your browser “uniqueness” via entropy and shows simple protection steps. No hidden sends. Geo/IP only with your consent.',
+    introText:'This page locally estimates your browser “uniqueness” via entropy and highlights clear protection steps. No hidden submissions. Geo/IP runs only with your consent.',
     legendTitle:'Risk legend:',
-    low:'low', med:'medium', high:'high',
-    uniqMeaning: pct => `Your fingerprint is more unique than ${pct}% of users`,
+    risk:{low:'low', med:'medium', high:'high'},
+    uniqMeaning:pct=>`Your fingerprint is more unique than ${pct}% of users`,
     detailTitle:'Detailed per-signal analysis',
-    shockTitle:'Already inferred (without your name):'
+    shockTitle:'Already inferred (without your name):',
+    shock:{
+      region:city=>`🗺️ <b>IP region:</b> ${city}`,
+      tzFallback:tz=>`🗺️ Time zone suggests you are near <b>${tz}</b>`,
+      device:(device,os)=>`💻 Device: <b>${device}</b> • OS: <b>${os}</b>`,
+      gpuKnown:chip=>`🎮 GPU: <b>${chip}</b>`,
+      gpuUnknown:'🎮 GPU is exposed via WebGL',
+      canvasActive:'🎯 <b>canvas/audio hashes</b> are active — visits can be linked',
+      canvasPassive:'🎯 Canvas/Audio may link visits',
+      browser:browser=>`🌐 Browser: <b>${browser}</b>`,
+      screen:(screen,depth)=>`🖥️ Screen: <b>${screen}</b> • color depth ${depth}-bit`,
+      perms:perms=>`🔐 Permissions: <b>${perms}</b>`
+    },
+    ip:{
+      button:'Detect IP & run speed test',
+      buttonLoading:'Working…',
+      title:'IP data',
+      none:'IP has not been detected yet.',
+      error:msg=>`Failed to obtain IP: ${msg}`,
+      address:ip=>`<b>IP:</b> ${ip||'—'}`,
+      geo:(city,country)=>`<b>Location:</b> ${city?city:''}${city&&country?', ':''}${country||''}`,
+      rawTitle:'Raw service payload:',
+      noData:'No data returned',
+      allFailed:'Could not retrieve data from any service',
+      sourceLabel:'Source:'
+    },
+    speed:{
+      running:'Running speed test…',
+      result:(mbps,ms)=>`⚡ Speed: ${mbps} Mbps • latency ≈ ${ms} ms`,
+      error:msg=>`Speed test failed: ${msg}`,
+      idle:''
+    },
+    saveButton:'Save',
+    copy:{hint:'Click to copy',done:'Copied'},
+    examplePrefix:'Example:',
+    advicePrefix:'💡 Tip:',
+    methodSummary:'<b>Methodology</b> (entropy & percentile)',
+    methodText:'Fingerprint entropy: <span class="mono">H = −∑ log₂ pᵢ(vᵢ)</span>, where pᵢ come from local frequencies.<br/>“More unique than X%” — percentile of <span class="mono">CDF(H)</span>, interpolated by quantiles.<br/>Rare values use Laplace smoothing. Correlations are partially accounted for (GPU↔platform, screen↔DPR).',
+    policySummary:'<b>Privacy policy</b>',
+    policyText:'Everything is computed locally with minimal network use. The IP button contacts a public service on demand and shows the full response.<br/>No external fonts, analytics, or trackers.',
+    headersSummary:'<b>Security headers (Express example)</b>',
+    footer:'© morgunov.tech • Local fingerprint audit • Version: entropy-percentile',
+    entropyUnit:'bits',
+    errorMessage:msg=>`Error: ${msg}`,
+    units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
+    labels:{touchPoints:'touch points',pointer:'pointer',latency:'latency',storage:{local:'localStorage',session:'sessionStorage',idb:'indexedDB',cookies:'cookies'}},
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% (filled ${filled} of ~${total})`
   },
   uz: {
+    langOption:'🇺🇿 Oʻzbekcha',
     introTitle:'Nega bu muhim',
-    introText:'Sahifa brauzeringiz “noyobligi”ni entropiya orqali lokal baholaydi va oddiy himoya qadamlarini ko‘rsatadi. Hech qanday yashirin yuborish yo‘q. Geo/IP faqat rozilik bilan.',
-    legendTitle:'Xavf afsonasi:',
-    low:'past', med:'o‘rtacha', high:'yuqori',
-    uniqMeaning: pct => `Sizning fingerprint ${pct}% foydalanuvchidan ko‘ra noyob`,
+    introText:'Sahifa brauzeringiz “noyobligi”ni entropiya orqali lokal baholaydi va himoya bo‘yicha aniq qadamlarni ko‘rsatadi. Hech qanday yashirin yuborish yo‘q. Geo/IP faqat roziligingiz bilan ishlaydi.',
+    legendTitle:'Xavf darajalari:',
+    risk:{low:'past', med:'o‘rtacha', high:'yuqori'},
+    uniqMeaning:pct=>`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`,
     detailTitle:'Har bir signal bo‘yicha batafsil tahlil',
-    shockTitle:'Siz haqingizda ayon (ismisiz):'
+    shockTitle:'Siz haqingizda allaqachon aniqlanganlar (ismisiz):',
+    shock:{
+      region:city=>`🗺️ <b>IP bo‘yicha hudud:</b> ${city}`,
+      tzFallback:tz=>`🗺️ Vaqt mintaqasi sizni <b>${tz}</b> atrofida ko‘rsatadi`,
+      device:(device,os)=>`💻 Qurilma: <b>${device}</b> • OT: <b>${os}</b>`,
+      gpuKnown:chip=>`🎮 GPU: <b>${chip}</b>`,
+      gpuUnknown:'🎮 GPU WebGL orqali ochiladi',
+      canvasActive:'🎯 <b>canvas/audio-hash</b> faolligi tashriflarni bog‘lashi mumkin',
+      canvasPassive:'🎯 Canvas/Audio tashriflarni bog‘lashi mumkin',
+      browser:browser=>`🌐 Brauzer: <b>${browser}</b>`,
+      screen:(screen,depth)=>`🖥️ Ekran: <b>${screen}</b> • rang chuqurligi ${depth}-bit`,
+      perms:perms=>`🔐 Ruxsatlar: <b>${perms}</b>`
+    },
+    ip:{
+      button:'IP aniqlash va tezlikni o‘lchash',
+      buttonLoading:'Aniqlanmoqda…',
+      title:'IP maʼlumotlari',
+      none:'IP hali aniqlanmagan.',
+      error:msg=>`IP olish muvaffaqiyatsiz: ${msg}`,
+      address:ip=>`<b>IP:</b> ${ip||'—'}`,
+      geo:(city,country)=>`<b>Joylashuv:</b> ${city?city:''}${city&&country?', ':''}${country||''}`,
+      rawTitle:'Xizmatdan olingan maʼlumotlar:',
+      noData:'Maʼlumot yo‘q',
+      allFailed:'Hech bir xizmatdan maʼlumot olmadi',
+      sourceLabel:'Manba:'
+    },
+    speed:{
+      running:'Tezlik testi bajarilmoqda…',
+      result:(mbps,ms)=>`⚡ Tezlik: ${mbps} Mbit/s • kechikish ≈ ${ms} ms`,
+      error:msg=>`Tezlik testi muvaffaqiyatsiz: ${msg}`,
+      idle:''
+    },
+    saveButton:'Saqlash',
+    copy:{hint:'Nusxa olish uchun bosing',done:'Nusxalandi'},
+    examplePrefix:'Misol:',
+    advicePrefix:'💡 Maslahat:',
+    methodSummary:'<b>Metodologiya</b> (entropiya va percentil)',
+    methodText:'Fingerprint entropiyasi: <span class="mono">H = −∑ log₂ pᵢ(vᵢ)</span>, bu yerda pᵢ lokal chastotalardan olinadi.<br/>«X% foydalanuvchidan noyob» — <span class="mono">CDF(H)</span> percentili, kvantillar bo‘yicha interpolatsiya.<br/>Kam uchraydigan qiymatlar Laplas silliqlash orqali hisoblanadi. Korrelatsiyalar qisman inobatga olingan (GPU↔platforma, ekran↔DPR).',
+    policySummary:'<b>Maxfiylik siyosati</b>',
+    policyText:'Hammasi lokal tarzda hisoblanadi, ortiqcha tarmoq so‘rovlari yo‘q. IP tugmasi faollashganda ommaviy servisga murojaat qiladi va to‘liq javobni ko‘rsatadi.<br/>Tashqi shriftlar, analitika va trekerlar yo‘q.',
+    headersSummary:'<b>Xavfsizlik sarlavhalari (Express uchun misol)</b>',
+    footer:'© morgunov.tech • Fingerprintni lokal audit qilish • Versiya: entropy-percentile',
+    entropyUnit:'bit',
+    errorMessage:msg=>`Xatolik: ${msg}`,
+    units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
+    labels:{touchPoints:'sensor nuqtalari',pointer:'ko‘rsatkich',latency:'kechikish',storage:{local:'localStorage',session:'sessionStorage',idb:'indexedDB',cookies:'cookies'}},
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% (taxminan ${total} ko‘rsatkichdan ${filled} tasi to‘ldi)`
   }
 };
+
 const LOCAL_TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||null;}catch(_){return null;}})();
 const TEXT_ENCODER=new TextEncoder();
 function detectPointerType(){
@@ -213,7 +339,6 @@ function probableBrowsers(b){const ua=b.userAgent||'';const out=[];/Edg\//.test(
 function guessOSVersion(ua){ua=(ua||'');const mac=ua.match(/Mac OS X ([0-9_\.]+)/i);if(mac)return'macOS '+mac[1].replace(/_/g,'.');const win=ua.match(/Windows NT ([0-9\.]+)/i);if(win){const map={'10.0':'Windows 10/11','6.3':'Windows 8.1','6.2':'Windows 8','6.1':'Windows 7'};return map[win[1]]||('Windows NT '+win[1]);}const ios=ua.match(/iPhone OS ([0-9_]+)/i)||ua.match(/CPU OS ([0-9_]+)/i);if(ios)return'iOS '+ios[1].replace(/_/g,'.');const android=ua.match(/Android ([0-9\.]+)/i);if(android)return'Android '+android[1];if(/Linux/i.test(ua))return'Linux';return'OS';}
 function guessAppleChip(renderer){if(!renderer)return null;const m=renderer.match(/Apple\s+M(\d)(?:\s*(Pro|Max|Ultra))?/i);return m?('Apple M'+m[1]+(m[2]?' '+m[2]:'')):null;}
 function guessDevice(b){const ua=(b.userAgent||'').toLowerCase();if(/iphone/.test(ua))return'iPhone';if(/ipad/.test(ua))return'iPad';if(/android/.test(ua)){const m=ua.match(/android[^;]*;\s*([^;]+?)\s+build/);return m?`${m[1].trim()} (Android)`:'Android-устройство';}if(/mac os x|macintosh/.test(ua)){const chip=guessAppleChip(b.gl?.renderer||'');const hasBattery=!!(b.battery&&b.battery.level!=null);const type=hasBattery?'MacBook':'Mac';return chip?`${type} (${chip})`:type;}if(/windows nt/.test(ua))return'Windows-ПК';if(/linux/.test(ua))return'Linux-ПК';return b.uaPlatform||b.platform||'устройство';}
-function estimateDiagonal(w,h){const res=`${w}×${h}`;const map={'1728×1117':'16″','1512×982':'14″','2560×1600':'13–16″','2560×1440':'27″','3440×1440':'34″ ultrawide','3840×2160':'27–32″','1920×1080':'22–24″'};return map[res]||null;}
 function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
 
 /* ======= Entropy-based frequency tables (compact, embedded) ======= */
@@ -298,19 +423,13 @@ function percentileFromH(H){
 }
 
 /* ============== Collect ============== */
-let ipOptIn=false;
-async function tryFetchHeaders(timeout=800){
-  if(!ipOptIn) return null;
-  const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),timeout);
-  return fetch('/headers',{signal:ctl.signal,credentials:'omit'}).then(r=>r.ok?r.json():null).catch(_=>null).finally(()=>clearTimeout(t));
-}
 async function collect(){
   const uaData=navigator.userAgentData;
   const hw={deviceMemory:navigator.deviceMemory??null,hardwareConcurrency:navigator.hardwareConcurrency??null};
   const tz=LOCAL_TZ;
   const tzOffset=new Date().getTimezoneOffset();
   const gl=webglInfo();
-  const [cv,au,perms,media,bat,server]=await Promise.all([canvasHash(),audioHash(),getPermissions(),getMediaDevices(),getBattery(),tryFetchHeaders(800)]);
+  const [cv,au,perms,media,bat]=await Promise.all([canvasHash(),audioHash(),getPermissions(),getMediaDevices(),getBattery()]);
   const net=netInfo();
   const pixelRatio=Number(window.devicePixelRatio||1)||1;
   const languages=getLanguages();
@@ -327,7 +446,7 @@ async function collect(){
     storage:{local:hasStorage('localStorage'),session:hasStorage('sessionStorage'),indexedDB:!!window.indexedDB},
     touch:{maxTouchPoints:navigator.maxTouchPoints||0,ontouchstart:('ontouchstart' in window)},
     pointer,
-    hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server
+    hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server:state.serverData
   };
   const json=JSON.stringify(sortDeep(basic));
   const fp=await sha256(json);
@@ -352,150 +471,568 @@ async function collect(){
 
 /* ============== UI render ============== */
 function uniqClass(pct){return pct>65?'high':(pct>35?'med':'low');}
-const HINTS = { // короткие тексты (как в вашем исходнике)
-  tz:{risk:'med',use:'Регион/VPN-несостыковки',ex:'IP=RU, TZ=US',adv:'Реальный TZ в системе'},
-  ua:{risk:'med',use:'Редкие версии=выше риск',ex:'Редкая версия',adv:'Обновите браузер'},
-  plat:{risk:'low',use:'Класс устройства',ex:'macOS vs Windows',adv:'Разные профили'},
-  screen:{risk:'med',use:'Стабильный набор',ex:'1728×1117',adv:'RFP/Brave/Tor либо стандарт'},
-  langs:{risk:'med',use:'Фишинг/регион',ex:'ru,en,uz',adv:'Оставьте 1–2 языка'},
-  hw:{risk:'low',use:'Эмуляторы',ex:'ядра/память',adv:'Отдельный профиль'},
-  store:{risk:'med',use:'Устойчивые ID',ex:'«воскрешение»',adv:'Чистите данные, 3rd-party off'},
-  dnt:{risk:'low',use:'Редко уважают',ex:'DNT=1',adv:'Исп. блокировщики'},
-  touch:{risk:'low',use:'Класс девайса',ex:'pointer fine',adv:'—'},
-  net:{risk:'med',use:'Профилинг/анти-фрод',ex:'2G, высокий RTT',adv:'Проверьте VPN/прокси'},
-  gl:{risk:'high',use:'Уникальный GPU',ex:'Apple M-series',adv:'Firefox RFP/Brave/Tor'},
-  canvas:{risk:'high',use:'Склейка доменов',ex:'Одинаковый хеш',adv:'Рандомизация canvas'},
-  audio:{risk:'high',use:'Стабильный хеш',ex:'Совпадает',adv:'Рандомизация audio'},
-  perm:{risk:'med',use:'Поведенческий профиль',ex:'camera: denied',adv:'Сбросить разрешения'},
-  plugins:{risk:'med',use:'Повышают уникальность',ex:'legacy',adv:'Удалите лишние'},
-  media:{risk:'med',use:'Раскрывает хост',ex:'редкий набор',adv:'Запрет по умолчанию'},
-  bat:{risk:'low',use:'Слабый сигнал',ex:'заряд/нет',adv:'—'},
-  fp:{risk:'high',use:'Если отправлять',ex:'тот же fp',adv:'Не делитесь ID'}
+const CARD_CONTENT = {
+  tz:{
+    risk:'med',
+    label:{ru:'Часовой пояс',en:'Time zone',uz:'Vaqt mintaqasi'},
+    use:{ru:'Регион/VPN-несостыковки',en:'Region/VPN mismatch',uz:'Hudud/VPN nomutanosibligi'},
+    ex:{ru:'IP=RU, TZ=US',en:'IP=RU, TZ=US',uz:'IP=RU, TZ=US'},
+    adv:{ru:'Реальный TZ в системе',en:'Keep TZ consistent',uz:'TZ ni mos holda saqlang'}
+  },
+  ua:{
+    risk:'med',
+    label:{ru:'Браузер',en:'Browser',uz:'Brauzer'},
+    use:{ru:'Редкие версии = выше риск',en:'Rare versions increase risk',uz:'Kam uchraydigan versiyalar xavfni oshiradi'},
+    ex:{ru:'Редкая версия',en:'Rare version',uz:'Noyob versiya'},
+    adv:{ru:'Обновите браузер',en:'Keep the browser updated',uz:'Brauzerni muntazam yangilang'}
+  },
+  plat:{
+    risk:'low',
+    label:{ru:'Платформа',en:'Platform',uz:'Platforma'},
+    use:{ru:'Класс устройства',en:'Device class',uz:'Qurilma turi'},
+    ex:{ru:'macOS vs Windows',en:'macOS vs Windows',uz:'macOS va Windows'},
+    adv:{ru:'Разные профили',en:'Use separate profiles',uz:'Alohida profillar yarating'}
+  },
+  screen:{
+    risk:'med',
+    label:{ru:'Экран',en:'Screen',uz:'Ekran'},
+    use:{ru:'Стабильный набор',en:'Stable combo',uz:'Barqaror kombinatsiya'},
+    ex:{ru:'1728×1117',en:'1728×1117',uz:'1728×1117'},
+    adv:{ru:'RFP/Brave/Tor либо стандарт',en:'Use RFP/Brave/Tor or common setups',uz:'RFP/Brave/Tor yoki ommaviy sozlamalarni ishlating'}
+  },
+  langs:{
+    risk:'med',
+    label:{ru:'Языки',en:'Languages',uz:'Tillar'},
+    use:{ru:'Фишинг/регион',en:'Phishing/region hints',uz:'Hudud/fishing alomatlari'},
+    ex:{ru:'ru,en,uz',en:'ru,en,uz',uz:'ru,en,uz'},
+    adv:{ru:'Оставьте 1–2 языка',en:'Keep 1–2 languages',uz:'1–2 tilni qoldiring'}
+  },
+  hw:{
+    risk:'low',
+    label:{ru:'CPU / RAM',en:'CPU / RAM',uz:'CPU / RAM'},
+    use:{ru:'Эмуляторы',en:'Detects emulators',uz:'Emulyatorlarni aniqlash'},
+    ex:{ru:'ядра/память',en:'cores/memory',uz:'yadro/xotira'},
+    adv:{ru:'Отдельный профиль',en:'Use dedicated profiles',uz:'Alohida profillar yarating'}
+  },
+  store:{
+    risk:'med',
+    label:{ru:'Хранилища',en:'Storage',uz:'Saqlash'},
+    use:{ru:'Устойчивые ID',en:'Persistent IDs',uz:'Barqaror identifikatorlar'},
+    ex:{ru:'«воскрешение»',en:'resurrected IDs',uz:'qayta tiklangan ID'},
+    adv:{ru:'Чистите данные, 3rd-party off',en:'Clear data, disable 3rd-party',uz:'Maʼlumotlarni tozalang, 3rd-party ni o‘chiring'}
+  },
+  dnt:{
+    risk:'low',
+    label:{ru:'DNT',en:'DNT',uz:'DNT'},
+    use:{ru:'Редко уважают',en:'Rarely respected',uz:'Kam hollarda inobatga olinadi'},
+    ex:{ru:'DNT=1',en:'DNT=1',uz:'DNT=1'},
+    adv:{ru:'Исп. блокировщики',en:'Use content blockers',uz:'Kontent bloklovchilaridan foydalaning'}
+  },
+  touch:{
+    risk:'low',
+    label:{ru:'Касания/указатель',en:'Touch / pointer',uz:'Sensor / ko‘rsatkich'},
+    use:{ru:'Класс девайса',en:'Device class',uz:'Qurilma turi'},
+    ex:{ru:'pointer fine',en:'pointer fine',uz:'pointer fine'},
+    adv:{ru:'',en:'',uz:''}
+  },
+  net:{
+    risk:'med',
+    label:{ru:'Сеть',en:'Network',uz:'Tarmoq'},
+    use:{ru:'Профилинг/анти-фрод',en:'Profiling/anti-fraud',uz:'Profiling/anti-fraud'},
+    ex:{ru:'2G, высокий RTT',en:'2G, high RTT',uz:'2G, yuqori RTT'},
+    adv:{ru:'Проверьте VPN/прокси',en:'Check VPN/proxy',uz:'VPN/proksini tekshiring'}
+  },
+  gl:{
+    risk:'high',
+    label:{ru:'WebGL (GPU)',en:'WebGL (GPU)',uz:'WebGL (GPU)'},
+    use:{ru:'Уникальный GPU',en:'Unique GPU',uz:'Noyob GPU'},
+    ex:{ru:'Apple M-series',en:'Apple M-series',uz:'Apple M-series'},
+    adv:{ru:'Firefox RFP/Brave/Tor',en:'Firefox RFP/Brave/Tor',uz:'Firefox RFP/Brave/Tor'}
+  },
+  canvas:{
+    risk:'high',
+    label:{ru:'Canvas hash',en:'Canvas hash',uz:'Canvas xeshi'},
+    use:{ru:'Склейка доменов',en:'Cross-site linking',uz:'Saytlararo bog‘lash'},
+    ex:{ru:'Одинаковый хеш',en:'Same hash',uz:'Bir xil xesh'},
+    adv:{ru:'Рандомизация canvas',en:'Randomize canvas',uz:'Canvasni tasodiflashtiring'}
+  },
+  audio:{
+    risk:'high',
+    label:{ru:'Audio hash',en:'Audio hash',uz:'Audio xeshi'},
+    use:{ru:'Стабильный хеш',en:'Stable hash',uz:'Barqaror xesh'},
+    ex:{ru:'Совпадает',en:'Matches',uz:'Mos keladi'},
+    adv:{ru:'Рандомизация audio',en:'Randomize audio',uz:'Audioni tasodiflashtiring'}
+  },
+  perm:{
+    risk:'med',
+    label:{ru:'Разрешения',en:'Permissions',uz:'Ruxsatlar'},
+    use:{ru:'Поведенческий профиль',en:'Behavioural profile',uz:'Xulq-atvor profili'},
+    ex:{ru:'camera: denied',en:'camera: denied',uz:'camera: denied'},
+    adv:{ru:'Сбросить разрешения',en:'Reset permissions',uz:'Ruxsatlarni tiklang'}
+  },
+  plugins:{
+    risk:'med',
+    label:{ru:'Плагины',en:'Plugins',uz:'Plaginlar'},
+    use:{ru:'Повышают уникальность',en:'Increase uniqueness',uz:'Noyoblikni oshiradi'},
+    ex:{ru:'legacy',en:'legacy',uz:'legacy'},
+    adv:{ru:'Удалите лишние',en:'Remove unused',uz:'Keraksizlarini olib tashlang'}
+  },
+  media:{
+    risk:'med',
+    label:{ru:'Медиа-устройства',en:'Media devices',uz:'Media qurilmalari'},
+    use:{ru:'Раскрывает хост',en:'Reveals host',uz:'Xostni ochib beradi'},
+    ex:{ru:'редкий набор',en:'rare set',uz:'kam uchraydigan to‘plam'},
+    adv:{ru:'Запрет по умолчанию',en:'Block by default',uz:'Standart bo‘yicha bloklang'}
+  },
+  bat:{
+    risk:'low',
+    label:{ru:'Батарея',en:'Battery',uz:'Batareya'},
+    use:{ru:'Слабый сигнал',en:'Weak signal',uz:'Kuchsiz signal'},
+    ex:{ru:'заряд/нет',en:'charging state',uz:'zaryad holati'},
+    adv:{ru:'',en:'',uz:''}
+  },
+  fullness:{
+    risk:'low',
+    label:{ru:'Насыщенность данных',en:'Data richness',uz:'Maʼlumot to‘liqligi'},
+    use:{ru:'Оценка «богатства» профиля',en:'Profile richness estimate',uz:'Profil boyligini baholash'},
+    ex:{ru:'Чем больше сигналов — тем легче связать',en:'More signals = easier to link',uz:'Ko‘proq signal — bog‘lash osonroq'},
+    adv:{ru:'Минимизируйте ненужные сигналы',en:'Reduce unnecessary signals',uz:'Keraksiz signallarni kamaytiring'}
+  },
+  fp:{
+    risk:'high',
+    label:{ru:'Итоговый Fingerprint',en:'Final fingerprint',uz:'Yakuniy fingerprint'},
+    use:{ru:'Если отправлять, годится для трекинга',en:'Usable for tracking if shared',uz:'Ulashilsa kuzatuvga yaroqli'},
+    ex:{ru:'Одинаковый ID',en:'Same ID',uz:'Bir xil ID'},
+    adv:{ru:'Не делитесь этим ID со сторонними сайтами',en:'Do not share this ID with third parties',uz:'Ushbu ID ni uchinchi tomonlar bilan ulashmang'}
+  }
 };
-function card(key,title,value,explain,adv){
-  const c=document.createElement('div');c.className='card';
-  const t=document.createElement('div');t.className='title';t.innerHTML=`<span class="dot ${explain.risk}"></span> ${title}`;c.appendChild(t);
-  const v=document.createElement('div');v.className='val';v.textContent=value;c.appendChild(v);
-  const l1=document.createElement('div');l1.className='line hint small';l1.textContent=explain.use;c.appendChild(l1);
-  const l2=document.createElement('div');l2.className='line small';l2.textContent='Пример: '+explain.ex;c.appendChild(l2);
-  if(adv){const l3=document.createElement('div');l3.className='line adv small';l3.textContent='💡 Совет: '+adv;c.appendChild(l3);}
-  return c;
+
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, ch=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  })[ch]);
+}
+
+const state={
+  serverData:null,
+  ipError:null,
+  fetchingIp:false,
+  speed:{status:'idle',mbps:null,latency:null,error:null}
+};
+const timeoutMessages={ru:'Превышено время ожидания',en:'Request timed out',uz:'Soʻrov vaqti tugadi'};
+const speedFetchMessages={ru:'Не удалось подключиться к серверу теста',en:'Could not reach the test server',uz:'Test serveriga ulanish imkonsiz'};
+
+async function fetchWithTimeout(url,{timeout=6000,...options}={}){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeout);
+  try{
+    const resp=await fetch(url,{...options,signal:controller.signal});
+    if(!resp.ok) throw new Error(resp.statusText||`HTTP ${resp.status}`);
+    return resp;
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('timeout');
+    throw e;
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+function normalizeHeaders(headers){
+  if(!headers || typeof headers!=='object') return {};
+  const out={};
+  Object.entries(headers).forEach(([key,value])=>{
+    if(value==null) return;
+    if(Array.isArray(value)){
+      out[key]=value.map(v=>String(v)).join(', ');
+      out[key.toLowerCase()]=out[key];
+    }else if(typeof value==='object'){
+      const str=String(value.value||JSON.stringify(value));
+      out[key]=str;
+      out[key.toLowerCase()]=str;
+    }else{
+      const str=String(value);
+      out[key]=str;
+      out[key.toLowerCase()]=str;
+    }
+  });
+  return out;
+}
+
+function ipFromHeaders(headers){
+  const get=h=>headers[h]||headers[h.toLowerCase()]||headers[h.toUpperCase()];
+  const forwarded=get('x-forwarded-for');
+  if(forwarded){
+    const first=forwarded.split(',')[0].trim();
+    if(first) return first;
+  }
+  return get('cf-connecting-ip')||get('x-real-ip')||get('client-ip')||get('remote-addr')||null;
+}
+
+async function fetchIpFromHeaders(){
+  const resp=await fetchWithTimeout('/headers',{timeout:4000,credentials:'omit'});
+  const data=await resp.json();
+  const headers=normalizeHeaders(data.headers||data);
+  const ip=data.ip||ipFromHeaders(headers)||null;
+  const geo=extractGeo(headers);
+  return {ip,geo,raw:data,source:'headers',headers};
+}
+
+async function fetchIpFromIpapi(){
+  const resp=await fetchWithTimeout('https://ipapi.co/json/',{timeout:6000,mode:'cors',cache:'no-store'});
+  const data=await resp.json();
+  if(!data || typeof data!=='object') throw new Error('empty');
+  const ip=data.ip||null;
+  if(!ip) throw new Error('empty');
+  const geo={city:data.city||'',country:data.country_name||data.country||''};
+  return {ip,geo,raw:data,source:'ipapi',headers:null};
+}
+
+async function fetchIpFromIpwho(){
+  const resp=await fetchWithTimeout('https://ipwho.is/?lang=en',{timeout:6000,mode:'cors',cache:'no-store'});
+  const data=await resp.json();
+  if(!data || typeof data!=='object' || data.success===false) throw new Error(data.message||'empty');
+  const ip=data.ip||null;
+  if(!ip) throw new Error('empty');
+  const geo={city:data.city||'',country:data.country||data.country_code||''};
+  return {ip,geo,raw:data,source:'ipwho',headers:null};
+}
+
+async function fetchIpData(){
+  const attempts=[fetchIpFromHeaders,fetchIpFromIpapi,fetchIpFromIpwho];
+  const errors=[];
+  for(const attempt of attempts){
+    try{
+      const result=await attempt();
+      if(!result || (!result.ip && !result.raw)) throw new Error('empty');
+      return result;
+    }catch(err){
+      errors.push(err.message||String(err));
+    }
+  }
+  const e=new Error(errors.join('; '));
+  e.attempts=errors;
+  throw e;
+}
+
+async function runSpeedTest(){
+  const BYTES=2000000;
+  const start=performance.now();
+  const resp=await fetch('https://speed.cloudflare.com/__down?bytes='+BYTES,{cache:'no-store',mode:'cors'});
+  if(!resp.ok) throw new Error(resp.statusText||`HTTP ${resp.status}`);
+  let bytes=0;
+  if(resp.body?.getReader){
+    const reader=resp.body.getReader();
+    while(true){
+      const {done,value}=await reader.read();
+      if(done) break;
+      if(value) bytes+=value.byteLength;
+    }
+  }else{
+    const buf=await resp.arrayBuffer();
+    bytes=buf.byteLength;
+  }
+  if(bytes===0){
+    const hint=parseInt(resp.headers.get('content-length')||'0',10);
+    if(hint>0) bytes=hint;
+  }
+  if(bytes===0) bytes=BYTES;
+  const duration=Math.max((performance.now()-start)/1000,0.001);
+  const mbps=Number(((bytes*8)/(duration*1e6)).toFixed(2));
+  const latency=Math.max(1,Math.round(duration*1000));
+  return {mbps,latency};
+}
+
+async function detectIpAndSpeed(){
+  if(state.fetchingIp) return;
+  state.fetchingIp=true;
+  state.ipError=null;
+  state.speed={status:'running',mbps:null,latency:null,error:null};
+  render(currentLang);
+  try{
+    const data=await fetchIpData();
+    if(!data || typeof data!=='object') throw new Error('empty');
+    state.serverData=data;
+  }catch(e){
+    const noDataMsg=(I18N[currentLang]?.ip?.noData)||'No data';
+    let msg;
+    if(e.message==='timeout'){
+      msg=timeoutMessages[currentLang]||timeoutMessages.ru;
+    }else if(e.message==='empty'){
+      msg=noDataMsg;
+    }else if(e.attempts){
+      const base=(I18N[currentLang]?.ip?.allFailed)||'All services failed';
+      msg=`${base}. ${e.attempts.filter(Boolean).join(' • ')}`;
+    }else{
+      msg=e.message||String(e);
+    }
+    state.ipError=msg;
+    state.speed={status:'idle',mbps:null,latency:null,error:null};
+    state.fetchingIp=false;
+    render(currentLang);
+    return;
+  }
+  try{
+    const speed=await runSpeedTest();
+    state.speed={status:'done',mbps:speed.mbps,latency:speed.latency,error:null};
+  }catch(e){
+    const message=(e.message||String(e));
+    const lowered=message.toLowerCase();
+    const friendly=lowered.includes('failed to fetch')?speedFetchMessages[currentLang]||speedFetchMessages.en:message;
+    state.speed={status:'error',mbps:null,latency:null,error:friendly};
+  }
+  state.fetchingIp=false;
+  render(currentLang);
+}
+
+function createCard(key,value,t){
+  const info=CARD_CONTENT[key];
+  const card=document.createElement('div');
+  card.className='card';
+  const title=document.createElement('div');
+  title.className='title';
+  title.innerHTML=`<span class="dot ${info.risk}"></span> ${info.label[currentLang]}`;
+  card.appendChild(title);
+  const valueEl=document.createElement('div');
+  valueEl.className='val';
+  valueEl.textContent=value??'—';
+  card.appendChild(valueEl);
+  const useEl=document.createElement('div');
+  useEl.className='line hint small';
+  useEl.textContent=info.use[currentLang];
+  card.appendChild(useEl);
+  const exampleEl=document.createElement('div');
+  exampleEl.className='line small';
+  exampleEl.textContent=`${t.examplePrefix} ${info.ex[currentLang]}`;
+  card.appendChild(exampleEl);
+  const advText=info.adv?.[currentLang];
+  if(advText && advText.trim()){
+    const advEl=document.createElement('div');
+    advEl.className='line adv small';
+    advEl.textContent=`${t.advicePrefix} ${advText}`;
+    card.appendChild(advEl);
+  }
+  return {card,valueEl};
+}
+
+function addCard(frag,key,value,t){
+  const {card}=createCard(key,value,t);
+  frag.appendChild(card);
+}
+
+function addHashCard(frag,key,value,t){
+  const {card,valueEl}=createCard(key,value||'—',t);
+  if(value){
+    valueEl.classList.add('mono','copyable');
+    valueEl.title=t.copy.hint;
+    valueEl.addEventListener('click',async()=>{
+      try{
+        await navigator.clipboard.writeText(value);
+        valueEl.title=t.copy.done;
+        setTimeout(()=>{valueEl.title=t.copy.hint;},1200);
+      }catch(_){/* ignore */}
+    });
+  }
+  frag.appendChild(card);
+}
+
+function updateIpSection(t){
+  const el=getEl('ipInfo');
+  if(state.fetchingIp){
+    el.textContent=t.ip.buttonLoading;
+    return;
+  }
+  if(state.ipError){
+    el.textContent=t.ip.error(state.ipError);
+    return;
+  }
+  if(!state.serverData){
+    el.textContent=t.ip.none;
+    return;
+  }
+  const {ip,geo,raw,source,headers}=state.serverData;
+  const parts=[`<div class="title">${t.ip.title}</div>`, `<div>${t.ip.address(ip)}</div>`];
+  if(geo && (geo.city||geo.country)){
+    parts.push(`<div>${t.ip.geo(geo.city||'', geo.country||'')}</div>`);
+  }
+  if(source){
+    parts.push(`<div class="small" style="margin-top:4px;color:var(--muted)">${t.ip.sourceLabel} ${source}</div>`);
+  }
+  parts.push(`<div style="margin-top:6px">${t.ip.rawTitle}</div>`);
+  const payload=headers?{headers,raw}:raw??state.serverData;
+  const json=JSON.stringify(payload??{},null,2)||'{}';
+  parts.push(`<pre class="mono" style="margin:4px 0 0;white-space:pre-wrap">${escapeHtml(json)}</pre>`);
+  el.innerHTML=parts.join('');
+}
+
+function updateSpeedSection(t){
+  const el=getEl('speedResult');
+  const status=state.speed.status;
+  if(status==='running'){
+    el.textContent=t.speed.running;
+  }else if(status==='done'){
+    el.textContent=t.speed.result(state.speed.mbps,state.speed.latency);
+  }else if(status==='error'){
+    el.textContent=t.speed.error(state.speed.error);
+  }else{
+    el.textContent=t.speed.idle;
+  }
 }
 
 let currentLang='ru';
 const cacheEls={};
 const getEl=id=>cacheEls[id]||(cacheEls[id]=document.getElementById(id));
 let renderToken=0;
+
 async function render(lang){
   const token=++renderToken;
   currentLang=(lang in I18N)?lang:'ru';
   const t=I18N[currentLang];
+  document.documentElement.lang=currentLang;
+  const langSelect=getEl('lang');
+  Array.from(langSelect.options).forEach(opt=>{if(I18N[opt.value]) opt.textContent=I18N[opt.value].langOption;});
+  langSelect.value=currentLang;
   getEl('introTitle').textContent=t.introTitle;
   getEl('introText').textContent=t.introText;
-  getEl('legend').innerHTML = `<span>${t.legendTitle}</span>
-    <span class="chip"><span class="dot low"></span>${t.low}</span>
-    <span class="chip"><span class="dot med"></span>${t.med}</span>
-    <span class="chip"><span class="dot high"></span>${t.high}</span>`;
+  getEl('legend').innerHTML=`<span>${t.legendTitle}</span>
+    <span class="chip"><span class="dot low"></span>${t.risk.low}</span>
+    <span class="chip"><span class="dot med"></span>${t.risk.med}</span>
+    <span class="chip"><span class="dot high"></span>${t.risk.high}</span>`;
   getEl('detailTitle').textContent=t.detailTitle;
+  getEl('shockTitle').textContent=t.shockTitle;
+  getEl('methodSummary').innerHTML=t.methodSummary;
+  getEl('methodText').innerHTML=t.methodText;
+  getEl('policySummary').innerHTML=t.policySummary;
+  getEl('policyText').innerHTML=t.policyText;
+  getEl('headersSummary').innerHTML=t.headersSummary;
+  getEl('footerText').textContent=t.footer;
+  getEl('printBtn').textContent=t.saveButton;
+  const ipBtn=getEl('ipBtn');
+  ipBtn.textContent=state.fetchingIp?t.ip.buttonLoading:t.ip.button;
+  ipBtn.disabled=state.fetchingIp;
+  updateIpSection(t);
+  updateSpeedSection(t);
 
   try{
     const {basic,fp,H,pct}=await collect();
     if(token!==renderToken) return;
 
-    // headline
     const cls=uniqClass(pct);
-    getEl('uniqLine').innerHTML=`<span class="dot ${cls}"></span> ${t.uniqMeaning(pct)} • H=${H.toFixed(1)} бит`;
+    getEl('uniqLine').innerHTML=`<span class="dot ${cls}"></span> ${t.uniqMeaning(pct)} • H=${H.toFixed(1)} ${t.entropyUnit}`;
 
-    // shock box
-    const s=basic.screen; const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
+    const s=basic.screen;
+    const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
     const osVer=guessOSVersion(basic.userAgent);
     const device=guessDevice(basic);
-    const chip=(basic.gl && basic.gl.renderer)?guessAppleChip(basic.gl.renderer):null;
+    const chip=basic.gl&&basic.gl.renderer?guessAppleChip(basic.gl.renderer):null;
     const geo=extractGeo(basic.server?.headers||{});
     const city=geo.city?(geo.country?`${geo.city}, ${geo.country}`:geo.city):null;
     const tzCity=tzCityName(basic.timezone||LOCAL_TZ||'');
     const browserGuess=probableBrowsers(basic);
-    const diag=estimateDiagonal(s.w,s.h);
     const permEntries=Object.entries(basic.perms||{});
     const permSample=permEntries.slice(0,3).map(([k,v])=>`${k}:${v}`).join(', ')||'—';
 
-    const bullets = [
-      city ? `🗺️ <b>Регион по IP:</b> ${city}` : `🗺️ По TZ вы около <b>${tzCity}</b>`,
-      `💻 Устройство: <b>${device}</b> • ОС: <b>${osVer}</b>`,
-      (chip?`🎮 GPU: <b>${chip}</b>`:`🎮 GPU раскрывается через WebGL`),
-      (basic.hashes.canvas&&basic.hashes.audio?`🎯 Активны <b>canvas/audio-hash</b> — возможна склейка визитов`:`🎯 Canvas/Audio могут склеивать визиты`),
-      `🌐 Браузер: <b>${browserGuess}</b>`,
-      (diag?`🖥️ Экран: <b>${screenStr}</b> • ≈ <b>${diag}</b>`:`🖥️ Экран: <b>${screenStr}</b>`),
-      `🔐 Разрешения: <b>${permSample}</b>`
+    const bullets=[
+      city?t.shock.region(city):t.shock.tzFallback(tzCity),
+      t.shock.device(device,osVer),
+      chip?t.shock.gpuKnown(chip):t.shock.gpuUnknown,
+      (basic.hashes.canvas&&basic.hashes.audio)?t.shock.canvasActive:t.shock.canvasPassive,
+      t.shock.browser(browserGuess),
+      t.shock.screen(screenStr,basic.screen.colorDepth),
+      t.shock.perms(permSample)
     ];
     const shock=getEl('shock');
-    const ul=getEl('shockList'); ul.innerHTML='';
-    bullets.forEach(b=>{const li=document.createElement('li');li.innerHTML=b;ul.appendChild(li);});
-    getEl('shockTitle').textContent=t.shockTitle;
-    shock.style.display='block';
+    const ul=getEl('shockList');
+    ul.innerHTML='';
+    bullets.forEach(text=>{const li=document.createElement('li');li.innerHTML=text;ul.appendChild(li);});
+    shock.style.display=bullets.length?'block':'none';
 
-    // pro cards
     const cards=getEl('cards');
     cards.textContent='';
     const frag=document.createDocumentFragment();
     const tzForClock=basic.timezone||LOCAL_TZ||'UTC';
-    const tzStr=`${basic.timezone||'—'} (${utcOffsetStr(-basic.tzOffsetMinutes)}) • ${timeInTZ(tzForClock, currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU'))}`;
-    const add=(k,label,val)=>frag.appendChild(card(k,label,val,HINTS[k],HINTS[k].adv));
-    add('tz','Часовой пояс',tzStr);
-    add('ua','Браузер',basic.userAgent);
-    add('plat','Платформа',`${basic.uaPlatform||basic.platform||'—'} ${basic.uaMobile?'(mobile)':''}`.trim());
-    add('screen','Экран',`${screenStr} • ${basic.screen.colorDepth}-bit`);
-    add('langs','Языки',(basic.languages||[]).join(', '));
-    add('hw','CPU / RAM',`${basic.hw.hardwareConcurrency||'?'} cores • ${basic.hw.deviceMemory||'?'} GB`);
-    add('store','Хранилища',`local:${basic.storage.local?'yes':'no'} session:${basic.storage.session?'yes':'no'} idb:${basic.storage.indexedDB?'yes':'no'} cookies:${basic.cookiesEnabled?'yes':'no'}`);
-    add('dnt','DNT', basic.dnt!=null ? String(basic.dnt) : '—');
-    add('touch','Касания/указатель', `${basic.touch.maxTouchPoints} touch • pointer ${basic.pointer}`);
-    add('net','Сеть', basic.net && Object.keys(basic.net).length? `${basic.net.effectiveType||'—'} • ${basic.net.downlink??'?'}Mbps • rtt ${basic.net.rtt??'?'}ms` : '—');
-    add('gl','WebGL (GPU)', basic.gl && (basic.gl.vendor||basic.gl.renderer)? `${basic.gl.vendor} / ${basic.gl.renderer}`:'—');
+    const locale=currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU');
+    const tzStr=`${basic.timezone||'—'} (${utcOffsetStr(-basic.tzOffsetMinutes)}) • ${timeInTZ(tzForClock,locale)}`;
+    const yesNo=value=>value?t.units.yes:t.units.no;
+    const storeLabels=t.labels.storage;
+    const hwVal=`${basic.hw.hardwareConcurrency||'?'} ${t.units.cores} • ${basic.hw.deviceMemory||'?'} ${t.units.gb}`;
+    const touchVal=`${basic.touch.maxTouchPoints} ${t.labels.touchPoints} • ${t.labels.pointer}: ${basic.pointer}`;
+    const netVal=basic.net&&Object.keys(basic.net).length?`${basic.net.effectiveType||'—'} • ${basic.net.downlink??'?'} ${t.units.mbps} • ${t.labels.latency} ${basic.net.rtt??'?'} ${t.units.ms}`:'—';
+    const storeVal=`${storeLabels.local}:${yesNo(basic.storage.local)} • ${storeLabels.session}:${yesNo(basic.storage.session)} • ${storeLabels.idb}:${yesNo(basic.storage.indexedDB)} • ${storeLabels.cookies}:${yesNo(!!basic.cookiesEnabled)}`;
+    const permVal=permEntries.length?permEntries.map(([k,v])=>`${k}:${v}`).join(' • '):'—';
+    const pluginsVal=basic.plugins?.length?String(basic.plugins.length):'0';
+    const mediaVal=basic.media?.length?basic.media.map(m=>`${m.kind}:${m.label?t.units.yes:t.units.no}`).join(' • '):'—';
+    const batteryVal=basic.battery&&basic.battery.level!=null?`${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—';
 
-    // hashes с копированием
-    function makeHashCard(k,title,val){
-      const el=card(k,title,val||'—',HINTS[k],HINTS[k].adv);
-      const v=el.querySelector('.val');
-      if(val){v.classList.add('mono','copyable');v.title='Нажмите, чтобы скопировать';
-        v.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(val);v.title='Скопировано';setTimeout(()=>v.title='Нажмите, чтобы скопировать',1200);}catch(_){}});}
-      frag.appendChild(el);
-    }
-    makeHashCard('canvas','Canvas Hash',basic.hashes.canvas);
-    makeHashCard('audio','Audio Hash',basic.hashes.audio);
+    addCard(frag,'tz',tzStr,t);
+    addCard(frag,'ua',basic.userAgent,t);
+    addCard(frag,'plat',`${basic.uaPlatform||basic.platform||'—'} ${basic.uaMobile?'(mobile)':''}`.trim(),t);
+    addCard(frag,'screen',`${screenStr} • ${basic.screen.colorDepth}-bit`,t);
+    addCard(frag,'langs',(basic.languages||[]).join(', ')||'—',t);
+    addCard(frag,'hw',hwVal,t);
+    addCard(frag,'store',storeVal,t);
+    addCard(frag,'dnt', basic.dnt!=null?String(basic.dnt):'—',t);
+    addCard(frag,'touch',touchVal,t);
+    addCard(frag,'net',netVal,t);
+    addCard(frag,'gl',basic.gl&&(basic.gl.vendor||basic.gl.renderer)?`${basic.gl.vendor} / ${basic.gl.renderer}`:'—',t);
+    addHashCard(frag,'canvas',basic.hashes.canvas,t);
+    addHashCard(frag,'audio',basic.hashes.audio,t);
+    addCard(frag,'perm',permVal,t);
+    addCard(frag,'plugins',pluginsVal,t);
+    addCard(frag,'media',mediaVal,t);
+    addCard(frag,'bat',batteryVal,t);
 
-    add('perm','Разрешения', permEntries.length? permEntries.map(([k,v])=>`${k}:${v}`).join(' • '):'—');
-    add('plugins','Плагины', basic.plugins?.length? String(basic.plugins.length):'0');
-    add('media','Медиа-устройства', basic.media?.length? basic.media.map(m=>`${m.kind}:${m.label?'yes':'no'}`).join(' • '):'—');
-    add('bat','Батарея', basic.battery && (basic.battery.level!=null)? `${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—');
-
-    // fullness
-    let filled=0,total=0;(function walk(o){for(const k in o){total++;const v=o[k];if(v==null)continue;
-      if(typeof v==='string'&&v.length)filled++;else if(typeof v==='number'&&!Number.isNaN(v))filled++;
-      else if(typeof v==='boolean')filled++;else if(typeof v==='object'){if(Array.isArray(v)){if(v.length)filled++;}else walk(v);}}})(basic);
-    frag.appendChild(card('fullness','Насколько много данных',`${Math.round(100*filled/Math.max(1,total))}% (заполнено ${filled} из ~${total})`,{risk:'low',use:'Оценка “богатства” профиля',ex:'Чем больше сигналов — тем легче связать'},'Минимизируйте ненужные сигналы'));
-    frag.appendChild(card('fp','Итоговый Fingerprint',fp,{risk:'high',use:'Если отправлять, годится для трекинга',ex:'Одинаковый ID'},'Не делитесь этим ID со сторонними сайтами'));
+    let filled=0,total=0;
+    (function walk(o){
+      for(const k in o){
+        total++;
+        const v=o[k];
+        if(v==null) continue;
+        if(typeof v==='string'){if(v.length)filled++;}
+        else if(typeof v==='number'&&!Number.isNaN(v))filled++;
+        else if(typeof v==='boolean')filled++;
+        else if(typeof v==='object'){
+          if(Array.isArray(v)){if(v.length)filled++;}
+          else walk(v);
+        }
+      }
+    })(basic);
+    addCard(frag,'fullness',t.formatFullness(filled,total),t);
+    addHashCard(frag,'fp',fp,t);
     cards.appendChild(frag);
-  }catch(e){if(token!==renderToken)return;console.error(e);alert('Ошибка: '+e.message);}
+  }catch(e){
+    if(token!==renderToken)return;
+    console.error(e);
+    alert(t.errorMessage(e.message||String(e)));
+  }
 }
 
-/* ============== Boot & Controls ============== */
-function detectLang(){try{const saved=localStorage.getItem('fp_lang');if(saved&&I18N[saved])return saved;const n=navigator.language||'ru';if(n.startsWith('ru'))return'ru';if(n.startsWith('en'))return'en';if(n.startsWith('uz'))return'uz';return'ru';}catch(_){return'ru';}}
-document.addEventListener('DOMContentLoaded', ()=>{
-  const sel=getEl('lang'); const lang=detectLang(); sel.value=lang;
-  const applyMode=mode=>{document.body.classList.toggle('pro',mode==='pro');};
-  // mode toggle
-  document.querySelectorAll('input[name=mode]').forEach(r=>{
-    r.addEventListener('change', ()=>{ if(r.checked) applyMode(r.value); });
+function detectLang(){
+  try{
+    const saved=localStorage.getItem('fp_lang');
+    if(saved&&I18N[saved])return saved;
+    const n=navigator.language||'ru';
+    if(n.startsWith('ru'))return'ru';
+    if(n.startsWith('en'))return'en';
+    if(n.startsWith('uz'))return'uz';
+    return'ru';
+  }catch(_){return'ru';}
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const sel=getEl('lang');
+  const lang=detectLang();
+  sel.value=lang;
+  getEl('printBtn').addEventListener('click',()=>window.print());
+  getEl('ipBtn').addEventListener('click',detectIpAndSpeed);
+  sel.addEventListener('change',()=>{
+    const l=sel.value;
+    try{localStorage.setItem('fp_lang',l);}catch(_){/* ignore */}
+    render(l);
   });
-  // ip opt-in
-  const ip=getEl('ipOptIn'); ip.checked=false; ip.addEventListener('change',()=>{ ipOptIn=ip.checked; render(sel.value); });
-  // pdf
-  getEl('printBtn').addEventListener('click', ()=>window.print());
-  // lang
-  sel.addEventListener('change', ()=>{ const l=sel.value; try{localStorage.setItem('fp_lang',l);}catch(_){ } render(l); });
-  // initial render
-  applyMode(document.querySelector('input[name=mode]:checked')?.value||'simple');
   render(lang);
 });
 </script>
