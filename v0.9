@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fingerprint — by morgunov.tech</title>
+  <meta name="description" content="Локальная проверка отпечатка: энтропия и перцентиль без скрытых запросов. Режимы 'Просто/Профи'. PDF, методология и политика приватности."/>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042;
+      --r:16px; --shadow:0 10px 30px rgba(0,0,0,.25);
+      --good:#22c55e; --mid:#f59e0b; --bad:#ef4444; --accent:#60a5fa;
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#0b0f1400);color:var(--text);
+         font:15px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial}
+    .wrap{max-width:1100px;margin:30px auto;padding:0 16px}
+    header{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+    h1{font-size:20px;margin:0}
+    .sub{color:var(--muted);font-size:14px}
+    .toolbar{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap}
+    select, .pill, .switch{
+      border:1px solid var(--border);background:transparent;color:var(--text);
+      padding:6px 10px;border-radius:10px;font:inherit
+    }
+    .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin:14px 0}
+    .legend{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);margin:8px 0}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--border)}
+    .dot{display:inline-block;width:12px;height:12px;border-radius:50%}
+    .low{background:#22c55e}.med{background:#f59e0b}.high{background:#ef4444}
+    .big{font-weight:800;font-size:22px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
+    .danger ul{margin:6px 0 0 18px; padding:0}
+    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .card{border:1px solid var(--border);border-radius:12px;padding:12px}
+    .title{font-weight:700;margin-bottom:6px}
+    .val{white-space:normal;word-break:break-word}
+    .line{display:block;margin-top:4px}
+    .hint{color:var(--text)}
+    .adv{color:var(--muted)}
+    .small{color:var(--muted);font-size:14px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:13px}
+    .copyable{cursor:pointer}
+    @media (max-width:920px){ .cards{grid-template-columns:1fr} }
+    a{color:var(--accent);text-decoration:none}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .btn{border:1px solid var(--border);background:transparent;color:var(--text);padding:6px 10px;border-radius:10px;cursor:pointer}
+    details{margin-top:8px}
+    /* Simple/Pro visibility */
+    body:not(.pro) .proOnly{display:none}
+    body.pro .simpleOnly{display:none}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Fingerprint</h1><span class="sub">by morgunov.tech</span>
+    <div class="toolbar">
+      <!-- mode -->
+      <label class="pill"><input type="radio" name="mode" value="simple" checked> Просто</label>
+      <label class="pill"><input type="radio" name="mode" value="pro"> Профи</label>
+      <!-- lang -->
+      <select id="lang"><option value="ru">Русский</option><option value="en">English</option><option value="uz">Oʻzbekcha</option></select>
+      <!-- IP opt-in -->
+      <label class="switch"><input id="ipOptIn" type="checkbox"> Гео по IP (/headers)</label>
+      <button class="btn" id="printBtn">PDF</button>
+    </div>
+  </header>
+
+  <!-- Block 1: Intro -->
+  <section class="block">
+    <div id="introTitle" style="font-weight:700;margin-bottom:6px"></div>
+    <div id="introText" class="small"></div>
+    <div id="legend" class="legend"></div>
+  </section>
+
+  <!-- Block 2: Uniqueness + shock -->
+  <section class="block">
+    <div id="uniqLine" class="big"></div>
+    <div id="shock" class="danger" style="display:none">
+      <div class="small" id="shockTitle"></div>
+      <ul id="shockList"></ul>
+      <!-- Simple steps -->
+      <div class="simpleOnly" id="simpleSteps" style="margin-top:8px">
+        <div class="title">3 шага защиты:</div>
+        <ol class="small" style="margin:6px 0 0 18px">
+          <li><b>Firefox:</b> about:config → <span class="mono">privacy.resistFingerprinting=true</span></li>
+          <li><b>Chrome/Edge:</b> «Замок» → Параметры сайта → Сбросить разрешения</li>
+          <li><b>iOS/Android:</b> Отключить межсайтовое отслеживание + блокировщик</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- Block 3: Detailed cards -->
+  <section class="block proOnly">
+    <div id="detailTitle" style="font-weight:700;margin-bottom:6px"></div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- Block 4: Methodology & Policy -->
+  <section class="block">
+    <details>
+      <summary><b>Методология</b> (энтропия и перцентиль)</summary>
+      <div class="small" style="margin-top:6px">
+        Энтропия отпечатка: <span class="mono">H = −∑ log₂ pᵢ(vᵢ)</span>, где pᵢ берутся из локальных частот.<br/>
+        «Уникальнее, чем X%» — перцентиль <span class="mono">CDF(H)</span>, интерполяция по квантилям.<br/>
+        Редкие значения — сглаживание Лапласа. Корреляции частично учтены (GPU↔платформа, экран↔DPR).
+      </div>
+    </details>
+    <details>
+      <summary><b>Политика приватности</b></summary>
+      <div class="small" style="margin-top:6px">
+        Всё считается локально, без сетевых запросов. Пункт «Гео по IP (/headers)» опционален и обращается только к вашему серверу.
+        Внешних шрифтов, аналитики и трекеров нет.
+      </div>
+    </details>
+    <details class="proOnly">
+      <summary><b>Заголовки безопасности (пример для Express)</b></summary>
+      <pre class="small mono">app.use((req,res,next)=>{res.set({
+"Content-Security-Policy":"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+"Referrer-Policy":"no-referrer",
+"Cross-Origin-Opener-Policy":"same-origin",
+"Cross-Origin-Embedder-Policy":"require-corp",
+"Cross-Origin-Resource-Policy":"same-origin",
+"Permissions-Policy":"geolocation=(),camera=(),microphone=(),usb=()"
+});next();});</pre>
+    </details>
+  </section>
+
+  <footer class="small" style="text-align:center;color:var(--muted)">
+    © morgunov.tech • Локальный аудит отпечатка • <span class="proOnly">Версия: entropy-percentile</span>
+  </footer>
+</div>
+
+<script>
+/* ================= I18N ================= */
+const I18N = {
+  ru: {
+    introTitle:'Зачем это нужно',
+    introText:'Страница локально оценивает «уникальность» вашего браузера по энтропии признаков и показывает понятные шаги защиты. Никаких скрытых отправок. Гео/IP — только по вашему согласию.',
+    legendTitle:'Легенда рисков:',
+    low:'низкий', med:'средний', high:'высокий',
+    uniqMeaning: pct => `Ваш отпечаток уникальнее, чем ${pct}% пользователей`,
+    detailTitle:'Подробный анализ по пунктам',
+    shockTitle:'Что уже ясно о вас (без имени):'
+  },
+  en: {
+    introTitle:'Why this matters',
+    introText:'This page locally estimates your browser “uniqueness” via entropy and shows simple protection steps. No hidden sends. Geo/IP only with your consent.',
+    legendTitle:'Risk legend:',
+    low:'low', med:'medium', high:'high',
+    uniqMeaning: pct => `Your fingerprint is more unique than ${pct}% of users`,
+    detailTitle:'Detailed per-signal analysis',
+    shockTitle:'Already inferred (without your name):'
+  },
+  uz: {
+    introTitle:'Nega bu muhim',
+    introText:'Sahifa brauzeringiz “noyobligi”ni entropiya orqali lokal baholaydi va oddiy himoya qadamlarini ko‘rsatadi. Hech qanday yashirin yuborish yo‘q. Geo/IP faqat rozilik bilan.',
+    legendTitle:'Xavf afsonasi:',
+    low:'past', med:'o‘rtacha', high:'yuqori',
+    uniqMeaning: pct => `Sizning fingerprint ${pct}% foydalanuvchidan ko‘ra noyob`,
+    detailTitle:'Har bir signal bo‘yicha batafsil tahlil',
+    shockTitle:'Siz haqingizda ayon (ismisiz):'
+  }
+};
+
+/* ============== Helpers (from your base) ============== */
+function toHex(buf){return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function sha256(str){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return toHex(buf);}
+function hasStorage(type){try{const x='__fp__';window[type].setItem(x,x);const ok=window[type].getItem(x)===x;window[type].removeItem(x);return ok;}catch(_){return false;}}
+async function canvasHash(){try{const c=document.createElement('canvas');c.width=320;c.height=120;const g=c.getContext('2d');const grad=g.createLinearGradient(0,0,320,0);grad.addColorStop(0,'#000');grad.addColorStop(1,'#0bf');g.fillStyle=grad;g.fillRect(0,0,320,120);g.fillStyle='#fff';g.font='16px Arial';g.rotate(0.03);g.fillText('fp',10,24);g.fillText(navigator.userAgent,10,60);return sha256(c.toDataURL());}catch(_){return '';}}
+async function audioHash(){try{const ctx=new OfflineAudioContext(1,44100,44100);const o=ctx.createOscillator();o.type='triangle';o.frequency.value=1000;const comp=ctx.createDynamicsCompressor();o.connect(comp);comp.connect(ctx.destination);o.start(0);o.stop(0.1);const buf=await ctx.startRendering();const ch=buf.getChannelData(0);let acc=0;for(let i=0;i<ch.length;i+=64){acc+=Math.abs(ch[i]);}return sha256(String(acc));}catch(_){return '';}}
+function webglInfo(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return{};const dbg=gl.getExtension('WEBGL_debug_renderer_info');return{vendor:dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),renderer:dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};}catch(_){return{};}}
+async function getBattery(){try{if(navigator.getBattery){const b=await navigator.getBattery();return{level:b.level,charging:b.charging};}return{};}catch(_){return{};}}
+async function getPermissions(){const names=['geolocation','notifications','camera','microphone','clipboard-read','clipboard-write','persistent-storage'];const out={};if(!navigator.permissions)return out;await Promise.all(names.map(async n=>{try{const st=await navigator.permissions.query({name:n});out[n]=st.state;}catch(_){}}));return out;}
+async function getMediaDevices(){try{if(!navigator.mediaDevices?.enumerateDevices)return[];const list=await navigator.mediaDevices.enumerateDevices();return list.map(d=>({kind:d.kind,label:!!d.label}));}catch(_){return[];}}
+function getPlugins(){try{return Array.from(navigator.plugins||[]).map(p=>p.name);}catch(_){return[];}}
+function netInfo(){try{const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(!c)return{};return{downlink:c.downlink,rtt:c.rtt,effectiveType:c.effectiveType};}catch(_){return{};}}
+function utcOffsetStr(mins){const sign=mins<=0?'+':'-';const abs=Math.abs(mins);const hh=String(Math.floor(abs/60)).padStart(2,'0');const mm=String(abs%60).padStart(2,'0');return`UTC${sign}${hh}:${mm}`;}
+function timeInTZ(tz,loc){const d=new Date();const date=d.toLocaleDateString(loc||'ru-RU',{timeZone:tz});const time=d.toLocaleTimeString(loc||'ru-RU',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false});return`${time} ${date}`;}
+function tzCityName(tz){if(!tz)return'ваша TZ';const parts=tz.split('/');let city=parts[1]||parts[0];return city.replace('_',' ');}
+function probableBrowsers(b){const ua=b.userAgent||'';const out=[];/Edg\//.test(ua)&&out.push('Edge');/OPR\//.test(ua)&&out.push('Opera');/YaBrowser\//.test(ua)&&out.push('Yandex Browser');/Firefox\//.test(ua)&&out.push('Firefox');(/Chrome\//.test(ua)&&!/Edg\/|OPR\/|YaBrowser\//.test(ua))&&out.push('Chrome','Brave');(/Safari\//.test(ua)&&!/Chrome\//.test(ua))&&out.push('Safari');return out.length?Array.from(new Set(out)).join(' / '):'—';}
+function guessOSVersion(ua){ua=(ua||'');const mac=ua.match(/Mac OS X ([0-9_\.]+)/i);if(mac)return'macOS '+mac[1].replace(/_/g,'.');const win=ua.match(/Windows NT ([0-9\.]+)/i);if(win){const map={'10.0':'Windows 10/11','6.3':'Windows 8.1','6.2':'Windows 8','6.1':'Windows 7'};return map[win[1]]||('Windows NT '+win[1]);}const ios=ua.match(/iPhone OS ([0-9_]+)/i)||ua.match(/CPU OS ([0-9_]+)/i);if(ios)return'iOS '+ios[1].replace(/_/g,'.');const android=ua.match(/Android ([0-9\.]+)/i);if(android)return'Android '+android[1];if(/Linux/i.test(ua))return'Linux';return'OS';}
+function guessAppleChip(renderer){if(!renderer)return null;const m=renderer.match(/Apple\s+M(\d)(?:\s*(Pro|Max|Ultra))?/i);return m?('Apple M'+m[1]+(m[2]?' '+m[2]:'')):null;}
+function guessDevice(b){const ua=(b.userAgent||'').toLowerCase();if(/iphone/.test(ua))return'iPhone';if(/ipad/.test(ua))return'iPad';if(/android/.test(ua)){const m=ua.match(/android[^;]*;\s*([^;]+?)\s+build/);return m?`${m[1].trim()} (Android)`:'Android-устройство';}if(/mac os x|macintosh/.test(ua)){const chip=guessAppleChip(b.gl?.renderer||'');const hasBattery=!!(b.battery&&b.battery.level!=null);const type=hasBattery?'MacBook':'Mac';return chip?`${type} (${chip})`:type;}if(/windows nt/.test(ua))return'Windows-ПК';if(/linux/.test(ua))return'Linux-ПК';return b.uaPlatform||b.platform||'устройство';}
+function estimateDiagonal(w,h){const res=`${w}×${h}`;const map={'1728×1117':'16″','1512×982':'14″','2560×1600':'13–16″','2560×1440':'27″','3440×1440':'34″ ultrawide','3840×2160':'27–32″','1920×1080':'22–24″'};return map[res]||null;}
+function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
+
+/* ======= Entropy-based frequency tables (compact, embedded) ======= */
+const FREQ = {
+  // browser family (rough, world-wide)
+  'browser.family': {'Chrome':0.58,'Safari':0.20,'Edge':0.08,'Firefox':0.08,'__other':0.06},
+  // screen@dpr (top combos; fallback -> __other)
+  'screen': {'1920x1080@1':0.25,'1366x768@1':0.12,'1512x982@2':0.05,'2560x1600@2':0.06,'2560x1440@1':0.07,'3840x2160@2':0.04,'__other':0.41},
+  'dpr': {'1':0.35,'1.5':0.03,'2':0.5,'3':0.1,'__other':0.02},
+  // languages count
+  'langs.count': {'1':0.52,'2':0.32,'3':0.12,'4+':0.04,'__other':0.0},
+  // gpu brand by renderer string
+  'gpu.brand': {'NVIDIA':0.34,'Intel':0.28,'AMD':0.15,'Apple':0.18,'__other':0.05},
+  // canvas/audio availability (hash presence)
+  'has.canvas': {'1':0.95,'0':0.05},
+  'has.audio': {'1':0.95,'0':0.05},
+  // plugins count bucket
+  'plugins.bucket': {'0':0.70,'1-3':0.20,'4+':0.10},
+  // permissions bucket
+  'perm.bucket': {'0':0.60,'1-3':0.30,'4+':0.10}
+};
+// Quantile table for H (illustrative; calibrated на открытых публикациях)
+const H_CDF = [
+  [10,0.05],[15,0.15],[20,0.35],[25,0.55],[30,0.75],[35,0.90],[40,0.97],[45,0.995]
+];
+const ALPHA = 1; // Laplace
+
+function bucketPlugins(n){if(n<=0)return'0';if(n<=3)return'1-3';return'4+';}
+function bucketPerms(n){if(n<=0)return'0';if(n<=3)return'1-3';return'4+';}
+function brandFromRenderer(r){
+  r=(r||'').toLowerCase();
+  if(r.includes('nvidia'))return'NVIDIA';
+  if(r.includes('intel'))return'Intel';
+  if(r.includes('amd')||r.includes('ati'))return'AMD';
+  if(r.includes('apple'))return'Apple';
+  return'__other';
+}
+function browserFamily(ua){
+  if(/Edg\//.test(ua))return'Edge';
+  if(/Firefox\//.test(ua))return'Firefox';
+  if(/Safari\//.test(ua)&&!/Chrome\//.test(ua))return'Safari';
+  if(/Chrome\//.test(ua))return'Chrome';
+  return'__other';
+}
+function pFrom(table, key){
+  const t=FREQ[table]||{};
+  const k = (key in t)?key:(t['__other']!==undefined?'__other':key);
+  const c = (t[k]||0)*1000; // pseudo-counts
+  const n = Object.values(t).reduce((a,b)=>a+b,0)*1000;
+  const ksize = Object.keys(t).length;
+  return (c+ALPHA)/(n+ALPHA*ksize);
+}
+function entropyFromFeatures(f){
+  let H=0;
+  H += -Math.log2(pFrom('browser.family', f.browser));
+  H += -Math.log2(pFrom('screen', f.screen));
+  H += -Math.log2(pFrom('dpr', f.dpr));
+  H += -Math.log2(pFrom('langs.count', f.langsCount));
+  H += -Math.log2(pFrom('gpu.brand', f.gpuBrand));
+  H += -Math.log2(pFrom('has.canvas', f.hasCanvas));
+  H += -Math.log2(pFrom('has.audio', f.hasAudio));
+  H += -Math.log2(pFrom('plugins.bucket', f.pluginsBucket));
+  H += -Math.log2(pFrom('perm.bucket', f.permBucket));
+  // лёгкая коррекция зависимостей (GPU×browser Safari/Apple; screen×dpr)
+  if(f.browser==='Safari' && f.gpuBrand==='Apple') H -= 1.0;
+  if((f.dpr==='2'||f.dpr==='3') && f.screen.endsWith('@'+f.dpr)) H -= 0.5;
+  return Math.max(0,H);
+}
+function percentileFromH(H){
+  // линейная интерполяция по H_CDF
+  if(H<=H_CDF[0][0])return Math.round(H_CDF[0][1]*100);
+  for(let i=1;i<H_CDF.length;i++){
+    const [x1,y1]=H_CDF[i-1]; const [x2,y2]=H_CDF[i];
+    if(H<=x2){ const t=(H-x1)/(x2-x1); return Math.round((y1+t*(y2-y1))*100); }
+  }
+  return 100;
+}
+
+/* ============== Collect ============== */
+let ipOptIn=false;
+async function tryFetchHeaders(timeout=800){
+  if(!ipOptIn) return null;
+  const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),timeout);
+  return fetch('/headers',{signal:ctl.signal,credentials:'omit'}).then(r=>r.ok?r.json():null).catch(_=>null).finally(()=>clearTimeout(t));
+}
+async function collect(){
+  const uaData=navigator.userAgentData;
+  const hw={deviceMemory:navigator.deviceMemory??null,hardwareConcurrency:navigator.hardwareConcurrency??null};
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||null;
+  const tzOffset=new Date().getTimezoneOffset();
+  const gl=webglInfo();
+  const [cv,au,perms,media,bat,server]=await Promise.all([canvasHash(),audioHash(),getPermissions(),getMediaDevices(),getBattery(),tryFetchHeaders(800)]);
+  const net=netInfo();
+  const dpr=String(window.devicePixelRatio||1);
+  const basic={
+    userAgent:navigator.userAgent,
+    uaBrands:uaData?.brands||null, uaMobile:uaData?.mobile??null, uaPlatform:uaData?.platform||null,
+    platform:navigator.platform||null,
+    languages:navigator.languages||[navigator.language],
+    screen:{w:screen.width,h:screen.height,colorDepth:screen.colorDepth,pixelRatio:+dpr},
+    timezone:tz, tzOffsetMinutes:tzOffset,
+    cookiesEnabled:navigator.cookieEnabled??null,
+    dnt:navigator.doNotTrack||null,
+    storage:{local:hasStorage('localStorage'),session:hasStorage('sessionStorage'),indexedDB:!!window.indexedDB},
+    touch:{maxTouchPoints:navigator.maxTouchPoints||0,ontouchstart:('ontouchstart' in window)},
+    pointer:matchMedia('(pointer:fine)').matches?'fine':(matchMedia('(pointer:coarse)').matches?'coarse':'none'),
+    hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server
+  };
+  const json=JSON.stringify(basic,Object.keys(basic).sort()); const fp=await sha256(json);
+
+  // features for entropy
+  const browser=browserFamily(basic.userAgent);
+  const scr=`${basic.screen.w}x${basic.screen.h}@${basic.screen.pixelRatio}`;
+  const langsCount = (basic.languages||[]).length>=4?'4+':String((basic.languages||[]).length||0);
+  const gpuBrand=brandFromRenderer(basic.gl?.renderer||'');
+  const hasCanvas = basic.hashes.canvas? '1':'0';
+  const hasAudio  = basic.hashes.audio?  '1':'0';
+  const pluginsBucket = bucketPlugins((basic.plugins||[]).length);
+  const permBucket = bucketPerms(Object.keys(basic.perms||{}).length);
+
+  const H = entropyFromFeatures({browser,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,hasCanvas,hasAudio,pluginsBucket,permBucket});
+  const pct = percentileFromH(H);
+
+  return {basic, fp, H, pct};
+}
+
+/* ============== UI render ============== */
+function uniqClass(pct){return pct>65?'high':(pct>35?'med':'low');}
+const HINTS = { // короткие тексты (как в вашем исходнике)
+  tz:{risk:'med',use:'Регион/VPN-несостыковки',ex:'IP=RU, TZ=US',adv:'Реальный TZ в системе'},
+  ua:{risk:'med',use:'Редкие версии=выше риск',ex:'Редкая версия',adv:'Обновите браузер'},
+  plat:{risk:'low',use:'Класс устройства',ex:'macOS vs Windows',adv:'Разные профили'},
+  screen:{risk:'med',use:'Стабильный набор',ex:'1728×1117',adv:'RFP/Brave/Tor либо стандарт'},
+  langs:{risk:'med',use:'Фишинг/регион',ex:'ru,en,uz',adv:'Оставьте 1–2 языка'},
+  hw:{risk:'low',use:'Эмуляторы',ex:'ядра/память',adv:'Отдельный профиль'},
+  store:{risk:'med',use:'Устойчивые ID',ex:'«воскрешение»',adv:'Чистите данные, 3rd-party off'},
+  dnt:{risk:'low',use:'Редко уважают',ex:'DNT=1',adv:'Исп. блокировщики'},
+  touch:{risk:'low',use:'Класс девайса',ex:'pointer fine',adv:'—'},
+  net:{risk:'med',use:'Профилинг/анти-фрод',ex:'2G, высокий RTT',adv:'Проверьте VPN/прокси'},
+  gl:{risk:'high',use:'Уникальный GPU',ex:'Apple M-series',adv:'Firefox RFP/Brave/Tor'},
+  canvas:{risk:'high',use:'Склейка доменов',ex:'Одинаковый хеш',adv:'Рандомизация canvas'},
+  audio:{risk:'high',use:'Стабильный хеш',ex:'Совпадает',adv:'Рандомизация audio'},
+  perm:{risk:'med',use:'Поведенческий профиль',ex:'camera: denied',adv:'Сбросить разрешения'},
+  plugins:{risk:'med',use:'Повышают уникальность',ex:'legacy',adv:'Удалите лишние'},
+  media:{risk:'med',use:'Раскрывает хост',ex:'редкий набор',adv:'Запрет по умолчанию'},
+  bat:{risk:'low',use:'Слабый сигнал',ex:'заряд/нет',adv:'—'},
+  fp:{risk:'high',use:'Если отправлять',ex:'тот же fp',adv:'Не делитесь ID'}
+};
+function card(key,title,value,explain,adv){
+  const c=document.createElement('div');c.className='card';
+  const t=document.createElement('div');t.className='title';t.innerHTML=`<span class="dot ${explain.risk}"></span> ${title}`;c.appendChild(t);
+  const v=document.createElement('div');v.className='val';v.textContent=value;c.appendChild(v);
+  const l1=document.createElement('div');l1.className='line hint small';l1.textContent=explain.use;c.appendChild(l1);
+  const l2=document.createElement('div');l2.className='line small';l2.textContent='Пример: '+explain.ex;c.appendChild(l2);
+  const l3=document.createElement('div');l3.className='line adv small';l3.textContent='💡 Совет: '+adv;c.appendChild(l3);
+  return c;
+}
+
+let currentLang='ru';
+async function render(lang){
+  currentLang=(lang in I18N)?lang:'ru';
+  const t=I18N[currentLang];
+  document.getElementById('introTitle').textContent=t.introTitle;
+  document.getElementById('introText').textContent=t.introText;
+  document.getElementById('legend').innerHTML = `<span>${t.legendTitle}</span>
+    <span class="chip"><span class="dot low"></span>${t.low}</span>
+    <span class="chip"><span class="dot med"></span>${t.med}</span>
+    <span class="chip"><span class="dot high"></span>${t.high}</span>`;
+  document.getElementById('detailTitle').textContent=t.detailTitle;
+
+  try{
+    const {basic,fp,H,pct}=await collect();
+
+    // headline
+    const cls=uniqClass(pct);
+    document.getElementById('uniqLine').innerHTML=`<span class="dot ${cls}"></span> ${t.uniqMeaning(pct)} • H=${H.toFixed(1)} бит`;
+
+    // shock box
+    const s=basic.screen; const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
+    const osVer=guessOSVersion(basic.userAgent);
+    const device=guessDevice(basic);
+    const chip=(basic.gl && basic.gl.renderer)?guessAppleChip(basic.gl.renderer):null;
+    const geo=extractGeo(basic.server?.headers||{});
+    const city=geo.city?(geo.country?`${geo.city}, ${geo.country}`:geo.city):null;
+    const tzCity=tzCityName(basic.timezone||'');
+    const browserGuess=probableBrowsers(basic);
+    const diag=estimateDiagonal(s.w,s.h);
+    const permSample=Object.keys(basic.perms||{}).slice(0,3).map(k=>`${k}:${basic.perms[k]}`).join(', ')||'—';
+
+    const bullets = [
+      city ? `🗺️ <b>Регион по IP:</b> ${city}` : `🗺️ По TZ вы около <b>${tzCity}</b>`,
+      `💻 Устройство: <b>${device}</b> • ОС: <b>${osVer}</b>`,
+      (chip?`🎮 GPU: <b>${chip}</b>`:`🎮 GPU раскрывается через WebGL`),
+      (basic.hashes.canvas&&basic.hashes.audio?`🎯 Активны <b>canvas/audio-hash</b> — возможна склейка визитов`:`🎯 Canvas/Audio могут склеивать визиты`),
+      `🌐 Браузер: <b>${browserGuess}</b>`,
+      (diag?`🖥️ Экран: <b>${screenStr}</b> • ≈ <b>${diag}</b>`:`🖥️ Экран: <b>${screenStr}</b>`),
+      `🔐 Разрешения: <b>${permSample}</b>`
+    ];
+    const shock=document.getElementById('shock');
+    const ul=document.getElementById('shockList'); ul.innerHTML='';
+    bullets.forEach(b=>{const li=document.createElement('li');li.innerHTML=b;ul.appendChild(li);});
+    document.getElementById('shockTitle').textContent=t.shockTitle;
+    shock.style.display='block';
+
+    // pro cards
+    const cards=document.getElementById('cards'); cards.innerHTML='';
+    const tzStr=`${basic.timezone||'—'} (${utcOffsetStr(-basic.tzOffsetMinutes)}) • ${timeInTZ(basic.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone, currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU'))}`;
+    const add=(k,label,val,h)=>cards.appendChild(card(k,label,val,HINTS[k],HINTS[k].adv));
+    add('tz','Часовой пояс',tzStr,HINTS.tz);
+    add('ua','Браузер',basic.userAgent,HINTS.ua);
+    add('plat','Платформа',`${basic.uaPlatform||basic.platform||'—'} ${basic.uaMobile?'(mobile)':''}`,HINTS.plat);
+    add('screen','Экран',`${screenStr} • ${basic.screen.colorDepth}-bit`,HINTS.screen);
+    add('langs','Языки',(basic.languages||[]).join(', '),HINTS.langs);
+    add('hw','CPU / RAM',`${basic.hw.hardwareConcurrency||'?'} cores • ${basic.hw.deviceMemory||'?'} GB`,HINTS.hw);
+    add('store','Хранилища',`local:${basic.storage.local?'yes':'no'} session:${basic.storage.session?'yes':'no'} idb:${basic.storage.indexedDB?'yes':'no'} cookies:${basic.cookiesEnabled?'yes':'no'}`,HINTS.store);
+    add('dnt','DNT', (basic.dnt!=null ? String(basic.dnt) : '—'),HINTS.dnt);
+    add('touch','Касания/указатель', `${basic.touch.maxTouchPoints} touch • pointer ${basic.pointer}`,HINTS.touch);
+    add('net','Сеть', basic.net && Object.keys(basic.net).length? `${basic.net.effectiveType||'—'} • ${basic.net.downlink??'?'}Mbps • rtt ${basic.net.rtt??'?'}ms` : '—',HINTS.net);
+    add('gl','WebGL (GPU)', basic.gl && (basic.gl.vendor||basic.gl.renderer)? `${basic.gl.vendor} / ${basic.gl.renderer}`:'—',HINTS.gl);
+
+    // hashes с копированием
+    function makeHashCard(k,title,val,h){
+      const el=card(k,title,val||'—',HINTS[k],HINTS[k].adv);
+      const v=el.querySelector('.val');
+      if(val){v.classList.add('mono','copyable');v.title='Нажмите, чтобы скопировать';
+        v.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(val);v.title='Скопировано';setTimeout(()=>v.title='Нажмите, чтобы скопировать',1200);}catch(_){}});}
+      cards.appendChild(el);
+    }
+    makeHashCard('canvas','Canvas Hash',basic.hashes.canvas,HINTS.canvas);
+    makeHashCard('audio','Audio Hash',basic.hashes.audio,HINTS.audio);
+
+    add('perm','Разрешения', Object.keys(basic.perms||{}).length? Object.entries(basic.perms).map(([k,v])=>`${k}:${v}`).join(' • '):'—',HINTS.perm);
+    add('plugins','Плагины', basic.plugins?.length? String(basic.plugins.length):'0',HINTS.plugins);
+    add('media','Медиа-устройства', basic.media?.length? basic.media.map(m=>`${m.kind}:${m.label?'yes':'no'}`).join(' • '):'—',HINTS.media);
+    add('bat','Батарея', basic.battery && (basic.battery.level!=null)? `${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—',HINTS.bat);
+
+    // fullness
+    let filled=0,total=0;(function walk(o){for(const k in o){total++;const v=o[k];if(v==null)continue;
+      if(typeof v==='string'&&v.length)filled++;else if(typeof v==='number'&&!Number.isNaN(v))filled++;
+      else if(typeof v==='boolean')filled++;else if(typeof v==='object'){if(Array.isArray(v)){if(v.length)filled++;}else walk(v);}}})(basic);
+    cards.appendChild(card('fullness','Насколько много данных',`${Math.round(100*filled/Math.max(1,total))}% (заполнено ${filled} из ~${total})`,{risk:'low',use:'Оценка “богатства” профиля',ex:'Чем больше сигналов — тем легче связать'},'Минимизируйте ненужные сигналы'));
+    cards.appendChild(card('fp','Итоговый Fingerprint',fp,{risk:'high',use:'Если отправлять, годится для трекинга',ex:'Одинаковый ID','adv':'Не делитесь этим ID со сторонними сайтами'},''));
+  }catch(e){console.error(e);alert('Ошибка: '+e.message);}
+}
+
+/* ============== Boot & Controls ============== */
+function detectLang(){try{const saved=localStorage.getItem('fp_lang');if(saved&&I18N[saved])return saved;const n=navigator.language||'ru';if(n.startsWith('ru'))return'ru';if(n.startsWith('en'))return'en';if(n.startsWith('uz'))return'uz';return'ru';}catch(_){return'ru';}}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const sel=document.getElementById('lang'); const lang=detectLang(); sel.value=lang;
+  // mode toggle
+  document.querySelectorAll('input[name=mode]').forEach(r=>{
+    r.addEventListener('change', ()=>{ document.body.classList.toggle('pro', r.value==='pro'); });
+  });
+  // ip opt-in
+  const ip=document.getElementById('ipOptIn'); ip.checked=false; ip.addEventListener('change',()=>{ ipOptIn=ip.checked; render(sel.value); });
+  // pdf
+  document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+  // lang
+  sel.addEventListener('change', ()=>{ const l=sel.value; try{localStorage.setItem('fp_lang',l);}catch(_){ } render(l); });
+  // initial render
+  render(lang);
+});
+</script>
+</body>
+</html>
