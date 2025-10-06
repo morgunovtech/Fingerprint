@@ -33,8 +33,9 @@
     .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--border)}
     .dot{display:inline-block;width:12px;height:12px;border-radius:50%}
     .low{background:#22c55e}.med{background:#f59e0b}.high{background:#ef4444}
-    .big{font-weight:700;font-size:21px;display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-    .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:4px 0 0 22px;max-width:720px}
+    .big{font-weight:700;font-size:21px;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;margin-bottom:12px}
+    .big .dot{margin-top:0}
+    .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:0;grid-column:1/-1;max-width:720px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
@@ -60,12 +61,15 @@
       h1{font-size:20px}
       .wrap{padding:0 16px}
       .block{padding:16px}
-      .big{font-size:19px}
+      .big{font-size:19px;grid-template-columns:min-content 1fr}
       header{align-items:flex-start}
       .toolbar{margin-left:0}
     }
     @media (max-width:520px){
       body{font-size:14px}
+      .legend span{font-size:13px}
+      .legend .chip{padding:4px 8px;font-size:12px}
+      .big{gap:10px}
       .btn{width:100%;justify-content:center}
       .legend{gap:6px}
     }
@@ -122,14 +126,10 @@
       <summary id="policySummary"></summary>
       <div class="small" id="policyText" style="margin-top:6px"></div>
     </details>
-    <details>
-      <summary id="improveSummary"></summary>
-      <div class="small" id="improveText" style="margin-top:6px"></div>
-    </details>
   </section>
 
   <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
-    © morgunov.tech • Локальный аудит отпечатка • Версия: 2024.05.05 (CalVer)
+    © morgunov.tech • Локальный аудит отпечатка • Версия: 07.10.25 (CalVer (DD.MM.YY))
   </footer>
 </div>
 
@@ -139,12 +139,12 @@ const I18N = {
   ru: {
     langOption:'🇷🇺 Русский',
     introTitle:'Что делает сервис',
-    introText:'Сервис показывает, сколько информации о вас отдаёт браузер и как это влияет на приватность. Все вычисления идут на вашем устройстве, пока вы сами не запросите IP и тест скорости.',
+    introText:'Этот сервис показывает, какие данные о вас сразу получает сайт и как они влияют на приватность. Всё считается прямо в браузере, пока вы сами не попросите узнать IP и измерить скорость.',
     legendTitle:'Как читать уровни риска:',
     risk:{low:'низкий', med:'средний', high:'высокий'},
     uniqMeaning:pct=>({
       headline:`Ваш отпечаток уникальнее, чем ${pct}% пользователей`,
-      note:'Чем выше процент, тем проще сайтам узнать вас снова. Используйте отдельные профили, приватный режим или VPN, если важно оставаться незаметным.'
+      note:'Чем выше процент, тем легче сайтам узнать вас снова. Хотите оставаться незаметным — разделяйте профили, чаще чистите данные или подключайте VPN.'
     }),
     detailTitle:'Какие данные видит сайт',
     shockTitle:'Что уже видно без IP:',
@@ -204,7 +204,8 @@ const I18N = {
       reasons:{
         timezone:'часовой пояс не совпадает с системным',
         language:'язык браузера не совпадает со страной IP',
-        asn:'провайдер похож на VPN или облачный хостинг'
+        asn:'провайдер похож на VPN или облачный хостинг',
+        forwarded:'в заголовках есть признаки прокси'
       }
     },
     monitorText:{single:'браузер сообщает об одном экране',multi:count=>`браузер сообщает о ${count} активных экранах`,unknown:'браузер не раскрывает количество экранов'},
@@ -218,17 +219,15 @@ const I18N = {
       'persistent-storage':'постоянное хранилище'
     },
     permStates:{granted:'разрешено',denied:'запрещено',prompt:'спросит при необходимости',unknown:'не сообщается'},
-    memoryNote:'значение округлено браузером',
+    memoryNote:'браузер округляет цифры, реальные значения могут отличаться',
     saveButton:'Сохранить',
     copy:{hint:'Нажмите, чтобы скопировать',done:'Скопировано'},
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
-    methodSummary:'<b>Как мы считаем</b>',
-    methodText:'Мы сравниваем ваш набор признаков с частотой похожих комбинаций. Чем реже сочетание (энтропия H), тем выше процент уникальности. Формулы считаются локально и не отправляются наружу.',
-    policySummary:'<b>Прозрачность</b>',
-    policyText:'Данные обрабатываются в браузере. К серверам обращаемся только по кнопке IP, и сразу показываем весь ответ. Шрифты, трекеры и скрытые запросы не используются.',
-    improveSummary:'<b>Планы улучшений</b>',
-    improveText:'В приоритете: экспорт в JSON, подсказки для разных ролей (маркетинг, безопасность) и сравнение отпечатка в динамике.',
+    methodSummary:'<b>Как считаем результат</b>',
+    methodText:'Мы сопоставляем ваш набор сигналов с распространённостью похожих комбинаций. Редкий набор даёт большую энтропию H и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
+    policySummary:'<b>Как обращаемся с данными</b>',
+    policyText:'Все вычисления выполняет ваш браузер. Внешние сервисы вызываются только по кнопке IP, и мы показываем весь ответ. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     footer:(version,scheme)=>`© morgunov.tech • Локальный аудит отпечатка • Версия: ${version} (${scheme})`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
@@ -239,12 +238,12 @@ const I18N = {
   en: {
     langOption:'🇬🇧 English',
     introTitle:'What this service does',
-    introText:'The page shows how much information your browser leaks and how it affects privacy. Everything is calculated locally until you request the IP lookup and the speed test.',
+    introText:'This page explains what a site learns about you right away and how that affects privacy. Everything stays inside your browser until you ask for the IP lookup and the speed test.',
     legendTitle:'How to read the risk levels:',
     risk:{low:'low', med:'medium', high:'high'},
     uniqMeaning:pct=>({
       headline:`Your fingerprint is more unique than ${pct}% of users`,
-      note:'A high value means websites can recognise you more easily. Use separate profiles, private windows, or a VPN when you need extra anonymity.'
+      note:'The higher the number, the easier it is to recognise you. Keep separate profiles, clear data more often, or add a VPN when you want to stay harder to track.'
     }),
     detailTitle:'What a site can learn',
     shockTitle:'Already visible without IP:',
@@ -304,7 +303,8 @@ const I18N = {
       reasons:{
         timezone:'time zone differs from your device',
         language:'browser language does not match the IP country',
-        asn:'provider looks like a VPN or cloud host'
+        asn:'provider looks like a VPN or cloud host',
+        forwarded:'proxy or VPN headers spotted'
       }
     },
     monitorText:{single:'browser reports one active screen',multi:count=>`browser reports ${count} active screens`,unknown:'browser does not reveal the number of screens'},
@@ -318,17 +318,15 @@ const I18N = {
       'persistent-storage':'persistent storage'
     },
     permStates:{granted:'allowed',denied:'blocked',prompt:'will ask when needed',unknown:'not reported'},
-    memoryNote:'browser estimate',
+    memoryNote:'browser rounds numbers, actual RAM may differ',
     saveButton:'Save',
     copy:{hint:'Click to copy',done:'Copied'},
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
-    methodSummary:'<b>How it is calculated</b>',
-    methodText:'We compare your signals with how often similar combinations appear. The rarer the combination (entropy H), the higher the uniqueness percentile. Everything is computed locally inside the browser.',
-    policySummary:'<b>Transparency</b>',
-    policyText:'Processing happens in your browser. We contact external services only when you press the IP button and show the full response. No fonts, trackers, or hidden calls are loaded.',
-    improveSummary:'<b>Roadmap</b>',
-    improveText:'Next steps: JSON export, tailored advice for marketers and security teams, and tracking fingerprint changes over time.',
+    methodSummary:'<b>How we calculate it</b>',
+    methodText:'We compare your signals with how common similar sets are. A rare mix produces higher entropy H and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
+    policySummary:'<b>How we handle data</b>',
+    policyText:'All processing happens in your browser. External services are called only when you press the IP button, and the full reply is shown at once. No extra fonts, trackers, or hidden requests are loaded.',
     footer:(version,scheme)=>`© morgunov.tech • Local fingerprint audit • Version: ${version} (${scheme})`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
@@ -339,12 +337,12 @@ const I18N = {
   uz: {
     langOption:'🇺🇿 Oʻzbekcha',
     introTitle:'Servis nima qiladi',
-    introText:'Bu sahifa brauzeringiz qanchalik ko‘p maʼlumot uzatayotganini va bu maxfiylikka qanday taʼsir qilishini ko‘rsatadi. Hammasi qurilmangizda hisoblanadi, IP va tezlik testi faqat siz bosganingizda ishga tushadi.',
+    introText:'Bu sahifa sayt siz haqingizda darhol oladigan maʼlumotlarni va ularning maxfiylikka taʼsirini ko‘rsatadi. Hammasi brauzeringiz ichida bajariladi, IP va tezlik testi faqat siz so‘raganingizda ishlaydi.',
     legendTitle:'Xavf darajalarini qanday o‘qish kerak:',
     risk:{low:'past', med:'o‘rtacha', high:'yuqori'},
     uniqMeaning:pct=>({
       headline:`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`,
-      note:'Ko‘rsatkich yuqori bo‘lsa, saytlar sizni qayta tashriflarda tezroq taniydi. Maxfiylik kerak bo‘lsa, alohida profil, maxfiy oynalar yoki VPN dan foydalaning.'
+      note:'Ko‘rsatkich qanchalik katta bo‘lsa, tanib olish shunchalik oson bo‘ladi. Ko‘proq maxfiylik kerak bo‘lsa, alohida profillarni saqlang, maʼlumotlarni tez-tez tozalang yoki VPN ulang.'
     }),
     detailTitle:'Sayt nimalarni ko‘rishi mumkin',
     shockTitle:'IP so‘ralmasdan ko‘rinadiganlar:',
@@ -366,7 +364,7 @@ const I18N = {
       button:'IP aniqlash va tezlikni o‘lchash',
       buttonLoading:'Aniqlanmoqda…',
       title:'IP maʼlumotlari',
-      none:'IP hali aniqlанmagan.',
+      none:'IP hali aniqlanmagan.',
       error:msg=>`IP olish imkonsiz: ${msg}`,
       address:ip=>`<b>IP:</b> ${ip||'—'}`,
       geo:(city,country)=>`<b>Joylashuv:</b> ${city?city:''}${city&&country?', ':''}${country||''}`,
@@ -404,7 +402,8 @@ const I18N = {
       reasons:{
         timezone:'vaqt mintaqasi qurilmadagi sozlamadan farq qiladi',
         language:'brauzer tili IP mamlakatiga to‘g‘ri kelmaydi',
-        asn:'provayder VPN yoki bulut xizmati o‘xshash'
+        asn:'provayder VPN yoki bulut xizmati o‘xshash',
+        forwarded:'sarlavhalarda proksi yoki VPN izi bor'
       }
     },
     monitorText:{single:'brauzer bitta faol ekran haqida maʼlum qiladi',multi:count=>`brauzer ${count} ta faol ekran haqida maʼlum qildi`,unknown:'brauzer ekranlar sonini bermadi'},
@@ -418,17 +417,15 @@ const I18N = {
       'persistent-storage':'doimiy xotira'
     },
     permStates:{granted:'ruxsat berilgan',denied:'bloklangan',prompt:'kerak bo‘lsa so‘raydi',unknown:'maʼlumot yo‘q'},
-    memoryNote:'brauzer taxmini',
+    memoryNote:'brauzer qiymatlarni taxmin qiladi, haqiqiy RAM boshqacha bo‘lishi mumkin',
     saveButton:'Saqlash',
     copy:{hint:'Nusxa olish uchun bosing',done:'Nusxalandi'},
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
-    methodSummary:'<b>Qanday hisoblaymiz</b>',
-    methodText:'Sizdagi signallarni qanchalik tez-tez uchrashi bilan solishtiramiz. Kam uchraydigan to‘plam (entropiya H) — yuqori noyoblik. Hammasi brauzeringiz ichida hisoblanadi.',
-    policySummary:'<b>Shaffoflik</b>',
-    policyText:'Maʼlumotlar brauzer ichida qayta ishlanadi. IP tugmasi bosilgandagina tashqi servisga murojaat qilamiz va javobni to‘liq ko‘rsatamiz. Shriftlar va trekerlar yuklanmaydi.',
-    improveSummary:'<b>Rivojlanish rejasi</b>',
-    improveText:'Keyingi qadamlar: JSON eksporti, turli rollar uchun maslahatlar ва вақт бўйича fingerprint solishtirish.',
+    methodSummary:'<b>Natija qanday olinadi</b>',
+    methodText:'Signallarni o‘xshash to‘plamlar uchrash tezligi bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
+    policySummary:'<b>Maʼlumotlardan foydalanish</b>',
+    policyText:'Barcha jarayon brauzer ichida bo‘ladi. IP tugmasini bosganingizdagina tashqi servisga murojaat qilamiz va javobni butunlay ko‘rsatamiz. Qo‘shimcha shriftlar, trekerlar yoki yashirin so‘rovlar yo‘q.',
     footer:(version,scheme)=>`© morgunov.tech • Mahalliy fingerprint auditi • Versiya: ${version} (${scheme})`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
@@ -439,12 +436,13 @@ const I18N = {
 };
 
 // Calendar versioning keeps builds tied to release dates.
-const VERSION = '2024.05.05';
-const VERSION_SCHEME = 'CalVer (YYYY.MM.DD)';
+const VERSION = '07.10.25';
+const VERSION_SCHEME = 'CalVer (DD.MM.YY)';
 
 
 const LOCAL_TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||null;}catch(_){return null;}})();
 const TEXT_ENCODER=new TextEncoder();
+const IS_IOS=(()=>{const ua=navigator.userAgent||'';const platform=navigator.platform||'';return /iP(?:ad|hone|od)/.test(ua)||(platform==='MacIntel'&&navigator.maxTouchPoints>1);})();
 function detectPointerType(){
   try{
     if(window.matchMedia&&window.matchMedia('(pointer:fine)').matches)return'fine';
@@ -504,6 +502,7 @@ function netInfo(){try{const c=navigator.connection||navigator.mozConnection||na
 function utcOffsetStr(mins){const sign=mins<=0?'+':'-';const abs=Math.abs(mins);const hh=String(Math.floor(abs/60)).padStart(2,'0');const mm=String(abs%60).padStart(2,'0');return`UTC${sign}${hh}:${mm}`;}
 function timeInTZ(tz,loc){const d=new Date();const date=d.toLocaleDateString(loc||'ru-RU',{timeZone:tz});const time=d.toLocaleTimeString(loc||'ru-RU',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false});return`${time} ${date}`;}
 function tzCityName(tz){if(!tz)return'ваша TZ';const parts=tz.split('/');let city=parts[1]||parts[0];return city.replace('_',' ');}
+function detectMemory(){const info={deviceMemory:null,heapLimit:null};try{if(typeof navigator.deviceMemory==='number'&&!Number.isNaN(navigator.deviceMemory)){info.deviceMemory=Math.max(1,Math.round(navigator.deviceMemory));}}catch(_){/* ignore */}try{const perf=performance?.memory;if(perf&&typeof perf.jsHeapSizeLimit==='number'&&perf.jsHeapSizeLimit>0){info.heapLimit=Math.max(1,Math.round(perf.jsHeapSizeLimit/(1024*1024*1024)));}}catch(_){/* ignore */}return info;}
 function probableBrowsers(b){
   const ua=b.userAgent||'';
   const brands=Array.isArray(b.uaBrands)?b.uaBrands.map(item=>(item?.brand||'').toLowerCase()):[];
@@ -521,41 +520,42 @@ function legacyOsFromUa(ua){ua=ua||'';const mac=ua.match(/Mac OS X ([0-9_\.]+)/i
 
 function guessOSVersion(basic){
   const ua=basic.userAgent||'';
-  const platform=(basic.uaPlatform||'').toLowerCase();
+  const platform=(basic.uaPlatform||basic.platform||'').toLowerCase();
   const hints=basic.uaHighEntropy||{};
-  const pv=(hints.platformVersion||'').split('.')[0];
-  const architecture=hints.architecture||'';
+  const pvString=hints.platformVersion||'';
+  const pvMajor=parseInt(pvString.split('.')[0]||'',10);
+  const legacy=legacyOsFromUa(ua);
   if(platform.includes('mac')){
-    const darwin=parseInt(pv,10);
-    if(!Number.isNaN(darwin)){
+    if(legacy) return legacy;
+    if(!Number.isNaN(pvMajor)){
       const map={23:'macOS 14',22:'macOS 13',21:'macOS 12',20:'macOS 11',19:'macOS 10.15'};
-      const darwinLabel=hints.platformVersion||'?';
-      return map[darwin]||`macOS (Darwin ${darwinLabel})`;
+      return map[pvMajor]||`macOS (Darwin ${pvString||pvMajor})`;
     }
-    return'macOS';
+    return 'macOS';
   }
   if(platform.includes('ios')||/iPhone|iPad|iPod/i.test(ua)){
-    if(hints.model){return`iOS (${hints.model})`;}
-    const legacy=legacyOsFromUa(ua);
-    return legacy||'iOS';
+    const model=hints.model||(/iPad|iPhone|iPod/i.exec(ua)?.[0]||'').trim();
+    const label=legacy||'iOS';
+    return model?`${label} (${model})`:label;
   }
   if(platform.includes('android')){
-    const legacy=legacyOsFromUa(ua);
     if(legacy) return legacy;
-    return architecture?`Android (${architecture})`:'Android';
+    const arch=hints.architecture||'';
+    return arch?`Android (${arch})`:'Android';
   }
   if(platform.includes('windows')){
     const map={'15':'Windows 11','14':'Windows 10','13':'Windows 8.1','12':'Windows 8','11':'Windows 7'};
-    if(map[pv]) return map[pv];
-    const legacy=legacyOsFromUa(ua);
+    if(map[pvMajor]) return map[pvMajor];
     return legacy||'Windows';
   }
-  if(platform.includes('chrome os')) return'ChromeOS';
+  if(platform.includes('chrome os')) return 'ChromeOS';
   if(platform.includes('linux')){
-    return architecture?`Linux (${architecture})`:'Linux';
+    if(legacy && legacy.toLowerCase().startsWith('linux')) return legacy;
+    const arch=hints.architecture||'';
+    return arch?`Linux (${arch})`:'Linux';
   }
-  const fallback=legacyOsFromUa(ua);
-  return fallback||basic.uaPlatform||basic.platform||'OS';
+  if(legacy) return legacy;
+  return basic.uaPlatform||basic.platform||'OS';
 }
 function guessAppleChip(renderer){if(!renderer)return null;const m=renderer.match(/Apple\s+M(\d)(?:\s*(Pro|Max|Ultra))?/i);return m?('Apple M'+m[1]+(m[2]?' '+m[2]:'')):null;}
 function guessDevice(b){
@@ -582,6 +582,70 @@ function guessDevice(b){
 }
 function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
 
+const COUNTRY_NAME_TO_CODE={
+  'united states':'US','usa':'US','united kingdom':'GB','great britain':'GB','russia':'RU','russian federation':'RU',
+  'china':'CN','people\'s republic of china':'CN','india':'IN','brazil':'BR','indonesia':'ID','nigeria':'NG',
+  'japan':'JP','germany':'DE','federal republic of germany':'DE','france':'FR','uzbekistan':'UZ'
+};
+
+function normalizeCountryCodeValue(code){
+  if(!code&&code!==0)return null;
+  const norm=String(code).trim().toUpperCase();
+  if(!norm) return null;
+  if(norm.length<=3) return norm;
+  return null;
+}
+
+function resolveCountryCode(details,raw,geo){
+  const candidates=[
+    details?.country_code, raw?.country_code, raw?.countryCode, raw?.country_code2,
+    raw?.country_code_iso3166, raw?.country_code_iso3166_1_alpha_2, raw?.cc,
+    geo?.country_code, geo?.countryCode
+  ];
+  for(const cand of candidates){
+    const norm=normalizeCountryCodeValue(cand);
+    if(norm) return norm;
+  }
+  const names=[details?.country_name, raw?.country_name, raw?.country, raw?.country_long, geo?.country];
+  for(const name of names){
+    if(!name) continue;
+    const key=COUNTRY_NAME_TO_CODE[String(name).trim().toLowerCase()];
+    if(key) return key;
+  }
+  return null;
+}
+
+function categorizeIpDetail(details){
+  if(!details) return 'none';
+  let filled=0;
+  const keys=[...DETAIL_FIELDS,'country_code'];
+  keys.forEach(key=>{const value=details[key];if(value!=null&&String(value).trim())filled++;});
+  if(filled>=4) return 'rich';
+  if(filled>=1) return 'light';
+  return 'none';
+}
+
+function ipCountryKey(serverData){
+  if(!serverData) return 'unknown';
+  const details=serverData.details||extractCanonicalDetailsFromPayload(serverData.raw)||null;
+  const code=resolveCountryCode(details,serverData.raw,serverData.geo||{});
+  return code||'unknown';
+}
+
+function bucketSpeedValue(speed){
+  if(!speed||speed.status!=='done'||!speed.mbps) return 'none';
+  if(speed.mbps<10) return 'slow';
+  if(speed.mbps<60) return 'mid';
+  return 'fast';
+}
+
+function bucketLatencyValue(speed){
+  if(!speed||speed.status!=='done'||!speed.latency) return 'unknown';
+  if(speed.latency<40) return 'responsive';
+  if(speed.latency<120) return 'moderate';
+  return 'slow';
+}
+
 /* ======= Entropy-based frequency tables (compact, embedded) ======= */
 const FREQ = {
   // browser family (rough, world-wide)
@@ -599,7 +663,13 @@ const FREQ = {
   // plugins count bucket
   'plugins.bucket': {'0':0.70,'1-3':0.20,'4+':0.10},
   // permissions bucket
-  'perm.bucket': {'0':0.60,'1-3':0.30,'4+':0.10}
+  'perm.bucket': {'0':0.60,'1-3':0.30,'4+':0.10},
+  // IP enrichment
+  'ip.detail': {'none':0.55,'light':0.25,'rich':0.20},
+  'ip.country': {'unknown':0.40,'US':0.07,'CN':0.06,'IN':0.05,'RU':0.03,'BR':0.03,'ID':0.03,'NG':0.025,'JP':0.02,'DE':0.02,'GB':0.02,'FR':0.018,'__other':0.227},
+  // connection quality
+  'speed.bucket': {'none':0.45,'slow':0.25,'mid':0.20,'fast':0.10},
+  'latency.bucket': {'unknown':0.40,'responsive':0.30,'moderate':0.20,'slow':0.10}
 };
 // Quantile table for H (illustrative; calibrated на открытых публикациях)
 const H_CDF = [
@@ -648,6 +718,10 @@ function entropyFromFeatures(f){
   H += -Math.log2(pFrom('has.audio', f.hasAudio));
   H += -Math.log2(pFrom('plugins.bucket', f.pluginsBucket));
   H += -Math.log2(pFrom('perm.bucket', f.permBucket));
+  H += -Math.log2(pFrom('ip.detail', f.ipDetail));
+  H += -Math.log2(pFrom('ip.country', f.ipCountry));
+  H += -Math.log2(pFrom('speed.bucket', f.speedBucket));
+  H += -Math.log2(pFrom('latency.bucket', f.latencyBucket));
   // лёгкая коррекция зависимостей (GPU×browser Safari/Apple; screen×dpr)
   if(f.browser==='Safari' && f.gpuBrand==='Apple') H -= 1.0;
   if((f.dpr==='2'||f.dpr==='3') && f.screen.endsWith('@'+f.dpr)) H -= 0.5;
@@ -664,9 +738,14 @@ function percentileFromH(H){
 }
 
 /* ============== Collect ============== */
-async function collect(){
+async function computeSnapshot(){
   const uaData=navigator.userAgentData;
-  const hw={deviceMemory:navigator.deviceMemory??null,hardwareConcurrency:navigator.hardwareConcurrency??null};
+  const memoryInfo=detectMemory();
+  const hw={
+    deviceMemory:memoryInfo.deviceMemory??null,
+    hardwareConcurrency:navigator.hardwareConcurrency??null,
+    memoryLimitGb:memoryInfo.heapLimit??null
+  };
   const tz=LOCAL_TZ;
   const tzOffset=new Date().getTimezoneOffset();
   const gl=webglInfo();
@@ -701,7 +780,6 @@ async function collect(){
   const json=JSON.stringify(sortDeep(basic));
   const fp=await sha256(json);
 
-  // features for entropy
   const browser=browserFamily(basic.userAgent);
   const scr=`${basic.screen.w}x${basic.screen.h}@${basic.screen.pixelRatio}`;
   const langCount=languages.length;
@@ -712,13 +790,16 @@ async function collect(){
   const pluginsBucket = bucketPlugins((basic.plugins||[]).length);
   const permEntries=Object.entries(basic.perms||{});
   const permBucket = bucketPerms(permEntries.length);
+  const ipDetail = state.serverData?categorizeIpDetail(state.serverData.details||extractCanonicalDetailsFromPayload(state.serverData.raw)||null):'none';
+  const ipCountry = ipCountryKey(state.serverData);
+  const speedBucket = bucketSpeedValue(state.speed);
+  const latencyBucket = bucketLatencyValue(state.speed);
 
-  const H = entropyFromFeatures({browser,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,hasCanvas,hasAudio,pluginsBucket,permBucket});
+  const H = entropyFromFeatures({browser,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,hasCanvas,hasAudio,pluginsBucket,permBucket,ipDetail,ipCountry,speedBucket,latencyBucket});
   const pct = percentileFromH(H);
 
   return {basic, fp, H, pct};
 }
-
 /* ============== UI render ============== */
 function uniqClass(pct){return pct>65?'high':(pct>35?'med':'low');}
 const CARD_CONTENT = {
@@ -762,7 +843,7 @@ const CARD_CONTENT = {
     label:{ru:'CPU / RAM',en:'CPU / RAM',uz:'CPU / RAM'},
     use:{ru:'Ядра и память показывают класс устройства',en:'Cores and memory show the device class',uz:'Yadrolar va xotira qurilma turini bildiradi'},
     ex:{ru:'8 ядер и ~16 ГБ',en:'8 cores and ~16 GB',uz:'8 yadro va ~16 GB'},
-    adv:{ru:'Память браузер округляет, это нормально',en:'Browsers round the memory value, that is expected',uz:'Brauzer xotirani taxmin qiladi — bu odatiy hol'}
+    adv:{ru:'Если цифры не совпадают с системой — ориентируйтесь на диспетчер задач',en:'If the numbers differ from the OS, trust the system stats',uz:'Raqamlar tizimdagidan farq qilsa, operatsion tizim maʼlumotlariga tayaning'}
   },
   store:{
     risk:'med',
@@ -875,6 +956,15 @@ const state={
   speed:{status:'idle',mbps:null,latency:null,error:null,note:null},
   vpn:{status:'uncertain',reasons:[],checked:false}
 };
+let snapshotCache=null;
+let snapshotPromise=null;
+function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;}
+async function getSnapshot(){
+  if(snapshotCache) return snapshotCache;
+  if(snapshotPromise) return snapshotPromise;
+  snapshotPromise=computeSnapshot().then(result=>{snapshotCache=result;snapshotPromise=null;return result;}).catch(err=>{snapshotPromise=null;throw err;});
+  return snapshotPromise;
+}
 const DETAIL_FIELDS=['region','country_name','timezone','country_calling_code','org'];
 const timeoutMessages={ru:'Превышено время ожидания',en:'Request timed out',uz:'Soʻrov vaqti tugadi'};
 const speedFetchMessages={ru:'Не удалось подключиться к серверу теста',en:'Could not reach the test server',uz:'Test serveriga ulanish imkonsiz'};
@@ -1181,6 +1271,8 @@ function evaluateVpnState(serverData){
   if(!serverData) return {status:'uncertain',reasons:[],checked:false};
   const details=serverData.details||extractCanonicalDetailsFromPayload(serverData.raw);
   if(!details) return {status:'uncertain',reasons:[],checked:false};
+  const raw=serverData.raw||{};
+  const headers=serverData.headers||{};
   const reasons=[];
   const ipTz=details.timezone||null;
   const localTz=LOCAL_TZ||null;
@@ -1188,25 +1280,46 @@ function evaluateVpnState(serverData){
     reasons.push('timezone');
   }
   const langCode=primaryLanguageCode();
-  const countryCode=details.country_code||serverData.raw && (serverData.raw.country_code||serverData.raw.countryCode||serverData.raw.cc)||null;
-  if(langCode && countryCode && languageMismatch(langCode,countryCode)){
+  const countryCandidate=normalizeCountryCodeValue(details.country_code||raw.country_code||raw.countryCode||raw.cc);
+  if(langCode && countryCandidate && languageMismatch(langCode,countryCandidate)){
     reasons.push('language');
   }
-  if(providerLooksLikeVpn(details,serverData.raw||{})){
+  if(providerLooksLikeVpn(details,raw)){
     reasons.push('asn');
   }
+  const forwardedHeaders=['via','forwarded','x-forwarded-for','x-forwarded-host','x-forwarded-proto'];
+  for(const name of forwardedHeaders){
+    const value=headers?.[name]||headers?.[name?.toLowerCase?.()||name]||headers?.[name?.toUpperCase?.()||name];
+    if(value){
+      reasons.push('forwarded');
+      break;
+    }
+  }
+  if(raw.proxy===true||raw.vpn===true||raw.tor===true){
+    reasons.push('forwarded');
+  }
   const uniqueReasons=Array.from(new Set(reasons));
+  let score=0;
+  uniqueReasons.forEach(reason=>{
+    if(reason==='asn'||reason==='forwarded') score+=3;
+    else if(reason==='timezone') score+=1.5;
+    else if(reason==='language') score+=1;
+  });
+  const connectionType=String(raw?.connection?.type||'').toLowerCase();
+  const asType=String(raw?.asn?.type||'').toLowerCase();
+  const looksResidential=[connectionType,asType].some(val=>val.includes('residential')||val.includes('consumer')||val.includes('isp')||val.includes('mobile')||val.includes('cellular'));
   let status='uncertain';
-  if(uniqueReasons.includes('asn') && uniqueReasons.length>=1){
+  if(score>=3){
     status='likely';
-  }else if(uniqueReasons.length>=2){
+  }else if(score>=2.5){
     status='likely';
-  }else if(uniqueReasons.length===0){
-    if(details.timezone||details.country_name) status='unlikely';
+  }else if(score===0 && (details.timezone||details.country_name)){
+    status='unlikely';
+  }else if(looksResidential && score<2){
+    status='unlikely';
   }
   return {status,reasons:uniqueReasons,checked:true};
 }
-
 async function runSpeedTest(){
   const BYTES=2000000;
   async function measure(url,timeout=10000){
@@ -1274,6 +1387,7 @@ async function detectIpAndSpeed(){
     if(!data || typeof data!=='object') throw new Error('empty');
     state.serverData=data;
     state.vpn=evaluateVpnState(data);
+    render(currentLang);
   }catch(e){
     const noDataMsg=(I18N[currentLang]?.ip?.noData)||'No data';
     let msg;
@@ -1288,9 +1402,11 @@ async function detectIpAndSpeed(){
       msg=e.message||String(e);
     }
     state.ipError=msg;
+    state.serverData=null;
     state.speed={status:'idle',mbps:null,latency:null,error:null,note:null};
     state.vpn={status:'uncertain',reasons:[],checked:false};
     state.fetchingIp=false;
+    invalidateSnapshot();
     render(currentLang);
     return;
   }
@@ -1314,6 +1430,7 @@ async function detectIpAndSpeed(){
     state.vpn=evaluateVpnState(state.serverData);
   }
   state.fetchingIp=false;
+  invalidateSnapshot();
   render(currentLang);
 }
 
@@ -1370,7 +1487,7 @@ function addHashCard(frag,key,value,t){
 
 function updateIpSection(t){
   const el=getEl('ipInfo');
-  if(state.fetchingIp){
+  if(state.fetchingIp && !state.serverData){
     el.textContent=t.ip.buttonLoading;
     return;
   }
@@ -1474,8 +1591,6 @@ async function render(lang){
   getEl('methodText').innerHTML=t.methodText;
   getEl('policySummary').innerHTML=t.policySummary;
   getEl('policyText').innerHTML=t.policyText;
-  getEl('improveSummary').innerHTML=t.improveSummary;
-  getEl('improveText').innerHTML=t.improveText;
   getEl('footerText').textContent=typeof t.footer==='function'?t.footer(VERSION,VERSION_SCHEME):t.footer;
   getEl('printBtn').textContent=t.saveButton;
   const ipBtn=getEl('ipBtn');
@@ -1485,7 +1600,7 @@ async function render(lang){
   updateSpeedSection(t);
 
   try{
-    const {basic,fp,H,pct}=await collect();
+    const {basic,fp,H,pct}=await getSnapshot();
     if(token!==renderToken) return;
 
     const cls=uniqClass(pct);
@@ -1521,7 +1636,7 @@ async function render(lang){
     const vpnReasons=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
     bullets.push(t.shock.vpn(vpnStatusLabel,vpnReasons));
     const speedSummary=formatSpeedSummary(t);
-    if(speedSummary && (state.speed.status==='done'||state.speed.status==='error')){
+    if(speedSummary && state.speed.status!=='idle'){
       bullets.push(t.shock.speed(speedSummary));
     }
     const shock=getEl('shock');
@@ -1538,7 +1653,11 @@ async function render(lang){
     const tzStr=`${basic.timezone||'—'} (${utcOffsetStr(-basic.tzOffsetMinutes)}) • ${timeInTZ(tzForClock,locale)}`;
     const yesNo=value=>value?t.units.yes:t.units.no;
     const storeLabels=t.labels.storage;
-    const hwVal=`${basic.hw.hardwareConcurrency||'?'} ${t.units.cores} • ${basic.hw.deviceMemory?`≈${basic.hw.deviceMemory}`:'?'} ${t.units.gb}${basic.hw.deviceMemory?` (${t.memoryNote||''})`:''}`.trim();
+    const memParts=[];
+    if(basic.hw.deviceMemory){memParts.push(`≈${basic.hw.deviceMemory} ${t.units.gb}`);}
+    if(basic.hw.memoryLimitGb && (!basic.hw.deviceMemory || Math.abs(basic.hw.memoryLimitGb-basic.hw.deviceMemory)>1)){memParts.push(`heap ≤${basic.hw.memoryLimitGb} ${t.units.gb}`);}
+    const memText=memParts.length?memParts.join(' / '):'—';
+    const hwVal=`${basic.hw.hardwareConcurrency||'?'} ${t.units.cores} • ${memText}${memParts.length?` (${t.memoryNote||''})`:''}`.trim();
     const touchVal=`${basic.touch.maxTouchPoints} ${t.labels.touchPoints} • ${t.labels.pointer}: ${basic.pointer}`;
     const netVal=basic.net&&Object.keys(basic.net).length?`${basic.net.effectiveType||'—'} • ${basic.net.downlink??'?'} ${t.units.mbps} • ${t.labels.latency} ${basic.net.rtt??'?'} ${t.units.ms}`:'—';
     const storeVal=`${storeLabels.local}:${yesNo(basic.storage.local)} • ${storeLabels.session}:${yesNo(basic.storage.session)} • ${storeLabels.idb}:${yesNo(basic.storage.indexedDB)} • ${storeLabels.cookies}:${yesNo(!!basic.cookiesEnabled)}`;
@@ -1603,11 +1722,49 @@ function detectLang(){
   }catch(_){return'ru';}
 }
 
+async function handleSaveClick(){
+  const filename=`fingerprint-${new Date().toISOString().slice(0,10)}.html`;
+  const html=document.documentElement.outerHTML;
+  const blob=new Blob([html],{type:'text/html'});
+  if(IS_IOS && typeof navigator.share==='function'){
+    try{
+      const fileType={type:'text/html'};
+      const file=typeof File==='function'?new File([blob],filename,fileType):null;
+      const payload=file?{files:[file],title:'Fingerprint snapshot'}:{title:'Fingerprint snapshot',text:html};
+      let canShare=true;
+      if(typeof navigator.canShare==='function'){
+        try{
+          canShare=navigator.canShare(payload);
+        }catch(_){
+          canShare=false;
+        }
+      }
+      if(canShare){
+        await navigator.share(payload);
+        return;
+      }
+    }catch(_){/* fallback to download */}
+  }else if(typeof window.print==='function'){
+    try{
+      window.print();
+      return;
+    }catch(_){/* fallback */}
+  }
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;
+  link.download=filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   const sel=getEl('lang');
   const lang=detectLang();
   sel.value=lang;
-  getEl('printBtn').addEventListener('click',()=>window.print());
+  getEl('printBtn').addEventListener('click',()=>{handleSaveClick().catch(()=>{});});
   getEl('ipBtn').addEventListener('click',detectIpAndSpeed);
   sel.addEventListener('change',()=>{
     const l=sel.value;
