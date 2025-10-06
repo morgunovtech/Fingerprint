@@ -168,11 +168,36 @@ const I18N = {
     shockTitle:'Siz haqingizda ayon (ismisiz):'
   }
 };
+const LOCAL_TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||null;}catch(_){return null;}})();
+const TEXT_ENCODER=new TextEncoder();
+function detectPointerType(){
+  try{
+    if(window.matchMedia&&window.matchMedia('(pointer:fine)').matches)return'fine';
+    if(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)return'coarse';
+  }catch(_){/* ignore */}
+  return'none';
+}
+function getLanguages(){
+  try{
+    const langs=Array.isArray(navigator.languages)?navigator.languages.filter(Boolean):[];
+    if(langs.length)return langs;
+    return navigator.language?[navigator.language]:[];
+  }catch(_){return[];}
+}
 
 /* ============== Helpers (from your base) ============== */
 function toHex(buf){return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
-async function sha256(str){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return toHex(buf);}
+async function sha256(str){const buf=await crypto.subtle.digest('SHA-256',TEXT_ENCODER.encode(str));return toHex(buf);}
 function hasStorage(type){try{const x='__fp__';window[type].setItem(x,x);const ok=window[type].getItem(x)===x;window[type].removeItem(x);return ok;}catch(_){return false;}}
+function sortDeep(value){
+  if(Array.isArray(value)) return value.map(sortDeep);
+  if(value && typeof value==='object'){
+    const out={};
+    Object.keys(value).sort().forEach(k=>{out[k]=sortDeep(value[k]);});
+    return out;
+  }
+  return value;
+}
 async function canvasHash(){try{const c=document.createElement('canvas');c.width=320;c.height=120;const g=c.getContext('2d');const grad=g.createLinearGradient(0,0,320,0);grad.addColorStop(0,'#000');grad.addColorStop(1,'#0bf');g.fillStyle=grad;g.fillRect(0,0,320,120);g.fillStyle='#fff';g.font='16px Arial';g.rotate(0.03);g.fillText('fp',10,24);g.fillText(navigator.userAgent,10,60);return sha256(c.toDataURL());}catch(_){return '';}}
 async function audioHash(){try{const ctx=new OfflineAudioContext(1,44100,44100);const o=ctx.createOscillator();o.type='triangle';o.frequency.value=1000;const comp=ctx.createDynamicsCompressor();o.connect(comp);comp.connect(ctx.destination);o.start(0);o.stop(0.1);const buf=await ctx.startRendering();const ch=buf.getChannelData(0);let acc=0;for(let i=0;i<ch.length;i+=64){acc+=Math.abs(ch[i]);}return sha256(String(acc));}catch(_){return '';}}
 function webglInfo(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return{};const dbg=gl.getExtension('WEBGL_debug_renderer_info');return{vendor:dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),renderer:dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};}catch(_){return{};}}
@@ -215,6 +240,11 @@ const H_CDF = [
   [10,0.05],[15,0.15],[20,0.35],[25,0.55],[30,0.75],[35,0.90],[40,0.97],[45,0.995]
 ];
 const ALPHA = 1; // Laplace
+const FREQ_META = Object.fromEntries(Object.entries(FREQ).map(([name,table])=>{
+  const entries=Object.entries(table).map(([k,v])=>[k,Math.max(v,0)]);
+  const total=entries.reduce((sum,[,v])=>sum+v,0);
+  return [name,{table:Object.fromEntries(entries),total,size:entries.length}];
+}));
 
 function bucketPlugins(n){if(n<=0)return'0';if(n<=3)return'1-3';return'4+';}
 function bucketPerms(n){if(n<=0)return'0';if(n<=3)return'1-3';return'4+';}
@@ -233,13 +263,13 @@ function browserFamily(ua){
   if(/Chrome\//.test(ua))return'Chrome';
   return'__other';
 }
-function pFrom(table, key){
-  const t=FREQ[table]||{};
-  const k = (key in t)?key:(t['__other']!==undefined?'__other':key);
-  const c = (t[k]||0)*1000; // pseudo-counts
-  const n = Object.values(t).reduce((a,b)=>a+b,0)*1000;
-  const ksize = Object.keys(t).length;
-  return (c+ALPHA)/(n+ALPHA*ksize);
+function pFrom(table,key){
+  const meta=FREQ_META[table];
+  if(!meta)return 1;
+  const {table:freq,total,size}=meta;
+  const fallback=freq.__other??0;
+  const value=Object.prototype.hasOwnProperty.call(freq,key)?freq[key]:fallback;
+  return (value+ALPHA)/(total+ALPHA*size);
 }
 function entropyFromFeatures(f){
   let H=0;
@@ -277,37 +307,42 @@ async function tryFetchHeaders(timeout=800){
 async function collect(){
   const uaData=navigator.userAgentData;
   const hw={deviceMemory:navigator.deviceMemory??null,hardwareConcurrency:navigator.hardwareConcurrency??null};
-  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||null;
+  const tz=LOCAL_TZ;
   const tzOffset=new Date().getTimezoneOffset();
   const gl=webglInfo();
   const [cv,au,perms,media,bat,server]=await Promise.all([canvasHash(),audioHash(),getPermissions(),getMediaDevices(),getBattery(),tryFetchHeaders(800)]);
   const net=netInfo();
-  const dpr=String(window.devicePixelRatio||1);
+  const pixelRatio=Number(window.devicePixelRatio||1)||1;
+  const languages=getLanguages();
+  const pointer=detectPointerType();
   const basic={
     userAgent:navigator.userAgent,
     uaBrands:uaData?.brands||null, uaMobile:uaData?.mobile??null, uaPlatform:uaData?.platform||null,
     platform:navigator.platform||null,
-    languages:navigator.languages||[navigator.language],
-    screen:{w:screen.width,h:screen.height,colorDepth:screen.colorDepth,pixelRatio:+dpr},
+    languages,
+    screen:{w:screen.width,h:screen.height,colorDepth:screen.colorDepth,pixelRatio},
     timezone:tz, tzOffsetMinutes:tzOffset,
     cookiesEnabled:navigator.cookieEnabled??null,
     dnt:navigator.doNotTrack||null,
     storage:{local:hasStorage('localStorage'),session:hasStorage('sessionStorage'),indexedDB:!!window.indexedDB},
     touch:{maxTouchPoints:navigator.maxTouchPoints||0,ontouchstart:('ontouchstart' in window)},
-    pointer:matchMedia('(pointer:fine)').matches?'fine':(matchMedia('(pointer:coarse)').matches?'coarse':'none'),
+    pointer,
     hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server
   };
-  const json=JSON.stringify(basic,Object.keys(basic).sort()); const fp=await sha256(json);
+  const json=JSON.stringify(sortDeep(basic));
+  const fp=await sha256(json);
 
   // features for entropy
   const browser=browserFamily(basic.userAgent);
   const scr=`${basic.screen.w}x${basic.screen.h}@${basic.screen.pixelRatio}`;
-  const langsCount = (basic.languages||[]).length>=4?'4+':String((basic.languages||[]).length||0);
+  const langCount=languages.length;
+  const langsCount = langCount>=4?'4+':String(langCount||0);
   const gpuBrand=brandFromRenderer(basic.gl?.renderer||'');
   const hasCanvas = basic.hashes.canvas? '1':'0';
   const hasAudio  = basic.hashes.audio?  '1':'0';
   const pluginsBucket = bucketPlugins((basic.plugins||[]).length);
-  const permBucket = bucketPerms(Object.keys(basic.perms||{}).length);
+  const permEntries=Object.entries(basic.perms||{});
+  const permBucket = bucketPerms(permEntries.length);
 
   const H = entropyFromFeatures({browser,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,hasCanvas,hasAudio,pluginsBucket,permBucket});
   const pct = percentileFromH(H);
@@ -343,28 +378,33 @@ function card(key,title,value,explain,adv){
   const v=document.createElement('div');v.className='val';v.textContent=value;c.appendChild(v);
   const l1=document.createElement('div');l1.className='line hint small';l1.textContent=explain.use;c.appendChild(l1);
   const l2=document.createElement('div');l2.className='line small';l2.textContent='Пример: '+explain.ex;c.appendChild(l2);
-  const l3=document.createElement('div');l3.className='line adv small';l3.textContent='💡 Совет: '+adv;c.appendChild(l3);
+  if(adv){const l3=document.createElement('div');l3.className='line adv small';l3.textContent='💡 Совет: '+adv;c.appendChild(l3);}
   return c;
 }
 
 let currentLang='ru';
+const cacheEls={};
+const getEl=id=>cacheEls[id]||(cacheEls[id]=document.getElementById(id));
+let renderToken=0;
 async function render(lang){
+  const token=++renderToken;
   currentLang=(lang in I18N)?lang:'ru';
   const t=I18N[currentLang];
-  document.getElementById('introTitle').textContent=t.introTitle;
-  document.getElementById('introText').textContent=t.introText;
-  document.getElementById('legend').innerHTML = `<span>${t.legendTitle}</span>
+  getEl('introTitle').textContent=t.introTitle;
+  getEl('introText').textContent=t.introText;
+  getEl('legend').innerHTML = `<span>${t.legendTitle}</span>
     <span class="chip"><span class="dot low"></span>${t.low}</span>
     <span class="chip"><span class="dot med"></span>${t.med}</span>
     <span class="chip"><span class="dot high"></span>${t.high}</span>`;
-  document.getElementById('detailTitle').textContent=t.detailTitle;
+  getEl('detailTitle').textContent=t.detailTitle;
 
   try{
     const {basic,fp,H,pct}=await collect();
+    if(token!==renderToken) return;
 
     // headline
     const cls=uniqClass(pct);
-    document.getElementById('uniqLine').innerHTML=`<span class="dot ${cls}"></span> ${t.uniqMeaning(pct)} • H=${H.toFixed(1)} бит`;
+    getEl('uniqLine').innerHTML=`<span class="dot ${cls}"></span> ${t.uniqMeaning(pct)} • H=${H.toFixed(1)} бит`;
 
     // shock box
     const s=basic.screen; const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
@@ -373,10 +413,11 @@ async function render(lang){
     const chip=(basic.gl && basic.gl.renderer)?guessAppleChip(basic.gl.renderer):null;
     const geo=extractGeo(basic.server?.headers||{});
     const city=geo.city?(geo.country?`${geo.city}, ${geo.country}`:geo.city):null;
-    const tzCity=tzCityName(basic.timezone||'');
+    const tzCity=tzCityName(basic.timezone||LOCAL_TZ||'');
     const browserGuess=probableBrowsers(basic);
     const diag=estimateDiagonal(s.w,s.h);
-    const permSample=Object.keys(basic.perms||{}).slice(0,3).map(k=>`${k}:${basic.perms[k]}`).join(', ')||'—';
+    const permEntries=Object.entries(basic.perms||{});
+    const permSample=permEntries.slice(0,3).map(([k,v])=>`${k}:${v}`).join(', ')||'—';
 
     const bullets = [
       city ? `🗺️ <b>Регион по IP:</b> ${city}` : `🗺️ По TZ вы около <b>${tzCity}</b>`,
@@ -387,68 +428,74 @@ async function render(lang){
       (diag?`🖥️ Экран: <b>${screenStr}</b> • ≈ <b>${diag}</b>`:`🖥️ Экран: <b>${screenStr}</b>`),
       `🔐 Разрешения: <b>${permSample}</b>`
     ];
-    const shock=document.getElementById('shock');
-    const ul=document.getElementById('shockList'); ul.innerHTML='';
+    const shock=getEl('shock');
+    const ul=getEl('shockList'); ul.innerHTML='';
     bullets.forEach(b=>{const li=document.createElement('li');li.innerHTML=b;ul.appendChild(li);});
-    document.getElementById('shockTitle').textContent=t.shockTitle;
+    getEl('shockTitle').textContent=t.shockTitle;
     shock.style.display='block';
 
     // pro cards
-    const cards=document.getElementById('cards'); cards.innerHTML='';
-    const tzStr=`${basic.timezone||'—'} (${utcOffsetStr(-basic.tzOffsetMinutes)}) • ${timeInTZ(basic.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone, currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU'))}`;
-    const add=(k,label,val,h)=>cards.appendChild(card(k,label,val,HINTS[k],HINTS[k].adv));
-    add('tz','Часовой пояс',tzStr,HINTS.tz);
-    add('ua','Браузер',basic.userAgent,HINTS.ua);
-    add('plat','Платформа',`${basic.uaPlatform||basic.platform||'—'} ${basic.uaMobile?'(mobile)':''}`,HINTS.plat);
-    add('screen','Экран',`${screenStr} • ${basic.screen.colorDepth}-bit`,HINTS.screen);
-    add('langs','Языки',(basic.languages||[]).join(', '),HINTS.langs);
-    add('hw','CPU / RAM',`${basic.hw.hardwareConcurrency||'?'} cores • ${basic.hw.deviceMemory||'?'} GB`,HINTS.hw);
-    add('store','Хранилища',`local:${basic.storage.local?'yes':'no'} session:${basic.storage.session?'yes':'no'} idb:${basic.storage.indexedDB?'yes':'no'} cookies:${basic.cookiesEnabled?'yes':'no'}`,HINTS.store);
-    add('dnt','DNT', (basic.dnt!=null ? String(basic.dnt) : '—'),HINTS.dnt);
-    add('touch','Касания/указатель', `${basic.touch.maxTouchPoints} touch • pointer ${basic.pointer}`,HINTS.touch);
-    add('net','Сеть', basic.net && Object.keys(basic.net).length? `${basic.net.effectiveType||'—'} • ${basic.net.downlink??'?'}Mbps • rtt ${basic.net.rtt??'?'}ms` : '—',HINTS.net);
-    add('gl','WebGL (GPU)', basic.gl && (basic.gl.vendor||basic.gl.renderer)? `${basic.gl.vendor} / ${basic.gl.renderer}`:'—',HINTS.gl);
+    const cards=getEl('cards');
+    cards.textContent='';
+    const frag=document.createDocumentFragment();
+    const tzForClock=basic.timezone||LOCAL_TZ||'UTC';
+    const tzStr=`${basic.timezone||'—'} (${utcOffsetStr(-basic.tzOffsetMinutes)}) • ${timeInTZ(tzForClock, currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU'))}`;
+    const add=(k,label,val)=>frag.appendChild(card(k,label,val,HINTS[k],HINTS[k].adv));
+    add('tz','Часовой пояс',tzStr);
+    add('ua','Браузер',basic.userAgent);
+    add('plat','Платформа',`${basic.uaPlatform||basic.platform||'—'} ${basic.uaMobile?'(mobile)':''}`.trim());
+    add('screen','Экран',`${screenStr} • ${basic.screen.colorDepth}-bit`);
+    add('langs','Языки',(basic.languages||[]).join(', '));
+    add('hw','CPU / RAM',`${basic.hw.hardwareConcurrency||'?'} cores • ${basic.hw.deviceMemory||'?'} GB`);
+    add('store','Хранилища',`local:${basic.storage.local?'yes':'no'} session:${basic.storage.session?'yes':'no'} idb:${basic.storage.indexedDB?'yes':'no'} cookies:${basic.cookiesEnabled?'yes':'no'}`);
+    add('dnt','DNT', basic.dnt!=null ? String(basic.dnt) : '—');
+    add('touch','Касания/указатель', `${basic.touch.maxTouchPoints} touch • pointer ${basic.pointer}`);
+    add('net','Сеть', basic.net && Object.keys(basic.net).length? `${basic.net.effectiveType||'—'} • ${basic.net.downlink??'?'}Mbps • rtt ${basic.net.rtt??'?'}ms` : '—');
+    add('gl','WebGL (GPU)', basic.gl && (basic.gl.vendor||basic.gl.renderer)? `${basic.gl.vendor} / ${basic.gl.renderer}`:'—');
 
     // hashes с копированием
-    function makeHashCard(k,title,val,h){
+    function makeHashCard(k,title,val){
       const el=card(k,title,val||'—',HINTS[k],HINTS[k].adv);
       const v=el.querySelector('.val');
       if(val){v.classList.add('mono','copyable');v.title='Нажмите, чтобы скопировать';
         v.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(val);v.title='Скопировано';setTimeout(()=>v.title='Нажмите, чтобы скопировать',1200);}catch(_){}});}
-      cards.appendChild(el);
+      frag.appendChild(el);
     }
-    makeHashCard('canvas','Canvas Hash',basic.hashes.canvas,HINTS.canvas);
-    makeHashCard('audio','Audio Hash',basic.hashes.audio,HINTS.audio);
+    makeHashCard('canvas','Canvas Hash',basic.hashes.canvas);
+    makeHashCard('audio','Audio Hash',basic.hashes.audio);
 
-    add('perm','Разрешения', Object.keys(basic.perms||{}).length? Object.entries(basic.perms).map(([k,v])=>`${k}:${v}`).join(' • '):'—',HINTS.perm);
-    add('plugins','Плагины', basic.plugins?.length? String(basic.plugins.length):'0',HINTS.plugins);
-    add('media','Медиа-устройства', basic.media?.length? basic.media.map(m=>`${m.kind}:${m.label?'yes':'no'}`).join(' • '):'—',HINTS.media);
-    add('bat','Батарея', basic.battery && (basic.battery.level!=null)? `${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—',HINTS.bat);
+    add('perm','Разрешения', permEntries.length? permEntries.map(([k,v])=>`${k}:${v}`).join(' • '):'—');
+    add('plugins','Плагины', basic.plugins?.length? String(basic.plugins.length):'0');
+    add('media','Медиа-устройства', basic.media?.length? basic.media.map(m=>`${m.kind}:${m.label?'yes':'no'}`).join(' • '):'—');
+    add('bat','Батарея', basic.battery && (basic.battery.level!=null)? `${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—');
 
     // fullness
     let filled=0,total=0;(function walk(o){for(const k in o){total++;const v=o[k];if(v==null)continue;
       if(typeof v==='string'&&v.length)filled++;else if(typeof v==='number'&&!Number.isNaN(v))filled++;
       else if(typeof v==='boolean')filled++;else if(typeof v==='object'){if(Array.isArray(v)){if(v.length)filled++;}else walk(v);}}})(basic);
-    cards.appendChild(card('fullness','Насколько много данных',`${Math.round(100*filled/Math.max(1,total))}% (заполнено ${filled} из ~${total})`,{risk:'low',use:'Оценка “богатства” профиля',ex:'Чем больше сигналов — тем легче связать'},'Минимизируйте ненужные сигналы'));
-    cards.appendChild(card('fp','Итоговый Fingerprint',fp,{risk:'high',use:'Если отправлять, годится для трекинга',ex:'Одинаковый ID','adv':'Не делитесь этим ID со сторонними сайтами'},''));
-  }catch(e){console.error(e);alert('Ошибка: '+e.message);}
+    frag.appendChild(card('fullness','Насколько много данных',`${Math.round(100*filled/Math.max(1,total))}% (заполнено ${filled} из ~${total})`,{risk:'low',use:'Оценка “богатства” профиля',ex:'Чем больше сигналов — тем легче связать'},'Минимизируйте ненужные сигналы'));
+    frag.appendChild(card('fp','Итоговый Fingerprint',fp,{risk:'high',use:'Если отправлять, годится для трекинга',ex:'Одинаковый ID'},'Не делитесь этим ID со сторонними сайтами'));
+    cards.appendChild(frag);
+  }catch(e){if(token!==renderToken)return;console.error(e);alert('Ошибка: '+e.message);}
 }
 
 /* ============== Boot & Controls ============== */
 function detectLang(){try{const saved=localStorage.getItem('fp_lang');if(saved&&I18N[saved])return saved;const n=navigator.language||'ru';if(n.startsWith('ru'))return'ru';if(n.startsWith('en'))return'en';if(n.startsWith('uz'))return'uz';return'ru';}catch(_){return'ru';}}
 document.addEventListener('DOMContentLoaded', ()=>{
-  const sel=document.getElementById('lang'); const lang=detectLang(); sel.value=lang;
+  const sel=getEl('lang'); const lang=detectLang(); sel.value=lang;
+  const applyMode=mode=>{document.body.classList.toggle('pro',mode==='pro');};
   // mode toggle
   document.querySelectorAll('input[name=mode]').forEach(r=>{
-    r.addEventListener('change', ()=>{ document.body.classList.toggle('pro', r.value==='pro'); });
+    r.addEventListener('change', ()=>{ if(r.checked) applyMode(r.value); });
   });
   // ip opt-in
-  const ip=document.getElementById('ipOptIn'); ip.checked=false; ip.addEventListener('change',()=>{ ipOptIn=ip.checked; render(sel.value); });
+  const ip=getEl('ipOptIn'); ip.checked=false; ip.addEventListener('change',()=>{ ipOptIn=ip.checked; render(sel.value); });
   // pdf
-  document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+  getEl('printBtn').addEventListener('click', ()=>window.print());
   // lang
   sel.addEventListener('change', ()=>{ const l=sel.value; try{localStorage.setItem('fp_lang',l);}catch(_){ } render(l); });
   // initial render
+  applyMode(document.querySelector('input[name=mode]:checked')?.value||'simple');
   render(lang);
 });
 </script>
