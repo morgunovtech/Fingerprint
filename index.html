@@ -17,25 +17,27 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--text);
-         font:15px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial}
-    .wrap{max-width:1100px;margin:30px auto;padding:0 16px}
-    header{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-    h1{font-size:20px;margin:0}
+         font:15px/1.65 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial;
+         -webkit-font-smoothing:antialiased}
+    .wrap{max-width:1100px;margin:24px auto 72px;padding:0 20px}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+    h1{font-size:22px;margin:0}
     .sub{color:var(--muted);font-size:14px}
     .toolbar{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap}
     select{
       border:1px solid var(--border);background:transparent;color:var(--text);
       padding:6px 10px;border-radius:10px;font:inherit
     }
-    .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin:14px 0}
-    .legend{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);margin:8px 0}
+    .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
+    .legend{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);margin:12px 0 0}
     .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--border)}
     .dot{display:inline-block;width:12px;height:12px;border-radius:50%}
     .low{background:#22c55e}.med{background:#f59e0b}.high{background:#ef4444}
-    .big{font-weight:800;font-size:22px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .big{font-weight:700;font-size:21px;display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+    .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:4px 0 0 22px;max-width:720px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
-    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
     .card{border:1px solid var(--border);border-radius:12px;padding:12px}
     .title{font-weight:700;margin-bottom:6px}
     .val{white-space:normal;word-break:break-word}
@@ -48,10 +50,25 @@
     @media (max-width:920px){ .cards{grid-template-columns:1fr} }
     a{color:var(--accent);text-decoration:none}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .btn{border:1px solid var(--border);background:transparent;color:var(--text);padding:6px 10px;border-radius:10px;cursor:pointer}
+    .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s;text-align:center}
+    .btn:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
+    .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     #shockList{list-style:none;margin:6px 0 0;padding:0}
     #shockList li{margin:4px 0}
     details{margin-top:8px}
+    @media (max-width:720px){
+      h1{font-size:20px}
+      .wrap{padding:0 16px}
+      .block{padding:16px}
+      .big{font-size:19px}
+      header{align-items:flex-start}
+      .toolbar{margin-left:0}
+    }
+    @media (max-width:520px){
+      body{font-size:14px}
+      .btn{width:100%;justify-content:center}
+      .legend{gap:6px}
+    }
   </style>
 </head>
 <body>
@@ -106,20 +123,13 @@
       <div class="small" id="policyText" style="margin-top:6px"></div>
     </details>
     <details>
-      <summary id="headersSummary"></summary>
-      <pre class="small mono">app.use((req,res,next)=>{res.set({
-"Content-Security-Policy":"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
-"Referrer-Policy":"no-referrer",
-"Cross-Origin-Opener-Policy":"same-origin",
-"Cross-Origin-Embedder-Policy":"require-corp",
-"Cross-Origin-Resource-Policy":"same-origin",
-"Permissions-Policy":"geolocation=(),camera=(),microphone=(),usb=()"
-});next();});</pre>
+      <summary id="improveSummary"></summary>
+      <div class="small" id="improveText" style="margin-top:6px"></div>
     </details>
   </section>
 
   <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
-    © morgunov.tech • Локальный аудит отпечатка • Версия: entropy-percentile
+    © morgunov.tech • Локальный аудит отпечатка • Версия: 2024.05.05 (CalVer)
   </footer>
 </div>
 
@@ -128,37 +138,41 @@
 const I18N = {
   ru: {
     langOption:'🇷🇺 Русский',
-    introTitle:'Зачем это нужно',
-    introText:'Страница локально оценивает «уникальность» вашего браузера по энтропии признаков и показывает понятные шаги защиты. Никаких скрытых отправок. Geo/IP выполняется только с вашего согласия.',
-    legendTitle:'Легенда рисков:',
+    introTitle:'Что делает сервис',
+    introText:'Сервис показывает, сколько информации о вас отдаёт браузер и как это влияет на приватность. Все вычисления идут на вашем устройстве, пока вы сами не запросите IP и тест скорости.',
+    legendTitle:'Как читать уровни риска:',
     risk:{low:'низкий', med:'средний', high:'высокий'},
-    uniqMeaning:pct=>`Ваш отпечаток уникальнее, чем ${pct}% пользователей`,
-    detailTitle:'Подробный анализ по пунктам',
-    shockTitle:'Что уже ясно о вас (без имени):',
+    uniqMeaning:pct=>({
+      headline:`Ваш отпечаток уникальнее, чем ${pct}% пользователей`,
+      note:'Чем выше процент, тем проще сайтам узнать вас снова. Используйте отдельные профили, приватный режим или VPN, если важно оставаться незаметным.'
+    }),
+    detailTitle:'Какие данные видит сайт',
+    shockTitle:'Что уже видно без IP:',
     shock:{
-      region:city=>`🗺️ <b>Регион по IP:</b> ${city}`,
-      tzFallback:tz=>`🗺️ По часовому поясу вы около <b>${tz}</b>`,
-      device:(device,os)=>`💻 Устройство: <b>${device}</b> • ОС: <b>${os}</b>`,
-      gpuKnown:chip=>`🎮 GPU: <b>${chip}</b>`,
-      gpuUnknown:'🎮 GPU раскрывается через WebGL',
-      canvasActive:'🎯 Активны <b>canvas/audio-hash</b> — возможна склейка визитов',
-      canvasPassive:'🎯 Canvas/Audio могут склеивать визиты',
-      browser:browser=>`🌐 Браузер: <b>${browser}</b>`,
-      screen:(screen,depth)=>`🖥️ Экран: <b>${screen}</b> • глубина цвета ${depth}-бит`,
-      perms:perms=>`🔐 Разрешения: <b>${perms}</b>`,
-      vpn:(status,reasons)=>`🕵️ <b>Использование VPN:</b> ${status}${reasons?` (${reasons})`:''}`
+      region:city=>`🗺️ <b>Местоположение по признакам:</b> ${city}`,
+      tzFallback:tz=>`🗺️ <b>Часовой пояс:</b> похоже на ${tz}`,
+      device:(device,os)=>`💻 <b>Устройство:</b> ${device}, система ${os}`,
+      gpuKnown:chip=>`🎮 <b>Графика:</b> ${chip}`,
+      gpuUnknown:'🎮 <b>Графика:</b> браузер не раскрывает точную модель',
+      canvasActive:'🎯 <b>Хеши canvas/audio активны</b> — вас можно сопоставить между сайтами',
+      canvasPassive:'🎯 <b>Хеши canvas/audio</b> могут помочь сопоставлять визиты',
+      browser:browser=>`🌐 <b>Браузер:</b> ${browser}`,
+      screen:(screen,depth,monitorsText)=>`🖥️ <b>Экран:</b> ${screen}, глубина цвета ${depth}-бит${monitorsText?` • ${monitorsText}`:''}`,
+      perms:perms=>`🔐 <b>Разрешения:</b> ${perms}`,
+      vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
+      speed:value=>`⚡ <b>Скорость сети:</b> ${value}`
     },
     ip:{
       button:'Определить IP и измерить скорость',
-      buttonLoading:'Определение…',
+      buttonLoading:'Определяем…',
       title:'Данные IP',
       none:'IP ещё не определён.',
-      error:msg=>`Ошибка получения IP: ${msg}`,
+      error:msg=>`Не получилось получить IP: ${msg}`,
       address:ip=>`<b>IP:</b> ${ip||'—'}`,
       geo:(city,country)=>`<b>Локация:</b> ${city?city:''}${city&&country?', ':''}${country||''}`,
       rawTitle:'Исходные данные сервиса:',
       noData:'Данные отсутствуют',
-      allFailed:'Не удалось получить информацию от сервисов',
+      allFailed:'Ни один сервис не вернул ответ',
       sourceLabel:'Источник:',
       fields:{
         ip:'IP',
@@ -168,161 +182,197 @@ const I18N = {
         country_calling_code:'Телефонный код',
         org:'Организация'
       },
-      noDetails:'Данные недоступны'
+      noDetails:'Подробные сведения не пришли'
     },
     speed:{
       running:'Тест скорости выполняется…',
-      result:(mbps,ms)=>`⚡ Скорость: ${mbps} Мбит/с • задержка ≈ ${ms} мс`,
-      error:msg=>`Ошибка теста скорости: ${msg}`,
+      result:(mbps,ms)=>`${mbps} Мбит/с, задержка ≈ ${ms} мс`,
+      error:msg=>`Тест скорости не удался: ${msg}`,
       idle:'',
       allFailed:'Не удалось выполнить тест скорости',
       notes:{
-        approx:'(оценка по данным Network Information API)'
+        approx:'оценка по данным браузера'
       }
     },
     vpn:{
       label:'Использование VPN',
       statuses:{
-        likely:'возможно используется',
-        unlikely:'скорее всего нет',
-        uncertain:'недостаточно данных'
+        likely:'скорее всего включён',
+        unlikely:'скорее всего выключен',
+        uncertain:'нужно больше данных'
       },
       reasons:{
-        timezone:'часовой пояс отличается от системного',
-        language:'язык браузера не совпадает со страной IP'
+        timezone:'часовой пояс не совпадает с системным',
+        language:'язык браузера не совпадает со страной IP',
+        asn:'провайдер похож на VPN или облачный хостинг'
       }
     },
+    monitorText:{single:'браузер сообщает об одном экране',multi:count=>`браузер сообщает о ${count} активных экранах`,unknown:'браузер не раскрывает количество экранов'},
+    permNames:{
+      geolocation:'геолокация',
+      notifications:'уведомления',
+      camera:'камера',
+      microphone:'микрофон',
+      'clipboard-read':'чтение буфера обмена',
+      'clipboard-write':'запись в буфер обмена',
+      'persistent-storage':'постоянное хранилище'
+    },
+    permStates:{granted:'разрешено',denied:'запрещено',prompt:'спросит при необходимости',unknown:'не сообщается'},
+    memoryNote:'значение округлено браузером',
     saveButton:'Сохранить',
     copy:{hint:'Нажмите, чтобы скопировать',done:'Скопировано'},
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
-    methodSummary:'<b>Методология</b> (энтропия и перцентиль)',
-    methodText:'Энтропия отпечатка: <span class="mono">H = −∑ log₂ pᵢ(vᵢ)</span>, где pᵢ берутся из локальных частот.<br/>«Уникальнее, чем X%» — перцентиль <span class="mono">CDF(H)</span>, интерполяция по квантилям.<br/>Редкие значения — сглаживание Лапласа. Корреляции частично учтены (GPU↔платформа, экран↔DPR).',
-    policySummary:'<b>Политика приватности</b>',
-    policyText:'Всё считается локально, без лишних сетевых запросов. Кнопка IP по нажатию обращается к публичному сервису и показывает весь ответ.<br/>Внешних шрифтов, аналитики и трекеров нет.',
-    headersSummary:'<b>Заголовки безопасности (пример для Express)</b>',
-    footer:'© morgунов.tech • Локальный аудит отпечатка • Версия: entropy-percentile',
+    methodSummary:'<b>Как мы считаем</b>',
+    methodText:'Мы сравниваем ваш набор признаков с частотой похожих комбинаций. Чем реже сочетание (энтропия H), тем выше процент уникальности. Формулы считаются локально и не отправляются наружу.',
+    policySummary:'<b>Прозрачность</b>',
+    policyText:'Данные обрабатываются в браузере. К серверам обращаемся только по кнопке IP, и сразу показываем весь ответ. Шрифты, трекеры и скрытые запросы не используются.',
+    improveSummary:'<b>Планы улучшений</b>',
+    improveText:'В приоритете: экспорт в JSON, подсказки для разных ролей (маркетинг, безопасность) и сравнение отпечатка в динамике.',
+    footer:(version,scheme)=>`© morgunov.tech • Локальный аудит отпечатка • Версия: ${version} (${scheme})`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
     units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
-    labels:{touchPoints:'касания',pointer:'указатель',latency:'задержка',storage:{local:'localStorage',session:'sessionStorage',idb:'indexedDB',cookies:'cookies'}},
-    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% (заполнено ${filled} из ~${total})`
+    labels:{touchPoints:'касания',pointer:'указатель',latency:'задержка',storage:{local:'Локальное хранилище',session:'Сессионное хранилище',idb:'IndexedDB (база)',cookies:'Cookie'}},
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% данных заполнено (${filled} из ~${total})`
   },
   en: {
     langOption:'🇬🇧 English',
-    introTitle:'Why this matters',
-    introText:'This page locally estimates your browser “uniqueness” via entropy and highlights clear protection steps. No hidden submissions. Geo/IP runs only with your consent.',
-    legendTitle:'Risk legend:',
+    introTitle:'What this service does',
+    introText:'The page shows how much information your browser leaks and how it affects privacy. Everything is calculated locally until you request the IP lookup and the speed test.',
+    legendTitle:'How to read the risk levels:',
     risk:{low:'low', med:'medium', high:'high'},
-    uniqMeaning:pct=>`Your fingerprint is more unique than ${pct}% of users`,
-    detailTitle:'Detailed per-signal analysis',
-    shockTitle:'Already inferred (without your name):',
+    uniqMeaning:pct=>({
+      headline:`Your fingerprint is more unique than ${pct}% of users`,
+      note:'A high value means websites can recognise you more easily. Use separate profiles, private windows, or a VPN when you need extra anonymity.'
+    }),
+    detailTitle:'What a site can learn',
+    shockTitle:'Already visible without IP:',
     shock:{
-      region:city=>`🗺️ <b>IP region:</b> ${city}`,
-      tzFallback:tz=>`🗺️ Time zone suggests you are near <b>${tz}</b>`,
-      device:(device,os)=>`💻 Device: <b>${device}</b> • OS: <b>${os}</b>`,
-      gpuKnown:chip=>`🎮 GPU: <b>${chip}</b>`,
-      gpuUnknown:'🎮 GPU is exposed via WebGL',
-      canvasActive:'🎯 <b>canvas/audio hashes</b> are active — visits can be linked',
-      canvasPassive:'🎯 Canvas/Audio may link visits',
-      browser:browser=>`🌐 Browser: <b>${browser}</b>`,
-      screen:(screen,depth)=>`🖥️ Screen: <b>${screen}</b> • color depth ${depth}-bit`,
-      perms:perms=>`🔐 Permissions: <b>${perms}</b>`,
-      vpn:(status,reasons)=>`🕵️ <b>VPN usage:</b> ${status}${reasons?` (${reasons})`:''}`
+      region:city=>`🗺️ <b>Approximate location:</b> ${city}`,
+      tzFallback:tz=>`🗺️ <b>Time zone hint:</b> looks like ${tz}`,
+      device:(device,os)=>`💻 <b>Device:</b> ${device}, system ${os}`,
+      gpuKnown:chip=>`🎮 <b>Graphics:</b> ${chip}`,
+      gpuUnknown:'🎮 <b>Graphics:</b> the browser hides the exact model',
+      canvasActive:'🎯 <b>Canvas/audio hashes are active</b> — visits can be linked',
+      canvasPassive:'🎯 <b>Canvas/audio hashes</b> may link visits',
+      browser:browser=>`🌐 <b>Browser:</b> ${browser}`,
+      screen:(screen,depth,monitorsText)=>`🖥️ <b>Screen:</b> ${screen}, colour depth ${depth}-bit${monitorsText?` • ${monitorsText}`:''}`,
+      perms:perms=>`🔐 <b>Permissions:</b> ${perms}`,
+      vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
+      speed:value=>`⚡ <b>Connection speed:</b> ${value}`
     },
     ip:{
       button:'Detect IP & run speed test',
       buttonLoading:'Working…',
-      title:'IP data',
+      title:'IP details',
       none:'IP has not been detected yet.',
-      error:msg=>`Failed to obtain IP: ${msg}`,
+      error:msg=>`Could not get IP: ${msg}`,
       address:ip=>`<b>IP:</b> ${ip||'—'}`,
       geo:(city,country)=>`<b>Location:</b> ${city?city:''}${city&&country?', ':''}${country||''}`,
       rawTitle:'Raw service payload:',
       noData:'No data returned',
-      allFailed:'Could not retrieve data from any service',
+      allFailed:'No service responded with data',
       sourceLabel:'Source:',
       fields:{
         ip:'IP',
         region:'Region',
         country_name:'Country',
         timezone:'Time zone',
-        country_calling_code:'Country calling code',
-        org:'Organization'
+        country_calling_code:'Calling code',
+        org:'Organisation'
       },
-      noDetails:'No enriched data'
+      noDetails:'No extra details received'
     },
     speed:{
-      running:'Running speed test…',
-      result:(mbps,ms)=>`⚡ Speed: ${mbps} Mbps • latency ≈ ${ms} ms`,
+      running:'Running the speed test…',
+      result:(mbps,ms)=>`${mbps} Mbps, latency ≈ ${ms} ms`,
       error:msg=>`Speed test failed: ${msg}`,
       idle:'',
-      allFailed:'Speed test could not complete',
+      allFailed:'The speed test did not complete',
       notes:{
-        approx:'(estimated via Network Information API)'
+        approx:'estimated from the Network Information API'
       }
     },
     vpn:{
       label:'VPN usage',
       statuses:{
         likely:'likely in use',
-        unlikely:'likely not in use',
-        uncertain:'insufficient data'
+        unlikely:'likely off',
+        uncertain:'needs more data'
       },
       reasons:{
-        timezone:'time zone differs from the system setting',
-        language:'browser language differs from the IP country'
+        timezone:'time zone differs from your device',
+        language:'browser language does not match the IP country',
+        asn:'provider looks like a VPN or cloud host'
       }
     },
+    monitorText:{single:'browser reports one active screen',multi:count=>`browser reports ${count} active screens`,unknown:'browser does not reveal the number of screens'},
+    permNames:{
+      geolocation:'location',
+      notifications:'notifications',
+      camera:'camera',
+      microphone:'microphone',
+      'clipboard-read':'read clipboard',
+      'clipboard-write':'write clipboard',
+      'persistent-storage':'persistent storage'
+    },
+    permStates:{granted:'allowed',denied:'blocked',prompt:'will ask when needed',unknown:'not reported'},
+    memoryNote:'browser estimate',
     saveButton:'Save',
     copy:{hint:'Click to copy',done:'Copied'},
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
-    methodSummary:'<b>Methodology</b> (entropy & percentile)',
-    methodText:'Fingerprint entropy: <span class="mono">H = −∑ log₂ pᵢ(vᵢ)</span>, where pᵢ come from local frequencies.<br/>“More unique than X%” — percentile of <span class="mono">CDF(H)</span>, interpolated by quantiles.<br/>Rare values use Laplace smoothing. Correlations are partially accounted for (GPU↔platform, screen↔DPR).',
-    policySummary:'<b>Privacy policy</b>',
-    policyText:'Everything is computed locally with minimal network use. The IP button contacts a public service on demand and shows the full response.<br/>No external fonts, analytics, or trackers.',
-    headersSummary:'<b>Security headers (Express example)</b>',
-    footer:'© morgunov.tech • Local fingerprint audit • Version: entropy-percentile',
+    methodSummary:'<b>How it is calculated</b>',
+    methodText:'We compare your signals with how often similar combinations appear. The rarer the combination (entropy H), the higher the uniqueness percentile. Everything is computed locally inside the browser.',
+    policySummary:'<b>Transparency</b>',
+    policyText:'Processing happens in your browser. We contact external services only when you press the IP button and show the full response. No fonts, trackers, or hidden calls are loaded.',
+    improveSummary:'<b>Roadmap</b>',
+    improveText:'Next steps: JSON export, tailored advice for marketers and security teams, and tracking fingerprint changes over time.',
+    footer:(version,scheme)=>`© morgunov.tech • Local fingerprint audit • Version: ${version} (${scheme})`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
     units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
-    labels:{touchPoints:'touch points',pointer:'pointer',latency:'latency',storage:{local:'localStorage',session:'sessionStorage',idb:'indexedDB',cookies:'cookies'}},
-    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% (filled ${filled} of ~${total})`
+    labels:{touchPoints:'touch points',pointer:'pointer',latency:'latency',storage:{local:'Local storage',session:'Session storage',idb:'IndexedDB',cookies:'Cookies'}},
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% of data filled (${filled} of ~${total})`
   },
   uz: {
     langOption:'🇺🇿 Oʻzbekcha',
-    introTitle:'Nega bu muhim',
-    introText:'Sahifa brauzeringiz “noyobligi”ni entropiya orqali lokal baholaydi va himoya bo‘yicha aniq qadamlarni ko‘rsatadi. Hech qanday yashirin yuborish yo‘q. Geo/IP faqat roziligingiz bilan ishlaydi.',
-    legendTitle:'Xavf darajalari:',
+    introTitle:'Servis nima qiladi',
+    introText:'Bu sahifa brauzeringiz qanchalik ko‘p maʼlumot uzatayotganini va bu maxfiylikka qanday taʼsir qilishini ko‘rsatadi. Hammasi qurilmangizda hisoblanadi, IP va tezlik testi faqat siz bosganingizda ishga tushadi.',
+    legendTitle:'Xavf darajalarini qanday o‘qish kerak:',
     risk:{low:'past', med:'o‘rtacha', high:'yuqori'},
-    uniqMeaning:pct=>`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`,
-    detailTitle:'Har bir signal bo‘yicha batafsil tahlil',
-    shockTitle:'Siz haqingizda allaqachon aniqlanganlar (ismisiz):',
+    uniqMeaning:pct=>({
+      headline:`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`,
+      note:'Ko‘rsatkich yuqori bo‘lsa, saytlar sizni qayta tashriflarda tezroq taniydi. Maxfiylik kerak bo‘lsa, alohida profil, maxfiy oynalar yoki VPN dan foydalaning.'
+    }),
+    detailTitle:'Sayt nimalarni ko‘rishi mumkin',
+    shockTitle:'IP so‘ralmasdan ko‘rinadiganlar:',
     shock:{
-      region:city=>`🗺️ <b>IP bo‘yicha hudud:</b> ${city}`,
-      tzFallback:tz=>`🗺️ Vaqt mintaqasi sizni <b>${tz}</b> atrofida ko‘rsatadi`,
-      device:(device,os)=>`💻 Qurilma: <b>${device}</b> • OT: <b>${os}</b>`,
-      gpuKnown:chip=>`🎮 GPU: <b>${chip}</b>`,
-      gpuUnknown:'🎮 GPU WebGL orqali ochiladi',
-      canvasActive:'🎯 <b>canvas/audio-hash</b> faolligi tashriflarni bog‘lashi mumkin',
-      canvasPassive:'🎯 Canvas/Audio tashriflarni bog‘lashi mumkin',
-      browser:browser=>`🌐 Brauzer: <b>${browser}</b>`,
-      screen:(screen,depth)=>`🖥️ Ekran: <b>${screen}</b> • rang chuqurligi ${depth}-bit`,
-      perms:perms=>`🔐 Ruxsatlar: <b>${perms}</b>`,
-      vpn:(status,reasons)=>`🕵️ <b>VPN ishlatilishi:</b> ${status}${reasons?` (${reasons})`:''}`
+      region:city=>`🗺️ <b>Taxminiy joylashuv:</b> ${city}`,
+      tzFallback:tz=>`🗺️ <b>Vaqt mintaqasi:</b> ${tz} ga o‘xshaydi`,
+      device:(device,os)=>`💻 <b>Qurilma:</b> ${device}, tizim ${os}`,
+      gpuKnown:chip=>`🎮 <b>Grafika:</b> ${chip}`,
+      gpuUnknown:'🎮 <b>Grafika:</b> brauzer aniq modelni bermadi',
+      canvasActive:'🎯 <b>Canvas/audio xeshlari yoqilgan</b> — tashriflarni bog‘lash mumkin',
+      canvasPassive:'🎯 <b>Canvas/audio xeshlari</b> tashriflarni bog‘lashi mumkin',
+      browser:browser=>`🌐 <b>Brauzer:</b> ${browser}`,
+      screen:(screen,depth,monitorsText)=>`🖥️ <b>Ekran:</b> ${screen}, rang chuqurligi ${depth}-bit${monitorsText?` • ${monitorsText}`:''}`,
+      perms:perms=>`🔐 <b>Ruxsatlar:</b> ${perms}`,
+      vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
+      speed:value=>`⚡ <b>Internet tezligi:</b> ${value}`
     },
     ip:{
       button:'IP aniqlash va tezlikni o‘lchash',
       buttonLoading:'Aniqlanmoqda…',
       title:'IP maʼlumotlari',
-      none:'IP hali aniqlanmagan.',
-      error:msg=>`IP olish muvaffaqiyatsiz: ${msg}`,
+      none:'IP hali aniqlанmagan.',
+      error:msg=>`IP olish imkonsiz: ${msg}`,
       address:ip=>`<b>IP:</b> ${ip||'—'}`,
       geo:(city,country)=>`<b>Joylashuv:</b> ${city?city:''}${city&&country?', ':''}${country||''}`,
-      rawTitle:'Xizmatdan olingan maʼlumotlar:',
+      rawTitle:'Xizmatdan kelgan maʼlumot:',
       noData:'Maʼlumot yo‘q',
-      allFailed:'Hech bir xizmatdan maʼlumot olmadi',
+      allFailed:'Hech bir xizmat javob bermadi',
       sourceLabel:'Manba:',
       fields:{
         ip:'IP',
@@ -332,47 +382,66 @@ const I18N = {
         country_calling_code:'Telefon kodi',
         org:'Tashkilot'
       },
-      noDetails:'Maʼlumot yetarli emas'
+      noDetails:'Qo‘shimcha maʼlumot kelmadi'
     },
     speed:{
       running:'Tezlik testi bajarilmoqda…',
-      result:(mbps,ms)=>`⚡ Tezlik: ${mbps} Mbit/s • kechikish ≈ ${ms} ms`,
-      error:msg=>`Tezlik testi muvaffaqiyatsiz: ${msg}`,
+      result:(mbps,ms)=>`${mbps} Mbit/s, kechikish ≈ ${ms} ms`,
+      error:msg=>`Tezlik testi bajarilmadi: ${msg}`,
       idle:'',
       allFailed:'Tezlik testi yakunlanmadi',
       notes:{
-        approx:'(Network Information API orqali baholash)'
+        approx:'brauzer maʼlumotlaridan taxmin'
       }
     },
     vpn:{
       label:'VPN ishlatilishi',
       statuses:{
         likely:'ehtimol VPN yoqilgan',
-        unlikely:'ehtimol VPN yo‘q',
-        uncertain:'maʼlumot yetarli emas'
+        unlikely:'ehtimol VPN o‘chirilган',
+        uncertain:'yana maʼlumot kerak'
       },
       reasons:{
-        timezone:'vaqt mintaqasi tizimdagidan farq qiladi',
-        language:'brauzer tili IP mamlakatiga mos kelmaydi'
+        timezone:'vaqt mintaqasi qurilmadagi sozlamadan farq qiladi',
+        language:'brauzer tili IP mamlakatiga to‘g‘ri kelmaydi',
+        asn:'provayder VPN yoki bulut xizmati o‘xshash'
       }
     },
+    monitorText:{single:'brauzer bitta faol ekran haqida maʼlum qiladi',multi:count=>`brauzer ${count} ta faol ekran haqida maʼlum qildi`,unknown:'brauzer ekranlar sonini bermadi'},
+    permNames:{
+      geolocation:'geolokatsiya',
+      notifications:'bildirishnomalar',
+      camera:'kamera',
+      microphone:'mikrofon',
+      'clipboard-read':'buf. xotiradan o‘qish',
+      'clipboard-write':'buf. xotiraga yozish',
+      'persistent-storage':'doimiy xotira'
+    },
+    permStates:{granted:'ruxsat berilgan',denied:'bloklangan',prompt:'kerak bo‘lsa so‘raydi',unknown:'maʼlumot yo‘q'},
+    memoryNote:'brauzer taxmini',
     saveButton:'Saqlash',
     copy:{hint:'Nusxa olish uchun bosing',done:'Nusxalandi'},
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
-    methodSummary:'<b>Metodologiya</b> (entropiya va percentil)',
-    methodText:'Fingerprint entropiyasi: <span class="mono">H = −∑ log₂ pᵢ(vᵢ)</span>, bu yerda pᵢ lokal chastotalardan olinadi.<br/>«X% foydalanuvchidan noyob» — <span class="mono">CDF(H)</span> percentili, kvantillar bo‘yicha interpolatsiya.<br/>Kam uchraydigan qiymatlar Laplas silliqlash orqali hisoblanadi. Korrelatsiyalar qisman inobatga olingan (GPU↔platforma, ekran↔DPR).',
-    policySummary:'<b>Maxfiylik siyosati</b>',
-    policyText:'Hammasi lokal tarzda hisoblanadi, ortiqcha tarmoq so‘rovlari yo‘q. IP tugmasi faollashganda ommaviy servisga murojaat qiladi va to‘liq javobni ko‘rsatadi.<br/>Tashqi shriftlar, analitika va trekerlar yo‘q.',
-    headersSummary:'<b>Xavfsizlik sarlavhalari (Express uchun misol)</b>',
-    footer:'© morgunov.tech • Fingerprintni lokal audit qilish • Versiya: entropy-percentile',
+    methodSummary:'<b>Qanday hisoblaymiz</b>',
+    methodText:'Sizdagi signallarni qanchalik tez-tez uchrashi bilan solishtiramiz. Kam uchraydigan to‘plam (entropiya H) — yuqori noyoblik. Hammasi brauzeringiz ichida hisoblanadi.',
+    policySummary:'<b>Shaffoflik</b>',
+    policyText:'Maʼlumotlar brauzer ichida qayta ishlanadi. IP tugmasi bosilgandagina tashqi servisga murojaat qilamiz va javobni to‘liq ko‘rsatamiz. Shriftlar va trekerlar yuklanmaydi.',
+    improveSummary:'<b>Rivojlanish rejasi</b>',
+    improveText:'Keyingi qadamlar: JSON eksporti, turli rollar uchun maslahatlar ва вақт бўйича fingerprint solishtirish.',
+    footer:(version,scheme)=>`© morgunov.tech • Mahalliy fingerprint auditi • Versiya: ${version} (${scheme})`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
     units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
-    labels:{touchPoints:'sensor nuqtalari',pointer:'ko‘rsatkich',latency:'kechikish',storage:{local:'localStorage',session:'sessionStorage',idb:'indexedDB',cookies:'cookies'}},
-    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% (taxminan ${total} ko‘rsatkichdan ${filled} tasi to‘ldi)`
+    labels:{touchPoints:'sensor nuqtalari',pointer:'ko‘rsatkich',latency:'kechikish',storage:{local:'Mahalliy saqlash',session:'Sessiya saqlashi',idb:'IndexedDB',cookies:'Cookie'}},
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% maʼlumot to‘ldirilган (${filled} / ~${total})`
   }
 };
+
+// Calendar versioning keeps builds tied to release dates.
+const VERSION = '2024.05.05';
+const VERSION_SCHEME = 'CalVer (YYYY.MM.DD)';
+
 
 const LOCAL_TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||null;}catch(_){return null;}})();
 const TEXT_ENCODER=new TextEncoder();
@@ -389,6 +458,26 @@ function getLanguages(){
     if(langs.length)return langs;
     return navigator.language?[navigator.language]:[];
   }catch(_){return[];}
+}
+
+async function getUaHints(uaData){
+  if(!uaData?.getHighEntropyValues) return null;
+  try{
+    return await uaData.getHighEntropyValues(['architecture','bitness','model','platformVersion','uaFullVersion']);
+  }catch(_){
+    return null;
+  }
+}
+
+function detectScreenSetup(){
+  const scr=window.screen;
+  if(!scr) return {mode:'unknown',count:null};
+  if(typeof scr.isExtended==='boolean'){
+    return {mode:scr.isExtended?'multi':'single',count:scr.isExtended?2:1};
+  }
+  const extended=Boolean((typeof scr.availLeft==='number'&&scr.availLeft!==0)||(typeof scr.availTop==='number'&&scr.availTop!==0));
+  if(extended) return {mode:'multi',count:2};
+  return {mode:'single',count:1};
 }
 
 /* ============== Helpers (from your base) ============== */
@@ -415,10 +504,82 @@ function netInfo(){try{const c=navigator.connection||navigator.mozConnection||na
 function utcOffsetStr(mins){const sign=mins<=0?'+':'-';const abs=Math.abs(mins);const hh=String(Math.floor(abs/60)).padStart(2,'0');const mm=String(abs%60).padStart(2,'0');return`UTC${sign}${hh}:${mm}`;}
 function timeInTZ(tz,loc){const d=new Date();const date=d.toLocaleDateString(loc||'ru-RU',{timeZone:tz});const time=d.toLocaleTimeString(loc||'ru-RU',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false});return`${time} ${date}`;}
 function tzCityName(tz){if(!tz)return'ваша TZ';const parts=tz.split('/');let city=parts[1]||parts[0];return city.replace('_',' ');}
-function probableBrowsers(b){const ua=b.userAgent||'';const out=[];/Edg\//.test(ua)&&out.push('Edge');/OPR\//.test(ua)&&out.push('Opera');/YaBrowser\//.test(ua)&&out.push('Yandex Browser');/Firefox\//.test(ua)&&out.push('Firefox');(/Chrome\//.test(ua)&&!/Edg\/|OPR\/|YaBrowser\//.test(ua))&&out.push('Chrome','Brave');(/Safari\//.test(ua)&&!/Chrome\//.test(ua))&&out.push('Safari');return out.length?Array.from(new Set(out)).join(' / '):'—';}
-function guessOSVersion(ua){ua=(ua||'');const mac=ua.match(/Mac OS X ([0-9_\.]+)/i);if(mac)return'macOS '+mac[1].replace(/_/g,'.');const win=ua.match(/Windows NT ([0-9\.]+)/i);if(win){const map={'10.0':'Windows 10/11','6.3':'Windows 8.1','6.2':'Windows 8','6.1':'Windows 7'};return map[win[1]]||('Windows NT '+win[1]);}const ios=ua.match(/iPhone OS ([0-9_]+)/i)||ua.match(/CPU OS ([0-9_]+)/i);if(ios)return'iOS '+ios[1].replace(/_/g,'.');const android=ua.match(/Android ([0-9\.]+)/i);if(android)return'Android '+android[1];if(/Linux/i.test(ua))return'Linux';return'OS';}
+function probableBrowsers(b){
+  const ua=b.userAgent||'';
+  const brands=Array.isArray(b.uaBrands)?b.uaBrands.map(item=>(item?.brand||'').toLowerCase()):[];
+  const out=[];
+  if(/Arc\//i.test(ua)||brands.some(name=>name.includes('arc'))){out.push('Arc');}
+  /Edg\//.test(ua)&&out.push('Edge');
+  /OPR\//.test(ua)&&out.push('Opera');
+  /YaBrowser\//.test(ua)&&out.push('Yandex Browser');
+  /Firefox\//.test(ua)&&out.push('Firefox');
+  (/Chrome\//.test(ua)&&!/Edg\/|OPR\/|YaBrowser\//.test(ua))&&out.push('Chrome','Brave');
+  (/Safari\//.test(ua)&&!/Chrome\//.test(ua))&&out.push('Safari');
+  return out.length?Array.from(new Set(out)).join(' / '):'—';
+}
+function legacyOsFromUa(ua){ua=ua||'';const mac=ua.match(/Mac OS X ([0-9_\.]+)/i);if(mac)return'macOS '+mac[1].replace(/_/g,'.');const win=ua.match(/Windows NT ([0-9\.]+)/i);if(win){const map={'10.0':'Windows 10/11','6.3':'Windows 8.1','6.2':'Windows 8','6.1':'Windows 7'};return map[win[1]]||('Windows NT '+win[1]);}const ios=ua.match(/iPhone OS ([0-9_]+)/i)||ua.match(/CPU OS ([0-9_]+)/i);if(ios)return'iOS '+ios[1].replace(/_/g,'.');const android=ua.match(/Android ([0-9\.]+)/i);if(android)return'Android '+android[1];if(/Linux/i.test(ua))return'Linux';return'';}
+
+function guessOSVersion(basic){
+  const ua=basic.userAgent||'';
+  const platform=(basic.uaPlatform||'').toLowerCase();
+  const hints=basic.uaHighEntropy||{};
+  const pv=(hints.platformVersion||'').split('.')[0];
+  const architecture=hints.architecture||'';
+  if(platform.includes('mac')){
+    const darwin=parseInt(pv,10);
+    if(!Number.isNaN(darwin)){
+      const map={23:'macOS 14',22:'macOS 13',21:'macOS 12',20:'macOS 11',19:'macOS 10.15'};
+      const darwinLabel=hints.platformVersion||'?';
+      return map[darwin]||`macOS (Darwin ${darwinLabel})`;
+    }
+    return'macOS';
+  }
+  if(platform.includes('ios')||/iPhone|iPad|iPod/i.test(ua)){
+    if(hints.model){return`iOS (${hints.model})`;}
+    const legacy=legacyOsFromUa(ua);
+    return legacy||'iOS';
+  }
+  if(platform.includes('android')){
+    const legacy=legacyOsFromUa(ua);
+    if(legacy) return legacy;
+    return architecture?`Android (${architecture})`:'Android';
+  }
+  if(platform.includes('windows')){
+    const map={'15':'Windows 11','14':'Windows 10','13':'Windows 8.1','12':'Windows 8','11':'Windows 7'};
+    if(map[pv]) return map[pv];
+    const legacy=legacyOsFromUa(ua);
+    return legacy||'Windows';
+  }
+  if(platform.includes('chrome os')) return'ChromeOS';
+  if(platform.includes('linux')){
+    return architecture?`Linux (${architecture})`:'Linux';
+  }
+  const fallback=legacyOsFromUa(ua);
+  return fallback||basic.uaPlatform||basic.platform||'OS';
+}
 function guessAppleChip(renderer){if(!renderer)return null;const m=renderer.match(/Apple\s+M(\d)(?:\s*(Pro|Max|Ultra))?/i);return m?('Apple M'+m[1]+(m[2]?' '+m[2]:'')):null;}
-function guessDevice(b){const ua=(b.userAgent||'').toLowerCase();if(/iphone/.test(ua))return'iPhone';if(/ipad/.test(ua))return'iPad';if(/android/.test(ua)){const m=ua.match(/android[^;]*;\s*([^;]+?)\s+build/);return m?`${m[1].trim()} (Android)`:'Android-устройство';}if(/mac os x|macintosh/.test(ua)){const chip=guessAppleChip(b.gl?.renderer||'');const hasBattery=!!(b.battery&&b.battery.level!=null);const type=hasBattery?'MacBook':'Mac';return chip?`${type} (${chip})`:type;}if(/windows nt/.test(ua))return'Windows-ПК';if(/linux/.test(ua))return'Linux-ПК';return b.uaPlatform||b.platform||'устройство';}
+function guessDevice(b){
+  const ua=(b.userAgent||'').toLowerCase();
+  const hints=b.uaHighEntropy||{};
+  if(hints.model && /android/.test(ua)){
+    return `${hints.model.trim()} (Android)`;
+  }
+  if(/iphone/.test(ua))return'iPhone';
+  if(/ipad/.test(ua))return'iPad';
+  if(/android/.test(ua)){
+    const m=ua.match(/android[^;]*;\s*([^;]+?)\s+build/);
+    return m?`${m[1].trim()} (Android)`:'Android device';
+  }
+  if(/mac os x|macintosh/.test(ua)||/macos/.test((b.uaPlatform||'').toLowerCase())){
+    const chip=guessAppleChip(b.gl?.renderer||'');
+    const hasBattery=!!(b.battery&&b.battery.level!=null);
+    const type=hasBattery?'MacBook':'Mac';
+    return chip?`${type} (${chip})`:type;
+  }
+  if(/windows nt/.test(ua)||/(^|\s)windows/.test((b.uaPlatform||'').toLowerCase()))return'Windows PC';
+  if(/linux/.test(ua)||/(^|\s)linux/.test((b.uaPlatform||'').toLowerCase()))return'Linux PC';
+  return b.uaPlatform||b.platform||'устройство';
+}
 function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
 
 /* ======= Entropy-based frequency tables (compact, embedded) ======= */
@@ -509,24 +670,33 @@ async function collect(){
   const tz=LOCAL_TZ;
   const tzOffset=new Date().getTimezoneOffset();
   const gl=webglInfo();
-  const [cv,au,perms,media,bat]=await Promise.all([canvasHash(),audioHash(),getPermissions(),getMediaDevices(),getBattery()]);
+  const [cv,au,perms,media,bat,uaHints]=await Promise.all([
+    canvasHash(),
+    audioHash(),
+    getPermissions(),
+    getMediaDevices(),
+    getBattery(),
+    getUaHints(uaData)
+  ]);
   const net=netInfo();
   const pixelRatio=Number(window.devicePixelRatio||1)||1;
   const languages=getLanguages();
+  const screenSetup=detectScreenSetup();
   const pointer=detectPointerType();
   const basic={
     userAgent:navigator.userAgent,
     uaBrands:uaData?.brands||null, uaMobile:uaData?.mobile??null, uaPlatform:uaData?.platform||null,
+    uaHighEntropy:uaHints,
     platform:navigator.platform||null,
     languages,
-    screen:{w:screen.width,h:screen.height,colorDepth:screen.colorDepth,pixelRatio},
+    screen:{w:screen.width,h:screen.height,colorDepth:screen.colorDepth,pixelRatio,monitors:screenSetup},
     timezone:tz, tzOffsetMinutes:tzOffset,
     cookiesEnabled:navigator.cookieEnabled??null,
     dnt:navigator.doNotTrack||null,
     storage:{local:hasStorage('localStorage'),session:hasStorage('sessionStorage'),indexedDB:!!window.indexedDB},
     touch:{maxTouchPoints:navigator.maxTouchPoints||0,ontouchstart:('ontouchstart' in window)},
     pointer,
-    hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server:state.serverData
+    hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server:state.serverData, speed:state.speed
   };
   const json=JSON.stringify(sortDeep(basic));
   const fp=await sha256(json);
@@ -555,137 +725,138 @@ const CARD_CONTENT = {
   tz:{
     risk:'med',
     label:{ru:'Часовой пояс',en:'Time zone',uz:'Vaqt mintaqasi'},
-    use:{ru:'Регион/VPN-несостыковки',en:'Region/VPN mismatch',uz:'Hudud/VPN nomutanosibligi'},
-    ex:{ru:'IP=RU, TZ=US',en:'IP=RU, TZ=US',uz:'IP=RU, TZ=US'},
-    adv:{ru:'Реальный TZ в системе',en:'Keep TZ consistent',uz:'TZ ni mos holda saqlang'}
+    use:{ru:'Помогает сайтам прикинуть ваш регион',en:'Helps sites guess your region',uz:'Saytlar hududingizni taxmin qiladi'},
+    ex:{ru:'Москва и Нью-Йорк — разные зоны',en:'Moscow and New York are different zones',uz:'Moskva va Nyu-York zonalari har xil'},
+    adv:{ru:'Следите за точностью системного времени',en:'Keep your system time accurate',uz:'Tizim vaqti to‘g‘ri bo‘lsin'}
   },
   ua:{
     risk:'med',
     label:{ru:'Браузер',en:'Browser',uz:'Brauzer'},
-    use:{ru:'Редкие версии = выше риск',en:'Rare versions increase risk',uz:'Kam uchraydigan versiyalar xavfni oshiradi'},
-    ex:{ru:'Редкая версия',en:'Rare version',uz:'Noyob versiya'},
-    adv:{ru:'Обновите браузер',en:'Keep the browser updated',uz:'Brauzerni muntazam yangilang'}
+    use:{ru:'Название и версия показывают редкость',en:'Name and version show how rare you are',uz:'Nom va versiya qanchalik noyobligini ko‘rsatadi'},
+    ex:{ru:'Arc 1.30 — редкий браузер',en:'Arc 1.30 is a rare browser',uz:'Arc 1.30 kam uchraydi'},
+    adv:{ru:'Держите браузер обновлённым',en:'Keep the browser up to date',uz:'Brauzerni yangilab turing'}
   },
   plat:{
     risk:'low',
     label:{ru:'Платформа',en:'Platform',uz:'Platforma'},
-    use:{ru:'Класс устройства',en:'Device class',uz:'Qurilma turi'},
-    ex:{ru:'macOS vs Windows',en:'macOS vs Windows',uz:'macOS va Windows'},
-    adv:{ru:'Разные профили',en:'Use separate profiles',uz:'Alohida profillar yarating'}
+    use:{ru:'Определяет класс устройства',en:'Shows the device class',uz:'Qurilma turini bildiradi'},
+    ex:{ru:'macOS, Windows, Android',en:'macOS, Windows, Android',uz:'macOS, Windows, Android'},
+    adv:{ru:'Разделяйте рабочие и личные устройства',en:'Split work and personal devices',uz:'Ish va shaxsiy qurilmalarni ajrating'}
   },
   screen:{
     risk:'med',
     label:{ru:'Экран',en:'Screen',uz:'Ekran'},
-    use:{ru:'Стабильный набор',en:'Stable combo',uz:'Barqaror kombinatsiya'},
-    ex:{ru:'1728×1117',en:'1728×1117',uz:'1728×1117'},
-    adv:{ru:'RFP/Brave/Tor либо стандарт',en:'Use RFP/Brave/Tor or common setups',uz:'RFP/Brave/Tor yoki ommaviy sozlamalarni ishlating'}
+    use:{ru:'Размер и плотность отличают устройства',en:'Size and density distinguish devices',uz:'O‘lcham va zichlik qurilmalarni farqlaydi'},
+    ex:{ru:'1920×1080 — популярный размер',en:'1920×1080 is a popular size',uz:'1920×1080 mashhur o‘lcham'},
+    adv:{ru:'Приватные режимы или виртуалки меняют параметры',en:'Private modes or VMs can change these values',uz:'Maxfiy rejim yoki VM bu qiymatlarni o‘zgartiradi'}
   },
   langs:{
     risk:'med',
     label:{ru:'Языки',en:'Languages',uz:'Tillar'},
-    use:{ru:'Фишинг/регион',en:'Phishing/region hints',uz:'Hudud/fishing alomatlari'},
-    ex:{ru:'ru,en,uz',en:'ru,en,uz',uz:'ru,en,uz'},
-    adv:{ru:'Оставьте 1–2 языка',en:'Keep 1–2 languages',uz:'1–2 tilni qoldiring'}
+    use:{ru:'Список языков намекает на страну и интересы',en:'Language list hints at country and interests',uz:'Tillar ro‘yxati mamlakat va qiziqishlarni ko‘rsatadi'},
+    ex:{ru:'ru, en',en:'ru, en',uz:'ru, en'},
+    adv:{ru:'Оставьте только нужные языки',en:'Keep only the languages you use',uz:'Faqat kerakli tillarni qoldiring'}
   },
   hw:{
     risk:'low',
     label:{ru:'CPU / RAM',en:'CPU / RAM',uz:'CPU / RAM'},
-    use:{ru:'Эмуляторы',en:'Detects emulators',uz:'Emulyatorlarni aniqlash'},
-    ex:{ru:'ядра/память',en:'cores/memory',uz:'yadro/xotira'},
-    adv:{ru:'Отдельный профиль',en:'Use dedicated profiles',uz:'Alohida profillar yarating'}
+    use:{ru:'Ядра и память показывают класс устройства',en:'Cores and memory show the device class',uz:'Yadrolar va xotira qurilma turini bildiradi'},
+    ex:{ru:'8 ядер и ~16 ГБ',en:'8 cores and ~16 GB',uz:'8 yadro va ~16 GB'},
+    adv:{ru:'Память браузер округляет, это нормально',en:'Browsers round the memory value, that is expected',uz:'Brauzer xotirani taxmin qiladi — bu odatiy hol'}
   },
   store:{
     risk:'med',
     label:{ru:'Хранилища',en:'Storage',uz:'Saqlash'},
-    use:{ru:'Устойчивые ID',en:'Persistent IDs',uz:'Barqaror identifikatorlar'},
-    ex:{ru:'«воскрешение»',en:'resurrected IDs',uz:'qayta tiklangan ID'},
-    adv:{ru:'Чистите данные, 3rd-party off',en:'Clear data, disable 3rd-party',uz:'Maʼlumotlarni tozalang, 3rd-party ni o‘chiring'}
+    use:{ru:'Помогают восстановить идентификатор',en:'Can recreate a saved ID',uz:'Saqlangan identifikatorni tiklash mumkin'},
+    ex:{ru:'localStorage, cookies',en:'localStorage, cookies',uz:'localStorage, cookies'},
+    adv:{ru:'Очищайте данные после важных сессий',en:'Clear data after sensitive sessions',uz:'Muhim sessiyalardan so‘ng maʼlumotlarni tozalang'}
   },
   dnt:{
     risk:'low',
     label:{ru:'DNT',en:'DNT',uz:'DNT'},
-    use:{ru:'Редко уважают',en:'Rarely respected',uz:'Kam hollarda inobatga olinadi'},
-    ex:{ru:'DNT=1',en:'DNT=1',uz:'DNT=1'},
-    adv:{ru:'Исп. блокировщики',en:'Use content blockers',uz:'Kontent bloklovchilaridan foydalaning'}
+    use:{ru:'Показывает, включали ли вы «Не отслеживать»',en:'Shows whether Do Not Track is enabled',uz:'Do Not Track yoqilganini ko‘rsatadi'},
+    ex:{ru:'Флаг включён, но сайты могут игнорировать',en:'Flag on, yet many sites ignore it',uz:'Flag yoqilgan, lekin ko‘p saytlar eʼtibor bermaydi'},
+    adv:{ru:'Дополните флаг блокировщиками',en:'Add content blockers on top',uz:'Qo‘shimcha bloklovchilardan foydalaning'}
   },
   touch:{
     risk:'low',
     label:{ru:'Касания/указатель',en:'Touch / pointer',uz:'Sensor / ko‘rsatkich'},
-    use:{ru:'Класс девайса',en:'Device class',uz:'Qurilma turi'},
-    ex:{ru:'pointer fine',en:'pointer fine',uz:'pointer fine'},
-    adv:{ru:'',en:'',uz:''}
+    use:{ru:'Показывает наличие тачскрина и мыши',en:'Shows if touch or mouse is available',uz:'Sensor yoki sichqoncha borligini bildiradi'},
+    ex:{ru:'touch 0, pointer fine',en:'touch 0, pointer fine',uz:'touch 0, pointer fine'},
+    adv:{ru:'Отдельные профили скрывают комбинации',en:'Separate profiles hide unique combos',uz:'Alohida profil noyob kombinatsiyani yashiradi'}
   },
   net:{
     risk:'med',
     label:{ru:'Сеть',en:'Network',uz:'Tarmoq'},
-    use:{ru:'Профилинг/анти-фрод',en:'Profiling/anti-fraud',uz:'Profiling/anti-fraud'},
-    ex:{ru:'2G, высокий RTT',en:'2G, high RTT',uz:'2G, yuqori RTT'},
-    adv:{ru:'Проверьте VPN/прокси',en:'Check VPN/proxy',uz:'VPN/proksini tekshiring'}
+    use:{ru:'Тип сети и задержка важны для антифрода',en:'Network type and latency matter for anti-fraud',uz:'Tarmoq turi va kechikish anti-fraud uchun muhim'},
+    ex:{ru:'Wi‑Fi, 30 мс',en:'Wi‑Fi, 30 ms',uz:'Wi‑Fi, 30 ms'},
+    adv:{ru:'Проверяйте настройки VPN или прокси',en:'Verify your VPN or proxy settings',uz:'VPN yoki proksi sozlamalarini tekshiring'}
   },
   gl:{
     risk:'high',
     label:{ru:'WebGL (GPU)',en:'WebGL (GPU)',uz:'WebGL (GPU)'},
-    use:{ru:'Уникальный GPU',en:'Unique GPU',uz:'Noyob GPU'},
-    ex:{ru:'Apple M-series',en:'Apple M-series',uz:'Apple M-series'},
-    adv:{ru:'Firefox RFP/Brave/Tor',en:'Firefox RFP/Brave/Tor',uz:'Firefox RFP/Brave/Tor'}
+    use:{ru:'Модель видеокарты часто уникальна',en:'GPU model is often unique',uz:'GPU modeli ko‘pincha noyob'},
+    ex:{ru:'Apple M2 GPU',en:'Apple M2 GPU',uz:'Apple M2 GPU'},
+    adv:{ru:'Защитные режимы скрывают точную модель',en:'Privacy modes can mask the exact model',uz:'Maxfiy rejimlar aniq modelni yashiradi'}
   },
   canvas:{
     risk:'high',
     label:{ru:'Canvas hash',en:'Canvas hash',uz:'Canvas xeshi'},
-    use:{ru:'Склейка доменов',en:'Cross-site linking',uz:'Saytlararo bog‘lash'},
-    ex:{ru:'Одинаковый хеш',en:'Same hash',uz:'Bir xil xesh'},
-    adv:{ru:'Рандомизация canvas',en:'Randomize canvas',uz:'Canvasni tasodiflashtiring'}
+    use:{ru:'Canvas-хеш связывает посещения между сайтами',en:'Canvas hashes can link visits across sites',uz:'Canvas xesh tashriflarni bog‘lashi mumkin'},
+    ex:{ru:'Совпадающий хеш на разных сайтах',en:'Matching hash on different sites',uz:'Turli saytlarda bir xil xesh'},
+    adv:{ru:'Включите рандомизацию canvas в браузере',en:'Enable canvas randomisation in the browser',uz:'Brauzerda canvasni tasodiflashtiring'}
   },
   audio:{
     risk:'high',
     label:{ru:'Audio hash',en:'Audio hash',uz:'Audio xeshi'},
-    use:{ru:'Стабильный хеш',en:'Stable hash',uz:'Barqaror xesh'},
-    ex:{ru:'Совпадает',en:'Matches',uz:'Mos keladi'},
-    adv:{ru:'Рандомизация audio',en:'Randomize audio',uz:'Audioni tasodiflashtiring'}
+    use:{ru:'Аудио-хеш работает как canvas',en:'Audio hash acts similar to canvas',uz:'Audio xesh canvas kabi ishlaydi'},
+    ex:{ru:'Одинаковый хеш',en:'Same hash',uz:'Bir xil xesh'},
+    adv:{ru:'Используйте защиту аудио в браузере',en:'Use audio fingerprint protection',uz:'Brauzerdagi audio himoyasini yoqing'}
   },
   perm:{
     risk:'med',
     label:{ru:'Разрешения',en:'Permissions',uz:'Ruxsatlar'},
-    use:{ru:'Поведенческий профиль',en:'Behavioural profile',uz:'Xulq-atvor profili'},
-    ex:{ru:'camera: denied',en:'camera: denied',uz:'camera: denied'},
-    adv:{ru:'Сбросить разрешения',en:'Reset permissions',uz:'Ruxsatlarni tiklang'}
+    use:{ru:'Показывают, к чему уже был доступ',en:'Reveal what you have granted access to',uz:'Qaysi ruxsatlar berilganini ko‘rsatadi'},
+    ex:{ru:'камера: запрещено',en:'camera: blocked',uz:'kamera: bloklangan'},
+    adv:{ru:'Проверяйте список разрешений регулярно',en:'Review permissions regularly',uz:'Ruxsatlarni muntazam tekshirib turing'}
   },
   plugins:{
     risk:'med',
     label:{ru:'Плагины',en:'Plugins',uz:'Plaginlar'},
-    use:{ru:'Повышают уникальность',en:'Increase uniqueness',uz:'Noyoblikni oshiradi'},
-    ex:{ru:'legacy',en:'legacy',uz:'legacy'},
-    adv:{ru:'Удалите лишние',en:'Remove unused',uz:'Keraksizlarini olib tashlang'}
+    use:{ru:'Редкие плагины выдают привычки',en:'Rare plugins highlight your habits',uz:'Kam uchraydigan plaginlar odatlarni ko‘rsatadi'},
+    ex:{ru:'2 плагина',en:'2 plugins',uz:'2 ta plagin'},
+    adv:{ru:'Удаляйте то, чем не пользуетесь',en:'Remove plugins you do not need',uz:'Keraksiz plaginlarni olib tashlang'}
   },
   media:{
     risk:'med',
     label:{ru:'Медиа-устройства',en:'Media devices',uz:'Media qurilmalari'},
-    use:{ru:'Раскрывает хост',en:'Reveals host',uz:'Xostni ochib beradi'},
-    ex:{ru:'редкий набор',en:'rare set',uz:'kam uchraydigan to‘plam'},
-    adv:{ru:'Запрет по умолчанию',en:'Block by default',uz:'Standart bo‘yicha bloklang'}
+    use:{ru:'Список камер и микрофонов показывает окружение',en:'Camera and mic list shows your environment',uz:'Kamera va mikrofon ro‘yxati muhitni ko‘rsatadi'},
+    ex:{ru:'microphone: скрыто',en:'microphone: hidden',uz:'microphone: yashirilgan'},
+    adv:{ru:'Отключайте устройства по умолчанию',en:'Disable devices by default',uz:'Qurilmalarni sukut bo‘yicha o‘chiring'}
   },
   bat:{
     risk:'low',
     label:{ru:'Батарея',en:'Battery',uz:'Batareya'},
-    use:{ru:'Слабый сигнал',en:'Weak signal',uz:'Kuchsiz signal'},
-    ex:{ru:'заряд/нет',en:'charging state',uz:'zaryad holati'},
-    adv:{ru:'',en:'',uz:''}
+    use:{ru:'Заряд подсказывает тип устройства',en:'Charge level hints at device type',uz:'Zaryad qurilma turini bildiradi'},
+    ex:{ru:'85% и зарядка',en:'85% and charging',uz:'85% va zaryadlanmoqda'},
+    adv:{ru:'Это слабый сигнал, но его видно',en:'It is a weak signal, yet visible',uz:'Bu kuchsiz signal, ammo baribir ko‘rinadi'}
   },
   fullness:{
     risk:'low',
-    label:{ru:'Насыщенность данных',en:'Data richness',uz:'Maʼlumot to‘liqligi'},
-    use:{ru:'Оценка «богатства» профиля',en:'Profile richness estimate',uz:'Profil boyligini baholash'},
-    ex:{ru:'Чем больше сигналов — тем легче связать',en:'More signals = easier to link',uz:'Ko‘proq signal — bog‘lash osonroq'},
-    adv:{ru:'Минимизируйте ненужные сигналы',en:'Reduce unnecessary signals',uz:'Keraksiz signallarni kamaytiring'}
+    label:{ru:'Насыщенность данных',en:'Data richness',uz:'Maʼlumot boyligi'},
+    use:{ru:'Показывает, сколько данных сообщил браузер',en:'Shows how much data the browser shared',uz:'Brauzer qancha maʼlumot berganini ko‘rsatadi'},
+    ex:{ru:'Чем больше данных, тем проще вас узнать',en:'More data makes re-identification easier',uz:'Maʼlumot ko‘p bo‘lsa, tanish oson'},
+    adv:{ru:'Отключайте лишние разрешения и плагины',en:'Turn off extra permissions and plugins',uz:'Keraksiz ruxsat va plaginlarni o‘chiring'}
   },
   fp:{
     risk:'high',
     label:{ru:'Итоговый Fingerprint',en:'Final fingerprint',uz:'Yakuniy fingerprint'},
-    use:{ru:'Если отправлять, годится для трекинга',en:'Usable for tracking if shared',uz:'Ulashilsa kuzatuvga yaroqli'},
-    ex:{ru:'Одинаковый ID',en:'Same ID',uz:'Bir xil ID'},
-    adv:{ru:'Не делитесь этим ID со сторонними сайтами',en:'Do not share this ID with third parties',uz:'Ushbu ID ni uchinchi tomonlar bilan ulashmang'}
+    use:{ru:'Хеш объединяет все найденные данные',en:'Hash combines all collected data',uz:'Hash barcha maʼlumotni birlashtiradi'},
+    ex:{ru:'Совпадающий отпечаток',en:'Matching fingerprint',uz:'Mos fingerprint'},
+    adv:{ru:'Не делитесь отпечатком со сторонними сайтами',en:'Do not share this ID with other sites',uz:'Bu ID ni boshqa saytlar bilan ulashmang'}
   }
 };
+
 
 function escapeHtml(str){
   return str.replace(/[&<>"']/g, ch=>({
@@ -773,6 +944,8 @@ const COUNTRY_LANG_MAP={
   za:['en','af','zu','xh']
 };
 
+const VPN_KEYWORDS=['vpn','virtual private network','hosting','datacenter','data center','cloud','aws','amazon','google','azure','ovh','digitalocean','linode','leaseweb','m247','hetzner','contabo','colo','server','fastly','akamai'];
+
 async function fetchWithTimeout(url,{timeout=6000,...options}={}){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeout);
@@ -802,6 +975,27 @@ function normalizeCallingCode(code){
 
 function normalizeTimeZoneValue(tz){
   return String(tz||'').trim().toLowerCase();
+}
+
+function providerLooksLikeVpn(details,raw){
+  const lower=str=>String(str||'').toLowerCase();
+  const candidates=[
+    details?.org,
+    raw?.org,
+    raw?.isp,
+    raw?.as,
+    raw?.company,
+    raw?.connection?.isp,
+    raw?.connection?.org,
+    raw?.asn?.org,
+    raw?.asn?.name
+  ].map(lower).filter(Boolean);
+  if(candidates.some(org=>VPN_KEYWORDS.some(key=>org.includes(key)))) return true;
+  const security=raw?.security||raw?.threat||{};
+  if([security.vpn,security.proxy,security.relay,security.tor,raw?.proxy,raw?.vpn,raw?.tor].some(val=>val===true)) return true;
+  const type=lower(raw?.connection?.type||raw?.type);
+  if(type&&(type.includes('hosting')||type.includes('datacenter')||type.includes('data center'))) return true;
+  return false;
 }
 
 function primaryLanguageCode(){
@@ -998,13 +1192,19 @@ function evaluateVpnState(serverData){
   if(langCode && countryCode && languageMismatch(langCode,countryCode)){
     reasons.push('language');
   }
+  if(providerLooksLikeVpn(details,serverData.raw||{})){
+    reasons.push('asn');
+  }
+  const uniqueReasons=Array.from(new Set(reasons));
   let status='uncertain';
-  if(reasons.length>=2){
+  if(uniqueReasons.includes('asn') && uniqueReasons.length>=1){
     status='likely';
-  }else if(reasons.length===0){
+  }else if(uniqueReasons.length>=2){
+    status='likely';
+  }else if(uniqueReasons.length===0){
     if(details.timezone||details.country_name) status='unlikely';
   }
-  return {status,reasons,checked:true};
+  return {status,reasons:uniqueReasons,checked:true};
 }
 
 async function runSpeedTest(){
@@ -1097,6 +1297,7 @@ async function detectIpAndSpeed(){
   try{
     const speed=await runSpeedTest();
     state.speed={status:'done',mbps:speed.mbps,latency:speed.latency,error:null,note:speed.note||null};
+    state.vpn=evaluateVpnState(state.serverData);
   }catch(e){
     const message=(e.message||String(e));
     const lowered=message.toLowerCase();
@@ -1110,6 +1311,7 @@ async function detectIpAndSpeed(){
       friendly=speedFetchMessages[currentLang]||speedFetchMessages.en;
     }
     state.speed={status:'error',mbps:null,latency:null,error:friendly,note:null};
+    state.vpn=evaluateVpnState(state.serverData);
   }
   state.fetchingIp=false;
   render(currentLang);
@@ -1203,22 +1405,48 @@ function updateIpSection(t){
   el.innerHTML=rows.join('');
 }
 
-function updateSpeedSection(t){
-  const el=getEl('speedResult');
+function formatSpeedSummary(t){
   const status=state.speed.status;
-  if(status==='running'){
-    el.textContent=t.speed.running;
-  }else if(status==='done'){
+  if(status==='running') return t.speed.running;
+  if(status==='done'){
     let text=t.speed.result(state.speed.mbps,state.speed.latency);
     if(state.speed.note && t.speed.notes?.[state.speed.note]){
-      text+=` ${t.speed.notes[state.speed.note]}`;
+      text+=` (${t.speed.notes[state.speed.note]})`;
     }
-    el.textContent=text;
-  }else if(status==='error'){
-    el.textContent=t.speed.error(state.speed.error);
-  }else{
-    el.textContent=t.speed.idle;
+    return text;
   }
+  if(status==='error') return t.speed.error(state.speed.error);
+  return t.speed.idle||'';
+}
+
+function formatPermissionEntries(entries,t){
+  return entries.map(([key,value])=>{
+    const name=t.permNames?.[key]||key;
+    const state=t.permStates?.[value]||t.permStates?.unknown||value;
+    return `${name}: ${state}`;
+  });
+}
+
+function formatMonitorText(info,t){
+  if(!info||!info.mode) return t.monitorText?.unknown||'';
+  if(info.mode==='multi'){
+    const label=t.monitorText?.multi;
+    const count=info.count||2;
+    if(typeof label==='function') return label(count);
+    return label||'';
+  }
+  if(info.mode==='single'){
+    const label=t.monitorText?.single;
+    if(typeof label==='function') return label(info.count||1);
+    return label||'';
+  }
+  return t.monitorText?.unknown||'';
+}
+
+function updateSpeedSection(t){
+  const el=getEl('speedResult');
+  const summary=formatSpeedSummary(t);
+  el.textContent=summary?`⚡ ${summary}`:'';
 }
 
 let currentLang='ru';
@@ -1246,8 +1474,9 @@ async function render(lang){
   getEl('methodText').innerHTML=t.methodText;
   getEl('policySummary').innerHTML=t.policySummary;
   getEl('policyText').innerHTML=t.policyText;
-  getEl('headersSummary').innerHTML=t.headersSummary;
-  getEl('footerText').textContent=t.footer;
+  getEl('improveSummary').innerHTML=t.improveSummary;
+  getEl('improveText').innerHTML=t.improveText;
+  getEl('footerText').textContent=typeof t.footer==='function'?t.footer(VERSION,VERSION_SCHEME):t.footer;
   getEl('printBtn').textContent=t.saveButton;
   const ipBtn=getEl('ipBtn');
   ipBtn.textContent=state.fetchingIp?t.ip.buttonLoading:t.ip.button;
@@ -1260,11 +1489,13 @@ async function render(lang){
     if(token!==renderToken) return;
 
     const cls=uniqClass(pct);
-    getEl('uniqLine').innerHTML=`<span class="dot ${cls}"></span> ${t.uniqMeaning(pct)} • H=${H.toFixed(1)} ${t.entropyUnit}`;
+    const uniqCopy=t.uniqMeaning(pct);
+    const uniqNote=`${uniqCopy.note} · H=${H.toFixed(1)} ${t.entropyUnit}`;
+    getEl('uniqLine').innerHTML=`<span class="dot ${cls}"></span><span>${uniqCopy.headline}</span><span class="uniq-note">${uniqNote}</span>`;
 
     const s=basic.screen;
     const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
-    const osVer=guessOSVersion(basic.userAgent);
+    const osVer=guessOSVersion(basic);
     const device=guessDevice(basic);
     const chip=basic.gl&&basic.gl.renderer?guessAppleChip(basic.gl.renderer):null;
     const geo=extractGeo(basic.server?.headers||{});
@@ -1272,7 +1503,9 @@ async function render(lang){
     const tzCity=tzCityName(basic.timezone||LOCAL_TZ||'');
     const browserGuess=probableBrowsers(basic);
     const permEntries=Object.entries(basic.perms||{});
-    const permSample=permEntries.slice(0,3).map(([k,v])=>`${k}:${v}`).join(', ')||'—';
+    const formattedPerms=formatPermissionEntries(permEntries,t);
+    const permSample=formattedPerms.length?formattedPerms.slice(0,3).join(', '):(t.permStates?.unknown||'—');
+    const monitorLabel=formatMonitorText(basic.screen?.monitors,t);
 
     const bullets=[
       city?t.shock.region(city):t.shock.tzFallback(tzCity),
@@ -1280,13 +1513,17 @@ async function render(lang){
       chip?t.shock.gpuKnown(chip):t.shock.gpuUnknown,
       (basic.hashes.canvas&&basic.hashes.audio)?t.shock.canvasActive:t.shock.canvasPassive,
       t.shock.browser(browserGuess),
-      t.shock.screen(screenStr,basic.screen.colorDepth),
+      t.shock.screen(screenStr,basic.screen.colorDepth,monitorLabel),
       t.shock.perms(permSample)
     ];
     const vpnState=state.vpn||{status:'uncertain',reasons:[]};
     const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
     const vpnReasons=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
     bullets.push(t.shock.vpn(vpnStatusLabel,vpnReasons));
+    const speedSummary=formatSpeedSummary(t);
+    if(speedSummary && (state.speed.status==='done'||state.speed.status==='error')){
+      bullets.push(t.shock.speed(speedSummary));
+    }
     const shock=getEl('shock');
     const ul=getEl('shockList');
     ul.innerHTML='';
@@ -1301,11 +1538,11 @@ async function render(lang){
     const tzStr=`${basic.timezone||'—'} (${utcOffsetStr(-basic.tzOffsetMinutes)}) • ${timeInTZ(tzForClock,locale)}`;
     const yesNo=value=>value?t.units.yes:t.units.no;
     const storeLabels=t.labels.storage;
-    const hwVal=`${basic.hw.hardwareConcurrency||'?'} ${t.units.cores} • ${basic.hw.deviceMemory||'?'} ${t.units.gb}`;
+    const hwVal=`${basic.hw.hardwareConcurrency||'?'} ${t.units.cores} • ${basic.hw.deviceMemory?`≈${basic.hw.deviceMemory}`:'?'} ${t.units.gb}${basic.hw.deviceMemory?` (${t.memoryNote||''})`:''}`.trim();
     const touchVal=`${basic.touch.maxTouchPoints} ${t.labels.touchPoints} • ${t.labels.pointer}: ${basic.pointer}`;
     const netVal=basic.net&&Object.keys(basic.net).length?`${basic.net.effectiveType||'—'} • ${basic.net.downlink??'?'} ${t.units.mbps} • ${t.labels.latency} ${basic.net.rtt??'?'} ${t.units.ms}`:'—';
     const storeVal=`${storeLabels.local}:${yesNo(basic.storage.local)} • ${storeLabels.session}:${yesNo(basic.storage.session)} • ${storeLabels.idb}:${yesNo(basic.storage.indexedDB)} • ${storeLabels.cookies}:${yesNo(!!basic.cookiesEnabled)}`;
-    const permVal=permEntries.length?permEntries.map(([k,v])=>`${k}:${v}`).join(' • '):'—';
+    const permVal=formattedPerms.length?formattedPerms.join(' • '):(t.permStates?.unknown||'—');
     const pluginsVal=basic.plugins?.length?String(basic.plugins.length):'0';
     const mediaVal=basic.media?.length?basic.media.map(m=>`${m.kind}:${m.label?t.units.yes:t.units.no}`).join(' • '):'—';
     const batteryVal=basic.battery&&basic.battery.level!=null?`${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—';
@@ -1313,7 +1550,8 @@ async function render(lang){
     addCard(frag,'tz',tzStr,t);
     addCard(frag,'ua',basic.userAgent,t);
     addCard(frag,'plat',`${basic.uaPlatform||basic.platform||'—'} ${basic.uaMobile?'(mobile)':''}`.trim(),t);
-    addCard(frag,'screen',`${screenStr} • ${basic.screen.colorDepth}-bit`,t);
+    const screenDetails=[`${screenStr}`,`${basic.screen.colorDepth}-bit`,monitorLabel].filter(Boolean).join(' • ');
+    addCard(frag,'screen',screenDetails,t);
     addCard(frag,'langs',(basic.languages||[]).join(', ')||'—',t);
     addCard(frag,'hw',hwVal,t);
     addCard(frag,'store',storeVal,t);
