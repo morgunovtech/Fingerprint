@@ -1,0 +1,13 @@
+{
+  "name": "fingerprint-pages",
+  "version": "1.0.0",
+  "description": "Static fingerprint entropy checker ready for Cloudflare Pages hosting.",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.js",
+    "clean": "rm -rf dist"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
