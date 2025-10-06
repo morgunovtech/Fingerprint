@@ -162,7 +162,11 @@ const I18N = {
       running:'Тест скорости выполняется…',
       result:(mbps,ms)=>`⚡ Скорость: ${mbps} Мбит/с • задержка ≈ ${ms} мс`,
       error:msg=>`Ошибка теста скорости: ${msg}`,
-      idle:''
+      idle:'',
+      allFailed:'Не удалось выполнить тест скорости',
+      notes:{
+        approx:'(оценка по данным Network Information API)'
+      }
     },
     saveButton:'Сохранить',
     copy:{hint:'Нажмите, чтобы скопировать',done:'Скопировано'},
@@ -218,7 +222,11 @@ const I18N = {
       running:'Running speed test…',
       result:(mbps,ms)=>`⚡ Speed: ${mbps} Mbps • latency ≈ ${ms} ms`,
       error:msg=>`Speed test failed: ${msg}`,
-      idle:''
+      idle:'',
+      allFailed:'Speed test could not complete',
+      notes:{
+        approx:'(estimated via Network Information API)'
+      }
     },
     saveButton:'Save',
     copy:{hint:'Click to copy',done:'Copied'},
@@ -274,7 +282,11 @@ const I18N = {
       running:'Tezlik testi bajarilmoqda…',
       result:(mbps,ms)=>`⚡ Tezlik: ${mbps} Mbit/s • kechikish ≈ ${ms} ms`,
       error:msg=>`Tezlik testi muvaffaqiyatsiz: ${msg}`,
-      idle:''
+      idle:'',
+      allFailed:'Tezlik testi yakunlanmadi',
+      notes:{
+        approx:'(Network Information API orqali baholash)'
+      }
     },
     saveButton:'Saqlash',
     copy:{hint:'Nusxa olish uchun bosing',done:'Nusxalandi'},
@@ -621,7 +633,7 @@ const state={
   serverData:null,
   ipError:null,
   fetchingIp:false,
-  speed:{status:'idle',mbps:null,latency:null,error:null}
+  speed:{status:'idle',mbps:null,latency:null,error:null,note:null}
 };
 const timeoutMessages={ru:'Превышено время ожидания',en:'Request timed out',uz:'Soʻrov vaqti tugadi'};
 const speedFetchMessages={ru:'Не удалось подключиться к серверу теста',en:'Could not reach the test server',uz:'Test serveriga ulanish imkonsiz'};
@@ -701,8 +713,27 @@ async function fetchIpFromIpwho(){
   return {ip,geo,raw:data,source:'ipwho',headers:null};
 }
 
+async function fetchIpFromIpify(){
+  const resp=await fetchWithTimeout('https://api64.ipify.org?format=json',{timeout:6000,mode:'cors',cache:'no-store',credentials:'omit'});
+  const data=await resp.json();
+  if(!data || typeof data!=='object') throw new Error('empty');
+  const ip=data.ip||null;
+  if(!ip) throw new Error('empty');
+  return {ip,geo:{city:'',country:''},raw:data,source:'ipify',headers:null};
+}
+
+async function fetchIpFromMyip(){
+  const resp=await fetchWithTimeout('https://api.myip.com',{timeout:6000,mode:'cors',cache:'no-store',credentials:'omit',headers:{'Accept':'application/json'}});
+  const data=await resp.json();
+  if(!data || typeof data!=='object') throw new Error('empty');
+  const ip=data.ip||null;
+  if(!ip) throw new Error('empty');
+  const geo={city:'',country:data.country||data.cc||''};
+  return {ip,geo,raw:data,source:'myip',headers:null};
+}
+
 async function fetchIpData(){
-  const attempts=[fetchIpFromHeaders,fetchIpFromIpapi,fetchIpFromIpwho];
+  const attempts=[fetchIpFromHeaders,fetchIpFromIpapi,fetchIpFromIpwho,fetchIpFromIpify,fetchIpFromMyip];
   const errors=[];
   for(const attempt of attempts){
     try{
@@ -720,37 +751,64 @@ async function fetchIpData(){
 
 async function runSpeedTest(){
   const BYTES=2000000;
-  const start=performance.now();
-  const resp=await fetch('https://speed.cloudflare.com/__down?bytes='+BYTES,{cache:'no-store',mode:'cors'});
-  if(!resp.ok) throw new Error(resp.statusText||`HTTP ${resp.status}`);
-  let bytes=0;
-  if(resp.body?.getReader){
-    const reader=resp.body.getReader();
-    while(true){
-      const {done,value}=await reader.read();
-      if(done) break;
-      if(value) bytes+=value.byteLength;
+  async function measure(url,timeout=10000){
+    const cacheBust=Date.now();
+    const target=url.includes('?')?`${url}&cacheBust=${cacheBust}`:`${url}?cacheBust=${cacheBust}`;
+    const start=performance.now();
+    const resp=await fetchWithTimeout(target,{timeout,mode:'cors',cache:'no-store',credentials:'omit'});
+    let bytes=0;
+    if(resp.body?.getReader){
+      const reader=resp.body.getReader();
+      while(true){
+        const {done,value}=await reader.read();
+        if(done) break;
+        if(value) bytes+=value.byteLength;
+      }
+    }else{
+      const buf=await resp.arrayBuffer();
+      bytes=buf.byteLength;
     }
-  }else{
-    const buf=await resp.arrayBuffer();
-    bytes=buf.byteLength;
+    if(bytes===0){
+      const hint=parseInt(resp.headers.get('content-length')||'0',10);
+      if(hint>0) bytes=hint;
+    }
+    if(bytes===0) bytes=BYTES;
+    const duration=Math.max((performance.now()-start)/1000,0.001);
+    const mbps=Number(((bytes*8)/(duration*1e6)).toFixed(2));
+    const latency=Math.max(1,Math.round(duration*1000));
+    return {mbps,latency,note:null};
   }
-  if(bytes===0){
-    const hint=parseInt(resp.headers.get('content-length')||'0',10);
-    if(hint>0) bytes=hint;
+
+  const attempts=[
+    {url:`https://speed.cloudflare.com/__down?bytes=${BYTES}`,timeout:12000},
+    {url:`https://httpbin.org/bytes/${BYTES}`,timeout:12000}
+  ];
+  const errors=[];
+  for(const attempt of attempts){
+    try{
+      return await measure(attempt.url,attempt.timeout);
+    }catch(err){
+      errors.push(err.message||String(err));
+    }
   }
-  if(bytes===0) bytes=BYTES;
-  const duration=Math.max((performance.now()-start)/1000,0.001);
-  const mbps=Number(((bytes*8)/(duration*1e6)).toFixed(2));
-  const latency=Math.max(1,Math.round(duration*1000));
-  return {mbps,latency};
+  const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(conn?.downlink){
+    const downlink=Number(conn.downlink||0);
+    if(downlink>0){
+      const latency=Math.max(1,Math.round(conn.rtt||100));
+      return {mbps:Number(downlink.toFixed(2)),latency,note:'approx'};
+    }
+  }
+  const e=new Error(errors.join('; '));
+  e.attempts=errors;
+  throw e;
 }
 
 async function detectIpAndSpeed(){
   if(state.fetchingIp) return;
   state.fetchingIp=true;
   state.ipError=null;
-  state.speed={status:'running',mbps:null,latency:null,error:null};
+  state.speed={status:'running',mbps:null,latency:null,error:null,note:null};
   render(currentLang);
   try{
     const data=await fetchIpData();
@@ -770,19 +828,27 @@ async function detectIpAndSpeed(){
       msg=e.message||String(e);
     }
     state.ipError=msg;
-    state.speed={status:'idle',mbps:null,latency:null,error:null};
+    state.speed={status:'idle',mbps:null,latency:null,error:null,note:null};
     state.fetchingIp=false;
     render(currentLang);
     return;
   }
   try{
     const speed=await runSpeedTest();
-    state.speed={status:'done',mbps:speed.mbps,latency:speed.latency,error:null};
+    state.speed={status:'done',mbps:speed.mbps,latency:speed.latency,error:null,note:speed.note||null};
   }catch(e){
     const message=(e.message||String(e));
     const lowered=message.toLowerCase();
-    const friendly=lowered.includes('failed to fetch')?speedFetchMessages[currentLang]||speedFetchMessages.en:message;
-    state.speed={status:'error',mbps:null,latency:null,error:friendly};
+    let friendly=message;
+    if(e.attempts?.length){
+      const base=(I18N[currentLang]?.speed?.allFailed)||(I18N.en?.speed?.allFailed)||message;
+      friendly=`${base}. ${e.attempts.filter(Boolean).join(' • ')}`;
+    }else if(lowered.includes('timeout')){
+      friendly=timeoutMessages[currentLang]||timeoutMessages.ru;
+    }else if(lowered.includes('failed to fetch')){
+      friendly=speedFetchMessages[currentLang]||speedFetchMessages.en;
+    }
+    state.speed={status:'error',mbps:null,latency:null,error:friendly,note:null};
   }
   state.fetchingIp=false;
   render(currentLang);
@@ -874,7 +940,11 @@ function updateSpeedSection(t){
   if(status==='running'){
     el.textContent=t.speed.running;
   }else if(status==='done'){
-    el.textContent=t.speed.result(state.speed.mbps,state.speed.latency);
+    let text=t.speed.result(state.speed.mbps,state.speed.latency);
+    if(state.speed.note && t.speed.notes?.[state.speed.note]){
+      text+=` ${t.speed.notes[state.speed.note]}`;
+    }
+    el.textContent=text;
   }else if(status==='error'){
     el.textContent=t.speed.error(state.speed.error);
   }else{
