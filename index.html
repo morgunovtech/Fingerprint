@@ -64,7 +64,6 @@
         <option value="en">🇬🇧 English</option>
         <option value="uz">🇺🇿 Oʻzbekcha</option>
       </select>
-      <button class="btn" id="ipBtn"></button>
       <button class="btn" id="printBtn"></button>
     </div>
   </header>
@@ -79,6 +78,9 @@
   <!-- Block 2: Uniqueness + shock -->
   <section class="block">
     <div id="uniqLine" class="big"></div>
+    <div class="row" id="ipActionRow" style="margin:10px 0">
+      <button class="btn" id="ipBtn"></button>
+    </div>
     <div id="shock" class="danger" style="display:none">
       <div class="small" id="shockTitle"></div>
       <ul id="shockList"></ul>
@@ -143,7 +145,8 @@ const I18N = {
       canvasPassive:'🎯 Canvas/Audio могут склеивать визиты',
       browser:browser=>`🌐 Браузер: <b>${browser}</b>`,
       screen:(screen,depth)=>`🖥️ Экран: <b>${screen}</b> • глубина цвета ${depth}-бит`,
-      perms:perms=>`🔐 Разрешения: <b>${perms}</b>`
+      perms:perms=>`🔐 Разрешения: <b>${perms}</b>`,
+      vpn:(status,reasons)=>`🕵️ <b>Использование VPN:</b> ${status}${reasons?` (${reasons})`:''}`
     },
     ip:{
       button:'Определить IP и измерить скорость',
@@ -156,7 +159,16 @@ const I18N = {
       rawTitle:'Исходные данные сервиса:',
       noData:'Данные отсутствуют',
       allFailed:'Не удалось получить информацию от сервисов',
-      sourceLabel:'Источник:'
+      sourceLabel:'Источник:',
+      fields:{
+        ip:'IP',
+        region:'Регион',
+        country_name:'Страна',
+        timezone:'Часовой пояс',
+        country_calling_code:'Телефонный код',
+        org:'Организация'
+      },
+      noDetails:'Данные недоступны'
     },
     speed:{
       running:'Тест скорости выполняется…',
@@ -166,6 +178,18 @@ const I18N = {
       allFailed:'Не удалось выполнить тест скорости',
       notes:{
         approx:'(оценка по данным Network Information API)'
+      }
+    },
+    vpn:{
+      label:'Использование VPN',
+      statuses:{
+        likely:'возможно используется',
+        unlikely:'скорее всего нет',
+        uncertain:'недостаточно данных'
+      },
+      reasons:{
+        timezone:'часовой пояс отличается от системного',
+        language:'язык браузера не совпадает со страной IP'
       }
     },
     saveButton:'Сохранить',
@@ -203,7 +227,8 @@ const I18N = {
       canvasPassive:'🎯 Canvas/Audio may link visits',
       browser:browser=>`🌐 Browser: <b>${browser}</b>`,
       screen:(screen,depth)=>`🖥️ Screen: <b>${screen}</b> • color depth ${depth}-bit`,
-      perms:perms=>`🔐 Permissions: <b>${perms}</b>`
+      perms:perms=>`🔐 Permissions: <b>${perms}</b>`,
+      vpn:(status,reasons)=>`🕵️ <b>VPN usage:</b> ${status}${reasons?` (${reasons})`:''}`
     },
     ip:{
       button:'Detect IP & run speed test',
@@ -216,7 +241,16 @@ const I18N = {
       rawTitle:'Raw service payload:',
       noData:'No data returned',
       allFailed:'Could not retrieve data from any service',
-      sourceLabel:'Source:'
+      sourceLabel:'Source:',
+      fields:{
+        ip:'IP',
+        region:'Region',
+        country_name:'Country',
+        timezone:'Time zone',
+        country_calling_code:'Country calling code',
+        org:'Organization'
+      },
+      noDetails:'No enriched data'
     },
     speed:{
       running:'Running speed test…',
@@ -226,6 +260,18 @@ const I18N = {
       allFailed:'Speed test could not complete',
       notes:{
         approx:'(estimated via Network Information API)'
+      }
+    },
+    vpn:{
+      label:'VPN usage',
+      statuses:{
+        likely:'likely in use',
+        unlikely:'likely not in use',
+        uncertain:'insufficient data'
+      },
+      reasons:{
+        timezone:'time zone differs from the system setting',
+        language:'browser language differs from the IP country'
       }
     },
     saveButton:'Save',
@@ -263,7 +309,8 @@ const I18N = {
       canvasPassive:'🎯 Canvas/Audio tashriflarni bog‘lashi mumkin',
       browser:browser=>`🌐 Brauzer: <b>${browser}</b>`,
       screen:(screen,depth)=>`🖥️ Ekran: <b>${screen}</b> • rang chuqurligi ${depth}-bit`,
-      perms:perms=>`🔐 Ruxsatlar: <b>${perms}</b>`
+      perms:perms=>`🔐 Ruxsatlar: <b>${perms}</b>`,
+      vpn:(status,reasons)=>`🕵️ <b>VPN ishlatilishi:</b> ${status}${reasons?` (${reasons})`:''}`
     },
     ip:{
       button:'IP aniqlash va tezlikni o‘lchash',
@@ -276,7 +323,16 @@ const I18N = {
       rawTitle:'Xizmatdan olingan maʼlumotlar:',
       noData:'Maʼlumot yo‘q',
       allFailed:'Hech bir xizmatdan maʼlumot olmadi',
-      sourceLabel:'Manba:'
+      sourceLabel:'Manba:',
+      fields:{
+        ip:'IP',
+        region:'Hudud',
+        country_name:'Mamlakat',
+        timezone:'Vaqt mintaqasi',
+        country_calling_code:'Telefon kodi',
+        org:'Tashkilot'
+      },
+      noDetails:'Maʼlumot yetarli emas'
     },
     speed:{
       running:'Tezlik testi bajarilmoqda…',
@@ -286,6 +342,18 @@ const I18N = {
       allFailed:'Tezlik testi yakunlanmadi',
       notes:{
         approx:'(Network Information API orqali baholash)'
+      }
+    },
+    vpn:{
+      label:'VPN ishlatilishi',
+      statuses:{
+        likely:'ehtimol VPN yoqilgan',
+        unlikely:'ehtimol VPN yo‘q',
+        uncertain:'maʼlumot yetarli emas'
+      },
+      reasons:{
+        timezone:'vaqt mintaqasi tizimdagidan farq qiladi',
+        language:'brauzer tili IP mamlakatiga mos kelmaydi'
       }
     },
     saveButton:'Saqlash',
@@ -633,10 +701,77 @@ const state={
   serverData:null,
   ipError:null,
   fetchingIp:false,
-  speed:{status:'idle',mbps:null,latency:null,error:null,note:null}
+  speed:{status:'idle',mbps:null,latency:null,error:null,note:null},
+  vpn:{status:'uncertain',reasons:[],checked:false}
 };
+const DETAIL_FIELDS=['region','country_name','timezone','country_calling_code','org'];
 const timeoutMessages={ru:'Превышено время ожидания',en:'Request timed out',uz:'Soʻrov vaqti tugadi'};
 const speedFetchMessages={ru:'Не удалось подключиться к серверу теста',en:'Could not reach the test server',uz:'Test serveriga ulanish imkonsiz'};
+const COUNTRY_LANG_MAP={
+  ru:['ru'],
+  uz:['uz','ru'],
+  ua:['uk','ru'],
+  by:['be','ru'],
+  kz:['kk','ru'],
+  kg:['ky','ru'],
+  tj:['tg','ru'],
+  az:['az','ru'],
+  am:['hy','ru'],
+  ge:['ka','ru'],
+  ee:['et','ru'],
+  lv:['lv','ru'],
+  lt:['lt','ru'],
+  pl:['pl'],
+  de:['de'],
+  fr:['fr'],
+  es:['es','ca'],
+  it:['it'],
+  tr:['tr'],
+  cn:['zh'],
+  jp:['ja'],
+  kr:['ko'],
+  vn:['vi'],
+  th:['th'],
+  id:['id'],
+  in:['hi','en'],
+  us:['en'],
+  gb:['en'],
+  ca:['en','fr'],
+  au:['en'],
+  nz:['en'],
+  ie:['en'],
+  sg:['en','ms','zh','ta'],
+  hk:['zh','en'],
+  br:['pt'],
+  mx:['es'],
+  ar:['es'],
+  ch:['de','fr','it'],
+  se:['sv'],
+  no:['no','nn'],
+  fi:['fi','sv'],
+  dk:['da'],
+  nl:['nl'],
+  be:['nl','fr','de'],
+  pt:['pt'],
+  ro:['ro'],
+  bg:['bg'],
+  hu:['hu'],
+  cz:['cs'],
+  sk:['sk'],
+  rs:['sr'],
+  si:['sl'],
+  hr:['hr'],
+  gr:['el'],
+  il:['he','ar'],
+  ae:['ar'],
+  sa:['ar'],
+  ir:['fa'],
+  pk:['ur','en'],
+  bd:['bn'],
+  my:['ms','en'],
+  ph:['en','tl'],
+  za:['en','af','zu','xh']
+};
 
 async function fetchWithTimeout(url,{timeout=6000,...options}={}){
   const controller=new AbortController();
@@ -651,6 +786,68 @@ async function fetchWithTimeout(url,{timeout=6000,...options}={}){
   }finally{
     clearTimeout(timer);
   }
+}
+
+function normalizeCallingCode(code){
+  if(code==null) return null;
+  let str=String(code).trim();
+  if(!str) return null;
+  str=str.replace(/[^0-9+]/g,'');
+  while(str.startsWith('+')){
+    str=str.slice(1);
+  }
+  if(!str) return null;
+  return `+${str}`;
+}
+
+function normalizeTimeZoneValue(tz){
+  return String(tz||'').trim().toLowerCase();
+}
+
+function primaryLanguageCode(){
+  const langs=navigator.languages;
+  if(langs&&langs.length){
+    return String(langs[0]).split('-')[0].toLowerCase();
+  }
+  return String(navigator.language||'').split('-')[0].toLowerCase();
+}
+
+function languageMismatch(langCode,countryCode){
+  if(!langCode||!countryCode) return false;
+  const lang=langCode.toLowerCase();
+  if(!lang) return false;
+  if(lang==='en') return false;
+  const allowed=COUNTRY_LANG_MAP[countryCode.toLowerCase()];
+  if(!allowed) return false;
+  return !allowed.includes(lang);
+}
+
+function extractCanonicalDetailsFromPayload(payload){
+  if(!payload||typeof payload!=='object') return null;
+  const details={};
+  const region=payload.region_name||payload.region||payload.state_prov||payload.state||payload.province||payload.regionName||null;
+  if(region) details.region=String(region);
+  const countryName=payload.country_name||payload.country||payload.countryName||payload.country_long||payload.country_full||null;
+  if(countryName) details.country_name=String(countryName);
+  const countryCode=payload.country_code||payload.countryCode||payload.country_code2||payload.country_code_iso3166||payload.country_code_iso3166_1_alpha_2||payload.cc||payload.country_code_iso||null;
+  if(countryCode) details.country_code=String(countryCode).toUpperCase();
+  let timezone=null;
+  if(typeof payload.timezone==='string'){
+    timezone=payload.timezone;
+  }else if(payload.timezone&&typeof payload.timezone==='object'){
+    timezone=payload.timezone.id||payload.timezone.name||payload.timezone.timezone||payload.timezone.current_time_zone||payload.timezone.current_time||payload.timezone.abbreviation||null;
+  }else if(typeof payload.time_zone==='string'){
+    timezone=payload.time_zone;
+  }else if(payload.time_zone&&typeof payload.time_zone==='object'){
+    timezone=payload.time_zone.name||payload.time_zone.id||null;
+  }
+  if(timezone) details.timezone=String(timezone);
+  const calling=payload.country_calling_code||payload.calling_code||payload.country_call_code||payload.country_phone_code||payload.telephone_code||payload.phone_prefix||null;
+  const normalizedCalling=normalizeCallingCode(calling);
+  if(normalizedCalling) details.country_calling_code=normalizedCalling;
+  const org=payload.org||payload.organization||payload.connection && (payload.connection.org||payload.connection.isp||payload.connection.asn)||payload.isp||payload.as||payload.company||payload.provider||payload.org_name||null;
+  if(org) details.org=String(org);
+  return Object.keys(details).length?details:null;
 }
 
 function normalizeHeaders(headers){
@@ -735,18 +932,79 @@ async function fetchIpFromMyip(){
 async function fetchIpData(){
   const attempts=[fetchIpFromHeaders,fetchIpFromIpapi,fetchIpFromIpwho,fetchIpFromIpify,fetchIpFromMyip];
   const errors=[];
+  let aggregated=null;
+  let details=null;
+  let detailSource=null;
   for(const attempt of attempts){
     try{
       const result=await attempt();
       if(!result || (!result.ip && !result.raw)) throw new Error('empty');
-      return result;
+      if(!aggregated){
+        aggregated={...result};
+      }else{
+        if(result.ip && !aggregated.ip) aggregated.ip=result.ip;
+        if(result.geo && (!aggregated.geo || (!aggregated.geo.city && !aggregated.geo.country))) aggregated.geo=result.geo;
+        if(result.raw && !aggregated.raw) aggregated.raw=result.raw;
+        if(result.headers && !aggregated.headers) aggregated.headers=result.headers;
+        if(result.source && !aggregated.source) aggregated.source=result.source;
+      }
+      const candidate=extractCanonicalDetailsFromPayload(result.raw);
+      if(candidate){
+        if(!details) details={};
+        Object.keys(candidate).forEach(key=>{
+          if(candidate[key] && !details[key]){
+            details[key]=candidate[key];
+          }
+        });
+        if(!detailSource && result.source){
+          detailSource=result.source;
+        }
+      }
+      if(details && DETAIL_FIELDS.every(key=>details[key])){
+        const completed={...aggregated};
+        completed.details={...details};
+        completed.detailSource=detailSource||result.source||aggregated.source||null;
+        return completed;
+      }
     }catch(err){
       errors.push(err.message||String(err));
     }
   }
+  if(aggregated){
+    const completed={...aggregated};
+    if(details){
+      completed.details={...details};
+      completed.detailSource=detailSource||aggregated.source||null;
+    }
+    return completed;
+  }
   const e=new Error(errors.join('; '));
   e.attempts=errors;
   throw e;
+}
+
+function evaluateVpnState(serverData){
+  if(!serverData) return {status:'uncertain',reasons:[],checked:false};
+  const details=serverData.details||extractCanonicalDetailsFromPayload(serverData.raw);
+  if(!details) return {status:'uncertain',reasons:[],checked:false};
+  const reasons=[];
+  const ipTz=details.timezone||null;
+  const localTz=LOCAL_TZ||null;
+  if(ipTz && localTz && normalizeTimeZoneValue(ipTz)!==normalizeTimeZoneValue(localTz)){
+    reasons.push('timezone');
+  }
+  const langCode=primaryLanguageCode();
+  const countryCode=details.country_code||serverData.raw && (serverData.raw.country_code||serverData.raw.countryCode||serverData.raw.cc)||null;
+  if(langCode && countryCode && languageMismatch(langCode,countryCode)){
+    reasons.push('language');
+  }
+  let status='uncertain';
+  if(reasons.length>=2){
+    status='likely';
+  }else if(reasons.length===0){
+    if(details.timezone||details.country_name) status='unlikely';
+  }
+  return {status,reasons,checked:true};
 }
 
 async function runSpeedTest(){
@@ -809,11 +1067,13 @@ async function detectIpAndSpeed(){
   state.fetchingIp=true;
   state.ipError=null;
   state.speed={status:'running',mbps:null,latency:null,error:null,note:null};
+  state.vpn={status:'uncertain',reasons:[],checked:false};
   render(currentLang);
   try{
     const data=await fetchIpData();
     if(!data || typeof data!=='object') throw new Error('empty');
     state.serverData=data;
+    state.vpn=evaluateVpnState(data);
   }catch(e){
     const noDataMsg=(I18N[currentLang]?.ip?.noData)||'No data';
     let msg;
@@ -829,6 +1089,7 @@ async function detectIpAndSpeed(){
     }
     state.ipError=msg;
     state.speed={status:'idle',mbps:null,latency:null,error:null,note:null};
+    state.vpn={status:'uncertain',reasons:[],checked:false};
     state.fetchingIp=false;
     render(currentLang);
     return;
@@ -919,19 +1180,27 @@ function updateIpSection(t){
     el.textContent=t.ip.none;
     return;
   }
-  const {ip,geo,raw,source,headers}=state.serverData;
-  const parts=[`<div class="title">${t.ip.title}</div>`, `<div>${t.ip.address(ip)}</div>`];
-  if(geo && (geo.city||geo.country)){
-    parts.push(`<div>${t.ip.geo(geo.city||'', geo.country||'')}</div>`);
+  const {ip,details,detailSource,source}=state.serverData;
+  const fields=t.ip.fields||{};
+  const rows=[`<div class="title">${t.ip.title}</div>`];
+  const ipLabel=fields.ip||'IP';
+  const ipValue=ip?String(ip):'—';
+  rows.push(`<div><b>${escapeHtml(ipLabel)}:</b> ${escapeHtml(ipValue)}</div>`);
+  if(details){
+    DETAIL_FIELDS.forEach(key=>{
+      const label=fields[key]||key;
+      const rawValue=details[key];
+      const value=(rawValue!=null && String(rawValue).trim())?String(rawValue):'—';
+      rows.push(`<div><b>${escapeHtml(label)}:</b> ${escapeHtml(value)}</div>`);
+    });
+  }else{
+    rows.push(`<div>${escapeHtml(t.ip.noDetails||'—')}</div>`);
   }
-  if(source){
-    parts.push(`<div class="small" style="margin-top:4px;color:var(--muted)">${t.ip.sourceLabel} ${source}</div>`);
+  const src=detailSource||source||null;
+  if(src){
+    rows.push(`<div class="small" style="margin-top:4px;color:var(--muted)">${t.ip.sourceLabel} ${escapeHtml(src)}</div>`);
   }
-  parts.push(`<div style="margin-top:6px">${t.ip.rawTitle}</div>`);
-  const payload=headers?{headers,raw}:raw??state.serverData;
-  const json=JSON.stringify(payload??{},null,2)||'{}';
-  parts.push(`<pre class="mono" style="margin:4px 0 0;white-space:pre-wrap">${escapeHtml(json)}</pre>`);
-  el.innerHTML=parts.join('');
+  el.innerHTML=rows.join('');
 }
 
 function updateSpeedSection(t){
@@ -1014,6 +1283,10 @@ async function render(lang){
       t.shock.screen(screenStr,basic.screen.colorDepth),
       t.shock.perms(permSample)
     ];
+    const vpnState=state.vpn||{status:'uncertain',reasons:[]};
+    const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
+    const vpnReasons=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
+    bullets.push(t.shock.vpn(vpnStatusLabel,vpnReasons));
     const shock=getEl('shock');
     const ul=getEl('shockList');
     ul.innerHTML='';
