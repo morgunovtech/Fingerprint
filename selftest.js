@@ -858,12 +858,16 @@ const I18N = vm.runInContext('I18N', sandbox);
   stateRef.sharePayload = savedSharePayload;
   shareBtnEl.textContent = shareBtnEl.dataset.label;
 
-  const profilingSummaryEl = elements.get('profilingSummary');
-  for (let i = 0; i < 20 && profilingSummaryEl.textContent.trim().length < 10; i += 1) {
+  const shockListEl = elements.get('shockList');
+  const collectShockText = () => Array.from(shockListEl.children || [])
+    .map(item => extractText(item).replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  for (let i = 0; i < 200 && collectShockText().length === 0; i += 1) {
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  assert.ok(/вероят/i.test(profilingSummaryEl.textContent) || profilingSummaryEl.textContent.trim().length > 0);
-  const initialSummaryText = profilingSummaryEl.textContent;
+  const initialShockEntries = collectShockText();
+  assert.ok(initialShockEntries.length >= 1);
+  assert.ok(initialShockEntries.some(text => /Устройство|Браузер|Экран/i.test(text)));
   const initialShare = stateRef.sharePayload;
   assert.ok(initialShare);
   assert.equal(elements.get('shareBtn').dataset.ready, '1');
@@ -876,24 +880,35 @@ const I18N = vm.runInContext('I18N', sandbox);
   assert.equal(documentElement.lang, 'en');
   assert.ok(elements.get('introTitle').textContent.length > 0);
   assert.ok(elements.get('langBtn').textContent.includes('Language'));
-  assert.notEqual(profilingSummaryEl.textContent, initialSummaryText);
-  assert.ok(/We are/i.test(profilingSummaryEl.textContent));
+  let englishShock = '';
+  for (let i = 0; i < 200; i += 1) {
+    englishShock = collectShockText().join(' ');
+    if (/Approximate location/i.test(englishShock)) break;
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+  assert.ok(/Approximate location|Time zone hint/i.test(englishShock));
   await sandbox.render('uz');
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(documentElement.lang, 'uz');
   assert.ok(elements.get('introTitle').textContent.length > 0);
   assert.ok(elements.get('langBtn').textContent.includes('Til'));
-  assert.ok(/Taxminan/i.test(profilingSummaryEl.textContent));
+  let uzbekShock = '';
+  for (let i = 0; i < 200; i += 1) {
+    uzbekShock = collectShockText().join(' ');
+    if (/Taxminiy joylashuv/i.test(uzbekShock)) break;
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+  assert.ok(/Taxminiy joylashuv|Vaqt mintaqasi/i.test(uzbekShock));
   await sandbox.detectIpAndSpeed();
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));
-  for (let i = 0; i < 20 && !/Tashkent/i.test(profilingSummaryEl.textContent); i += 1) {
+  for (let i = 0; i < 20 && !/Tashkent/i.test(collectShockText().join(' ')); i += 1) {
     await new Promise(resolve => setTimeout(resolve, 0));
   }
   assert.ok(stateRef.serverData);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
   assert.equal(stateRef.speed.status, 'done');
-  assert.ok(/Tashkent|Uzbekistan/i.test(profilingSummaryEl.textContent), 'profiling summary should mention updated region');
+  assert.ok(/Tashkent|Uzbekistan/i.test(collectShockText().join(' ')), 'exposure list should mention updated region');
   assert.ok(stateRef.sharePayload);
 
   console.log('Self-test completed successfully');

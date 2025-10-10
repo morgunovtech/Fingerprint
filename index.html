@@ -40,6 +40,7 @@
     .menu{position:relative}
     .menu button{white-space:nowrap}
     .menu-panel{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:4px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:var(--shadow);min-width:120px;z-index:10}
+    .menu-panel[hidden]{display:none!important}
     .menu-panel button{border:1px solid var(--border);background:transparent;color:var(--text);padding:6px 10px;border-radius:8px;font:inherit;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:6px}
     .menu-panel button:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
     .menu-panel button.active{border-color:var(--accent);color:var(--accent);background-color:rgba(96,165,250,0.12)}
@@ -51,6 +52,7 @@
     .big[data-level="high"]{color:#ef4444}
     .big[data-level="med"]{color:#f59e0b}
     .big[data-level="low"]{color:var(--text)}
+    .big .code-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(148,163,184,.15);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:.95em;color:inherit}
     .big .uniq-note{font-weight:400;color:var(--muted)}
     .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:0;grid-column:1/-1;max-width:720px}
     #introText p{margin:6px 0}
@@ -146,13 +148,12 @@
     <ul id="uniqAdvice" class="advice-list small"></ul>
     <div id="shock" class="danger" style="display:none">
       <div class="row shock-actions" id="ipActionRow">
-        <button class="btn" id="printBtn"></button>
         <button class="btn" id="ipBtn"></button>
         <button class="btn btn-primary" id="shareBtn"></button>
+        <button class="btn" id="printBtn"></button>
       </div>
       <div class="section-subtitle" id="shockTitle"></div>
       <ul id="shockList" class="advice-list small emoji-list"></ul>
-      <div id="profilingSummary" class="small" style="margin-top:12px"></div>
       <div id="ipInfo" class="small" style="margin-top:10px"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
@@ -3066,18 +3067,13 @@ function formatProfilingValue(finding,cfg){
 function syncShockVisibility(){
   const shock=getEl('shock');
   if(!shock) return;
-  const summaryEl=getEl('profilingSummary');
-  const summaryVisible=Boolean(summaryEl)&&Boolean(summaryEl.textContent&&summaryEl.textContent.trim());
-  const show=shockBulletCount>0||summaryVisible;
-  shock.style.display=show?'block':'none';
+  shock.style.display=shockBulletCount>0?'block':'none';
 }
 
 async function renderProfilingSection(basic,t){
-  const cfg=t.profiling||{};
-  const summaryEl=getEl('profilingSummary');
   state.profilingContext=null;
   if(!basic){
-    if(summaryEl) summaryEl.textContent=cfg.waiting||'';
+    renderShockBullets(null,t);
     syncShockVisibility();
     return;
   }
@@ -3085,7 +3081,6 @@ async function renderProfilingSection(basic,t){
     globalThis.__fingerprintBasic=basic;
   }catch(_){/* ignore */}
   const runId=++profilingSequence;
-  if(summaryEl) summaryEl.textContent=cfg.loading||'';
   const ipGeo=buildProfilerIpGeo();
   try{
     const mod=await loadProfilerModule();
@@ -3097,26 +3092,12 @@ async function renderProfilingSection(basic,t){
     if(runId!==profilingSequence) return;
     const context=buildProfilingContext(findings,basic,t);
     state.profilingContext=context;
-    if(summaryEl){
-      summaryEl.textContent='';
-      if(findings.length && typeof cfg.summary==='function'){
-        const summaryText=cfg.summary(context);
-        if(summaryText) summaryEl.textContent=summaryText;
-      }else if(cfg.none){
-        summaryEl.textContent=cfg.none;
-      }
-    }
     renderShockBullets(basic,t);
     syncShockVisibility();
   }catch(err){
     if(runId!==profilingSequence) return;
     state.profilingContext=null;
-    if(summaryEl){
-      const loadError=cfg.errors?.load||'Profiling module failed to load.';
-      const runError=cfg.errors?.run;
-      const message=profilerLoadError?loadError:(runError?runError(err.message||String(err)):String(err));
-      summaryEl.textContent=message;
-    }
+    console.error('Profiling error',err);
     renderShockBullets(basic,t);
     syncShockVisibility();
   }
@@ -3196,7 +3177,19 @@ async function render(lang){
     const uniqCopy=t.uniqMeaning(pct,{level});
     const uniqLineEl=getEl('uniqLine');
     uniqLineEl.dataset.level=level;
-    uniqLineEl.innerHTML=`<span>${uniqCopy.headline}</span><span class="uniq-note">${uniqCopy.note}</span>`;
+    uniqLineEl.textContent='';
+    const headSpan=document.createElement('span');
+    const codeSpan=document.createElement('span');
+    codeSpan.className='code-pill';
+    codeSpan.textContent=uniqCopy.headline;
+    headSpan.appendChild(codeSpan);
+    uniqLineEl.appendChild(headSpan);
+    if(uniqCopy.note){
+      const noteSpan=document.createElement('span');
+      noteSpan.className='uniq-note';
+      noteSpan.textContent=uniqCopy.note;
+      uniqLineEl.appendChild(noteSpan);
+    }
     const exampleEl=getEl('uniqExample');
     if(uniqCopy.example){
       exampleEl.style.display='block';
@@ -3559,11 +3552,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   const langMenu=getEl('langMenu');
   if(langBtn&&langMenu){
     langBtn.addEventListener('click',event=>{
+      event.preventDefault();
       event.stopPropagation();
-      setLangMenu(!langMenuIsOpen);
+      const next=!langMenuIsOpen;
+      setThemeMenu(false);
+      setLangMenu(next);
     });
     langMenu.querySelectorAll('button[data-lang]').forEach(btn=>{
       btn.addEventListener('click',event=>{
+        event.preventDefault();
         event.stopPropagation();
         const value=btn.dataset.lang;
         if(!value) return;
@@ -3584,11 +3581,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   const themeMenu=getEl('themeMenu');
   if(themeBtn&&themeMenu){
     themeBtn.addEventListener('click',event=>{
+      event.preventDefault();
       event.stopPropagation();
-      setThemeMenu(!themeMenuIsOpen);
+      const next=!themeMenuIsOpen;
+      setLangMenu(false);
+      setThemeMenu(next);
     });
     themeMenu.querySelectorAll('button[data-theme]').forEach(btn=>{
       btn.addEventListener('click',event=>{
+        event.preventDefault();
         event.stopPropagation();
         const value=btn.dataset.theme;
         if(!value) return;
@@ -3604,6 +3605,12 @@ document.addEventListener('DOMContentLoaded',()=>{
       }
     });
   }
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){
+      setLangMenu(false);
+      setThemeMenu(false);
+    }
+  });
   render(lang);
 });
 </script>
