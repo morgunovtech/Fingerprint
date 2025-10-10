@@ -36,6 +36,13 @@
     .big{font-weight:700;font-size:21px;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;margin-bottom:12px}
     .big .dot{margin-top:0}
     .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:0;grid-column:1/-1;max-width:720px}
+    #introText p{margin:6px 0}
+    #introText p:first-child{margin-top:0}
+    #introText p:last-child{margin-bottom:0}
+    #uniqExample{margin:4px 0 0;color:var(--muted)}
+    #uniqAdviceTitle{margin-top:10px;font-weight:600}
+    .advice-list{list-style:none;margin:6px 0 0;padding:0}
+    .advice-list li{margin:4px 0;padding-left:0}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
@@ -56,6 +63,10 @@
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     #shockList{list-style:none;margin:6px 0 0;padding:0}
     #shockList li{margin:4px 0}
+    #advancedPanel{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:10px;background:rgba(96,165,250,0.08);display:none}
+    #advancedPanel h4{margin:0 0 6px;font-size:15px}
+    #advancedPanel ul{list-style:none;margin:6px 0 0;padding:0}
+    #advancedPanel li{margin:4px 0}
     details{margin-top:8px}
     @media (max-width:720px){
       h1{font-size:20px}
@@ -99,8 +110,12 @@
   <!-- Block 2: Uniqueness + shock -->
   <section class="block">
     <div id="uniqLine" class="big"></div>
+    <div id="uniqExample" class="small"></div>
+    <div id="uniqAdviceTitle" class="small"></div>
+    <ul id="uniqAdvice" class="advice-list small"></ul>
     <div class="row" id="ipActionRow" style="margin:10px 0">
       <button class="btn" id="ipBtn"></button>
+      <button class="btn" id="advancedBtn"></button>
     </div>
     <div id="shock" class="danger" style="display:none">
       <div class="small" id="shockTitle"></div>
@@ -108,6 +123,7 @@
       <div id="ipInfo" class="small" style="margin-top:10px"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
+    <div id="advancedPanel"></div>
   </section>
 
   <!-- Block 3: Detailed cards -->
@@ -138,14 +154,28 @@
 const I18N = {
   ru: {
     langOption:'🇷🇺 Русский',
-    introTitle:'Что делает сервис',
-    introText:'Этот сервис показывает, какие данные о вас сразу получает сайт и как они влияют на приватность. Всё считается прямо в браузере, пока вы сами не попросите узнать IP и измерить скорость.',
+    introTitle:'Для чего этот сервис',
+    introParagraphs:[
+      'Наглядно показывает, какие данные о вас уже видят веб-сайты и как это влияет на приватность.',
+      'Объясняем, насколько уникален ваш «цифровой отпечаток» — набор параметров, по которым сайт узнаёт устройство даже без аккаунта.',
+      'Каждый параметр помечен уровнем риска: чем больше пунктов со средним и высоким риском, тем проще вас опознать.',
+      'Мы не собираем и не храним данные: всё вычисляется локально, никакой регистрации и паролей не требуется.',
+      'Отдельная кнопка «Определить скорость интернета и IP-адрес» запускает быстрый тест и показывает сведения, которые открывает ваш IP, включая оценку использования VPN.'
+    ],
     legendTitle:'Как читать уровни риска:',
     risk:{low:'низкий', med:'средний', high:'высокий'},
     uniqMeaning:pct=>({
       headline:`Ваш отпечаток уникальнее, чем ${pct}% пользователей`,
-      note:'Чем выше процент, тем легче сайтам узнать вас снова. Хотите оставаться незаметным — разделяйте профили, чаще чистите данные или подключайте VPN.'
+      note:'Чем выше процент, тем проще сайтам узнать вас снова.',
+      example:`Например, онлайн-магазин сопоставит ваш отпечаток с прошлым визитом и подстроит цены, даже если вы не входили в аккаунт.`,
+      actions:[
+        'Разделяйте профили или браузеры для работы, личных дел и покупок.',
+        'Регулярно очищайте куки, локальное и сессионное хранилище, а также историю.',
+        'Используйте VPN или приватные сети, когда нужна анонимность.'
+      ]
     }),
+    uniqExampleLead:'Как это работает на практике:',
+    uniqAdviceLead:'Что можно сделать:',
     detailTitle:'Какие данные видит сайт',
     shockTitle:'Что уже видно без IP:',
     shock:{
@@ -159,6 +189,11 @@ const I18N = {
       browser:browser=>`🌐 <b>Браузер:</b> ${browser}`,
       screen:(screen,depth,monitorsText)=>`🖥️ <b>Экран:</b> ${screen}, глубина цвета ${depth}-бит${monitorsText?` • ${monitorsText}`:''}`,
       perms:perms=>`🔐 <b>Разрешения:</b> ${perms}`,
+      languages:list=>`🌍 <b>Языки интерфейса:</b> ${list}`,
+      storage:text=>`💾 <b>Хранилища:</b> ${text}`,
+      touch:(points,pointer)=>`🖐️ <b>Способы управления:</b> касаний ${points}, указатель ${pointer}`,
+      network:(type,downlink,rtt)=>`📶 <b>Тип сети:</b> ${type}${downlink?` • ~${downlink} Мбит/с`:''}${rtt?` • задержка ${rtt} мс`:''}`,
+      dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${status}`,
       vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
       speed:value=>`⚡ <b>Скорость сети:</b> ${value}`
     },
@@ -194,6 +229,26 @@ const I18N = {
         approx:'оценка по данным браузера'
       }
     },
+    advanced:{
+      button:'Advanced режим',
+      buttonActive:'Скрыть Advanced',
+      title:'Дополнительные сигналы',
+      loading:'Собираем дополнительные сигналы…',
+      fonts:'Сторонние шрифты',
+      trackers:'Возможные трекеры',
+      resources:'Другие сторонние загрузки',
+      plugins:'Плагины в браузере',
+      media:'Подключённые устройства',
+      storage:'Хранилища и куки',
+      none:'Дополнительных сигналов не обнаружено',
+      fontsNone:'Сторонние шрифты не найдены',
+      trackersNone:'Похожих трекеров не обнаружено',
+      resourcesNone:'Сторонних загрузок не найдено',
+      pluginsNone:'Плагины не обнаружены',
+      mediaNone:'Браузер не сообщил об устройствах',
+      note:'Advanced-режим использует только уже загруженные данные и не отправляет дополнительные запросы.',
+      storageSummary:values=>`localStorage: ${values.local}, sessionStorage: ${values.session}, IndexedDB: ${values.idb}, cookies: ${values.cookies}`
+    },
     vpn:{
       label:'Использование VPN',
       statuses:{
@@ -219,8 +274,10 @@ const I18N = {
       'persistent-storage':'постоянное хранилище'
     },
     permStates:{granted:'разрешено',denied:'запрещено',prompt:'спросит при необходимости',unknown:'не сообщается'},
+    pointerLabels:{fine:'мышь/трекпад',coarse:'тачскрин',none:'не сообщает'},
+    dntStatus:{on:'включена',off:'выключена',unknown:'браузер не сообщил'},
     memoryNote:'браузер округляет цифры, реальные значения могут отличаться',
-    saveButton:'Сохранить',
+    saveButton:'Сохранить PDF',
     copy:{hint:'Нажмите, чтобы скопировать',done:'Скопировано'},
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
@@ -237,14 +294,28 @@ const I18N = {
   },
   en: {
     langOption:'🇬🇧 English',
-    introTitle:'What this service does',
-    introText:'This page explains what a site learns about you right away and how that affects privacy. Everything stays inside your browser until you ask for the IP lookup and the speed test.',
+    introTitle:'Why this service exists',
+    introParagraphs:[
+      'Shows in plain language which data websites already see about you and how that impacts your privacy.',
+      'Explains how unique your “digital fingerprint” is — the combination of signals a site can use to recognise you without an account.',
+      'Every item is tagged with a risk level: the more medium or high risks you have, the easier it is to identify you.',
+      'We never collect or store data: everything is calculated locally, no registration or passwords required.',
+      'The “Detect IP & run speed test” button runs a quick check, reveals what your IP discloses, and adds our VPN usage guess.'
+    ],
     legendTitle:'How to read the risk levels:',
     risk:{low:'low', med:'medium', high:'high'},
     uniqMeaning:pct=>({
       headline:`Your fingerprint is more unique than ${pct}% of users`,
-      note:'The higher the number, the easier it is to recognise you. Keep separate profiles, clear data more often, or add a VPN when you want to stay harder to track.'
+      note:'The higher the percentage, the simpler it is for sites to recognise you again.',
+      example:'For example, an online shop can link this fingerprint to a past visit and adjust prices even if you never logged in.',
+      actions:[
+        'Keep separate browser profiles for work, shopping, and personal life.',
+        'Regularly clear cookies, local/session storage, and history after sensitive activity.',
+        'Use a VPN or privacy network whenever you need extra anonymity.'
+      ]
     }),
+    uniqExampleLead:'How it plays out in real life:',
+    uniqAdviceLead:'What you can do:',
     detailTitle:'What a site can learn',
     shockTitle:'Already visible without IP:',
     shock:{
@@ -258,6 +329,11 @@ const I18N = {
       browser:browser=>`🌐 <b>Browser:</b> ${browser}`,
       screen:(screen,depth,monitorsText)=>`🖥️ <b>Screen:</b> ${screen}, colour depth ${depth}-bit${monitorsText?` • ${monitorsText}`:''}`,
       perms:perms=>`🔐 <b>Permissions:</b> ${perms}`,
+      languages:list=>`🌍 <b>Interface languages:</b> ${list}`,
+      storage:text=>`💾 <b>Storage:</b> ${text}`,
+      touch:(points,pointer)=>`🖐️ <b>Input methods:</b> ${points} touch points, pointer ${pointer}`,
+      network:(type,downlink,rtt)=>`📶 <b>Connection type:</b> ${type}${downlink?` • ~${downlink} Mbps`:''}${rtt?` • latency ${rtt} ms`:''}`,
+      dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${status}`,
       vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
       speed:value=>`⚡ <b>Connection speed:</b> ${value}`
     },
@@ -293,6 +369,26 @@ const I18N = {
         approx:'estimated from the Network Information API'
       }
     },
+    advanced:{
+      button:'Advanced mode',
+      buttonActive:'Hide advanced data',
+      title:'Additional signals',
+      loading:'Collecting additional signals…',
+      fonts:'Third-party fonts',
+      trackers:'Potential trackers',
+      resources:'Other third-party loads',
+      plugins:'Browser plugins',
+      media:'Connected devices',
+      storage:'Storage & cookies',
+      none:'No extra signals found',
+      fontsNone:'No external fonts detected',
+      trackersNone:'No tracker domains spotted',
+      resourcesNone:'No third-party loads detected',
+      pluginsNone:'No plugins reported',
+      mediaNone:'Browser did not report devices',
+      note:'Advanced mode only uses already loaded data and never triggers extra requests.',
+      storageSummary:values=>`localStorage: ${values.local}, sessionStorage: ${values.session}, IndexedDB: ${values.idb}, cookies: ${values.cookies}`
+    },
     vpn:{
       label:'VPN usage',
       statuses:{
@@ -318,8 +414,10 @@ const I18N = {
       'persistent-storage':'persistent storage'
     },
     permStates:{granted:'allowed',denied:'blocked',prompt:'will ask when needed',unknown:'not reported'},
+    pointerLabels:{fine:'mouse/trackpad',coarse:'touchscreen',none:'not reported'},
+    dntStatus:{on:'enabled',off:'disabled',unknown:'not reported'},
     memoryNote:'browser rounds numbers, actual RAM may differ',
-    saveButton:'Save',
+    saveButton:'Save PDF',
     copy:{hint:'Click to copy',done:'Copied'},
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
@@ -336,14 +434,28 @@ const I18N = {
   },
   uz: {
     langOption:'🇺🇿 Oʻzbekcha',
-    introTitle:'Servis nima qiladi',
-    introText:'Bu sahifa sayt siz haqingizda darhol oladigan maʼlumotlarni va ularning maxfiylikka taʼsirini ko‘rsatadi. Hammasi brauzeringiz ichida bajariladi, IP va tezlik testi faqat siz so‘raganingizda ishlaydi.',
+    introTitle:'Servis nima uchun kerak',
+    introParagraphs:[
+      'Saytlar siz haqingizda allaqachon ko‘radigan maʼlumotlarni va ularning maxfiylikka taʼsirini oddiy tilda ko‘rsatadi.',
+      '“Raqamli barmoq izi” — sayt akkauntsiz ham tanishi mumkin bo‘lgan signallar to‘plami — qanchalik noyobligini tushuntiramiz.',
+      'Har bir element xavf darajasi bilan belgilangan: o‘rtacha va yuqori xavflar qancha ko‘p bo‘lsa, shuncha oson aniqlanishingiz mumkin.',
+      'Hech qanday maʼlumot yig‘maymiz va saqlamaymiz: hammasi brauzeringizda hisoblanadi, ro‘yxatdan o‘tish ham, parol ham talab etilmaydi.',
+      '“IP aniqlash va tezlikni o‘lchash” tugmasi tezkor testni ishga tushiradi, IP orqali ko‘rinadigan maʼlumotlarni ko‘rsatadi va VPN ishlatilishini taxmin qiladi.'
+    ],
     legendTitle:'Xavf darajalarini qanday o‘qish kerak:',
     risk:{low:'past', med:'o‘rtacha', high:'yuqori'},
     uniqMeaning:pct=>({
       headline:`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`,
-      note:'Ko‘rsatkich qanchalik katta bo‘lsa, tanib olish shunchalik oson bo‘ladi. Ko‘proq maxfiylik kerak bo‘lsa, alohida profillarni saqlang, maʼlumotlarni tez-tez tozalang yoki VPN ulang.'
+      note:'Foiz qanchalik katta bo‘lsa, saytlar sizni yana tanishi shunchalik oson.',
+      example:'Masalan, onlayn do‘kon bu barmoq izini oldingi tashrif bilan bog‘lab, akkauntsiz ham avvalgi narxlarni ko‘rsatishi mumkin.',
+      actions:[
+        'Ish, xarid va shaxsiy hayot uchun alohida brauzer yoki profil ishlating.',
+        'Muhim ishlar tugagach, cookie, lokal va sessiya xotirasini hamda tarixni tozalab turing.',
+        'Qo‘shimcha maxfiylik kerak bo‘lsa, VPN yoki maxfiy tarmoqlardan foydalaning.'
+      ]
     }),
+    uniqExampleLead:'Bu amalda qanday ko‘rinadi:',
+    uniqAdviceLead:'Nima qilish mumkin:',
     detailTitle:'Sayt nimalarni ko‘rishi mumkin',
     shockTitle:'IP so‘ralmasdan ko‘rinadiganlar:',
     shock:{
@@ -357,6 +469,11 @@ const I18N = {
       browser:browser=>`🌐 <b>Brauzer:</b> ${browser}`,
       screen:(screen,depth,monitorsText)=>`🖥️ <b>Ekran:</b> ${screen}, rang chuqurligi ${depth}-bit${monitorsText?` • ${monitorsText}`:''}`,
       perms:perms=>`🔐 <b>Ruxsatlar:</b> ${perms}`,
+      languages:list=>`🌍 <b>Interfeys tillari:</b> ${list}`,
+      storage:text=>`💾 <b>Saqlash:</b> ${text}`,
+      touch:(points,pointer)=>`🖐️ <b>Boshqaruv usullari:</b> sensor nuqtalari ${points}, ko‘rsatkich ${pointer}`,
+      network:(type,downlink,rtt)=>`📶 <b>Aloqa turi:</b> ${type}${downlink?` • ~${downlink} Mbit/s`:''}${rtt?` • kechikish ${rtt} ms`:''}`,
+      dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${status}`,
       vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
       speed:value=>`⚡ <b>Internet tezligi:</b> ${value}`
     },
@@ -392,6 +509,26 @@ const I18N = {
         approx:'brauzer maʼlumotlaridan taxmin'
       }
     },
+    advanced:{
+      button:'Advanced rejimi',
+      buttonActive:'Advanced maʼlumotlarini yashirish',
+      title:'Qo‘shimcha signallar',
+      loading:'Qo‘shimcha signallar yig‘ilmoqda…',
+      fonts:'Uchinchi tomon shriftlari',
+      trackers:'Ehtimoliy trekerlar',
+      resources:'Boshqa uchinchi tomon yuklamalari',
+      plugins:'Brauzer plaginlari',
+      media:'Ulangan qurilmalar',
+      storage:'Saqlash va cookie',
+      none:'Qo‘shimcha signallar topilmadi',
+      fontsNone:'Tashqi shriftlar aniqlanmadi',
+      trackersNone:'Treker domenlari topilmadi',
+      resourcesNone:'Uchinchi tomon yuklamalari aniqlanmadi',
+      pluginsNone:'Plaginlar haqida maʼlumot yo‘q',
+      mediaNone:'Brauzer qurilmalar haqida maʼlumot bermadi',
+      note:'Advanced rejim faqat allaqachon yuklangan maʼlumotdan foydalanadi va qo‘shimcha so‘rov yubormaydi.',
+      storageSummary:values=>`localStorage: ${values.local}, sessionStorage: ${values.session}, IndexedDB: ${values.idb}, cookie: ${values.cookies}`
+    },
     vpn:{
       label:'VPN ishlatilishi',
       statuses:{
@@ -417,8 +554,10 @@ const I18N = {
       'persistent-storage':'doimiy xotira'
     },
     permStates:{granted:'ruxsat berilgan',denied:'bloklangan',prompt:'kerak bo‘lsa so‘raydi',unknown:'maʼlumot yo‘q'},
+    pointerLabels:{fine:'sichqoncha/trekpad',coarse:'sensor ekran',none:'maʼlumot yo‘q'},
+    dntStatus:{on:'yoqilgan',off:'o‘chirilgan',unknown:'brauzer maʼlumot bermadi'},
     memoryNote:'brauzer qiymatlarni taxmin qiladi, haqiqiy RAM boshqacha bo‘lishi mumkin',
-    saveButton:'Saqlash',
+    saveButton:'PDF ni saqlash',
     copy:{hint:'Nusxa olish uchun bosing',done:'Nusxalandi'},
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
@@ -516,6 +655,45 @@ function probableBrowsers(b){
   (/Safari\//.test(ua)&&!/Chrome\//.test(ua))&&out.push('Safari');
   return out.length?Array.from(new Set(out)).join(' / '):'—';
 }
+
+function browserVersionFromUa(ua){
+  const patterns=[
+    {regex:/Arc\/([\d\.]+)/i,name:'Arc'},
+    {regex:/Edg(?:e)?\/([\d\.]+)/i,name:'Edge'},
+    {regex:/OPR\/([\d\.]+)/i,name:'Opera'},
+    {regex:/YaBrowser\/([\d\.]+)/i,name:'Yandex Browser'},
+    {regex:/Firefox\/([\d\.]+)/i,name:'Firefox'},
+    {regex:/Brave\/([\d\.]+)/i,name:'Brave'},
+    {regex:/Chrome\/([\d\.]+)/i,name:'Chrome'},
+    {regex:/Version\/([\d\.]+).*Safari\/([\d\.]+)/i,name:'Safari'},
+    {regex:/Safari\/([\d\.]+)/i,name:'Safari'}
+  ];
+  for(const {regex,name} of patterns){
+    const match=ua.match(regex);
+    if(match){
+      const version=match[1]||match[2];
+      if(version) return {name,version};
+    }
+  }
+  return null;
+}
+
+function browserDisplayName(basic){
+  const ua=basic.userAgent||'';
+  const versionInfo=browserVersionFromUa(ua);
+  const guess=probableBrowsers(basic);
+  const main=versionInfo?.name||(guess&&guess!=='—'?guess.split(' / ')[0]:null);
+  let version=versionInfo?.version||null;
+  if(!version && basic.uaHighEntropy?.uaFullVersion){
+    version=basic.uaHighEntropy.uaFullVersion.split('.')[0];
+  }
+  if(main && version){
+    return `${main} ${version}`;
+  }
+  if(main) return main;
+  if(guess && guess!=='—') return guess;
+  return '—';
+}
 function legacyOsFromUa(ua){ua=ua||'';const mac=ua.match(/Mac OS X ([0-9_\.]+)/i);if(mac)return'macOS '+mac[1].replace(/_/g,'.');const win=ua.match(/Windows NT ([0-9\.]+)/i);if(win){const map={'10.0':'Windows 10/11','6.3':'Windows 8.1','6.2':'Windows 8','6.1':'Windows 7'};return map[win[1]]||('Windows NT '+win[1]);}const ios=ua.match(/iPhone OS ([0-9_]+)/i)||ua.match(/CPU OS ([0-9_]+)/i);if(ios)return'iOS '+ios[1].replace(/_/g,'.');const android=ua.match(/Android ([0-9\.]+)/i);if(android)return'Android '+android[1];if(/Linux/i.test(ua))return'Linux';return'';}
 
 function guessOSVersion(basic){
@@ -528,24 +706,26 @@ function guessOSVersion(basic){
   if(platform.includes('mac')){
     if(legacy) return legacy;
     if(!Number.isNaN(pvMajor)){
-      const map={23:'macOS 14',22:'macOS 13',21:'macOS 12',20:'macOS 11',19:'macOS 10.15'};
+      const map={24:'macOS 15',23:'macOS 14',22:'macOS 13',21:'macOS 12',20:'macOS 11',19:'macOS 10.15'};
       return map[pvMajor]||`macOS (Darwin ${pvString||pvMajor})`;
     }
     return 'macOS';
   }
   if(platform.includes('ios')||/iPhone|iPad|iPod/i.test(ua)){
     const model=hints.model||(/iPad|iPhone|iPod/i.exec(ua)?.[0]||'').trim();
-    const label=legacy||'iOS';
-    return model?`${label} (${model})`:label;
+    const iosVersion=!Number.isNaN(pvMajor)&&pvMajor>0?`iOS ${pvMajor}`:(legacy||'iOS');
+    return model?`${iosVersion} (${model})`:iosVersion;
   }
   if(platform.includes('android')){
-    if(legacy) return legacy;
+    const versionMatch=ua.match(/Android ([0-9\.]+)/i);
+    const versionLabel=versionMatch?`Android ${versionMatch[1]}`:(legacy||'Android');
     const arch=hints.architecture||'';
-    return arch?`Android (${arch})`:'Android';
+    return arch?`${versionLabel} (${arch})`:versionLabel;
   }
   if(platform.includes('windows')){
     const map={'15':'Windows 11','14':'Windows 10','13':'Windows 8.1','12':'Windows 8','11':'Windows 7'};
-    if(map[pvMajor]) return map[pvMajor];
+    if(map[String(pvMajor)]) return map[String(pvMajor)];
+    if(pvMajor>15) return 'Windows 11';
     return legacy||'Windows';
   }
   if(platform.includes('chrome os')) return 'ChromeOS';
@@ -806,135 +986,135 @@ const CARD_CONTENT = {
   tz:{
     risk:'med',
     label:{ru:'Часовой пояс',en:'Time zone',uz:'Vaqt mintaqasi'},
-    use:{ru:'Помогает сайтам прикинуть ваш регион',en:'Helps sites guess your region',uz:'Saytlar hududingizni taxmin qiladi'},
-    ex:{ru:'Москва и Нью-Йорк — разные зоны',en:'Moscow and New York are different zones',uz:'Moskva va Nyu-York zonalari har xil'},
-    adv:{ru:'Следите за точностью системного времени',en:'Keep your system time accurate',uz:'Tizim vaqti to‘g‘ri bo‘lsin'}
+    use:{ru:'Часовой пояс выдаёт примерный регион проживания',en:'Your time zone hints at the region you live in',uz:'Vaqt mintaqasi qaysi hududda ekaningizni ko‘rsatadi'},
+    ex:{ru:'Например, Москва и Лондон живут по разным часам',en:'For example, Moscow and London run on different clocks',uz:'Masalan, Moskva va London vaqtlari farq qiladi'},
+    adv:{ru:'Синхронизируйте системное время и настройки VPN',en:'Keep your system clock and VPN settings in sync',uz:'Tizim vaqti va VPN sozlamalarini mos tuting'}
   },
   ua:{
     risk:'med',
     label:{ru:'Браузер',en:'Browser',uz:'Brauzer'},
-    use:{ru:'Название и версия показывают редкость',en:'Name and version show how rare you are',uz:'Nom va versiya qanchalik noyobligini ko‘rsatadi'},
-    ex:{ru:'Arc 1.30 — редкий браузер',en:'Arc 1.30 is a rare browser',uz:'Arc 1.30 kam uchraydi'},
-    adv:{ru:'Держите браузер обновлённым',en:'Keep the browser up to date',uz:'Brauzerni yangilab turing'}
+    use:{ru:'Название и версия браузера помогают отличить вас от большинства пользователей',en:'Browser name and version make it easy to separate you from the crowd',uz:'Brauzer nomi va versiyasi sizni boshqalardan ajratib turadi'},
+    ex:{ru:'Например, Arc встречается реже, чем Chrome или Safari',en:'For example, Arc appears far less often than Chrome or Safari',uz:'Masalan, Arc Chrome yoki Safari ga qaraganda kam uchraydi'},
+    adv:{ru:'Используйте обновлённые и массовые версии, когда важна анонимность',en:'Stick to up-to-date mainstream builds when anonymity matters',uz:'Maxfiylik zarur bo‘lsa, yangilanib turadigan ommabop versiyalardan foydalaning'}
   },
   plat:{
     risk:'low',
-    label:{ru:'Платформа',en:'Platform',uz:'Platforma'},
-    use:{ru:'Определяет класс устройства',en:'Shows the device class',uz:'Qurilma turini bildiradi'},
-    ex:{ru:'macOS, Windows, Android',en:'macOS, Windows, Android',uz:'macOS, Windows, Android'},
-    adv:{ru:'Разделяйте рабочие и личные устройства',en:'Split work and personal devices',uz:'Ish va shaxsiy qurilmalarni ajrating'}
+    label:{ru:'Операционная система',en:'Operating system',uz:'Operatsion tizim'},
+    use:{ru:'Тип и версия ОС помогают сопоставить устройство',en:'OS type and version help link the device',uz:'OT turi va versiyasi qurilmani aniqlashga yordam beradi'},
+    ex:{ru:'Например, macOS 14 или Windows 11 выделяются',en:'For example, macOS 14 or Windows 11 stand out',uz:'Masalan, macOS 14 yoki Windows 11 darhol ajralib turadi'},
+    adv:{ru:'Используйте отдельные устройства или виртуальные машины для чувствительных задач',en:'Use separate devices or virtual machines for sensitive tasks',uz:'Muhim ishlar uchun alohida qurilma yoki virtual mashina qo‘llang'}
   },
   screen:{
     risk:'med',
     label:{ru:'Экран',en:'Screen',uz:'Ekran'},
-    use:{ru:'Размер и плотность отличают устройства',en:'Size and density distinguish devices',uz:'O‘lcham va zichlik qurilmalarni farqlaydi'},
-    ex:{ru:'1920×1080 — популярный размер',en:'1920×1080 is a popular size',uz:'1920×1080 mashhur o‘lcham'},
-    adv:{ru:'Приватные режимы или виртуалки меняют параметры',en:'Private modes or VMs can change these values',uz:'Maxfiy rejim yoki VM bu qiymatlarni o‘zgartiradi'}
+    use:{ru:'Разрешение и плотность экрана подсказывают модель устройства',en:'Resolution and pixel density hint at the device model',uz:'Ekran o‘lchami va piksellar zichligi qurilma modelini ko‘rsatadi'},
+    ex:{ru:'Например, 13" ноутбук и 4K монитор дают разные сочетания',en:'A 13" laptop and a 4K monitor produce very different combos',uz:'Masalan, 13" noutbuk va 4K monitor butunlay boshqa kombinatsiya beradi'},
+    adv:{ru:'Отключайте лишние мониторы, когда хотите скрыть рабочую конфигурацию',en:'Disconnect extra monitors when you want to hide your work setup',uz:'Ishdagi sozlamani yashirmoqchi bo‘lsangiz, ortiqcha monitorlarni uzib qo‘ying'}
   },
   langs:{
     risk:'med',
     label:{ru:'Языки',en:'Languages',uz:'Tillar'},
-    use:{ru:'Список языков намекает на страну и интересы',en:'Language list hints at country and interests',uz:'Tillar ro‘yxati mamlakat va qiziqishlarni ko‘rsatadi'},
-    ex:{ru:'ru, en',en:'ru, en',uz:'ru, en'},
-    adv:{ru:'Оставьте только нужные языки',en:'Keep only the languages you use',uz:'Faqat kerakli tillarni qoldiring'}
+    use:{ru:'Языки интерфейса показывают, где и как вы обычно общаетесь',en:'Interface languages show where and how you normally browse',uz:'Interfeys tillari qayerda va qanday til ishlatishingizni ko‘rsatadi'},
+    ex:{ru:'Например, ru + uz указывает на Центральную Азию',en:'For example, ru + uz points to Central Asia',uz:'Masalan, ru + uz kombinatsiyasi Markaziy Osiyaga ishora qiladi'},
+    adv:{ru:'Храните только те языки, которыми действительно пользуетесь',en:'Keep only the languages you actively need',uz:'Faqat kerakli tillarni qoldiring'}
   },
   hw:{
     risk:'low',
     label:{ru:'CPU / RAM',en:'CPU / RAM',uz:'CPU / RAM'},
-    use:{ru:'Ядра и память показывают класс устройства',en:'Cores and memory show the device class',uz:'Yadrolar va xotira qurilma turini bildiradi'},
-    ex:{ru:'8 ядер и ~16 ГБ',en:'8 cores and ~16 GB',uz:'8 yadro va ~16 GB'},
-    adv:{ru:'Если цифры не совпадают с системой — ориентируйтесь на диспетчер задач',en:'If the numbers differ from the OS, trust the system stats',uz:'Raqamlar tizimdagidan farq qilsa, operatsion tizim maʼlumotlariga tayaning'}
+    use:{ru:'Количество ядер и объём памяти выдают класс устройства',en:'Core count and memory size expose the device class',uz:'Yadrolar soni va xotira hajmi qurilma turini ochib beradi'},
+    ex:{ru:'Смартфон с 6 ГБ отличается от ПК с 32 ГБ',en:'A phone with 6 GB looks different from a PC with 32 GB',uz:'6 GB telefon 32 GB kompyuterdan oson farqlanadi'},
+    adv:{ru:'Для критичных задач используйте отдельное или изолированное устройство',en:'Use a dedicated or isolated device for critical tasks',uz:'Muhim vazifalar uchun alohida yoki izolyatsiyalangan qurilmadan foydalaning'}
   },
   store:{
     risk:'med',
     label:{ru:'Хранилища',en:'Storage',uz:'Saqlash'},
-    use:{ru:'Помогают восстановить идентификатор',en:'Can recreate a saved ID',uz:'Saqlangan identifikatorni tiklash mumkin'},
-    ex:{ru:'localStorage, cookies',en:'localStorage, cookies',uz:'localStorage, cookies'},
-    adv:{ru:'Очищайте данные после важных сессий',en:'Clear data after sensitive sessions',uz:'Muhim sessiyalardan so‘ng maʼlumotlarni tozalang'}
+    use:{ru:'Cookie и хранилища позволяют сайтам узнавать вас без входа',en:'Cookies and storage let sites recognise you without logging in',uz:'Cookie va saqlash saytga sizni akkauntsiz ham tanish imkonini beradi'},
+    ex:{ru:'Если localStorage доступен, сайт может сохранить уникальный ID',en:'If localStorage is available, a site can store a unique ID',uz:'Agar localStorage mavjud bo‘lsa, sayt noyob ID saqlashi mumkin'},
+    adv:{ru:'Регулярно очищайте хранилища или используйте приватные окна',en:'Regularly clear storage or rely on private windows',uz:'Saqlashni muntazam tozalang yoki maxfiy oynalardan foydalaning'}
   },
   dnt:{
     risk:'low',
-    label:{ru:'DNT',en:'DNT',uz:'DNT'},
-    use:{ru:'Показывает, включали ли вы «Не отслеживать»',en:'Shows whether Do Not Track is enabled',uz:'Do Not Track yoqilganini ko‘rsatadi'},
-    ex:{ru:'Флаг включён, но сайты могут игнорировать',en:'Flag on, yet many sites ignore it',uz:'Flag yoqilgan, lekin ko‘p saytlar eʼtibor bermaydi'},
-    adv:{ru:'Дополните флаг блокировщиками',en:'Add content blockers on top',uz:'Qo‘shimcha bloklovchilardan foydalaning'}
+    label:{ru:'Настройка «Не отслеживать»',en:'“Do Not Track” setting',uz:'“Kuzatmang” sozlamasi'},
+    use:{ru:'Сообщает сайтам, просите ли вы не отслеживать вас',en:'Tells sites you prefer not to be tracked',uz:'Saytlarga sizni kuzatmaslikni so‘rashingizni bildiradi'},
+    ex:{ru:'Часть сервисов игнорирует этот сигнал',en:'Many services still ignore the signal',uz:'Ko‘plab servislar bu so‘rovni baribir eʼtiborsiz qoldiradi'},
+    adv:{ru:'Дополняйте настройку блокировщиками и VPN',en:'Back it up with blockers and a VPN',uz:'Bu sozlamani bloklovchi va VPN bilan mustahkamlang'}
   },
   touch:{
     risk:'low',
     label:{ru:'Касания/указатель',en:'Touch / pointer',uz:'Sensor / ko‘rsatkich'},
-    use:{ru:'Показывает наличие тачскрина и мыши',en:'Shows if touch or mouse is available',uz:'Sensor yoki sichqoncha borligini bildiradi'},
-    ex:{ru:'touch 0, pointer fine',en:'touch 0, pointer fine',uz:'touch 0, pointer fine'},
-    adv:{ru:'Отдельные профили скрывают комбинации',en:'Separate profiles hide unique combos',uz:'Alohida profil noyob kombinatsiyani yashiradi'}
+    use:{ru:'Количество касаний и тип указателя выдают устройство (ПК, планшет, смартфон)',en:'Touch points and pointer type reveal whether this is a PC, tablet, or phone',uz:'Sensor nuqtalari va ko‘rsatkich turi qurilma (PK, planshet, telefon) ekanini ko‘rsatadi'},
+    ex:{ru:'0 касаний + «fine» = настольный ПК, 5 касаний = планшет',en:'0 touches + “fine” points to a desktop, 5 touches points to a tablet',uz:'0 sensor + “fine” bu stolüstü PK, 5 sensor esa planshetni anglatadi'},
+    adv:{ru:'Разделяйте рабочие и личные устройства, чтобы сигналы не накладывались',en:'Keep work and personal devices separate so the signals do not mix',uz:'Ish va shaxsiy qurilmalarni alohida saqlang, shunda signallar aralashmaydi'}
   },
   net:{
     risk:'med',
     label:{ru:'Сеть',en:'Network',uz:'Tarmoq'},
-    use:{ru:'Тип сети и задержка важны для антифрода',en:'Network type and latency matter for anti-fraud',uz:'Tarmoq turi va kechikish anti-fraud uchun muhim'},
-    ex:{ru:'Wi‑Fi, 30 мс',en:'Wi‑Fi, 30 ms',uz:'Wi‑Fi, 30 ms'},
-    adv:{ru:'Проверяйте настройки VPN или прокси',en:'Verify your VPN or proxy settings',uz:'VPN yoki proksi sozlamalarini tekshiring'}
+    use:{ru:'Тип подключения и задержка помогают системам антифрода узнать вас',en:'Connection type and latency feed anti-fraud systems',uz:'Ulanish turi va kechikish antifrod tizimlariga sizni aniqlashga yordam beradi'},
+    ex:{ru:'Например, 4G и задержка 120 мс похожи на мобильную сеть',en:'For example, 4G with 120 ms latency looks like mobile data',uz:'Masalan, 4G va 120 ms kechikish mobil tarmoqni eslatadi'},
+    adv:{ru:'Контролируйте VPN и прокси, чтобы характеристики не выбивались из привычных',en:'Keep VPN and proxy settings consistent so values do not look suspicious',uz:'VPN va proksi sozlamalarini mos tuting, shunda qiymatlar g‘alati ko‘rinmaydi'}
   },
   gl:{
     risk:'high',
     label:{ru:'WebGL (GPU)',en:'WebGL (GPU)',uz:'WebGL (GPU)'},
-    use:{ru:'Модель видеокарты часто уникальна',en:'GPU model is often unique',uz:'GPU modeli ko‘pincha noyob'},
-    ex:{ru:'Apple M2 GPU',en:'Apple M2 GPU',uz:'Apple M2 GPU'},
-    adv:{ru:'Защитные режимы скрывают точную модель',en:'Privacy modes can mask the exact model',uz:'Maxfiy rejimlar aniq modelni yashiradi'}
+    use:{ru:'WebGL раскрывает модель видеочипа, она редко совпадает у двух людей',en:'WebGL reveals your GPU model, which is rarely identical between users',uz:'WebGL GPU modelini ko‘rsatadi va bu ko‘pchilikda takrorlanmaydi'},
+    ex:{ru:'Например, Apple M2 GPU виден на любом сайте с WebGL',en:'For example, an Apple M2 GPU is visible to any site using WebGL',uz:'Masalan, Apple M2 GPU WebGL ishlatadigan har qanday saytga ko‘rinadi'},
+    adv:{ru:'Используйте приватные режимы или отдельный браузер, чтобы скрыть точный чип',en:'Use private modes or a separate browser to mask the exact chip',uz:'Aniq chipni yashirish uchun maxfiy rejim yoki alohida brauzerdan foydalaning'}
   },
   canvas:{
     risk:'high',
-    label:{ru:'Canvas hash',en:'Canvas hash',uz:'Canvas xeshi'},
-    use:{ru:'Canvas-хеш связывает посещения между сайтами',en:'Canvas hashes can link visits across sites',uz:'Canvas xesh tashriflarni bog‘lashi mumkin'},
-    ex:{ru:'Совпадающий хеш на разных сайтах',en:'Matching hash on different sites',uz:'Turli saytlarda bir xil xesh'},
-    adv:{ru:'Включите рандомизацию canvas в браузере',en:'Enable canvas randomisation in the browser',uz:'Brauzerda canvasni tasodiflashtiring'}
+    label:{ru:'Графический отпечаток (Canvas)',en:'Graphic fingerprint (Canvas)',uz:'Grafik iz (Canvas)'},
+    use:{ru:'Браузер рисует невидимую картинку и получает уникальный хеш',en:'The browser draws an invisible image and gets a unique hash',uz:'Brauzer ko‘rinmas rasm chizib, noyob xesh oladi'},
+    ex:{ru:'Совпадающий Canvas-хеш связывает действия на разных сайтах',en:'The same Canvas hash links activity across different sites',uz:'Bir xil Canvas xeshi turli saytlardagi harakatlarni bog‘laydi'},
+    adv:{ru:'Включите защиту Canvas в настройках или расширениях',en:'Enable Canvas protection in settings or via extensions',uz:'Canvas himoyasini brauzer sozlamalarida yoki kengaytmada yoqing'}
   },
   audio:{
     risk:'high',
-    label:{ru:'Audio hash',en:'Audio hash',uz:'Audio xeshi'},
-    use:{ru:'Аудио-хеш работает как canvas',en:'Audio hash acts similar to canvas',uz:'Audio xesh canvas kabi ishlaydi'},
-    ex:{ru:'Одинаковый хеш',en:'Same hash',uz:'Bir xil xesh'},
-    adv:{ru:'Используйте защиту аудио в браузере',en:'Use audio fingerprint protection',uz:'Brauzerdagi audio himoyasini yoqing'}
+    label:{ru:'Аудио-отпечаток',en:'Audio fingerprint',uz:'Audio izi'},
+    use:{ru:'Звук генерируется и превращается в хеш, по нему вас узнают',en:'The browser generates a tone and turns it into a hash to recognise you',uz:'Brauzer tovush yaratib, xeshga aylantiradi va shu orqali sizi taniydi'},
+    ex:{ru:'Совпадающий аудио-хеш означает ту же систему и настройки',en:'A matching audio hash points to the same system and settings',uz:'Bir xil audio xesh bir xil tizim va sozlamalarni ko‘rsatadi'},
+    adv:{ru:'Включите аудиозащиту или используйте расширения с рандомизацией',en:'Enable audio protections or use extensions that randomise it',uz:'Audio himoyasini yoqing yoki tasodiflashtiruvchi kengaytmadan foydalaning'}
   },
   perm:{
     risk:'med',
     label:{ru:'Разрешения',en:'Permissions',uz:'Ruxsatlar'},
-    use:{ru:'Показывают, к чему уже был доступ',en:'Reveal what you have granted access to',uz:'Qaysi ruxsatlar berilganini ko‘rsatadi'},
-    ex:{ru:'камера: запрещено',en:'camera: blocked',uz:'kamera: bloklangan'},
-    adv:{ru:'Проверяйте список разрешений регулярно',en:'Review permissions regularly',uz:'Ruxsatlarni muntazam tekshirib turing'}
+    use:{ru:'Сайты видят, какие функции разрешены без дополнительных вопросов',en:'Sites see which features are already allowed without asking again',uz:'Saytlar qaysi funksiyalar qo‘shimcha so‘rovsiz ruxsat berilganini biladi'},
+    ex:{ru:'Если камера разрешена, сайт сможет включить её сразу',en:'If the camera is allowed, a site can start it instantly',uz:'Kamera ruxsat etilgan bo‘lsa, sayt uni darhol yoqishi mumkin'},
+    adv:{ru:'Периодически пересматривайте разрешения в настройках браузера',en:'Review permissions in your browser settings from time to time',uz:'Brauzer sozlamalarida ruxsatlarni vaqti-vaqti bilan ko‘rib chiqing'}
   },
   plugins:{
     risk:'med',
     label:{ru:'Плагины',en:'Plugins',uz:'Plaginlar'},
-    use:{ru:'Редкие плагины выдают привычки',en:'Rare plugins highlight your habits',uz:'Kam uchraydigan plaginlar odatlarni ko‘rsatadi'},
-    ex:{ru:'2 плагина',en:'2 plugins',uz:'2 ta plagin'},
-    adv:{ru:'Удаляйте то, чем не пользуетесь',en:'Remove plugins you do not need',uz:'Keraksiz plaginlarni olib tashlang'}
+    use:{ru:'Нестандартные плагины и расширения отличают ваш браузер от чужого',en:'Unusual plugins and extensions make your browser stand out',uz:'Noodatiy plaginlar va kengaytmalar brauzeringizni boshqalardan ajratib turadi'},
+    ex:{ru:'Например, криптокошелёк или узкий корпоративный плагин сразу заметны',en:'For example, a crypto wallet or corporate plugin is easy to spot',uz:'Masalan, kripto hamyon yoki korporativ plagin darhol seziladi'},
+    adv:{ru:'Удаляйте или отключайте то, чем не пользуетесь каждый день',en:'Remove or disable anything you do not use daily',uz:'Har kuni ishlatmaydigan plaginlarni olib tashlang yoki o‘chirib qo‘ying'}
   },
   media:{
     risk:'med',
     label:{ru:'Медиа-устройства',en:'Media devices',uz:'Media qurilmalari'},
-    use:{ru:'Список камер и микрофонов показывает окружение',en:'Camera and mic list shows your environment',uz:'Kamera va mikrofon ro‘yxati muhitni ko‘rsatadi'},
-    ex:{ru:'microphone: скрыто',en:'microphone: hidden',uz:'microphone: yashirilgan'},
-    adv:{ru:'Отключайте устройства по умолчанию',en:'Disable devices by default',uz:'Qurilmalarni sukut bo‘yicha o‘chiring'}
+    use:{ru:'Перечень камер и микрофонов показывает, домашний это ПК или рабочее место студии',en:'Listing cameras and microphones shows whether this is a home PC or a studio rig',uz:'Kamera va mikrofon ro‘yxati bu uy PK si yoki studiya uskunasi ekanini ko‘rsatadi'},
+    ex:{ru:'Несколько камер и микрофонов выдают стриминговое оборудование',en:'Multiple cameras and mics hint at streaming gear',uz:'Bir nechta kamera va mikrofon striming uskunasini anglatadi'},
+    adv:{ru:'Отключайте лишние устройства или используйте заглушки',en:'Disconnect unused devices or use hardware blockers',uz:'Keraksiz qurilmalarni uzib qo‘ying yoki himoya qopqoq ishlating'}
   },
   bat:{
     risk:'low',
     label:{ru:'Батарея',en:'Battery',uz:'Batareya'},
-    use:{ru:'Заряд подсказывает тип устройства',en:'Charge level hints at device type',uz:'Zaryad qurilma turini bildiradi'},
-    ex:{ru:'85% и зарядка',en:'85% and charging',uz:'85% va zaryadlanmoqda'},
-    adv:{ru:'Это слабый сигнал, но его видно',en:'It is a weak signal, yet visible',uz:'Bu kuchsiz signal, ammo baribir ko‘rinadi'}
+    use:{ru:'Уровень заряда намекает на переносное устройство или работу от сети',en:'Charge level hints whether this is portable or plugged in',uz:'Zaryad darajasi bu qurilma portativmi yoki tarmoqqa ulanganini ko‘rsatadi'},
+    ex:{ru:'Например, 15% без зарядки — вероятно смартфон в дороге',en:'For example, 15% with no charger likely means a phone on the go',uz:'Masalan, 15% va zaryadlanmayotgan bo‘lsa, bu yo‘lda ketayotgan telefon bo‘lishi mumkin'},
+    adv:{ru:'Старайтесь держать заряд в безопасном диапазоне и не передавайте его чужим сайтам без необходимости',en:'Keep the battery in a safe range and avoid sharing it with unknown sites unnecessarily',uz:'Zaryadni xavfsiz darajada saqlang va keraksiz saytlar bilan bo‘lishmang'}
   },
   fullness:{
     risk:'low',
-    label:{ru:'Насыщенность данных',en:'Data richness',uz:'Maʼlumot boyligi'},
-    use:{ru:'Показывает, сколько данных сообщил браузер',en:'Shows how much data the browser shared',uz:'Brauzer qancha maʼlumot berganini ko‘rsatadi'},
-    ex:{ru:'Чем больше данных, тем проще вас узнать',en:'More data makes re-identification easier',uz:'Maʼlumot ko‘p bo‘lsa, tanish oson'},
-    adv:{ru:'Отключайте лишние разрешения и плагины',en:'Turn off extra permissions and plugins',uz:'Keraksiz ruxsat va plaginlarni o‘chiring'}
+    label:{ru:'Полнота профиля',en:'Profile completeness',uz:'Profil to‘liqligi'},
+    use:{ru:'Показывает, сколько сигналов ваш браузер раскрыл сайтам',en:'Shows how many signals your browser has revealed',uz:'Brauzer saytga nechta signalni ochib berganini ko‘rsatadi'},
+    ex:{ru:'Чем больше заполнено, тем легче построить точный портрет',en:'The fuller the profile, the easier it is to build an accurate portrait',uz:'Maʼlumot qancha ko‘p bo‘lsa, aniq profil tuzish shunchalik oson'},
+    adv:{ru:'Ограничивайте доступ к лишним функциям и очищайте данные',en:'Limit access to unnecessary features and clear data regularly',uz:'Keraksiz funksiyalarni cheklang va maʼlumotlarni muntazam tozalang'}
   },
   fp:{
     risk:'high',
     label:{ru:'Итоговый Fingerprint',en:'Final fingerprint',uz:'Yakuniy fingerprint'},
-    use:{ru:'Хеш объединяет все найденные данные',en:'Hash combines all collected data',uz:'Hash barcha maʼlumotni birlashtiradi'},
-    ex:{ru:'Совпадающий отпечаток',en:'Matching fingerprint',uz:'Mos fingerprint'},
-    adv:{ru:'Не делитесь отпечатком со сторонними сайтами',en:'Do not share this ID with other sites',uz:'Bu ID ni boshqa saytlar bilan ulashmang'}
+    use:{ru:'Хеш объединяет все сигналы в одну строку — по ней вас находят снова',en:'The hash combines every signal so a site can find you again',uz:'Hash barcha signallarni bitta satrga birlashtiradi va sayt sizni yana topadi'},
+    ex:{ru:'Совпадающий отпечаток на другом сайте значит, что это та же система',en:'A matching fingerprint on another site means it is the same system',uz:'Boshqa saytda ham xuddi shu fingerprint chiqsa, bu aynan o‘sha tizim degani'},
+    adv:{ru:'Не делитесь хешем и обновляйте настройки, если хотите «обнулить» профиль',en:'Avoid sharing the hash and refresh your setup when you want to “reset” the profile',uz:'Hashni ulashmang va profilni “nolga tushirish” uchun sozlamalarni yangilang'}
   }
 };
 
@@ -954,11 +1134,14 @@ const state={
   ipError:null,
   fetchingIp:false,
   speed:{status:'idle',mbps:null,latency:null,error:null,note:null},
-  vpn:{status:'uncertain',reasons:[],checked:false}
+  vpn:{status:'uncertain',reasons:[],checked:false},
+  advanced:false,
+  advancedData:null,
+  advancedLoading:false
 };
 let snapshotCache=null;
 let snapshotPromise=null;
-function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;}
+function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;if(state.advanced){state.advancedData=null;}state.advancedLoading=false;}
 async function getSnapshot(){
   if(snapshotCache) return snapshotCache;
   if(snapshotPromise) return snapshotPromise;
@@ -1033,6 +1216,7 @@ const COUNTRY_LANG_MAP={
   ph:['en','tl'],
   za:['en','af','zu','xh']
 };
+const TRACKER_PATTERNS=['analytics','googletagmanager','doubleclick','facebook','pixel','metrics','metrika','hotjar','mixpanel','segment','amplitude','sentry','datadog','newrelic','bugsnag','smartlook','fullstory','clarity','telemetry','tracking','yandex','googleads','statcounter','plausible'];
 
 const VPN_KEYWORDS=['vpn','virtual private network','hosting','datacenter','data center','cloud','aws','amazon','google','azure','ovh','digitalocean','linode','leaseweb','m247','hetzner','contabo','colo','server','fastly','akamai'];
 
@@ -1544,6 +1728,210 @@ function formatPermissionEntries(entries,t){
   });
 }
 
+function formatPointerLabel(pointer,t){
+  if(!pointer) return t.pointerLabels?.none||'—';
+  const lower=String(pointer).toLowerCase();
+  return t.pointerLabels?.[lower]||pointer;
+}
+
+function formatDntStatus(value,t){
+  if(value==null) return t.dntStatus?.unknown||'—';
+  const norm=String(value).trim().toLowerCase();
+  if(['1','yes','true','on','enabled'].includes(norm)) return t.dntStatus?.on||value;
+  if(['0','no','false','off','disabled'].includes(norm)) return t.dntStatus?.off||value;
+  return t.dntStatus?.unknown||value;
+}
+
+function formatLanguagesList(langs){
+  if(!Array.isArray(langs)||!langs.length) return '';
+  if(langs.length<=3) return langs.join(', ');
+  return `${langs.slice(0,3).join(', ')} +${langs.length-3}`;
+}
+
+function humanConnectionType(type){
+  if(!type) return '—';
+  const lower=String(type).toLowerCase();
+  const map={wifi:'Wi‑Fi',ethernet:'Ethernet',cellular:'Cellular',bluetooth:'Bluetooth'};
+  if(map[lower]) return map[lower];
+  if(/^\d[g]$/.test(lower)) return lower.toUpperCase();
+  if(lower==='slow-2g') return '2G (slow)';
+  if(lower==='2g'||lower==='3g'||lower==='4g'||lower==='5g') return lower.toUpperCase();
+  return type;
+}
+
+function formatNetworkSummary(net){
+  if(!net||(!net.effectiveType&&net.downlink==null&&net.rtt==null)) return null;
+  const type=humanConnectionType(net.effectiveType);
+  let downlink=null;
+  if(typeof net.downlink==='number'&&!Number.isNaN(net.downlink)&&net.downlink>0){
+    downlink=parseFloat(net.downlink.toFixed(1));
+  }
+  let rtt=null;
+  if(typeof net.rtt==='number'&&!Number.isNaN(net.rtt)&&net.rtt>0){
+    rtt=Math.round(net.rtt);
+  }
+  return {type,downlink,rtt};
+}
+
+function formatStorageForShock(storage,cookiesEnabled,t){
+  if(!storage) return '';
+  const yes=t.units?.yes||'yes';
+  const no=t.units?.no||'no';
+  const unknown=t.permStates?.unknown||'—';
+  const labels=t.labels?.storage||{};
+  const entries=[
+    [labels.local||'localStorage',storage.local],
+    [labels.session||'sessionStorage',storage.session],
+    [labels.idb||'IndexedDB',storage.indexedDB],
+    [labels.cookies||'Cookies',cookiesEnabled]
+  ];
+  return entries
+    .map(([label,val])=>{
+      if(val===true) return `${label}: ${yes}`;
+      if(val===false) return `${label}: ${no}`;
+      if(val==null) return `${label}: ${unknown}`;
+      return `${label}: ${val}`;
+    })
+    .join(', ');
+}
+
+function formatTouchSummary(touch,pointer,t){
+  const points=typeof touch?.maxTouchPoints==='number'?touch.maxTouchPoints:0;
+  const pointerLabel=formatPointerLabel(pointer,t);
+  return {points, pointer:pointerLabel};
+}
+
+function buildAdvancedList(items,emptyText,limit=6){
+  if(!items || !items.length){
+    return `<li>${escapeHtml(emptyText||'—')}</li>`;
+  }
+  const limited=items.slice(0,limit);
+  const rows=limited.map(item=>`<li>${escapeHtml(item)}</li>`).join('');
+  if(items.length>limit){
+    return `${rows}<li>+${items.length-limit}</li>`;
+  }
+  return rows;
+}
+
+async function gatherAdvancedData(basic){
+  const fonts=new Set();
+  const trackers=new Set();
+  const resources=new Set();
+  try{
+    const entries=performance?.getEntriesByType?.('resource')||[];
+    entries.forEach(entry=>{
+      const name=entry?.name;
+      if(!name||typeof name!=='string') return;
+      if(name.startsWith('data:')) return;
+      let url;
+      try{url=new URL(name,location.href);}catch(_){return;}
+      if(url.origin===location.origin) return;
+      const host=url.host;
+      const initiator=(entry.initiatorType||'resource');
+      resources.add(`${host} (${initiator})`);
+      if((initiator||'').toLowerCase()==='font') fonts.add(host);
+      const hostLower=host.toLowerCase();
+      const pathLower=url.pathname.toLowerCase();
+      if(TRACKER_PATTERNS.some(pattern=>hostLower.includes(pattern)||pathLower.includes(pattern))){
+        trackers.add(host);
+      }
+    });
+  }catch(_){/* ignore */}
+  return {
+    fonts:Array.from(fonts),
+    trackers:Array.from(trackers),
+    resources:Array.from(resources),
+    plugins:Array.isArray(basic.plugins)?basic.plugins.slice():[],
+    media:Array.isArray(basic.media)?basic.media.slice():[],
+    storage:{
+      local:basic.storage?.local,
+      session:basic.storage?.session,
+      idb:basic.storage?.indexedDB,
+      cookies:basic.cookiesEnabled
+    }
+  };
+}
+
+function formatStorageSummaryForAdvanced(values,t){
+  const yes=t.units?.yes||'yes';
+  const no=t.units?.no||'no';
+  const unknown=t.permStates?.unknown||'—';
+  const make=val=>val===true?yes:val===false?no:unknown;
+  return {
+    local:make(values.local),
+    session:make(values.session),
+    idb:make(values.idb),
+    cookies:make(values.cookies)
+  };
+}
+
+function updateAdvancedPanel(t,basic){
+  const panel=getEl('advancedPanel');
+  if(!panel) return;
+  const advTexts=t.advanced||{};
+  if(!state.advanced){
+    panel.style.display='none';
+    panel.innerHTML='';
+    return;
+  }
+  panel.style.display='block';
+  if(state.advancedLoading){
+    panel.innerHTML=`<div class="small">${advTexts.loading||'…'}</div>`;
+    return;
+  }
+  const data=state.advancedData;
+  if(!data){
+    panel.innerHTML=`<div class="small">${advTexts.none||''}</div>`;
+    return;
+  }
+  if(data.error){
+    panel.innerHTML=`<div class="small">${escapeHtml(String(data.error))}</div>`;
+    return;
+  }
+  const sections=[];
+  sections.push(`<h4>${advTexts.title||'Advanced'}</h4>`);
+  if(advTexts.note){
+    sections.push(`<div class="small">${advTexts.note}</div>`);
+  }
+  const fontList=buildAdvancedList(data.fonts,advTexts.fontsNone||'—');
+  sections.push(`<div class="small"><b>${advTexts.fonts||'Fonts'}</b><ul>${fontList}</ul></div>`);
+  const trackerList=buildAdvancedList(data.trackers,advTexts.trackersNone||'—');
+  sections.push(`<div class="small"><b>${advTexts.trackers||'Trackers'}</b><ul>${trackerList}</ul></div>`);
+  const resourceList=buildAdvancedList(data.resources,advTexts.resourcesNone||'—');
+  sections.push(`<div class="small"><b>${advTexts.resources||'Resources'}</b><ul>${resourceList}</ul></div>`);
+  const pluginList=buildAdvancedList(data.plugins,advTexts.pluginsNone||'—');
+  sections.push(`<div class="small"><b>${advTexts.plugins||'Plugins'}</b><ul>${pluginList}</ul></div>`);
+  const mediaItems=(data.media||[]).map(device=>{
+    const kind=device.kind||'device';
+    const hasLabel=device.label? (t.units?.yes||'yes'):(t.units?.no||'no');
+    return `${kind}: ${hasLabel}`;
+  });
+  const mediaList=buildAdvancedList(mediaItems,advTexts.mediaNone||'—');
+  sections.push(`<div class="small"><b>${advTexts.media||'Media'}</b><ul>${mediaList}</ul></div>`);
+  if(advTexts.storage){
+    const storageValues=formatStorageSummaryForAdvanced(data.storage||{},t);
+    const summary=typeof advTexts.storageSummary==='function'
+      ?advTexts.storageSummary(storageValues)
+      :`${storageValues.local}, ${storageValues.session}, ${storageValues.idb}, ${storageValues.cookies}`;
+    sections.push(`<div class="small"><b>${advTexts.storage}</b><br>${escapeHtml(summary)}</div>`);
+  }
+  panel.innerHTML=sections.join('');
+}
+
+async function ensureAdvancedData(basic,t){
+  if(state.advancedData||state.advancedLoading) return;
+  state.advancedLoading=true;
+  updateAdvancedPanel(t,basic);
+  try{
+    const data=await gatherAdvancedData(basic||{});
+    state.advancedData=data;
+  }catch(e){
+    state.advancedData={error:e.message||String(e)};
+  }
+  state.advancedLoading=false;
+  updateAdvancedPanel(t,basic);
+}
+
 function formatMonitorText(info,t){
   if(!info||!info.mode) return t.monitorText?.unknown||'';
   if(info.mode==='multi'){
@@ -1580,7 +1968,14 @@ async function render(lang){
   Array.from(langSelect.options).forEach(opt=>{if(I18N[opt.value]) opt.textContent=I18N[opt.value].langOption;});
   langSelect.value=currentLang;
   getEl('introTitle').textContent=t.introTitle;
-  getEl('introText').textContent=t.introText;
+  const introTextEl=getEl('introText');
+  introTextEl.textContent='';
+  const introParagraphs=Array.isArray(t.introParagraphs)?t.introParagraphs.filter(Boolean):[t.introText].filter(Boolean);
+  introParagraphs.forEach(text=>{
+    const p=document.createElement('p');
+    p.textContent=text;
+    introTextEl.appendChild(p);
+  });
   getEl('legend').innerHTML=`<span>${t.legendTitle}</span>
     <span class="chip"><span class="dot low"></span>${t.risk.low}</span>
     <span class="chip"><span class="dot med"></span>${t.risk.med}</span>
@@ -1593,11 +1988,18 @@ async function render(lang){
   getEl('policyText').innerHTML=t.policyText;
   getEl('footerText').textContent=typeof t.footer==='function'?t.footer(VERSION,VERSION_SCHEME):t.footer;
   getEl('printBtn').textContent=t.saveButton;
+  const advBtn=getEl('advancedBtn');
+  if(advBtn){
+    const advTexts=t.advanced||{};
+    advBtn.textContent=state.advanced?(advTexts.buttonActive||advTexts.button||'Hide advanced'):(advTexts.button||'Advanced');
+    advBtn.disabled=state.advancedLoading;
+  }
   const ipBtn=getEl('ipBtn');
   ipBtn.textContent=state.fetchingIp?t.ip.buttonLoading:t.ip.button;
   ipBtn.disabled=state.fetchingIp;
   updateIpSection(t);
   updateSpeedSection(t);
+  updateAdvancedPanel(t,snapshotCache?.basic||null);
 
   try{
     const {basic,fp,H,pct}=await getSnapshot();
@@ -1607,6 +2009,41 @@ async function render(lang){
     const uniqCopy=t.uniqMeaning(pct);
     const uniqNote=`${uniqCopy.note} · H=${H.toFixed(1)} ${t.entropyUnit}`;
     getEl('uniqLine').innerHTML=`<span class="dot ${cls}"></span><span>${uniqCopy.headline}</span><span class="uniq-note">${uniqNote}</span>`;
+    const exampleEl=getEl('uniqExample');
+    if(uniqCopy.example){
+      exampleEl.style.display='block';
+      exampleEl.textContent='';
+      const lead=t.uniqExampleLead||'';
+      if(lead){
+        const strong=document.createElement('span');
+        strong.style.fontWeight='600';
+        strong.textContent=lead;
+        exampleEl.appendChild(strong);
+        exampleEl.appendChild(document.createTextNode(' '+uniqCopy.example));
+      }else{
+        exampleEl.textContent=uniqCopy.example;
+      }
+    }else{
+      exampleEl.style.display='none';
+      exampleEl.textContent='';
+    }
+    const adviceTitleEl=getEl('uniqAdviceTitle');
+    const adviceListEl=getEl('uniqAdvice');
+    adviceListEl.innerHTML='';
+    if(Array.isArray(uniqCopy.actions)&&uniqCopy.actions.length){
+      adviceTitleEl.textContent=t.uniqAdviceLead||'';
+      adviceTitleEl.style.display='block';
+      adviceListEl.style.display='block';
+      uniqCopy.actions.forEach(action=>{
+        const li=document.createElement('li');
+        li.textContent=action;
+        adviceListEl.appendChild(li);
+      });
+    }else{
+      adviceTitleEl.textContent='';
+      adviceTitleEl.style.display='none';
+      adviceListEl.style.display='none';
+    }
 
     const s=basic.screen;
     const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
@@ -1616,11 +2053,16 @@ async function render(lang){
     const geo=extractGeo(basic.server?.headers||{});
     const city=geo.city?(geo.country?`${geo.city}, ${geo.country}`:geo.city):null;
     const tzCity=tzCityName(basic.timezone||LOCAL_TZ||'');
-    const browserGuess=probableBrowsers(basic);
+    const browserGuess=browserDisplayName(basic);
+    const languagesSummary=formatLanguagesList(basic.languages);
     const permEntries=Object.entries(basic.perms||{});
     const formattedPerms=formatPermissionEntries(permEntries,t);
     const permSample=formattedPerms.length?formattedPerms.slice(0,3).join(', '):(t.permStates?.unknown||'—');
     const monitorLabel=formatMonitorText(basic.screen?.monitors,t);
+    const storageSummary=formatStorageForShock(basic.storage,basic.cookiesEnabled,t);
+    const dntLabel=formatDntStatus(basic.dnt,t);
+    const touchInfo=formatTouchSummary(basic.touch,basic.pointer,t);
+    const networkInfo=formatNetworkSummary(basic.net);
 
     const bullets=[
       city?t.shock.region(city):t.shock.tzFallback(tzCity),
@@ -1631,6 +2073,11 @@ async function render(lang){
       t.shock.screen(screenStr,basic.screen.colorDepth,monitorLabel),
       t.shock.perms(permSample)
     ];
+    if(languagesSummary) bullets.push(t.shock.languages(languagesSummary));
+    if(storageSummary) bullets.push(t.shock.storage(storageSummary));
+    if(dntLabel) bullets.push(t.shock.dnt(dntLabel));
+    if(touchInfo) bullets.push(t.shock.touch(touchInfo.points,touchInfo.pointer));
+    if(networkInfo) bullets.push(t.shock.network(networkInfo.type,networkInfo.downlink,networkInfo.rtt));
     const vpnState=state.vpn||{status:'uncertain',reasons:[]};
     const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
     const vpnReasons=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
@@ -1652,29 +2099,34 @@ async function render(lang){
     const locale=currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU');
     const tzStr=`${basic.timezone||'—'} (${utcOffsetStr(-basic.tzOffsetMinutes)}) • ${timeInTZ(tzForClock,locale)}`;
     const yesNo=value=>value?t.units.yes:t.units.no;
-    const storeLabels=t.labels.storage;
     const memParts=[];
     if(basic.hw.deviceMemory){memParts.push(`≈${basic.hw.deviceMemory} ${t.units.gb}`);}
     if(basic.hw.memoryLimitGb && (!basic.hw.deviceMemory || Math.abs(basic.hw.memoryLimitGb-basic.hw.deviceMemory)>1)){memParts.push(`heap ≤${basic.hw.memoryLimitGb} ${t.units.gb}`);}
     const memText=memParts.length?memParts.join(' / '):'—';
     const hwVal=`${basic.hw.hardwareConcurrency||'?'} ${t.units.cores} • ${memText}${memParts.length?` (${t.memoryNote||''})`:''}`.trim();
-    const touchVal=`${basic.touch.maxTouchPoints} ${t.labels.touchPoints} • ${t.labels.pointer}: ${basic.pointer}`;
-    const netVal=basic.net&&Object.keys(basic.net).length?`${basic.net.effectiveType||'—'} • ${basic.net.downlink??'?'} ${t.units.mbps} • ${t.labels.latency} ${basic.net.rtt??'?'} ${t.units.ms}`:'—';
-    const storeVal=`${storeLabels.local}:${yesNo(basic.storage.local)} • ${storeLabels.session}:${yesNo(basic.storage.session)} • ${storeLabels.idb}:${yesNo(basic.storage.indexedDB)} • ${storeLabels.cookies}:${yesNo(!!basic.cookiesEnabled)}`;
+    const touchVal=`${touchInfo.points} ${t.labels.touchPoints} • ${t.labels.pointer}: ${touchInfo.pointer}`;
+    const netParts=[];
+    if(networkInfo){
+      if(networkInfo.type) netParts.push(networkInfo.type);
+      if(networkInfo.downlink!=null) netParts.push(`~${networkInfo.downlink} ${t.units.mbps}`);
+      if(networkInfo.rtt!=null) netParts.push(`${t.labels.latency} ${networkInfo.rtt} ${t.units.ms}`);
+    }
+    const netVal=netParts.length?netParts.join(' • '):'—';
+    const storeVal=storageSummary?storageSummary.replace(/, /g,' • '):'—';
     const permVal=formattedPerms.length?formattedPerms.join(' • '):(t.permStates?.unknown||'—');
     const pluginsVal=basic.plugins?.length?String(basic.plugins.length):'0';
     const mediaVal=basic.media?.length?basic.media.map(m=>`${m.kind}:${m.label?t.units.yes:t.units.no}`).join(' • '):'—';
     const batteryVal=basic.battery&&basic.battery.level!=null?`${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—';
 
     addCard(frag,'tz',tzStr,t);
-    addCard(frag,'ua',basic.userAgent,t);
-    addCard(frag,'plat',`${basic.uaPlatform||basic.platform||'—'} ${basic.uaMobile?'(mobile)':''}`.trim(),t);
+    addCard(frag,'ua',browserGuess,t);
+    addCard(frag,'plat',osVer,t);
     const screenDetails=[`${screenStr}`,`${basic.screen.colorDepth}-bit`,monitorLabel].filter(Boolean).join(' • ');
     addCard(frag,'screen',screenDetails,t);
-    addCard(frag,'langs',(basic.languages||[]).join(', ')||'—',t);
+    addCard(frag,'langs',languagesSummary||'—',t);
     addCard(frag,'hw',hwVal,t);
     addCard(frag,'store',storeVal,t);
-    addCard(frag,'dnt', basic.dnt!=null?String(basic.dnt):'—',t);
+    addCard(frag,'dnt',dntLabel,t);
     addCard(frag,'touch',touchVal,t);
     addCard(frag,'net',netVal,t);
     addCard(frag,'gl',basic.gl&&(basic.gl.vendor||basic.gl.renderer)?`${basic.gl.vendor} / ${basic.gl.renderer}`:'—',t);
@@ -1703,6 +2155,15 @@ async function render(lang){
     addCard(frag,'fullness',t.formatFullness(filled,total),t);
     addHashCard(frag,'fp',fp,t);
     cards.appendChild(frag);
+    if(state.advanced){
+      if(!state.advancedData && !state.advancedLoading){
+        ensureAdvancedData(basic,t);
+      }else{
+        updateAdvancedPanel(t,basic);
+      }
+    }else{
+      updateAdvancedPanel(t,basic);
+    }
   }catch(e){
     if(token!==renderToken)return;
     console.error(e);
@@ -1766,6 +2227,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   sel.value=lang;
   getEl('printBtn').addEventListener('click',()=>{handleSaveClick().catch(()=>{});});
   getEl('ipBtn').addEventListener('click',detectIpAndSpeed);
+  getEl('advancedBtn').addEventListener('click',()=>{
+    state.advanced=!state.advanced;
+    if(!state.advanced){
+      state.advancedLoading=false;
+      updateAdvancedPanel(I18N[sel.value]||I18N.ru,snapshotCache?.basic||null);
+    }
+    render(sel.value);
+  });
   sel.addEventListener('change',()=>{
     const l=sel.value;
     try{localStorage.setItem('fp_lang',l);}catch(_){/* ignore */}
