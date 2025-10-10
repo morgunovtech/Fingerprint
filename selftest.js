@@ -160,7 +160,7 @@ let printed = false;
 
 const elements = new Map();
 const elementIds = [
-  'lang','introTitle','introText','legend','uniqLine','uniqExample','uniqAdviceTitle','uniqAdvice','shock','shockList','ipInfo','speedResult','advancedPanel','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','advancedBtn','shockTitle'
+  'lang','introTitle','introText','legend','uniqLine','uniqExample','uniqAdviceTitle','uniqAdvice','shock','shockList','ipInfo','speedResult','advancedPanel','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','advancedBtn','shockTitle','profilingBlock','profilingTitle','profilingIntro','profilingList'
 ];
 
 for (const id of elementIds) {
@@ -184,6 +184,8 @@ const ipBtnEl = elements.get('ipBtn');
 ipBtnEl.tagName = 'BUTTON';
 const advBtnEl = elements.get('advancedBtn');
 advBtnEl.tagName = 'BUTTON';
+elements.get('profilingBlock').tagName = 'SECTION';
+elements.get('profilingList').tagName = 'UL';
 
 const documentElement = { outerHTML: html, lang: 'ru' };
 const bodyEl = new Element('body', 'body');
@@ -551,6 +553,13 @@ const stateRef = vm.runInContext('state', sandbox);
   }
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));
+  const profilingSection = elements.get('profilingBlock');
+  assert.equal(profilingSection.style.display, 'block');
+  const profilingIntroEl = elements.get('profilingIntro');
+  assert.ok(profilingIntroEl.children.length >= 1);
+  const profilingListEl = elements.get('profilingList');
+  assert.ok(profilingListEl.children.length >= 3);
+  assert.ok(profilingListEl.children.some(node => String(node.innerHTML || '').includes('VPN')));
   const initialShare = stateRef.sharePayload;
   assert.ok(initialShare);
   assert.equal(elements.get('shareBtn').dataset.ready, '1');
@@ -564,6 +573,7 @@ const stateRef = vm.runInContext('state', sandbox);
   assert.ok(stateRef.serverData);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
   assert.equal(stateRef.speed.status, 'done');
+  assert.ok(elements.get('profilingList').children.some(node => String(node.innerHTML || '').includes('Tashkent')));
   assert.ok(stateRef.sharePayload);
 
   console.log('Self-test completed successfully');

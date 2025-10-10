@@ -143,13 +143,20 @@
     <div id="advancedPanel"></div>
   </section>
 
-  <!-- Block 3: Detailed cards -->
+  <!-- Block 3: Профайлинг -->
+  <section class="block" id="profilingBlock" style="display:none">
+    <div id="profilingTitle" style="font-weight:700;margin-bottom:6px"></div>
+    <div id="profilingIntro" class="small"></div>
+    <ul id="profilingList" class="advice-list small"></ul>
+  </section>
+
+  <!-- Block 4: Detailed cards -->
   <section class="block">
     <div id="detailTitle" style="font-weight:700;margin-bottom:6px"></div>
     <div class="cards" id="cards"></div>
   </section>
 
-  <!-- Block 4: Methodology & Policy -->
+  <!-- Block 5: Methodology & Policy -->
   <section class="block">
     <details>
       <summary id="methodSummary"></summary>
@@ -213,6 +220,61 @@ const I18N = {
       dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${status}`,
       vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
       speed:value=>`⚡ <b>Скорость сети:</b> ${value}`
+    },
+    profiling:{
+      title:'Профайлинг',
+      intro:'На основе собранных сигналов строим вероятностный портрет. Это гипотезы, которые остаются в вашем браузере.',
+      waiting:'Нажмите кнопку IP, чтобы уточнить оценки.',
+      confidence:{high:'высокая',med:'средняя',low:'низкая'},
+      vpnStates:{likely:'вероятен VPN или прокси',uncertain:'нужно больше данных',unlikely:'VPN не просматривается'},
+      signals:{
+        tzMismatch:'часовой пояс системы не совпадает с IP',
+        language:'язык браузера отличается от страны IP',
+        asnDatacenter:'провайдер похож на VPN или дата-центр',
+        forwardedHeaders:'в ответах есть прокси-заголовки',
+        latencyHigh:'задержка сети выше 250 мс',
+        desktop:'устройство определяется как настольное'
+      },
+      monitors:{
+        single:'1 активный экран',
+        multi:count=>`${count} активных экрана`,
+        unknown:'браузер не сообщил про экраны'
+      },
+      regionConflict:'Локальный часовой пояс и IP указывают на разные регионы',
+      linkLevels:{high:'высокий риск',med:'средний риск',low:'низкий риск'},
+      linkSignals:{canvas:'canvas-хеш активен',audio:'audio-хеш активен'},
+      vpn:({prob,confidence,status,signals})=>{
+        const pct=Math.round(prob*100);
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Уверенность: ${conf}.`:'';
+        const reasons=signals&&signals.length?` Сигналы: ${signals.join(', ')}.`:'';
+        return `🕵️ <b>VPN/прокси:</b> ${status} (${pct}%).${confText}${reasons}`;
+      },
+      device:({guess,confidence,monitors})=>{
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Уверенность: ${conf}.`:'';
+        const monitorsText=monitors?` Мониторы: ${monitors}.`:'';
+        return `💻 <b>Гипотеза по устройству:</b> ${guess}.${confText}${monitorsText}`;
+      },
+      region:({local,timezone,ip,confidence,conflict,conflictLabel})=>{
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Уверенность: ${conf}.`:'';
+        const localPart=local?`${local}${timezone?` (локальный TZ ${timezone})`:''}`:'';
+        let label='—';
+        if(ip && localPart){
+          label=conflict?`${localPart} / ${ip}`:ip;
+        }else if(ip){
+          label=ip;
+        }else if(localPart){
+          label=localPart;
+        }
+        const conflictText=conflict && conflictLabel?` ${conflictLabel}.`:'';
+        return `🗺️ <b>Предполагаемый регион:</b> ${label}.${confText}${conflictText}`;
+      },
+      linkability:({level,signals})=>{
+        const reasons=signals&&signals.length?` Сигналы: ${signals.join(', ')}.`:'';
+        return `🎯 <b>Отслеживаемость без куки:</b> ${level}.${reasons}`;
+      }
     },
     ip:{
       button:'Определить IP и измерить скорость',
@@ -365,6 +427,61 @@ const I18N = {
       vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
       speed:value=>`⚡ <b>Connection speed:</b> ${value}`
     },
+    profiling:{
+      title:'Profiling',
+      intro:'We combine the collected signals to build a probabilistic profile. These hypotheses stay on your device.',
+      waiting:'Run the IP & speed test to refine the estimates.',
+      confidence:{high:'high',med:'medium',low:'low'},
+      vpnStates:{likely:'VPN or proxy is likely',uncertain:'need more data',unlikely:'no clear VPN detected'},
+      signals:{
+        tzMismatch:'device time zone differs from IP',
+        language:'browser language differs from the IP country',
+        asnDatacenter:'provider resembles a VPN or data centre',
+        forwardedHeaders:'proxy headers detected',
+        latencyHigh:'latency above 250 ms',
+        desktop:'device looks desktop-class'
+      },
+      monitors:{
+        single:'1 active display',
+        multi:count=>`${count} active displays`,
+        unknown:'display count unknown'
+      },
+      regionConflict:'Local time zone and IP point to different regions',
+      linkLevels:{high:'high risk',med:'medium risk',low:'low risk'},
+      linkSignals:{canvas:'canvas hash active',audio:'audio hash active'},
+      vpn:({prob,confidence,status,signals})=>{
+        const pct=Math.round(prob*100);
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Confidence: ${conf}.`:'';
+        const reasons=signals&&signals.length?` Signals: ${signals.join(', ')}.`:'';
+        return `🕵️ <b>VPN/proxy:</b> ${status} (${pct}%).${confText}${reasons}`;
+      },
+      device:({guess,confidence,monitors})=>{
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Confidence: ${conf}.`:'';
+        const monitorsText=monitors?` Displays: ${monitors}.`:'';
+        return `💻 <b>Device hypothesis:</b> looks like ${guess}.${confText}${monitorsText}`;
+      },
+      region:({local,timezone,ip,confidence,conflict,conflictLabel})=>{
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Confidence: ${conf}.`:'';
+        const localPart=local?`${local}${timezone?` (local TZ ${timezone})`:''}`:'';
+        let label='—';
+        if(ip && localPart){
+          label=conflict?`${localPart} / ${ip}`:ip;
+        }else if(ip){
+          label=ip;
+        }else if(localPart){
+          label=localPart;
+        }
+        const conflictText=conflict && conflictLabel?` ${conflictLabel}.`:'';
+        return `🗺️ <b>Likely region:</b> ${label}.${confText}${conflictText}`;
+      },
+      linkability:({level,signals})=>{
+        const reasons=signals&&signals.length?` Signals: ${signals.join(', ')}.`:'';
+        return `🎯 <b>Trackability without cookies:</b> ${level}.${reasons}`;
+      }
+    },
     ip:{
       button:'Detect IP & run speed test',
       buttonLoading:'Working…',
@@ -515,6 +632,61 @@ const I18N = {
       dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${status}`,
       vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
       speed:value=>`⚡ <b>Internet tezligi:</b> ${value}`
+    },
+    profiling:{
+      title:'Profiling',
+      intro:'Yig‘ilgan signallar asosida ehtimoliy portret tuzamiz. Bu taxminlar brauzeringizdan tashqariga chiqmaydi.',
+      waiting:'Baholarni aniqlashtirish uchun IP va tezlik testini ishga tushiring.',
+      confidence:{high:'yuqori',med:'o‘rta',low:'past'},
+      vpnStates:{likely:'VPN yoki proksi ehtimoli yuqori',uncertain:'ko‘proq maʼlumot kerak',unlikely:'VPN belgisi sezilmadi'},
+      signals:{
+        tzMismatch:'tizim vaqt mintaqasi IP bilan mos emas',
+        language:'brauzer tili IP mamlakatidan farq qiladi',
+        asnDatacenter:'provayder VPN yoki data-markazga o‘xshaydi',
+        forwardedHeaders:'proksi sarlavhalari aniqlandi',
+        latencyHigh:'kechikish 250 ms dan yuqori',
+        desktop:'qurilma stol kompyuteriga o‘xshaydi'
+      },
+      monitors:{
+        single:'1 ta faol ekran',
+        multi:count=>`${count} ta faol ekran`,
+        unknown:'ekranlar soni nomaʼlum'
+      },
+      regionConflict:'Mahalliy vaqt mintaqasi va IP turli hududlarni ko‘rsatmoqda',
+      linkLevels:{high:'yuqori xavf',med:'o‘rta xavf',low:'past xavf'},
+      linkSignals:{canvas:'canvas xeshi faol',audio:'audio xeshi faol'},
+      vpn:({prob,confidence,status,signals})=>{
+        const pct=Math.round(prob*100);
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Ishonchlilik: ${conf}.`:'';
+        const reasons=signals&&signals.length?` Signallar: ${signals.join(', ')}.`:'';
+        return `🕵️ <b>VPN/proksi:</b> ${status} (${pct}%).${confText}${reasons}`;
+      },
+      device:({guess,confidence,monitors})=>{
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Ishonchlilik: ${conf}.`:'';
+        const monitorsText=monitors?` Ekranlar: ${monitors}.`:'';
+        return `💻 <b>Qurilma gipotezasi:</b> ${guess}ga o‘xshaydi.${confText}${monitorsText}`;
+      },
+      region:({local,timezone,ip,confidence,conflict,conflictLabel})=>{
+        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
+        const confText=confidence?` Ishonchlilik: ${conf}.`:'';
+        const localPart=local?`${local}${timezone?` (mahalliy TZ ${timezone})`:''}`:'';
+        let label='—';
+        if(ip && localPart){
+          label=conflict?`${localPart} / ${ip}`:ip;
+        }else if(ip){
+          label=ip;
+        }else if(localPart){
+          label=localPart;
+        }
+        const conflictText=conflict && conflictLabel?` ${conflictLabel}.`:'';
+        return `🗺️ <b>Ehtimoliy mintaqa:</b> ${label}.${confText}${conflictText}`;
+      },
+      linkability:({level,signals})=>{
+        const reasons=signals&&signals.length?` Signallar: ${signals.join(', ')}.`:'';
+        return `🎯 <b>Kukisiz kuzatish darajasi:</b> ${level}.${reasons}`;
+      }
     },
     ip:{
       button:'IP aniqlash va tezlikni o‘lchash',
@@ -2122,6 +2294,170 @@ function updateSpeedSection(t){
   el.textContent=summary?`⚡ ${summary}`:'';
 }
 
+function profilingMonitorLabel(info,cfg){
+  const monitorsCfg=cfg?.monitors;
+  if(!monitorsCfg) return '';
+  if(!info){
+    return monitorsCfg.unknown||'';
+  }
+  if(info.mode==='multi'){
+    const label=monitorsCfg.multi;
+    if(typeof label==='function') return label(info.count||2);
+    return label||'';
+  }
+  if(info.mode==='single'){
+    const label=monitorsCfg.single;
+    if(typeof label==='function') return label(info.count||1);
+    return label||'';
+  }
+  return monitorsCfg.unknown||'';
+}
+
+function computeVpnInsight(basic,t){
+  const cfg=t.profiling||{};
+  if(typeof cfg.vpn!=='function') return null;
+  const evaluation=(state.vpn&&state.vpn.checked)?state.vpn:(state.serverData?evaluateVpnState(state.serverData):{status:'uncertain',reasons:[],checked:false});
+  const reasons=Array.isArray(evaluation.reasons)?evaluation.reasons:[];
+  const tzMismatch=reasons.includes('timezone');
+  const langMismatch=reasons.includes('language');
+  const asn=reasons.includes('asn');
+  const forwarded=reasons.includes('forwarded');
+  const latencyHigh=state.speed.status==='done' && typeof state.speed.latency==='number' && state.speed.latency>250;
+  const desktop=!(basic?.uaMobile||basic?.uaHighEntropy?.mobile) && (basic?.touch?.maxTouchPoints||0)<=1;
+  let score=-1.1;
+  if(tzMismatch) score+=1.7;
+  if(langMismatch) score+=0.6;
+  if(asn) score+=2.4;
+  if(forwarded) score+=2.0;
+  if(latencyHigh) score+=0.9;
+  if(desktop) score+=0.4;
+  const prob=1/(1+Math.exp(-score));
+  const confidenceKey=prob>=0.82?'high':(prob>=0.58?'med':'low');
+  const confidenceLabel=cfg.confidence?.[confidenceKey]||confidenceKey;
+  const statusLabel=cfg.vpnStates?.[evaluation.status]||cfg.vpnStates?.uncertain||evaluation.status||'';
+  const signalsMap=cfg.signals||{};
+  const signalLabels=[];
+  if(tzMismatch && signalsMap.tzMismatch) signalLabels.push(signalsMap.tzMismatch);
+  if(langMismatch && signalsMap.language) signalLabels.push(signalsMap.language);
+  if(asn && signalsMap.asnDatacenter) signalLabels.push(signalsMap.asnDatacenter);
+  if(forwarded && signalsMap.forwardedHeaders) signalLabels.push(signalsMap.forwardedHeaders);
+  if(latencyHigh && signalsMap.latencyHigh) signalLabels.push(signalsMap.latencyHigh);
+  if(desktop && signalsMap.desktop) signalLabels.push(signalsMap.desktop);
+  return {prob,status:statusLabel,confidence:confidenceLabel,signals:signalLabels};
+}
+
+function computeDeviceInsight(basic,t){
+  const cfg=t.profiling||{};
+  if(typeof cfg.device!=='function') return null;
+  const guess=guessDevice(basic)||'—';
+  let confidenceKey='med';
+  const lowerGuess=guess.toLowerCase();
+  if(/macbook|iphone|ipad/.test(lowerGuess)) confidenceKey='high';
+  else if(lowerGuess.includes('android')||lowerGuess.includes('windows pc')||lowerGuess.includes('linux pc')) confidenceKey='med';
+  if(lowerGuess.includes('device')||lowerGuess==='—') confidenceKey='low';
+  const confidenceLabel=cfg.confidence?.[confidenceKey]||confidenceKey;
+  const monitors=profilingMonitorLabel(basic?.screen?.monitors,cfg);
+  return {guess,confidence:confidenceLabel,monitors};
+}
+
+function computeRegionInsight(basic,t){
+  const cfg=t.profiling||{};
+  if(typeof cfg.region!=='function') return null;
+  const timezone=basic?.timezone||LOCAL_TZ||'';
+  const localCity=timezone?tzCityName(timezone):'';
+  let ipLabel='';
+  let conflict=false;
+  if(state.serverData){
+    const details=state.serverData.details||extractCanonicalDetailsFromPayload(state.serverData.raw)||null;
+    const geo=state.serverData.geo||{};
+    const country=details?.country_name||geo.country||'';
+    const region=details?.region||'';
+    if(region && country) ipLabel=`${region}, ${country}`;
+    else ipLabel=country||region||'';
+    const ipTimezone=details?.timezone||null;
+    if(ipTimezone && timezone){
+      conflict=normalizeTimeZoneValue(ipTimezone)!==normalizeTimeZoneValue(timezone);
+    }
+  }
+  let confidenceKey='low';
+  if(ipLabel && localCity){
+    confidenceKey=conflict?'med':'high';
+  }else if(ipLabel || localCity){
+    confidenceKey='med';
+  }
+  const confidenceLabel=cfg.confidence?.[confidenceKey]||confidenceKey;
+  const conflictLabel=conflict?(cfg.regionConflict||''):'';
+  return {local:localCity,timezone,ip:ipLabel,confidence:confidenceLabel,conflict,conflictLabel};
+}
+
+function computeLinkabilityInsight(basic,t){
+  const cfg=t.profiling||{};
+  if(typeof cfg.linkability!=='function') return null;
+  const hasCanvas=!!(basic?.hashes?.canvas);
+  const hasAudio=!!(basic?.hashes?.audio);
+  let levelKey='low';
+  if(hasCanvas && hasAudio) levelKey='high';
+  else if(hasCanvas || hasAudio) levelKey='med';
+  const levelLabel=cfg.linkLevels?.[levelKey]||levelKey;
+  const signals=[];
+  const linkSignals=cfg.linkSignals||{};
+  if(hasCanvas && linkSignals.canvas) signals.push(linkSignals.canvas);
+  if(hasAudio && linkSignals.audio) signals.push(linkSignals.audio);
+  return {level:levelLabel,signals};
+}
+
+function buildProfilingItems(basic,t){
+  if(!basic) return [];
+  const cfg=t.profiling||{};
+  const items=[];
+  const vpnData=computeVpnInsight(basic,t);
+  if(vpnData) items.push(cfg.vpn(vpnData));
+  const deviceData=computeDeviceInsight(basic,t);
+  if(deviceData) items.push(cfg.device(deviceData));
+  const regionData=computeRegionInsight(basic,t);
+  if(regionData) items.push(cfg.region(regionData));
+  const linkData=computeLinkabilityInsight(basic,t);
+  if(linkData) items.push(cfg.linkability(linkData));
+  return items.filter(Boolean);
+}
+
+function renderProfilingSection(basic,t){
+  const section=getEl('profilingBlock');
+  if(!section) return;
+  const cfg=t.profiling||{};
+  const titleEl=getEl('profilingTitle');
+  if(titleEl) titleEl.textContent=cfg.title||'Profiling';
+  const introEl=getEl('profilingIntro');
+  const listEl=getEl('profilingList');
+  if(introEl) introEl.innerHTML='';
+  if(listEl) listEl.innerHTML='';
+  const items=basic?buildProfilingItems(basic,t):[];
+  const paragraphs=[];
+  if(cfg.intro) paragraphs.push(cfg.intro);
+  if(!items.length && cfg.waiting) paragraphs.push(cfg.waiting);
+  if(introEl){
+    paragraphs.forEach(text=>{
+      const p=document.createElement('p');
+      p.textContent=text;
+      introEl.appendChild(p);
+    });
+  }
+  if(listEl){
+    if(items.length){
+      listEl.style.display='block';
+      items.forEach(html=>{
+        const li=document.createElement('li');
+        li.innerHTML=html;
+        listEl.appendChild(li);
+      });
+    }else{
+      listEl.style.display='none';
+    }
+  }
+  const shouldShow=Boolean(paragraphs.length||items.length);
+  section.style.display=shouldShow?'block':'none';
+}
+
 let currentLang='ru';
 const cacheEls={};
 const getEl=id=>cacheEls[id]||(cacheEls[id]=document.getElementById(id));
@@ -2178,6 +2514,7 @@ async function render(lang){
   updateIpSection(t);
   updateSpeedSection(t);
   updateAdvancedPanel(t,snapshotCache?.basic||null);
+  renderProfilingSection(snapshotCache?.basic||null,t);
 
   try{
     const {basic,fp,H,pct}=await getSnapshot();
@@ -2280,6 +2617,8 @@ async function render(lang){
       shareBtn.removeAttribute('aria-disabled');
       shareBtn.setAttribute('aria-label',shareConfig.aria?shareConfig.aria({pct,headline:uniqCopy.headline}):shareTitle);
     }
+
+    renderProfilingSection(basic,t);
 
     const cards=getEl('cards');
     cards.textContent='';
