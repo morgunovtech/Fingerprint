@@ -137,7 +137,14 @@ class Element {
     return results;
   }
   click() {
-    (this.listeners.click || []).forEach(cb => cb({ type: 'click' }));
+    const event = {
+      type: 'click',
+      stopPropagation() {},
+      preventDefault() {},
+      target: this,
+      currentTarget: this
+    };
+    (this.listeners.click || []).forEach(cb => cb(event));
   }
   get clientWidth() {
     if (this.style && typeof this.style.width === 'string') {
@@ -807,8 +814,29 @@ const I18N = vm.runInContext('I18N', sandbox);
   assert.equal(shareBtnEl.getAttribute('aria-disabled'), null);
   const langBtnEl = elements.get('langBtn');
   assert.equal(langBtnEl.textContent, 'Язык');
+  const langMenuEl = elements.get('langMenu');
+  assert.equal(langMenuEl.hidden, true);
+  langBtnEl.click();
+  assert.equal(langMenuEl.hidden, false);
+  const langOptions = langMenuEl.querySelectorAll('button[data-lang]');
+  assert.equal(langOptions.length, 3);
+  langOptions[0].click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(langMenuEl.hidden, true);
+  assert.equal(langBtnEl.textContent, 'Язык');
   const themeBtnEl = elements.get('themeBtn');
   assert.ok(themeBtnEl.innerHTML.includes('Тема'));
+  const themeMenuEl = elements.get('themeMenu');
+  assert.equal(themeMenuEl.hidden, true);
+  themeBtnEl.click();
+  assert.equal(themeMenuEl.hidden, false);
+  const darkOption = themeMenuEl.querySelectorAll('button[data-theme]').find(btn => btn.dataset.theme === 'dark');
+  assert.ok(darkOption);
+  darkOption.click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(themeMenuEl.hidden, true);
+  assert.ok(documentElement.classList.contains('force-dark'));
+  assert.ok(themeBtnEl.innerHTML.includes('🌙'));
   vm.runInContext("applyThemePreference('light')", sandbox);
   vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
   assert.ok(documentElement.classList.contains('force-light'));
