@@ -90,6 +90,22 @@ class Element {
     if (!this.listeners[event]) this.listeners[event] = [];
     this.listeners[event].push(cb);
   }
+  querySelectorAll(selector) {
+    const results = [];
+    const match = (node) => {
+      if (!node || typeof node !== 'object') return;
+      if (selector === 'button[data-lang]') {
+        if (node.tagName === 'BUTTON' && node.dataset && Object.prototype.hasOwnProperty.call(node.dataset, 'lang')) {
+          results.push(node);
+        }
+      }
+      if (Array.isArray(node.children)) {
+        node.children.forEach(child => match(child));
+      }
+    };
+    match(this);
+    return results;
+  }
   click() {
     (this.listeners.click || []).forEach(cb => cb({ type: 'click' }));
   }
@@ -249,7 +265,38 @@ advBtnEl.tagName = 'BUTTON';
 elements.get('profilingBlock').tagName = 'SECTION';
 elements.get('profilingList').tagName = 'UL';
 
-const documentElement = { outerHTML: html, lang: 'ru' };
+const docClassTokens = new Set();
+const documentElement = {
+  outerHTML: html,
+  lang: 'ru',
+  classList: {
+    add(...tokens) {
+      tokens.forEach(token => docClassTokens.add(token));
+    },
+    remove(...tokens) {
+      tokens.forEach(token => docClassTokens.delete(token));
+    },
+    toggle(token, force) {
+      if (force === undefined) {
+        if (docClassTokens.has(token)) {
+          docClassTokens.delete(token);
+          return false;
+        }
+        docClassTokens.add(token);
+        return true;
+      }
+      if (force) {
+        docClassTokens.add(token);
+        return true;
+      }
+      docClassTokens.delete(token);
+      return false;
+    },
+    contains(token) {
+      return docClassTokens.has(token);
+    }
+  }
+};
 const bodyEl = new Element('body', 'body');
 const cookieStore = new Map();
 
@@ -735,7 +782,8 @@ const stateRef = vm.runInContext('state', sandbox);
   assert.ok(stateRef.serverData);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
   assert.equal(stateRef.speed.status, 'done');
-  assert.ok(Array.from(profListAfter.children).some(node => extractText(node).includes('Tashkent')));
+  const profilingAfterTexts = Array.from(profListAfter.children).map(extractText);
+  assert.ok(profilingAfterTexts.some(text => /Tashkent|Uzbekistan/i.test(text)), 'profiling should mention updated region');
   assert.ok(stateRef.sharePayload);
 
   console.log('Self-test completed successfully');

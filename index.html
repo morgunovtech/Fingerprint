@@ -17,12 +17,15 @@
   <meta name="twitter:image" content="https://morgunov.tech/fingerprint/share-card.svg" />
   <style>
     :root{
+      color-scheme: light dark;
       --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042;
       --r:16px; --shadow:0 10px 30px rgba(0,0,0,.25);
-      --good:#22c55e; --mid:#f59e0b; --bad:#ef4444; --accent:#60a5fa;
+      --accent:#60a5fa;
     }
+    :root.force-dark{ --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042; --shadow:0 10px 30px rgba(0,0,0,.25); --accent:#60a5fa; }
+    :root.force-light{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
     @media (prefers-color-scheme: light){
-      :root{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
+      :root:not(.force-dark):not(.force-light){ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -34,17 +37,18 @@
     h1{font-size:22px;margin:0}
     .sub{color:var(--muted);font-size:14px}
     .toolbar{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap}
-    select{
-      border:1px solid var(--border);background:transparent;color:var(--text);
-      padding:6px 10px;border-radius:10px;font:inherit
-    }
+    .lang-switcher{position:relative}
+    .lang-switcher button{white-space:nowrap}
+    .lang-menu{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:4px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:var(--shadow);min-width:120px;z-index:10}
+    .lang-menu button{border:1px solid var(--border);background:transparent;color:var(--text);padding:6px 10px;border-radius:8px;font:inherit;cursor:pointer;display:flex;justify-content:center;align-items:center}
+    .lang-menu button:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
+    .lang-menu button.active{border-color:var(--accent);color:var(--accent);background-color:rgba(96,165,250,0.12)}
     .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
-    .legend{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);margin:12px 0 0}
-    .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--border)}
-    .dot{display:inline-block;width:12px;height:12px;border-radius:50%}
-    .low{background:#22c55e}.med{background:#f59e0b}.high{background:#ef4444}
-    .big{font-weight:700;font-size:21px;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;margin-bottom:12px}
-    .big .dot{margin-top:0}
+    .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:4px}
+    .big[data-level="high"]{color:#ef4444}
+    .big[data-level="med"]{color:#f59e0b}
+    .big[data-level="low"]{color:var(--text)}
+    .big .uniq-note{font-weight:400;color:var(--muted)}
     .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:0;grid-column:1/-1;max-width:720px}
     #introText p{margin:6px 0}
     #introText p:first-child{margin-top:0}
@@ -79,10 +83,6 @@
     .shock-actions{margin-bottom:10px}
     #shockList{list-style:none;margin:6px 0 0;padding:0}
     #shockList li{margin:4px 0}
-    #advancedPanel{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:10px;background:rgba(96,165,250,0.08);display:none}
-    #advancedPanel h4{margin:0 0 6px;font-size:15px}
-    #advancedPanel ul{list-style:none;margin:6px 0 0;padding:0}
-    #advancedPanel li{margin:4px 0}
     details{margin-top:8px}
     @media (max-width:720px){
       h1{font-size:20px}
@@ -94,11 +94,8 @@
     }
     @media (max-width:520px){
       body{font-size:14px}
-      .legend span{font-size:13px}
-      .legend .chip{padding:4px 8px;font-size:12px}
-      .big{gap:10px}
+      .big{gap:6px}
       .btn{width:100%;justify-content:center}
-      .legend{gap:6px}
     }
   </style>
 </head>
@@ -107,11 +104,15 @@
   <header>
     <h1>Fingerprint</h1><span class="sub">by morgunov.tech</span>
     <div class="toolbar">
-      <select id="lang">
-        <option value="ru">🇷🇺 Русский</option>
-        <option value="en">🇬🇧 English</option>
-        <option value="uz">🇺🇿 Oʻzbekcha</option>
-      </select>
+      <div class="lang-switcher">
+        <button class="btn" id="langBtn" aria-haspopup="true" aria-expanded="false">Язык</button>
+        <div class="lang-menu" id="langMenu" hidden>
+          <button type="button" data-lang="ru" aria-label="Русский">🇷🇺</button>
+          <button type="button" data-lang="en" aria-label="English">🇬🇧</button>
+          <button type="button" data-lang="uz" aria-label="Oʻzbekcha">🇺🇿</button>
+        </div>
+      </div>
+      <button class="btn" id="themeToggle" type="button"></button>
     </div>
   </header>
 
@@ -119,13 +120,14 @@
   <section class="block">
     <div id="introTitle" style="font-weight:700;margin-bottom:6px"></div>
     <div id="introText" class="small"></div>
-    <div id="legend" class="legend"></div>
   </section>
 
   <!-- Block 2: Uniqueness + shock -->
   <section class="block">
     <div id="uniqLine" class="big"></div>
     <div id="uniqExample" class="small"></div>
+    <div id="uniqMeaningTitle" class="small" style="font-weight:600"></div>
+    <ul id="uniqMeaningList" class="advice-list small"></ul>
     <div id="uniqAdviceTitle" class="small"></div>
     <ul id="uniqAdvice" class="advice-list small"></ul>
     <div id="shock" class="danger" style="display:none">
@@ -133,14 +135,12 @@
         <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn" id="printBtn"></button>
         <button class="btn" id="ipBtn"></button>
-        <button class="btn" id="advancedBtn"></button>
       </div>
       <div class="small" id="shockTitle"></div>
       <ul id="shockList"></ul>
       <div id="ipInfo" class="small" style="margin-top:10px"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
-    <div id="advancedPanel"></div>
   </section>
 
   <!-- Block 3: Профайлинг -->
@@ -178,28 +178,76 @@
 const I18N = {
   ru: {
     langOption:'🇷🇺 Русский',
+    langButton:'Язык',
+    langLabels:{ru:'Русский',en:'Английский',uz:'Узбекский'},
+    theme:{label:'Тема',modes:{auto:'Авто',light:'Светлая',dark:'Тёмная'}},
     introTitle:'Для чего этот сервис',
     introParagraphs:[
-      'Наглядно показывает, какие данные о вас уже видят веб-сайты и как это влияет на приватность.',
-      'Объясняем, насколько уникален ваш «цифровой отпечаток» — набор параметров, по которым сайт узнаёт устройство даже без аккаунта.',
-      'Каждый параметр помечен уровнем риска: чем больше пунктов со средним и высоким риском, тем проще вас опознать.',
-      'Мы не собираем и не храним данные: всё вычисляется локально, никакой регистрации и паролей не требуется.',
-      'Отдельная кнопка «Определить скорость интернета и IP-адрес» запускает быстрый тест и показывает сведения, которые открывает ваш IP, включая оценку использования VPN.'
+      'Наглядно показывает, какие данные о вас уже видят сайты и как это влияет на приватность.',
+      'Объясняем, насколько уникален ваш «цифровой отпечаток» — набор параметров, по которым сайты узнают устройство без аккаунта.',
+      'Рассказываем человеческим языком, какие риски несут эти сигналы и как ими управлять.',
+      'Все вычисления выполняются локально: мы ничего не отправляем и не храним, регистрация не нужна.',
+      'Отдельная кнопка «Определить скорость интернета и IP-адрес» измерит соединение и покажет, что раскрывает ваш IP, включая оценку VPN.'
     ],
-    legendTitle:'Как читать уровни риска:',
-    risk:{low:'низкий', med:'средний', high:'высокий'},
-    uniqMeaning:pct=>({
-      headline:`Ваш отпечаток уникальнее, чем ${pct}% пользователей`,
-      note:'Чем выше процент, тем проще сайтам узнать вас снова.',
-      example:`Например, онлайн-магазин сопоставит ваш отпечаток с прошлым визитом и подстроит цены, даже если вы не входили в аккаунт.`,
-      actions:[
-        'Разделяйте профили или браузеры для работы, личных дел и покупок.',
-        'Регулярно очищайте куки, локальное и сессионное хранилище, а также историю.',
-        'Используйте VPN или приватные сети, когда нужна анонимность.'
-      ]
-    }),
-    uniqExampleLead:'Как это работает на практике:',
-    uniqAdviceLead:'Что можно сделать:',
+    uniqMeaningTitle:'Что это значит:',
+    uniqMeaning:(pct,{level}={})=>{
+      const lvl=level|| (pct>=70?'high':pct>=40?'med':'low');
+      const headline=`Ваш отпечаток уникальнее, чем ${pct}% пользователей`;
+      let note,example,threats;
+      if(lvl==='high'){
+        note='Сайты будут узнавать вас почти мгновенно: достаточно пары технических сигналов, чтобы связать визиты.';
+        example='Например, маркетплейс вспомнит прошлый заход и покажет персональные цены, даже без входа.';
+        threats=[
+          'Рекламные сети смогут объединять ваши действия на разных сайтах и поднимать ставки.',
+          'Антифрод-системы будут чаще запрашивать дополнительные проверки и документы.',
+          'Контент и тарифы начнут подстраиваться под ваш регион, устройство и историю визитов.'
+        ];
+      }else if(lvl==='med'){
+        note='Часть сайтов уже способна сопоставить ваш профиль, если вы возвращаетесь регулярно.';
+        example='Например, банк пропустит часть проверок при совпадении параметров, а новый сервис ещё будет сомневаться.';
+        threats=[
+          'Персональные цены или рекомендации могут следовать за вами между вкладками.',
+          'Рабочие и личные контексты легко смешиваются, если использовать один и тот же браузер.',
+          'Несостыковки по времени, языку или IP вызывают дополнительные капчи и ручные проверки.'
+        ];
+      }else{
+        note='Вы почти не выделяетесь — без дополнительных данных вас сложнее связать между визитами.';
+        example='Например, рекламным сетям труднее уверенно привязать покупки из разных вкладок к одному человеку.';
+        threats=[
+          'Как только появляются IP, куки или вход в аккаунт, уникальность резко растёт.',
+          'Редкие расширения или нестандартные шрифты мгновенно повышают узнаваемость.',
+          'Сайты всё равно видят браузер, язык и время — полностью анонимным отпечаток не бывает.'
+        ];
+      }
+      return {headline,note,example,threats};
+    },
+    uniqExampleLead:'Как это проявляется:',
+    uniqAdviceLead:'Что с этим делать:',
+    uniqAdvice:{
+      separateProfiles:'Разделите браузеры или профили для работы, покупок и личных дел, чтобы сигналы не смешивались.',
+      canvasShield:'Включите защиту Canvas/Audio в настройках браузера или установите расширение с рандомизацией.',
+      storage:'Регулярно очищайте localStorage, sessionStorage и IndexedDB после чувствительных действий.',
+      cookies:'Отключите сторонние cookie или разрешайте их точечно через настройки браузера.',
+      permissions:'Пересмотрите выданные разрешения — отключите камеру, микрофон и геолокацию, если они не нужны постоянно.',
+      plugins:'Удалите или отключите расширения, которыми давно не пользовались.',
+      fonts:({fontCount})=>`Спрячьте или удалите редкие шрифты (сейчас их ${fontCount}), чтобы устройство не выделялось.`,
+      trackers:({trackerCount})=>`Включите блокировщик трекеров: страница уже подключила ${trackerCount} сторонних счётчиков.`,
+      resources:({resourceCount})=>`Ограничьте обращения к ${resourceCount} внешним доменам через uBlock Origin или аналогичные фильтры.`,
+      vpn:'Используйте VPN или приватный туннель, чтобы скрыть реальный IP и сгладить отпечаток.',
+      browser:'Для приватных задач используйте массовый браузер или профиль с маскировкой отпечатка.',
+      webrtc:'Отключите WebRTC и DNS-утечки в настройках или через расширение, чтобы не светить реальный IP.',
+      ipRotate:'Периодически меняйте IP (VPN, перезапуск роутера, мобильный модем), чтобы отпечаток не привязывался к одному адресу.',
+      speed:'Стабилизируйте соединение: редкая низкая скорость выделяет вас как особый сегмент.',
+      privacyMode:'Включайте режимы с защитой отпечатка (Firefox RFP, Brave, LibreWolf) для чувствительных действий.',
+      network:'Если есть возможность, переключитесь на Wi‑Fi или проводное подключение, чтобы не выделяться мобильной задержкой.',
+      fallback1:'Настройте автоматическую очистку истории и куки при закрытии браузера.',
+      fallback2:'Открывайте важные сервисы в приватном или контейнерном окне, чтобы не смешивать рабочие и личные данные.',
+      fallback3:'Следите за обновлениями браузера и расширений — устаревшие версии сразу бросаются в глаза.',
+      fallback4:'Подумайте о втором устройстве или виртуальной машине для финансов и документов.',
+      fallback5:'Используйте расширения вроде uBlock Origin, Privacy Badger и Decentraleyes, чтобы блокировать лишние скрипты.',
+      fallback6:'Регулярно проверяйте настройки контент-блокеров и разрешений, чтобы они не включались сами собой.'
+    },
+    uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Какие данные видит сайт',
     shockTitle:'Что уже видно без IP:',
     shock:{
@@ -224,9 +272,34 @@ const I18N = {
     profiling:{
       title:'Профайлинг',
       intro:[
-        'Мы строим вероятностный портрет на основе сигналов, которые уже доступны сайтам. Всё обрабатывается локально.',
-        'Каждый вывод показывает уверенность, метод и сигналы, которые к нему привели.'
+        'Строим вероятностный портрет на основе открытых сигналов, которые браузер уже выдаёт сайтам. Всё считается локально.',
+        'Чтобы портрет стал точнее, при желании запустите определение IP и тест скорости.'
       ],
+      summary:info=>{
+        const unknown=info.unknown||'—';
+        const device=`${info.deviceConfidence||0}%`;
+        const deviceLabel=info.deviceLabel||unknown;
+        const osLabel=info.osLabel||unknown;
+        const battery=info.batteryText||unknown;
+        const localTime=info.localTime||unknown;
+        const vpn=info.vpnLabel?`${info.vpnLabel} (${info.vpnConfidence||0}%)`:unknown;
+        const location=info.location||unknown;
+        const speed=info.speedText||unknown;
+        const connection=info.connection||unknown;
+        const provider=info.provider||unknown;
+        return `С вероятностью ${device} вы используете ${deviceLabel} на ${osLabel}. Заряд батареи ${battery}, локальное время ${localTime}. VPN: ${vpn}. Предполагаемое местоположение: ${location}. Скорость ${speed}, тип подключения ${connection}, провайдер ${provider}.`;
+      },
+      detailLabels:{
+        device:'Устройство',
+        os:'ОС',
+        vpn:'VPN',
+        location:'Местоположение',
+        connection:'Подключение',
+        speed:'Скорость',
+        provider:'Провайдер',
+        battery:'Батарея',
+        time:'Локальное время'
+      },
       waiting:'Собираем сигналы…',
       loading:'Анализируем профиль…',
       none:'Недостаточно данных. Определите IP и скорость, чтобы уточнить гипотезы.',
@@ -235,6 +308,7 @@ const I18N = {
       confidence:conf=>`Уверенность ${Math.round(conf*100)}%`,
       evidenceLead:'Сигналы:',
       evidenceNone:'Сигналы недоступны',
+      unknown:'—',
       limitationsLead:'Почему важно:',
       errors:{
         load:'Не удалось загрузить модуль профайлинга.',
@@ -403,26 +477,6 @@ const I18N = {
         approx:'оценка по данным браузера'
       }
     },
-    advanced:{
-      button:'Advanced режим',
-      buttonActive:'Скрыть Advanced',
-      title:'Дополнительные сигналы',
-      loading:'Собираем дополнительные сигналы…',
-      fonts:'Сторонние шрифты',
-      trackers:'Возможные трекеры',
-      resources:'Другие сторонние загрузки',
-      plugins:'Плагины в браузере',
-      media:'Подключённые устройства',
-      storage:'Хранилища и куки',
-      none:'Дополнительных сигналов не обнаружено',
-      fontsNone:'Сторонние шрифты не найдены',
-      trackersNone:'Похожих трекеров не обнаружено',
-      resourcesNone:'Сторонних загрузок не найдено',
-      pluginsNone:'Плагины не обнаружены',
-      mediaNone:'Браузер не сообщил об устройствах',
-      note:'Advanced-режим использует только уже загруженные данные и не отправляет дополнительные запросы.',
-      storageSummary:values=>`localStorage: ${values.local}, sessionStorage: ${values.session}, IndexedDB: ${values.idb}, cookies: ${values.cookies}`
-    },
     vpn:{
       label:'Использование VPN',
       statuses:{
@@ -467,7 +521,7 @@ const I18N = {
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
     methodSummary:'<b>Как считаем результат</b>',
-    methodText:'Мы сопоставляем ваш набор сигналов с актуальными открытыми замерами (StatCounter, Cover Your Tracks 2024, Ookla). Редкий набор даёт большую энтропию H и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
+    methodText:'Мы сопоставляем ваш набор сигналов с актуальными открытыми замерами (StatCounter, Cover Your Tracks 2024, Ookla). Редкий набор даёт большую энтропию H (в битах) и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. Внешние сервисы вызываются только по кнопке IP, и мы показываем весь ответ. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     footer:(version,scheme)=>`© morgunov.tech • Локальный аудит отпечатка • Версия: ${version} (${scheme})`,
@@ -479,28 +533,76 @@ const I18N = {
   },
   en: {
     langOption:'🇬🇧 English',
+    langButton:'Language',
+    langLabels:{ru:'Russian',en:'English',uz:'Uzbek'},
+    theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark'}},
     introTitle:'Why this service exists',
     introParagraphs:[
-      'Shows in plain language which data websites already see about you and how that impacts your privacy.',
-      'Explains how unique your “digital fingerprint” is — the combination of signals a site can use to recognise you without an account.',
-      'Every item is tagged with a risk level: the more medium or high risks you have, the easier it is to identify you.',
-      'We never collect or store data: everything is calculated locally, no registration or passwords required.',
-      'The “Detect IP & run speed test” button runs a quick check, reveals what your IP discloses, and adds our VPN usage guess.'
+      'Shows in plain language which data websites already see about you and how that affects your privacy.',
+      'Explains how unique your “digital fingerprint” is — the combination of signals that lets sites recognise your device without an account.',
+      'Breaks down the risks behind those signals and turns them into practical guidance.',
+      'Everything runs locally in your browser: nothing is sent or stored, no account required.',
+      'The “Detect IP & run speed test” button measures your connection and reveals what your IP discloses, including our VPN guess.'
     ],
-    legendTitle:'How to read the risk levels:',
-    risk:{low:'low', med:'medium', high:'high'},
-    uniqMeaning:pct=>({
-      headline:`Your fingerprint is more unique than ${pct}% of users`,
-      note:'The higher the percentage, the simpler it is for sites to recognise you again.',
-      example:'For example, an online shop can link this fingerprint to a past visit and adjust prices even if you never logged in.',
-      actions:[
-        'Keep separate browser profiles for work, shopping, and personal life.',
-        'Regularly clear cookies, local/session storage, and history after sensitive activity.',
-        'Use a VPN or privacy network whenever you need extra anonymity.'
-      ]
-    }),
-    uniqExampleLead:'How it plays out in real life:',
-    uniqAdviceLead:'What you can do:',
+    uniqMeaningTitle:'What it means:',
+    uniqMeaning:(pct,{level}={})=>{
+      const lvl=level|| (pct>=70?'high':pct>=40?'med':'low');
+      const headline=`Your fingerprint is more unique than ${pct}% of users`;
+      let note,example,threats;
+      if(lvl==='high'){
+        note='Websites can recognise you almost instantly: just a couple of technical signals are enough to link visits.';
+        example='For instance, a marketplace can tie this visit to a previous one and adjust prices even if you never logged in.';
+        threats=[
+          'Ad networks can stitch together your activity across sites and bid more aggressively.',
+          'Fraud-prevention systems may trigger extra verification steps or request documents.',
+          'Content, offers, and regional restrictions adapt to your device profile and history.'
+        ];
+      }else if(lvl==='med'){
+        note='Some sites can already correlate your profile when you return regularly.';
+        example='For example, a bank may skip part of the checks when it recognises your setup, while a new service still hesitates.';
+        threats=[
+          'Personalised prices or recommendations can follow you between tabs.',
+          'Work and personal contexts blur quickly when you rely on a single browser.',
+          'Timezone, language, or IP mismatches can lead to CAPTCHAs and manual reviews.'
+        ];
+      }else{
+        note='You barely stand out — without extra data it is harder to link your visits together.';
+        example='For example, ad networks will struggle to confidently connect purchases from different tabs to one person.';
+        threats=[
+          'Once IPs, cookies, or logins appear, uniqueness jumps immediately.',
+          'Rare extensions or fonts can still single you out at a glance.',
+          'Sites continue seeing your browser, language, and time, so no fingerprint is truly anonymous.'
+        ];
+      }
+      return {headline,note,example,threats};
+    },
+    uniqExampleLead:'How it shows up:',
+    uniqAdviceLead:'What to do:',
+    uniqAdvice:{
+      separateProfiles:'Keep separate browser profiles for work, shopping, and personal tasks so the signals stay isolated.',
+      canvasShield:'Enable Canvas/Audio protections in your browser or install an extension that randomises them.',
+      storage:'Clear localStorage, sessionStorage, and IndexedDB after sensitive sessions.',
+      cookies:'Block third-party cookies or allow them only for trusted sites.',
+      permissions:'Audit granted permissions and revoke camera, microphone, or location when they are not needed.',
+      plugins:'Remove or disable extensions you no longer rely on.',
+      fonts:({fontCount})=>`Hide or remove rare fonts (currently ${fontCount}) so your device looks less unique.`,
+      trackers:({trackerCount})=>`Turn on a tracker blocker — this page already loads ${trackerCount} external beacons.`,
+      resources:({resourceCount})=>`Limit calls to ${resourceCount} external domains with filters such as uBlock Origin.`,
+      vpn:'Use a VPN or private tunnel to mask your real IP and smooth out the fingerprint.',
+      browser:'For sensitive work, use a mainstream browser or a fingerprint-resistant profile.',
+      webrtc:'Disable WebRTC/DNS leaks in settings or via an extension so your real IP stays hidden.',
+      ipRotate:'Rotate your IP (VPN, router reboot, mobile modem) so the fingerprint is not tied to one address.',
+      speed:'Stabilise the connection — unusual latency or low bandwidth makes you stand out as a rare segment.',
+      privacyMode:'Enable fingerprint-hardened modes (Firefox RFP, Brave, LibreWolf) for high-risk tasks.',
+      network:'Switch to Wi‑Fi or wired broadband when possible to avoid the “mobile network” signature.',
+      fallback1:'Enable automatic history and cookie clearing when the browser closes.',
+      fallback2:'Open critical services in private or container tabs to avoid mixing work and personal data.',
+      fallback3:'Keep your browser and extensions up to date — outdated builds are easy to fingerprint.',
+      fallback4:'Consider a second device or virtual machine for finance and paperwork.',
+      fallback5:'Install privacy extensions like uBlock Origin, Privacy Badger, and Decentraleyes to block excess scripts.',
+      fallback6:'Review blocker settings and permissions regularly so they do not silently re-enable themselves.'
+    },
+    uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'What a site can learn',
     shockTitle:'Already visible without IP:',
     shock:{
@@ -525,9 +627,34 @@ const I18N = {
     profiling:{
       title:'Profiling',
       intro:[
-        'We build explainable hypotheses from the signals your browser already shares. Everything runs locally.',
-        'Each finding lists confidence, method, and the exact signals behind it.'
+        'We assemble explainable hypotheses from the signals your browser already exposes. Everything stays on your device.',
+        'Run the IP and speed check if you want the portrait to become even more precise.'
       ],
+      summary:info=>{
+        const unknown=info.unknown||'—';
+        const device=`${info.deviceConfidence||0}%`;
+        const deviceLabel=info.deviceLabel||unknown;
+        const osLabel=info.osLabel||unknown;
+        const battery=info.batteryText||unknown;
+        const localTime=info.localTime||unknown;
+        const vpn=info.vpnLabel?`${info.vpnLabel} (${info.vpnConfidence||0}%)`:unknown;
+        const location=info.location||unknown;
+        const speed=info.speedText||unknown;
+        const connection=info.connection||unknown;
+        const provider=info.provider||unknown;
+        return `We are ${device} confident you are on ${deviceLabel} running ${osLabel}. Battery ${battery}, local time ${localTime}. VPN status: ${vpn}. Likely region: ${location}. Connection ${speed}, type ${connection}, provider ${provider}.`;
+      },
+      detailLabels:{
+        device:'Device',
+        os:'Operating system',
+        vpn:'VPN',
+        location:'Location',
+        connection:'Connection',
+        speed:'Speed',
+        provider:'Provider',
+        battery:'Battery',
+        time:'Local time'
+      },
       waiting:'Collecting signals…',
       loading:'Crunching the profile…',
       none:'Not enough data yet. Run the IP and speed check to refine the profile.',
@@ -536,6 +663,7 @@ const I18N = {
       confidence:conf=>`Confidence ${Math.round(conf*100)}%`,
       evidenceLead:'Signals:',
       evidenceNone:'No signals exposed',
+      unknown:'—',
       limitationsLead:'Why it matters:',
       errors:{
         load:'Could not load the profiling module.',
@@ -676,26 +804,6 @@ const I18N = {
         approx:'estimated from the Network Information API'
       }
     },
-    advanced:{
-      button:'Advanced mode',
-      buttonActive:'Hide advanced data',
-      title:'Additional signals',
-      loading:'Collecting additional signals…',
-      fonts:'Third-party fonts',
-      trackers:'Potential trackers',
-      resources:'Other third-party loads',
-      plugins:'Browser plugins',
-      media:'Connected devices',
-      storage:'Storage & cookies',
-      none:'No extra signals found',
-      fontsNone:'No external fonts detected',
-      trackersNone:'No tracker domains spotted',
-      resourcesNone:'No third-party loads detected',
-      pluginsNone:'No plugins reported',
-      mediaNone:'Browser did not report devices',
-      note:'Advanced mode only uses already loaded data and never triggers extra requests.',
-      storageSummary:values=>`localStorage: ${values.local}, sessionStorage: ${values.session}, IndexedDB: ${values.idb}, cookies: ${values.cookies}`
-    },
     vpn:{
       label:'VPN usage',
       statuses:{
@@ -740,7 +848,7 @@ const I18N = {
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
     methodSummary:'<b>How we calculate it</b>',
-    methodText:'We benchmark your signals against up-to-date public datasets (StatCounter, Cover Your Tracks 2024, Ookla). A rare mix produces higher entropy H and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
+    methodText:'We benchmark your signals against up-to-date public datasets (StatCounter, Cover Your Tracks 2024, Ookla). A rare mix produces higher entropy H (in bits) and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. External services are called only when you press the IP button, and the full reply is shown at once. No extra fonts, trackers, or hidden requests are loaded.',
     footer:(version,scheme)=>`© morgunov.tech • Local fingerprint audit • Version: ${version} (${scheme})`,
@@ -752,28 +860,76 @@ const I18N = {
   },
   uz: {
     langOption:'🇺🇿 Oʻzbekcha',
+    langButton:'Til',
+    langLabels:{ru:'Rus tili',en:'Ingliz tili',uz:'Oʻzbek tili'},
+    theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi'}},
     introTitle:'Servis nima uchun kerak',
     introParagraphs:[
-      'Saytlar siz haqingizda allaqachon ko‘radigan maʼlumotlarni va ularning maxfiylikka taʼsirini oddiy tilda ko‘rsatadi.',
-      '“Raqamli barmoq izi” — sayt akkauntsiz ham tanishi mumkin bo‘lgan signallar to‘plami — qanchalik noyobligini tushuntiramiz.',
-      'Har bir element xavf darajasi bilan belgilangan: o‘rtacha va yuqori xavflar qancha ko‘p bo‘lsa, shuncha oson aniqlanishingiz mumkin.',
-      'Hech qanday maʼlumot yig‘maymiz va saqlamaymiz: hammasi brauzeringizda hisoblanadi, ro‘yxatdan o‘tish ham, parol ham talab etilmaydi.',
-      '“IP aniqlash va tezlikni o‘lchash” tugmasi tezkor testni ishga tushiradi, IP orqali ko‘rinadigan maʼlumotlarni ko‘rsatadi va VPN ishlatilishini taxmin qiladi.'
+      'Saytlar siz haqingizda allaqachon ko‘radigan maʼlumotlarni va ularning maxfiylikka taʼsirini sodda tilda ko‘rsatamiz.',
+      '“Raqamli barmoq izi” — akkauntsiz ham qurilmangizni tanitadigan signallar to‘plami — qanchalik noyobligini tushuntiramiz.',
+      'Bu signallar qanday xavf tug‘dirishini va nima qilish kerakligini aniq tavsiyalar bilan yetkazamiz.',
+      'Hisob-kitoblar to‘liq brauzeringizda bajariladi: hech narsa yuborilmaydi, saqlanmaydi va ro‘yxatdan o‘tish talab etilmaydi.',
+      '“IP manzil va tezlikni aniqlash” tugmasi internet tezligini o‘lchab, IP orqali ko‘rinadigan maʼlumotlarni va VPN taxminini ko‘rsatadi.'
     ],
-    legendTitle:'Xavf darajalarini qanday o‘qish kerak:',
-    risk:{low:'past', med:'o‘rtacha', high:'yuqori'},
-    uniqMeaning:pct=>({
-      headline:`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`,
-      note:'Foiz qanchalik katta bo‘lsa, saytlar sizni yana tanishi shunchalik oson.',
-      example:'Masalan, onlayn do‘kon bu barmoq izini oldingi tashrif bilan bog‘lab, akkauntsiz ham avvalgi narxlarni ko‘rsatishi mumkin.',
-      actions:[
-        'Ish, xarid va shaxsiy hayot uchun alohida brauzer yoki profil ishlating.',
-        'Muhim ishlar tugagach, cookie, lokal va sessiya xotirasini hamda tarixni tozalab turing.',
-        'Qo‘shimcha maxfiylik kerak bo‘lsa, VPN yoki maxfiy tarmoqlardan foydalaning.'
-      ]
-    }),
-    uniqExampleLead:'Bu amalda qanday ko‘rinadi:',
-    uniqAdviceLead:'Nima qilish mumkin:',
+    uniqMeaningTitle:'Bu nimani anglatadi:',
+    uniqMeaning:(pct,{level}={})=>{
+      const lvl=level|| (pct>=70?'high':pct>=40?'med':'low');
+      const headline=`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`;
+      let note,example,threats;
+      if(lvl==='high'){
+        note='Saytlar deyarli darhol tanishi mumkin: bir necha texnik signal tashriflarni bog‘lash uchun yetarli.';
+        example='Masalan, onlayn do‘kon oldingi tashrifni eslab, akkauntsiz ham narxlarni moslashtirishi mumkin.';
+        threats=[
+          'Reklama tarmoqlari faoliyatingizni turli saytlarda birlashtirib, yuqori stavkalar qo‘yadi.',
+          'Fraudga qarshi tizimlar qo‘shimcha tasdiqlar yoki hujjat talab qilishi mumkin.',
+          'Kontent va tariflar qurilmangiz hamda tarixingizga qarab tez-tez o‘zgaradi.'
+        ];
+      }else if(lvl==='med'){
+        note='Baʼzi saytlar muntazam qaytganingizda profilni aniqlashga allaqachon qodir.';
+        example='Masalan, bank tanish qurilmani ko‘rib, tekshiruvlarning bir qismini o‘tkazib yuboradi, yangi servis esa ehtiyotkor bo‘lib qoladi.';
+        threats=[
+          'Shaxsiylashtirilgan narx yoki tavsiyalar turli oynalarda ham sizga ergashadi.',
+          'Ish va shaxsiy holatlar bitta brauzerda aralashib ketishi oson.',
+          'Vaqt zonasi, til yoki IP mos kelmasa, CAPTCHA va qo‘shimcha tekshiruvlar chiqadi.'
+        ];
+      }else{
+        note='Siz deyarli ajralib turmaysiz — qo‘shimcha maʼlumotsiz tashriflarni bog‘lash qiyin.';
+        example='Masalan, reklama tarmog‘i turli oynadagi xaridlarni aniq bitta odamga bog‘lay olmaydi.';
+        threats=[
+          'IP, cookie yoki akkaunt paydo bo‘lishi bilanoq noyoblik darhol oshadi.',
+          'Noodatiy kengaytmalar yoki shriftlar baribir sizni ajratib ko‘rsatadi.',
+          'Saytlar baribir brauzer, til va vaqtni ko‘radi, shuning uchun mutlaq anonimlik yo‘q.'
+        ];
+      }
+      return {headline,note,example,threats};
+    },
+    uniqExampleLead:'Bu qanday ko‘rinadi:',
+    uniqAdviceLead:'Nima qilish kerak:',
+    uniqAdvice:{
+      separateProfiles:'Ish, xarid va shaxsiy ishlar uchun alohida brauzer yoki profil ishlating.',
+      canvasShield:'Brauzer sozlamalarida Canvas/Audio himoyasini yoqing yoki tasodifiylashtiruvchi kengaytma o‘rnating.',
+      storage:'Muhim ishlar tugagach, localStorage, sessionStorage va IndexedDB ni tozalab turing.',
+      cookies:'Uchinchi tomon cookie fayllarini bloklang yoki faqat ishonchli saytlarga ruxsat bering.',
+      permissions:'Berilgan ruxsatlarni qayta ko‘rib chiqing va kamera, mikrofon, geolokatsiyani keraksiz bo‘lsa o‘chirib qo‘ying.',
+      plugins:'Ishlatilmaydigan kengaytmalarni o‘chirib tashlang yoki vaqtincha o‘chirib qo‘ying.',
+      fonts:({fontCount})=>`Kam uchraydigan shriftlarni yashiring yoki olib tashlang (hozir ${fontCount} ta), shunda qurilmangiz kamroq ajraladi.`,
+      trackers:({trackerCount})=>`Treker bloklagichini yoqing — sahifa ${trackerCount} ta tashqi hisoblagichni yuklamoqda.`,
+      resources:({resourceCount})=>`uBlock Origin kabi filtrlardan foydalanib, ${resourceCount} ta tashqi domen bilan aloqani cheklang.`,
+      vpn:'Haqiqiy IP manzilni yashirish va barmoq izini tekislash uchun VPN yoki maxfiy tuneldan foydalaning.',
+      browser:'Maxfiy vazifalar uchun ommabop brauzer yoki fingerprintga qarshi profilni tanlang.',
+      webrtc:'WebRTC va DNS oqishlarini sozlamalarda yoki kengaytmada o‘chirib qo‘ying, shunda haqiqiy IP chiqmaydi.',
+      ipRotate:'VPN, routerni qayta yuklash yoki mobil modem yordamida IP manzilni vaqti-vaqti bilan almashtiring.',
+      speed:'Aloqani barqaror qiling — noodatiy sekinlik sizni kam uchraydigan segment sifatida ko‘rsatadi.',
+      privacyMode:'Yuqori xavfli vazifalar uchun Firefox RFP, Brave yoki LibreWolf kabi fingerprintga qarshi rejimlarni yoqing.',
+      network:'Imkon bo‘lsa, Wi‑Fi yoki kabel orqali ulangan tarmoqqa o‘ting, shunda “mobil tarmoq” izi kamayadi.',
+      fallback1:'Brauzer yopilganda tarix va cookie fayllarini avtomatik tozalashni yoqing.',
+      fallback2:'Muhim xizmatlarni maxfiy yoki konteyner oynada oching, shunda ish va shaxsiy maʼlumotlar aralashmaydi.',
+      fallback3:'Brauzer va kengaytmalarni o‘z vaqtida yangilang — eski versiyalar osongina aniqlanadi.',
+      fallback4:'Moliyaviy va hujjat ishlari uchun alohida qurilma yoki virtual mashinadan foydalanishni o‘ylab ko‘ring.',
+      fallback5:'uBlock Origin, Privacy Badger, Decentraleyes kabi maxfiylik kengaytmalarini o‘rnating.',
+      fallback6:'Bloklagich va ruxsat sozlamalarini vaqti-vaqti bilan tekshirib turing — ular o‘z-o‘zidan yoqilib ketmasin.'
+    },
+    uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Sayt nimalarni ko‘rishi mumkin',
     shockTitle:'IP so‘ralmasdan ko‘rinadiganlar:',
     shock:{
@@ -798,9 +954,34 @@ const I18N = {
     profiling:{
       title:'Profiling',
       intro:[
-        'Brauzer ko‘rsatadigan signallar asosida ehtimoliy profil tuzamiz. Hisob-kitoblar faqat sizning brauzeringizda bajariladi.',
-        'Har bir xulosa ishonchlilik darajasi, qo‘llangan usul va signal ro‘yxati bilan ko‘rsatiladi.'
+        'Brauzer ochiq ko‘rsatayotgan signallar asosida ehtimoliy profil tuzamiz. Hisob-kitoblar faqat sizning qurilmangizda bajariladi.',
+        'Portretni aniqroq qilish uchun istasangiz IP va tezlik testini ishga tushiring.'
       ],
+      summary:info=>{
+        const unknown=info.unknown||'—';
+        const device=`${info.deviceConfidence||0}%`;
+        const deviceLabel=info.deviceLabel||unknown;
+        const osLabel=info.osLabel||unknown;
+        const battery=info.batteryText||unknown;
+        const localTime=info.localTime||unknown;
+        const vpn=info.vpnLabel?`${info.vpnLabel} (${info.vpnConfidence||0}%)`:unknown;
+        const location=info.location||unknown;
+        const speed=info.speedText||unknown;
+        const connection=info.connection||unknown;
+        const provider=info.provider||unknown;
+        return `Taxminan ${device} ehtimol bilan siz ${osLabel} o‘rnatilgan ${deviceLabel} dan foydalanyapsiz. Batareya ${battery}, qurilmadagi vaqt ${localTime}. VPN: ${vpn}. Ehtimoliy joylashuv: ${location}. Tezlik ${speed}, ulanish turi ${connection}, provayder ${provider}.`;
+      },
+      detailLabels:{
+        device:'Qurilma',
+        os:'Operatsion tizim',
+        vpn:'VPN',
+        location:'Joylashuv',
+        connection:'Ulanish',
+        speed:'Tezlik',
+        provider:'Provayder',
+        battery:'Batareya',
+        time:'Mahalliy vaqt'
+      },
       waiting:'Signallar yig‘ilmoqda…',
       loading:'Profil tahlil qilinmoqda…',
       none:'Maʼlumot yetarli emas. IP va tezlikni aniqlasangiz, profil aniqroq bo‘ladi.',
@@ -809,6 +990,7 @@ const I18N = {
       confidence:conf=>`Ishonchlilik ${Math.round(conf*100)}%`,
       evidenceLead:'Signallar:',
       evidenceNone:'Signallar mavjud emas',
+      unknown:'—',
       limitationsLead:'Nega muhim:',
       errors:{
         load:'Profiling moduli yuklanmadi.',
@@ -974,26 +1156,6 @@ const I18N = {
         approx:'brauzer maʼlumotlaridan taxmin'
       }
     },
-    advanced:{
-      button:'Advanced rejimi',
-      buttonActive:'Advanced maʼlumotlarini yashirish',
-      title:'Qo‘shimcha signallar',
-      loading:'Qo‘shimcha signallar yig‘ilmoqda…',
-      fonts:'Uchinchi tomon shriftlari',
-      trackers:'Ehtimoliy trekerlar',
-      resources:'Boshqa uchinchi tomon yuklamalari',
-      plugins:'Brauzer plaginlari',
-      media:'Ulangan qurilmalar',
-      storage:'Saqlash va cookie',
-      none:'Qo‘shimcha signallar topilmadi',
-      fontsNone:'Tashqi shriftlar aniqlanmadi',
-      trackersNone:'Treker domenlari topilmadi',
-      resourcesNone:'Uchinchi tomon yuklamalari aniqlanmadi',
-      pluginsNone:'Plaginlar haqida maʼlumot yo‘q',
-      mediaNone:'Brauzer qurilmalar haqida maʼlumot bermadi',
-      note:'Advanced rejim faqat allaqachon yuklangan maʼlumotdan foydalanadi va qo‘shimcha so‘rov yubormaydi.',
-      storageSummary:values=>`localStorage: ${values.local}, sessionStorage: ${values.session}, IndexedDB: ${values.idb}, cookie: ${values.cookies}`
-    },
     vpn:{
       label:'VPN ishlatilishi',
       statuses:{
@@ -1038,7 +1200,7 @@ const I18N = {
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
     methodSummary:'<b>Natija qanday olinadi</b>',
-    methodText:'Signallarni eng so‘nggi ochiq maʼlumotlar (StatCounter, Cover Your Tracks 2024, Ookla) bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
+    methodText:'Signallarni eng so‘nggi ochiq maʼlumotlar (StatCounter, Cover Your Tracks 2024, Ookla) bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni (bitlarda) oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:'Barcha jarayon brauzer ichida bo‘ladi. IP tugmasini bosganingizdagina tashqi servisga murojaat qilamiz va javobni butunlay ko‘rsatamiz. Qo‘shimcha shriftlar, trekerlar yoki yashirin so‘rovlar yo‘q.',
     footer:(version,scheme)=>`© morgunov.tech • Mahalliy fingerprint auditi • Versiya: ${version} (${scheme})`,
@@ -1546,6 +1708,11 @@ async function computeSnapshot(){
     hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server:state.serverData, speed:state.speed
   };
   try{
+    basic.exposure=await collectExposureData(basic);
+  }catch(_){
+    basic.exposure=null;
+  }
+  try{
     globalThis.__fingerprintBasic=basic;
   }catch(_){/* ignore */}
   const json=JSON.stringify(sortDeep(basic));
@@ -1577,7 +1744,7 @@ async function computeSnapshot(){
   return {basic, fp, H, pct};
 }
 /* ============== UI render ============== */
-function uniqClass(pct){return pct>65?'high':(pct>35?'med':'low');}
+function uniquenessLevel(pct){return pct>=70?'high':(pct>=40?'med':'low');}
 const CARD_CONTENT = {
   tz:{
     risk:'med',
@@ -1698,6 +1865,27 @@ const CARD_CONTENT = {
     ex:{ru:'Например, 15% без зарядки — вероятно смартфон в дороге',en:'For example, 15% with no charger likely means a phone on the go',uz:'Masalan, 15% va zaryadlanmayotgan bo‘lsa, bu yo‘lda ketayotgan telefon bo‘lishi mumkin'},
     adv:{ru:'Старайтесь держать заряд в безопасном диапазоне и не передавайте его чужим сайтам без необходимости',en:'Keep the battery in a safe range and avoid sharing it with unknown sites unnecessarily',uz:'Zaryadni xavfsiz darajada saqlang va keraksiz saytlar bilan bo‘lishmang'}
   },
+  fontsExposure:{
+    risk:'med',
+    label:{ru:'Сторонние шрифты',en:'Third-party fonts',uz:'Tashqi shriftlar'},
+    use:{ru:'Редкие шрифты выдают корпоративные настройки или конкретные приложения',en:'Unusual fonts reveal corporate setups or niche apps',uz:'Noodatiy shriftlar maxsus sozlamalar yoki dasturlarni fosh qiladi'},
+    ex:{ru:'Например, фирменные гарнитуры компании сразу выделяют ваш браузер',en:'For example, corporate brand fonts instantly single out your browser',uz:'Masalan, korporativ brend shriftlari brauzeringizni darhol ajratib ko‘rsatadi'},
+    adv:{ru:'Храните редкие шрифты в отдельном профиле или отключайте их перед чувствительными задачами',en:'Keep rare fonts in a separate profile or disable them before sensitive work',uz:'Kam uchraydigan shriftlarni alohida profilga o‘tkazing yoki muhim ishlar oldidan o‘chirib qo‘ying'}
+  },
+  trackerExposure:{
+    risk:'high',
+    label:{ru:'Трекеры и пиксели',en:'Trackers & pixels',uz:'Trekerlar va piksel kodlar'},
+    use:{ru:'Сторонние счётчики и пиксели помогают сопоставлять ваши визиты',en:'External analytics and pixels link your visits across pages',uz:'Tashqi hisoblagichlar va piksellar tashriflaringizni bog‘laydi'},
+    ex:{ru:'Например, один и тот же analytics-код увидит вас и на других сайтах',en:'For example, the same analytics tag recognises you on other sites',uz:'Masalan, bir xil analytics kodi sizni boshqa saytlarda ham taniydi'},
+    adv:{ru:'Установите блокировщик трекеров и ограничьте сторонние скрипты на чувствительных сайтах',en:'Install a tracker blocker and limit third-party scripts on sensitive sites',uz:'Trekerlarni bloklovchi kengaytma o‘rnating va tashqi skriptlarni cheklang'}
+  },
+  resourceExposure:{
+    risk:'med',
+    label:{ru:'Другие сторонние загрузки',en:'Other third-party loads',uz:'Boshqa tashqi yuklamalar'},
+    use:{ru:'Список сторонних доменов показывает, кому ещё уходит ваш трафик',en:'Extra domains show where else your traffic flows',uz:'Qo‘shimcha domenlar trafigingiz yana qayerga ketayotganini ko‘rsatadi'},
+    ex:{ru:'Например, CDN из другой страны может подсказать ваш регион или интересы',en:'For example, a foreign CDN may hint at your region or interests',uz:'Masalan, boshqa mamlakatdagi CDN sizning hududingiz yoki qiziqishlaringizni bildirishi mumkin'},
+    adv:{ru:'Отключайте лишние расширения и используйте режимы с изоляцией, чтобы ограничить внешний обмен данными',en:'Disable unused extensions and use isolated modes to limit external data exchange',uz:'Keraksiz kengaytmalarni o‘chirib qo‘ying va maʼlumot almashinuvini cheklash uchun izolyatsiyalangan rejimlardan foydalaning'}
+  },
   fullness:{
     risk:'low',
     label:{ru:'Полнота профиля',en:'Profile completeness',uz:'Profil to‘liqligi'},
@@ -1731,14 +1919,59 @@ const state={
   fetchingIp:false,
   speed:{status:'idle',mbps:null,latency:null,error:null,note:null},
   vpn:{status:'uncertain',reasons:[],checked:false},
-  advanced:false,
-  advancedData:null,
-  advancedLoading:false,
   sharePayload:null
 };
 let snapshotCache=null;
 let snapshotPromise=null;
-function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;if(state.advanced){state.advancedData=null;}state.advancedLoading=false;state.sharePayload=null;}
+function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;state.sharePayload=null;}
+const THEME_KEY='fp_theme';
+const THEME_ORDER=['auto','light','dark'];
+let themePreference='auto';
+let langMenuIsOpen=false;
+
+function loadThemePreference(){
+  try{
+    const stored=localStorage.getItem(THEME_KEY);
+    if(stored==='light'||stored==='dark'||stored==='auto') return stored;
+  }catch(_){/* ignore */}
+  return'auto';
+}
+
+function applyThemePreference(mode){
+  themePreference=mode;
+  document.documentElement.classList.remove('force-light','force-dark');
+  if(mode==='light') document.documentElement.classList.add('force-light');
+  else if(mode==='dark') document.documentElement.classList.add('force-dark');
+  try{
+    if(mode==='auto') localStorage.setItem(THEME_KEY,'auto');
+    else localStorage.setItem(THEME_KEY,mode);
+  }catch(_){/* ignore */}
+}
+
+function cycleThemePreference(){
+  const idx=THEME_ORDER.indexOf(themePreference);
+  const next=THEME_ORDER[(idx+1+THEME_ORDER.length)%THEME_ORDER.length];
+  applyThemePreference(next);
+}
+
+function updateThemeButton(t){
+  const btn=getEl('themeToggle');
+  if(!btn) return;
+  const map=t.theme?.modes||{};
+  const fallback={auto:'Auto',light:'Light',dark:'Dark'};
+  const label=map[themePreference]||fallback[themePreference]||'Auto';
+  const prefix=t.theme?.label||'Theme';
+  btn.textContent=`${prefix}: ${label}`;
+  btn.setAttribute('aria-label',`${prefix}: ${label}`);
+}
+
+function setLangMenu(open){
+  langMenuIsOpen=open;
+  const btn=getEl('langBtn');
+  const menu=getEl('langMenu');
+  if(btn) btn.setAttribute('aria-expanded',String(open));
+  if(menu) menu.hidden=!open;
+}
 async function getSnapshot(){
   if(snapshotCache) return snapshotCache;
   if(snapshotPromise) return snapshotPromise;
@@ -2221,7 +2454,7 @@ function createCard(key,value,t){
   card.className='card';
   const title=document.createElement('div');
   title.className='title';
-  title.innerHTML=`<span class="dot ${info.risk}"></span> ${info.label[currentLang]}`;
+  title.textContent=info.label[currentLang];
   card.appendChild(title);
   const valueEl=document.createElement('div');
   valueEl.className='val';
@@ -2398,19 +2631,136 @@ function formatTouchSummary(touch,pointer,t){
   return {points, pointer:pointerLabel};
 }
 
-function buildAdvancedList(items,emptyText,limit=6){
-  if(!items || !items.length){
-    return `<li>${escapeHtml(emptyText||'—')}</li>`;
-  }
-  const limited=items.slice(0,limit);
-  const rows=limited.map(item=>`<li>${escapeHtml(item)}</li>`).join('');
-  if(items.length>limit){
-    return `${rows}<li>+${items.length-limit}</li>`;
-  }
-  return rows;
+function summariseList(items,limit=3){
+  if(!Array.isArray(items)||!items.length) return '—';
+  const head=items.slice(0,limit);
+  const more=items.length>limit?` +${items.length-limit}`:'';
+  return `${head.join(', ')}${more}`;
 }
 
-async function gatherAdvancedData(basic){
+function buildPersonalizedAdvice({basic,state,pct,level},t){
+  const adv=t.uniqAdvice||{};
+  const fallback=t.uniqAdviceFallback||[];
+  const picks=[];
+  const used=new Set();
+  const grantedPerms=Object.entries(basic.perms||{}).filter(([,val])=>String(val).toLowerCase()==='granted');
+  const exposure=basic.exposure||{};
+  const fontCount=Array.isArray(exposure.fonts)?exposure.fonts.length:0;
+  const trackerCount=Array.isArray(exposure.trackers)?exposure.trackers.length:0;
+  const resourceCount=Array.isArray(exposure.resources)?exposure.resources.length:0;
+  const context={basic,state,pct,level,grantedPerms,fontCount,trackerCount,resourceCount};
+  const push=(key,condition=true)=>{
+    if(!condition||used.has(key)) return;
+    const template=adv[key];
+    if(!template) return;
+    const text=typeof template==='function'?template(context):template;
+    if(!text) return;
+    used.add(key);
+    picks.push(text);
+  };
+
+  push('separateProfiles',level!=='low');
+  push('canvasShield',Boolean(basic.hashes?.canvas||basic.hashes?.audio));
+  push('storage',Boolean(basic.storage?.local||basic.storage?.session||basic.storage?.indexedDB));
+  push('cookies',basic.cookiesEnabled===true);
+  push('permissions',grantedPerms.length>0);
+  push('plugins',Array.isArray(basic.plugins)&&basic.plugins.length>0);
+  push('fonts',fontCount>0);
+  push('trackers',trackerCount>0);
+  push('resources',resourceCount>3);
+  push('vpn',state.vpn?.status!=='likely'&&level!=='low');
+  push('browser',Array.isArray(basic.uaBrands)&&basic.uaBrands.some(brand=>(brand.brand||'').toLowerCase().includes('arc')));
+  push('webrtc',state.vpn?.status==='likely'?false:true);
+  push('ipRotate',Boolean(state.serverData));
+  push('speed',state.speed?.status==='done'&&state.speed.mbps<25);
+  push('privacyMode',level==='high');
+  push('network',String(basic.net?.effectiveType||'').toLowerCase().includes('cell'));
+
+  for(const key of fallback){
+    if(picks.length>=7) break;
+    push(key,true);
+  }
+  return picks.slice(0,7);
+}
+
+function buildProfilingContext(findings,basic,t){
+  const cfg=t.profiling||{};
+  const find=key=>findings.find(item=>item.key===key);
+  const deviceFinding=find('device.model')||find('device.class');
+  const osFinding=find('os.platform');
+  const vpnFinding=find('vpn.probability');
+  const locationFinding=find('location.region');
+  const networkFinding=find('network.profile');
+  const deviceLabel=deviceFinding?formatProfilingValue(deviceFinding,cfg):null;
+  const osLabel=osFinding?formatProfilingValue(osFinding,cfg):null;
+  const vpnLabel=vpnFinding?formatProfilingValue(vpnFinding,cfg):null;
+  const locationLabel=locationFinding?formatProfilingValue(locationFinding,cfg):null;
+  const networkLabel=networkFinding?formatProfilingValue(networkFinding,cfg):null;
+  const timezone=basic?.timezone||LOCAL_TZ||'UTC';
+  const locale=currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU');
+  const localTime=timeInTZ(timezone,locale);
+  const battery=basic?.battery;
+  let batteryText=null;
+  if(battery&&typeof battery.level==='number'){
+    const pct=Math.max(0,Math.min(100,Math.round(battery.level*100)));
+    batteryText=`${pct}%${battery.charging?' ⚡':''}`;
+  }
+  const netSummary=formatNetworkSummary(basic?.net);
+  const units=t.units||{};
+  const labels=t.labels||{};
+  let connectionText=null;
+  if(netSummary){
+    const parts=[];
+    if(netSummary.type) parts.push(netSummary.type);
+    if(netSummary.downlink!=null) parts.push(`~${netSummary.downlink} ${units.mbps||'Mbps'}`);
+    if(netSummary.rtt!=null) parts.push(`${labels.latency||'Latency'} ${netSummary.rtt} ${units.ms||'ms'}`);
+    connectionText=parts.join(' • ');
+  }
+  const speedState=state.speed||{};
+  let speedText=null;
+  if(speedState.status==='done'){
+    const parts=[];
+    if(typeof speedState.mbps==='number'&&!Number.isNaN(speedState.mbps)) parts.push(`${speedState.mbps.toFixed(1)} ${units.mbps||'Mbps'}`);
+    if(typeof speedState.latency==='number'&&!Number.isNaN(speedState.latency)) parts.push(`${labels.latency||'Latency'} ${speedState.latency} ${units.ms||'ms'}`);
+    speedText=parts.join(' • ');
+  }else if(speedState.status==='running'){
+    speedText=t.speed?.running||null;
+  }else if(speedState.status==='error'){
+    speedText=speedState.error||null;
+  }
+  let location=locationLabel;
+  if(!location){
+    const details=state.serverData?.details||{};
+    const parts=[details.region,details.country_name].filter(Boolean);
+    if(parts.length) location=parts.join(', ');
+    else if(details.timezone) location=details.timezone;
+  }
+  const provider=state.serverData?.details?.org||state.serverData?.detailSource||null;
+  const ctx={
+    unknown:cfg.unknown||'—',
+    deviceLabel,
+    deviceConfidence:Math.round((deviceFinding?.confidence||0)*100),
+    osLabel,
+    osConfidence:Math.round((osFinding?.confidence||0)*100),
+    vpnLabel,
+    vpnConfidence:Math.round((vpnFinding?.confidence||0)*100),
+    location:location||null,
+    connection:connectionText||networkLabel||null,
+    connectionRaw:networkLabel||null,
+    speedText:speedText,
+    provider:provider||null,
+    batteryText:batteryText,
+    localTime:`${localTime}${timezone?` (${timezone})`:''}`,
+    deviceFinding,
+    osFinding,
+    vpnFinding,
+    locationFinding,
+    networkFinding
+  };
+  return ctx;
+}
+
+async function collectExposureData(basic){
   const fonts=new Set();
   const trackers=new Set();
   const resources=new Set();
@@ -2447,86 +2797,6 @@ async function gatherAdvancedData(basic){
       cookies:basic.cookiesEnabled
     }
   };
-}
-
-function formatStorageSummaryForAdvanced(values,t){
-  const yes=t.units?.yes||'yes';
-  const no=t.units?.no||'no';
-  const unknown=t.permStates?.unknown||'—';
-  const make=val=>val===true?yes:val===false?no:unknown;
-  return {
-    local:make(values.local),
-    session:make(values.session),
-    idb:make(values.idb),
-    cookies:make(values.cookies)
-  };
-}
-
-function updateAdvancedPanel(t,basic){
-  const panel=getEl('advancedPanel');
-  if(!panel) return;
-  const advTexts=t.advanced||{};
-  if(!state.advanced){
-    panel.style.display='none';
-    panel.innerHTML='';
-    return;
-  }
-  panel.style.display='block';
-  if(state.advancedLoading){
-    panel.innerHTML=`<div class="small">${advTexts.loading||'…'}</div>`;
-    return;
-  }
-  const data=state.advancedData;
-  if(!data){
-    panel.innerHTML=`<div class="small">${advTexts.none||''}</div>`;
-    return;
-  }
-  if(data.error){
-    panel.innerHTML=`<div class="small">${escapeHtml(String(data.error))}</div>`;
-    return;
-  }
-  const sections=[];
-  sections.push(`<h4>${advTexts.title||'Advanced'}</h4>`);
-  if(advTexts.note){
-    sections.push(`<div class="small">${advTexts.note}</div>`);
-  }
-  const fontList=buildAdvancedList(data.fonts,advTexts.fontsNone||'—');
-  sections.push(`<div class="small"><b>${advTexts.fonts||'Fonts'}</b><ul>${fontList}</ul></div>`);
-  const trackerList=buildAdvancedList(data.trackers,advTexts.trackersNone||'—');
-  sections.push(`<div class="small"><b>${advTexts.trackers||'Trackers'}</b><ul>${trackerList}</ul></div>`);
-  const resourceList=buildAdvancedList(data.resources,advTexts.resourcesNone||'—');
-  sections.push(`<div class="small"><b>${advTexts.resources||'Resources'}</b><ul>${resourceList}</ul></div>`);
-  const pluginList=buildAdvancedList(data.plugins,advTexts.pluginsNone||'—');
-  sections.push(`<div class="small"><b>${advTexts.plugins||'Plugins'}</b><ul>${pluginList}</ul></div>`);
-  const mediaItems=(data.media||[]).map(device=>{
-    const kind=device.kind||'device';
-    const hasLabel=device.label? (t.units?.yes||'yes'):(t.units?.no||'no');
-    return `${kind}: ${hasLabel}`;
-  });
-  const mediaList=buildAdvancedList(mediaItems,advTexts.mediaNone||'—');
-  sections.push(`<div class="small"><b>${advTexts.media||'Media'}</b><ul>${mediaList}</ul></div>`);
-  if(advTexts.storage){
-    const storageValues=formatStorageSummaryForAdvanced(data.storage||{},t);
-    const summary=typeof advTexts.storageSummary==='function'
-      ?advTexts.storageSummary(storageValues)
-      :`${storageValues.local}, ${storageValues.session}, ${storageValues.idb}, ${storageValues.cookies}`;
-    sections.push(`<div class="small"><b>${advTexts.storage}</b><br>${escapeHtml(summary)}</div>`);
-  }
-  panel.innerHTML=sections.join('');
-}
-
-async function ensureAdvancedData(basic,t){
-  if(state.advancedData||state.advancedLoading) return;
-  state.advancedLoading=true;
-  updateAdvancedPanel(t,basic);
-  try{
-    const data=await gatherAdvancedData(basic||{});
-    state.advancedData=data;
-  }catch(e){
-    state.advancedData={error:e.message||String(e)};
-  }
-  state.advancedLoading=false;
-  updateAdvancedPanel(t,basic);
 }
 
 function formatMonitorText(info,t){
@@ -2639,12 +2909,15 @@ async function renderProfilingSection(basic,t){
     listEl.innerHTML='';
     listEl.style.display='none';
   }
-  ensureProfilerIntro(cfg,introEl);
   if(!basic){
-    if(cfg.waiting && introEl){
-      const p=document.createElement('p');
-      p.textContent=cfg.waiting;
-      introEl.appendChild(p);
+    if(introEl){
+      introEl.innerHTML='';
+      ensureProfilerIntro(cfg,introEl);
+      if(cfg.waiting){
+        const p=document.createElement('p');
+        p.textContent=cfg.waiting;
+        introEl.appendChild(p);
+      }
     }
     section.style.display='block';
     return;
@@ -2677,6 +2950,7 @@ async function renderProfilingSection(basic,t){
         li.className='small';
         li.textContent=cfg.none;
         listEl.appendChild(li);
+        listEl.style.display='block';
         section.style.display='block';
       }else{
         listEl.style.display='none';
@@ -2684,50 +2958,63 @@ async function renderProfilingSection(basic,t){
       }
       return;
     }
-    const methodLead=cfg.methodLead||'Method:';
-    findings.forEach(finding=>{
-      const li=document.createElement('li');
-      const label=cfg.labels?.[finding.key]||finding.label||finding.key;
-      const heading=document.createElement('div');
-      heading.innerHTML=`<b>${escapeHtml(label)}</b>`;
-      li.appendChild(heading);
-      const valueDiv=document.createElement('div');
-      valueDiv.className='small';
-      valueDiv.textContent=formatProfilingValue(finding,cfg);
-      li.appendChild(valueDiv);
-      const metaParts=[];
-      if(typeof cfg.confidence==='function') metaParts.push(cfg.confidence(finding.confidence));
-      else metaParts.push(`Confidence ${Math.round(finding.confidence*100)}%`);
-      if(finding.method){
-        const methodLabel=cfg.methods?.[finding.method]||finding.method;
-        if(methodLabel) metaParts.push(`${methodLead} ${methodLabel}`);
+    const context=buildProfilingContext(findings,basic,t);
+    if(introEl){
+      introEl.innerHTML='';
+      if(typeof cfg.summary==='function'){
+        const summaryText=cfg.summary(context);
+        if(summaryText){
+          const p=document.createElement('p');
+          p.textContent=summaryText;
+          introEl.appendChild(p);
+        }
       }
-      if(metaParts.length){
-        const meta=document.createElement('div');
-        meta.className='small';
-        meta.textContent=metaParts.join(' · ');
-        li.appendChild(meta);
+      if(!introEl.childElementCount){
+        ensureProfilerIntro(cfg,introEl);
       }
-      if(finding.evidence && finding.evidence.length){
-        const evidence=document.createElement('div');
-        evidence.className='small';
-        evidence.textContent=`${cfg.evidenceLead||'Signals:'} ${finding.evidence.join(', ')}`;
-        li.appendChild(evidence);
-      }else if(cfg.evidenceNone){
-        const evidence=document.createElement('div');
-        evidence.className='small';
-        evidence.textContent=`${cfg.evidenceLead||'Signals:'} ${cfg.evidenceNone}`;
-        li.appendChild(evidence);
+    }
+    const detailLabels=cfg.detailLabels||{};
+    const unknown=context.unknown||cfg.unknown||'—';
+    const details=[];
+    const addDetail=(label,value,confidenceFraction)=>{
+      if(!label) return;
+      const textParts=[`${label}: ${value||unknown}`];
+      if(confidenceFraction!=null){
+        const confidencePercent=Math.round(confidenceFraction*100);
+        if(typeof cfg.confidence==='function') textParts.push(cfg.confidence(confidenceFraction));
+        else textParts.push(`Confidence ${confidencePercent}%`);
       }
-      const limitationsText=formatProfilingLimitations(finding,cfg);
-      if(limitationsText){
-        const lim=document.createElement('div');
-        lim.className='small';
-        lim.textContent=`${cfg.limitationsLead||'Why it matters:'} ${limitationsText}`;
-        li.appendChild(lim);
-      }
-      listEl.appendChild(li);
-    });
+      details.push(textParts.join(' • '));
+    };
+    const deviceLabel=detailLabels.device||cfg.labels?.['device.model']||cfg.labels?.['device.class']||'Device';
+    const osLabel=detailLabels.os||cfg.labels?.['os.platform']||'OS';
+    const vpnLabel=detailLabels.vpn||cfg.labels?.['vpn.probability']||'VPN';
+    const locationLabel=detailLabels.location||cfg.labels?.['location.region']||'Location';
+    const connectionLabel=detailLabels.connection||cfg.labels?.['network.profile']||'Connection';
+    const speedLabel=detailLabels.speed||'Speed';
+    const providerLabel=detailLabels.provider||'Provider';
+    const batteryLabel=detailLabels.battery||'Battery';
+    const timeLabel=detailLabels.time||'Local time';
+    addDetail(deviceLabel,context.deviceLabel,context.deviceConfidence/100||null);
+    addDetail(osLabel,context.osLabel,context.osConfidence/100||null);
+    addDetail(vpnLabel,context.vpnLabel,context.vpnConfidence/100||null);
+    addDetail(locationLabel,context.location,null);
+    addDetail(connectionLabel,context.connection,null);
+    if(context.speedText) details.push(`${speedLabel}: ${context.speedText}`);
+    if(context.provider) details.push(`${providerLabel}: ${context.provider}`);
+    if(context.batteryText) details.push(`${batteryLabel}: ${context.batteryText}`);
+    if(context.localTime) details.push(`${timeLabel}: ${context.localTime}`);
+    if(details.length){
+      details.forEach(text=>{
+        const li=document.createElement('li');
+        li.className='small';
+        li.textContent=text;
+        listEl.appendChild(li);
+      });
+      listEl.style.display='block';
+    }else{
+      listEl.style.display='none';
+    }
     section.style.display='block';
   }catch(err){
     if(runId!==profilingSequence) return;
@@ -2756,9 +3043,22 @@ async function render(lang){
   currentLang=(lang in I18N)?lang:'ru';
   const t=I18N[currentLang];
   document.documentElement.lang=currentLang;
-  const langSelect=getEl('lang');
-  Array.from(langSelect.options).forEach(opt=>{if(I18N[opt.value]) opt.textContent=I18N[opt.value].langOption;});
-  langSelect.value=currentLang;
+  const langBtn=getEl('langBtn');
+  if(langBtn){
+    langBtn.textContent=t.langButton||'Language';
+    langBtn.setAttribute('aria-label',t.langButton||'Language');
+  }
+  const langMenu=getEl('langMenu');
+  if(langMenu){
+    langMenu.querySelectorAll('button[data-lang]').forEach(btn=>{
+      const value=btn.dataset.lang;
+      const label=t.langLabels?.[value]||btn.getAttribute('aria-label')||value;
+      btn.setAttribute('aria-label',label);
+      btn.classList.toggle('active',value===currentLang);
+    });
+  }
+  updateThemeButton(t);
+  setLangMenu(langMenuIsOpen);
   const shareBtn=getEl('shareBtn');
   if(shareBtn){
     shareBtn.textContent=t.shareButton;
@@ -2777,10 +3077,6 @@ async function render(lang){
     p.textContent=text;
     introTextEl.appendChild(p);
   });
-  getEl('legend').innerHTML=`<span>${t.legendTitle}</span>
-    <span class="chip"><span class="dot low"></span>${t.risk.low}</span>
-    <span class="chip"><span class="dot med"></span>${t.risk.med}</span>
-    <span class="chip"><span class="dot high"></span>${t.risk.high}</span>`;
   getEl('detailTitle').textContent=t.detailTitle;
   getEl('shockTitle').textContent=t.shockTitle;
   getEl('methodSummary').innerHTML=t.methodSummary;
@@ -2790,28 +3086,22 @@ async function render(lang){
   getEl('footerText').textContent=typeof t.footer==='function'?t.footer(VERSION,VERSION_SCHEME):t.footer;
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
-  const advBtn=getEl('advancedBtn');
-  if(advBtn){
-    const advTexts=t.advanced||{};
-    advBtn.textContent=state.advanced?(advTexts.buttonActive||advTexts.button||'Hide advanced'):(advTexts.button||'Advanced');
-    advBtn.disabled=state.advancedLoading;
-  }
   const ipBtn=getEl('ipBtn');
   ipBtn.textContent=state.fetchingIp?t.ip.buttonLoading:t.ip.button;
   ipBtn.disabled=state.fetchingIp;
   updateIpSection(t);
   updateSpeedSection(t);
-  updateAdvancedPanel(t,snapshotCache?.basic||null);
   renderProfilingSection(snapshotCache?.basic||null,t);
 
   try{
     const {basic,fp,H,pct}=await getSnapshot();
     if(token!==renderToken) return;
 
-    const cls=uniqClass(pct);
-    const uniqCopy=t.uniqMeaning(pct);
-    const uniqNote=`${uniqCopy.note} · H=${H.toFixed(1)} ${t.entropyUnit}`;
-    getEl('uniqLine').innerHTML=`<span class="dot ${cls}"></span><span>${uniqCopy.headline}</span><span class="uniq-note">${uniqNote}</span>`;
+    const level=uniquenessLevel(pct);
+    const uniqCopy=t.uniqMeaning(pct,{level});
+    const uniqLineEl=getEl('uniqLine');
+    uniqLineEl.dataset.level=level;
+    uniqLineEl.innerHTML=`<span>${uniqCopy.headline}</span><span class="uniq-note">${uniqCopy.note}</span>`;
     const exampleEl=getEl('uniqExample');
     if(uniqCopy.example){
       exampleEl.style.display='block';
@@ -2830,14 +3120,32 @@ async function render(lang){
       exampleEl.style.display='none';
       exampleEl.textContent='';
     }
+    const meaningTitleEl=getEl('uniqMeaningTitle');
+    const meaningListEl=getEl('uniqMeaningList');
+    meaningListEl.innerHTML='';
+    if(Array.isArray(uniqCopy.threats)&&uniqCopy.threats.length){
+      meaningTitleEl.textContent=t.uniqMeaningTitle||'';
+      meaningTitleEl.style.display='block';
+      meaningListEl.style.display='block';
+      uniqCopy.threats.forEach(item=>{
+        const li=document.createElement('li');
+        li.textContent=item;
+        meaningListEl.appendChild(li);
+      });
+    }else{
+      meaningTitleEl.textContent='';
+      meaningTitleEl.style.display='none';
+      meaningListEl.style.display='none';
+    }
     const adviceTitleEl=getEl('uniqAdviceTitle');
     const adviceListEl=getEl('uniqAdvice');
     adviceListEl.innerHTML='';
-    if(Array.isArray(uniqCopy.actions)&&uniqCopy.actions.length){
+    const personalizedAdvice=buildPersonalizedAdvice({basic,state,pct,level},t);
+    if(personalizedAdvice.length){
       adviceTitleEl.textContent=t.uniqAdviceLead||'';
       adviceTitleEl.style.display='block';
       adviceListEl.style.display='block';
-      uniqCopy.actions.forEach(action=>{
+      personalizedAdvice.forEach(action=>{
         const li=document.createElement('li');
         li.textContent=action;
         adviceListEl.appendChild(li);
@@ -2933,6 +3241,10 @@ async function render(lang){
     const pluginsVal=basic.plugins?.length?String(basic.plugins.length):'0';
     const mediaVal=basic.media?.length?basic.media.map(m=>`${m.kind}:${m.label?t.units.yes:t.units.no}`).join(' • '):'—';
     const batteryVal=basic.battery&&basic.battery.level!=null?`${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—';
+    const exposure=basic.exposure||{};
+    const fontsVal=summariseList(exposure.fonts||[]);
+    const trackersVal=summariseList(exposure.trackers||[]);
+    const resourcesVal=summariseList(exposure.resources||[]);
 
     addCard(frag,'tz',tzStr,t);
     addCard(frag,'ua',browserGuess,t);
@@ -2952,6 +3264,9 @@ async function render(lang){
     addCard(frag,'plugins',pluginsVal,t);
     addCard(frag,'media',mediaVal,t);
     addCard(frag,'bat',batteryVal,t);
+    addCard(frag,'fontsExposure',fontsVal,t);
+    addCard(frag,'trackerExposure',trackersVal,t);
+    addCard(frag,'resourceExposure',resourcesVal,t);
 
     let filled=0,total=0;
     (function walk(o){
@@ -2971,15 +3286,6 @@ async function render(lang){
     addCard(frag,'fullness',t.formatFullness(filled,total),t);
     addHashCard(frag,'fp',fp,t);
     cards.appendChild(frag);
-    if(state.advanced){
-      if(!state.advancedData && !state.advancedLoading){
-        ensureAdvancedData(basic,t);
-      }else{
-        updateAdvancedPanel(t,basic);
-      }
-    }else{
-      updateAdvancedPanel(t,basic);
-    }
   }catch(e){
     if(token!==renderToken)return;
     console.error(e);
@@ -3170,28 +3476,52 @@ async function handleSaveClick(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  const sel=getEl('lang');
+  themePreference=loadThemePreference();
+  applyThemePreference(themePreference);
   const lang=detectLang();
-  sel.value=lang;
+  try{localStorage.setItem('fp_lang',lang);}catch(_){/* ignore */}
   const shareBtnEl=getEl('shareBtn');
   if(shareBtnEl){
     shareBtnEl.addEventListener('click',()=>{handleShareClick().catch(()=>{});});
   }
-  getEl('printBtn').addEventListener('click',()=>{handleSaveClick().catch(()=>{});});
-  getEl('ipBtn').addEventListener('click',detectIpAndSpeed);
-  getEl('advancedBtn').addEventListener('click',()=>{
-    state.advanced=!state.advanced;
-    if(!state.advanced){
-      state.advancedLoading=false;
-      updateAdvancedPanel(I18N[sel.value]||I18N.ru,snapshotCache?.basic||null);
-    }
-    render(sel.value);
-  });
-  sel.addEventListener('change',()=>{
-    const l=sel.value;
-    try{localStorage.setItem('fp_lang',l);}catch(_){/* ignore */}
-    render(l);
-  });
+  const printBtn=getEl('printBtn');
+  if(printBtn){
+    printBtn.addEventListener('click',()=>{handleSaveClick().catch(()=>{});});
+  }
+  const ipBtn=getEl('ipBtn');
+  if(ipBtn){
+    ipBtn.addEventListener('click',detectIpAndSpeed);
+  }
+  const langBtn=getEl('langBtn');
+  const langMenu=getEl('langMenu');
+  if(langBtn&&langMenu){
+    langBtn.addEventListener('click',event=>{
+      event.stopPropagation();
+      setLangMenu(!langMenuIsOpen);
+    });
+    langMenu.querySelectorAll('button[data-lang]').forEach(btn=>{
+      btn.addEventListener('click',event=>{
+        event.stopPropagation();
+        const value=btn.dataset.lang;
+        if(!value) return;
+        setLangMenu(false);
+        try{localStorage.setItem('fp_lang',value);}catch(_){/* ignore */}
+        render(value);
+      });
+    });
+    document.addEventListener('click',event=>{
+      if(!langMenuIsOpen) return;
+      if(langMenu.contains(event.target)||event.target===langBtn) return;
+      setLangMenu(false);
+    });
+  }
+  const themeBtn=getEl('themeToggle');
+  if(themeBtn){
+    themeBtn.addEventListener('click',()=>{
+      cycleThemePreference();
+      updateThemeButton(I18N[currentLang]||I18N.ru);
+    });
+  }
   render(lang);
 });
 </script>
