@@ -107,6 +107,23 @@ class DocumentFragment {
   }
 }
 
+function extractText(node) {
+  if (!node || typeof node !== 'object') return '';
+  let text = '';
+  if (typeof node._textContent === 'string' && node._textContent) {
+    text += ` ${node._textContent}`;
+  }
+  if (typeof node._innerHTML === 'string' && node._innerHTML) {
+    text += ` ${node._innerHTML}`;
+  }
+  if (Array.isArray(node.children)) {
+    node.children.forEach(child => {
+      text += ` ${extractText(child)}`;
+    });
+  }
+  return text;
+}
+
 class Canvas2DContextStub {
   constructor() {
     this.fillStyle = '#000';
@@ -286,7 +303,8 @@ const performanceStub = {
     return this._now;
   },
   memory: { jsHeapSizeLimit: 2 * 1024 * 1024 * 1024 },
-  getEntriesByType: () => []
+  getEntriesByType: () => [],
+  getEntriesByName: () => []
 };
 
 class OfflineAudioContextStub {
@@ -328,7 +346,7 @@ function makeHeaders(map) {
   };
 }
 function makeJsonResponse(data, headers = {}) {
-  return {
+  const base = {
     ok: true,
     status: 200,
     headers: makeHeaders(headers),
@@ -336,9 +354,11 @@ function makeJsonResponse(data, headers = {}) {
     arrayBuffer: async () => Buffer.from(JSON.stringify(data)),
     body: null
   };
+  base.clone = () => makeJsonResponse(data, headers);
+  return base;
 }
 function makeBinaryResponse(size = BYTES) {
-  return {
+  const base = {
     ok: true,
     status: 200,
     headers: makeHeaders({ 'content-length': String(size) }),
@@ -346,6 +366,8 @@ function makeBinaryResponse(size = BYTES) {
     arrayBuffer: async () => Buffer.alloc(size),
     body: null
   };
+  base.clone = () => makeBinaryResponse(size);
+  return base;
 }
 
 async function fetchStub(url, options = {}) {
@@ -390,6 +412,9 @@ async function fetchStub(url, options = {}) {
   }
   if (target.startsWith('https://speed.cloudflare.com') || target.startsWith('https://httpbin.org/bytes')) {
     return makeBinaryResponse();
+  }
+  if (target.includes('share-card.svg')) {
+    return makeBinaryResponse(4096);
   }
   throw new Error(`Unexpected fetch URL: ${target}`);
 }
@@ -512,6 +537,9 @@ vm.runInContext(script, sandbox, { filename: 'index-inline.js' });
 const stateRef = vm.runInContext('state', sandbox);
 
 (async () => {
+  const profilerModule = await import(new URL('./src/profiler.js', `file://${__dirname}/`).href);
+  sandbox.__profilerModule = profilerModule;
+  sandbox.window.__profilerModule = profilerModule;
   assert.equal(typeof sandbox.detectPointerType, 'function');
   assert.equal(sandbox.detectPointerType(), 'none');
   assert.deepEqual(sandbox.getLanguages(), ['ru-RU', 'en-US']);
@@ -573,8 +601,12 @@ const stateRef = vm.runInContext('state', sandbox);
   const profilingIntroEl = elements.get('profilingIntro');
   assert.ok(profilingIntroEl.children.length >= 1);
   const profilingListEl = elements.get('profilingList');
+  for (let i = 0; i < 10 && profilingListEl.children.length < 3; i += 1) {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
   assert.ok(profilingListEl.children.length >= 3);
-  assert.ok(profilingListEl.children.some(node => String(node.innerHTML || '').includes('VPN')));
+  const profilingTexts = Array.from(profilingListEl.children).map(extractText);
+  assert.ok(profilingTexts.some(text => text.includes('VPN')));
   const initialShare = stateRef.sharePayload;
   assert.ok(initialShare);
   assert.equal(elements.get('shareBtn').dataset.ready, '1');
@@ -585,10 +617,14 @@ const stateRef = vm.runInContext('state', sandbox);
   await sandbox.detectIpAndSpeed();
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));
+  const profListAfter = elements.get('profilingList');
+  for (let i = 0; i < 10 && profListAfter.children.length < 3; i += 1) {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
   assert.ok(stateRef.serverData);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
   assert.equal(stateRef.speed.status, 'done');
-  assert.ok(elements.get('profilingList').children.some(node => String(node.innerHTML || '').includes('Tashkent')));
+  assert.ok(Array.from(profListAfter.children).some(node => extractText(node).includes('Tashkent')));
   assert.ok(stateRef.sharePayload);
 
   console.log('Self-test completed successfully');

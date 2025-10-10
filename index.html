@@ -223,57 +223,110 @@ const I18N = {
     },
     profiling:{
       title:'Профайлинг',
-      intro:'На основе собранных сигналов строим вероятностный портрет. Это гипотезы, которые остаются в вашем браузере.',
-      waiting:'Нажмите кнопку IP, чтобы уточнить оценки.',
-      confidence:{high:'высокая',med:'средняя',low:'низкая'},
-      vpnStates:{likely:'вероятен VPN или прокси',uncertain:'нужно больше данных',unlikely:'VPN не просматривается'},
-      signals:{
-        tzMismatch:'часовой пояс системы не совпадает с IP',
-        language:'язык браузера отличается от страны IP',
-        asnDatacenter:'провайдер похож на VPN или дата-центр',
-        forwardedHeaders:'в ответах есть прокси-заголовки',
-        latencyHigh:'задержка сети выше 250 мс',
-        desktop:'устройство определяется как настольное'
+      intro:[
+        'Мы строим вероятностный портрет на основе сигналов, которые уже доступны сайтам. Всё обрабатывается локально.',
+        'Каждый вывод показывает уверенность, метод и сигналы, которые к нему привели.'
+      ],
+      waiting:'Собираем сигналы…',
+      loading:'Анализируем профиль…',
+      none:'Недостаточно данных. Определите IP и скорость, чтобы уточнить гипотезы.',
+      methods:{rule:'правило','ua-ch':'UA-CH',measurement:'измерение',inference:'инференция',observation:'наблюдение'},
+      methodLead:'Метод:',
+      confidence:conf=>`Уверенность ${Math.round(conf*100)}%`,
+      evidenceLead:'Сигналы:',
+      evidenceNone:'Сигналы недоступны',
+      limitationsLead:'Почему важно:',
+      errors:{
+        load:'Не удалось загрузить модуль профайлинга.',
+        run:msg=>`Не удалось построить профиль: ${msg}`
       },
-      monitors:{
-        single:'1 активный экран',
-        multi:count=>`${count} активных экрана`,
-        unknown:'браузер не сообщил про экраны'
+      labels:{
+        'device.class':'Класс устройства',
+        'device.model':'Модель устройства',
+        'os.platform':'Операционная система',
+        'browser.engine':'Браузер и движок',
+        'network.profile':'Сеть и скорость',
+        'vpn.probability':'Использование VPN/прокси',
+        'location.region':'Предполагаемый регион',
+        'workspace.context':'Среда использования',
+        'device.peripherals':'Экраны и периферия',
+        'storage.quota':'Хранилище браузера',
+        'fingerprint.trackability':'Отслеживаемость без куки',
+        'browser.uaCh':'UA-CH сигналы',
+        'privacy.local':'Приватность',
+        'privacy.permissions':'Политика разрешений'
       },
-      regionConflict:'Локальный часовой пояс и IP указывают на разные регионы',
-      linkLevels:{high:'высокий риск',med:'средний риск',low:'низкий риск'},
-      linkSignals:{canvas:'canvas-хеш активен',audio:'audio-хеш активен'},
-      vpn:({prob,confidence,status,signals})=>{
-        const pct=Math.round(prob*100);
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Уверенность: ${conf}.`:'';
-        const reasons=signals&&signals.length?` Сигналы: ${signals.join(', ')}.`:'';
-        return `🕵️ <b>VPN/прокси:</b> ${status} (${pct}%).${confText}${reasons}`;
-      },
-      device:({guess,confidence,monitors})=>{
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Уверенность: ${conf}.`:'';
-        const monitorsText=monitors?` Мониторы: ${monitors}.`:'';
-        return `💻 <b>Гипотеза по устройству:</b> ${guess}.${confText}${monitorsText}`;
-      },
-      region:({local,timezone,ip,confidence,conflict,conflictLabel})=>{
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Уверенность: ${conf}.`:'';
-        const localPart=local?`${local}${timezone?` (локальный TZ ${timezone})`:''}`:'';
-        let label='—';
-        if(ip && localPart){
-          label=conflict?`${localPart} / ${ip}`:ip;
-        }else if(ip){
-          label=ip;
-        }else if(localPart){
-          label=localPart;
+      values:{
+        'device.class':finding=>{
+          const map={mobile:'мобильное устройство',laptop:'ноутбук',desktop:'настольный компьютер'};
+          const guess=map[finding.value]||finding.value;
+          return guess;
+        },
+        'vpn.probability':finding=>{
+          const map={'VPN/proxy likely':'вероятен VPN или прокси','VPN/proxy unlikely':'VPN или прокси не просматриваются','VPN status unclear':'Недостаточно данных'};
+          return map[finding.value]||finding.value;
+        },
+        'workspace.context':finding=>{
+          const lower=String(finding.value||'').toLowerCase();
+          if(lower.includes('office')) return 'Похоже на домашнюю или офисную конфигурацию (гипотеза)';
+          if(lower.includes('portable')) return 'Похоже на портативное устройство или публичную сеть (гипотеза)';
+          return 'Среда не определена (гипотеза)';
+        },
+        'fingerprint.trackability':finding=>{
+          if(String(finding.value||'').toLowerCase().includes('high')) return 'Высокая отслеживаемость без куки';
+          if(String(finding.value||'').toLowerCase().includes('medium')) return 'Средняя отслеживаемость без куки';
+          return 'Низкая отслеживаемость без куки';
+        },
+        'privacy.local':()=> 'Все вычисления выполняются локально в вашем браузере.',
+        'privacy.permissions':()=> 'Дополнительные сигналы собираются только после явного разрешения пользователя.',
+        'browser.uaCh':finding=>finding.value,
+        'network.profile':finding=>String(finding.value||'')
+          .replace('wifi-like','похоже на Wi‑Fi')
+          .replace('cellular-like','похоже на мобильную сеть')
+          .replace('unknown','тип сети не определён'),
+        'location.region':finding=>{
+          const raw=String(finding.value||'');
+          return raw
+            .replace('Local time zone','Локальный часовой пояс')
+            .replace('IP says','IP сообщает')
+            .replace('IP country','Страна по IP')
+            .replace('Region unclear','Регион не определён')
+            .replace(' (local & IP agree)',' (локально и IP совпадают)');
+        },
+        'device.peripherals':finding=>{
+          const raw=String(finding.value||'');
+          if(!raw) return raw;
+          if(raw.startsWith('Capabilities:')) return raw.replace('Capabilities:','Доступные API:');
+          if(raw==='No special peripheral APIs exposed') return 'Дополнительные интерфейсы не обнаружены';
+          return raw;
+        },
+        'storage.quota':finding=>{
+          const raw=String(finding.value||'');
+          if(!raw) return raw;
+          const match=raw.match(/Using ([^ ]+ MB) of ([^ ]+ MB) \(([^)]+)\)/);
+          if(match){
+            const used=match[1].replace(/MB/g,'МБ');
+            const total=match[2].replace(/MB/g,'МБ');
+            return `Используется ${used} из ${total} (${match[3]})`;
+          }
+          return raw.replace(/Using/i,'Используется').replace(/MB/g,'МБ').replace(' of ',' из ');
         }
-        const conflictText=conflict && conflictLabel?` ${conflictLabel}.`:'';
-        return `🗺️ <b>Предполагаемый регион:</b> ${label}.${confText}${conflictText}`;
       },
-      linkability:({level,signals})=>{
-        const reasons=signals&&signals.length?` Сигналы: ${signals.join(', ')}.`:'';
-        return `🎯 <b>Отслеживаемость без куки:</b> ${level}.${reasons}`;
+      limitations:{
+        'device.class':'Сайты адаптируют интерфейсы, цены и защиту под тип устройства.',
+        'device.model':'Приближённая модель помогает сопоставлять вас между визитами.',
+        'os.platform':'Версия ОС влияет на обновления и уровень защиты.',
+        'browser.engine':'Движок определяет поддержку функций и трекинг-защиту.',
+        'network.profile':'Скорость и тип сети влияют на персонализацию и антифрод.',
+        'vpn.probability':'VPN может вызвать проверки, капчи или блокировки.',
+        'location.region':'Разные регионы получают разные каталоги и цены.',
+        'workspace.context':'Обнаружение офисной среды меняет сценарии и доступ.',
+        'device.peripherals':'Периферия выдаёт рабочие сценарии и повышает узнаваемость.',
+        'storage.quota':'Большие квоты позволяют хранить больше идентификаторов.',
+        'fingerprint.trackability':'Сильные сигналы упрощают повторное распознавание.',
+        'browser.uaCh':'UA-CH раскрывает точные версии для таргетинга и совместимости.',
+        'privacy.local':'Данные не покидают браузер, пока вы сами ими не поделитесь.',
+        'privacy.permissions':'Выданные ранее разрешения автоматически доступны сайтам.'
       }
     },
     ip:{
@@ -429,57 +482,82 @@ const I18N = {
     },
     profiling:{
       title:'Profiling',
-      intro:'We combine the collected signals to build a probabilistic profile. These hypotheses stay on your device.',
-      waiting:'Run the IP & speed test to refine the estimates.',
-      confidence:{high:'high',med:'medium',low:'low'},
-      vpnStates:{likely:'VPN or proxy is likely',uncertain:'need more data',unlikely:'no clear VPN detected'},
-      signals:{
-        tzMismatch:'device time zone differs from IP',
-        language:'browser language differs from the IP country',
-        asnDatacenter:'provider resembles a VPN or data centre',
-        forwardedHeaders:'proxy headers detected',
-        latencyHigh:'latency above 250 ms',
-        desktop:'device looks desktop-class'
+      intro:[
+        'We build explainable hypotheses from the signals your browser already shares. Everything runs locally.',
+        'Each finding lists confidence, method, and the exact signals behind it.'
+      ],
+      waiting:'Collecting signals…',
+      loading:'Crunching the profile…',
+      none:'Not enough data yet. Run the IP and speed check to refine the profile.',
+      methods:{rule:'rule','ua-ch':'UA-CH hints',measurement:'measurement',inference:'inference',observation:'observation'},
+      methodLead:'Method:',
+      confidence:conf=>`Confidence ${Math.round(conf*100)}%`,
+      evidenceLead:'Signals:',
+      evidenceNone:'No signals exposed',
+      limitationsLead:'Why it matters:',
+      errors:{
+        load:'Could not load the profiling module.',
+        run:msg=>`Profiling failed: ${msg}`
       },
-      monitors:{
-        single:'1 active display',
-        multi:count=>`${count} active displays`,
-        unknown:'display count unknown'
+      labels:{
+        'device.class':'Device class',
+        'device.model':'Device model',
+        'os.platform':'Operating system',
+        'browser.engine':'Browser & engine',
+        'network.profile':'Network & speed',
+        'vpn.probability':'VPN/proxy likelihood',
+        'location.region':'Likely region',
+        'workspace.context':'Workspace context',
+        'device.peripherals':'Screens & peripherals',
+        'storage.quota':'Browser storage',
+        'fingerprint.trackability':'Trackability without cookies',
+        'browser.uaCh':'UA-CH transparency',
+        'privacy.local':'Privacy guarantee',
+        'privacy.permissions':'Permissions policy'
       },
-      regionConflict:'Local time zone and IP point to different regions',
-      linkLevels:{high:'high risk',med:'medium risk',low:'low risk'},
-      linkSignals:{canvas:'canvas hash active',audio:'audio hash active'},
-      vpn:({prob,confidence,status,signals})=>{
-        const pct=Math.round(prob*100);
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Confidence: ${conf}.`:'';
-        const reasons=signals&&signals.length?` Signals: ${signals.join(', ')}.`:'';
-        return `🕵️ <b>VPN/proxy:</b> ${status} (${pct}%).${confText}${reasons}`;
+      values:{
+        'device.class':finding=>{
+          const map={mobile:'Mobile device',laptop:'Laptop',desktop:'Desktop computer'};
+          return map[finding.value]||finding.value;
+        },
+        'vpn.probability':finding=>{
+          const map={'VPN/proxy likely':'VPN or proxy likely','VPN/proxy unlikely':'VPN or proxy unlikely','VPN status unclear':'Needs more data'};
+          return map[finding.value]||finding.value;
+        },
+        'workspace.context':finding=>{
+          const lower=String(finding.value||'').toLowerCase();
+          if(lower.includes('office')) return 'Looks like a home or office setup (hypothesis)';
+          if(lower.includes('portable')) return 'Looks like a portable device or public network (hypothesis)';
+          return 'Environment unclear (hypothesis)';
+        },
+        'fingerprint.trackability':finding=>{
+          if(String(finding.value||'').toLowerCase().includes('high')) return 'High trackability without cookies';
+          if(String(finding.value||'').toLowerCase().includes('medium')) return 'Medium trackability without cookies';
+          return 'Low trackability without cookies';
+        },
+        'privacy.local':()=> 'All computations stay inside your browser.',
+        'privacy.permissions':()=> 'Advanced insights run only after you explicitly grant permission.',
+        'browser.uaCh':finding=>finding.value,
+        'network.profile':finding=>String(finding.value||'')
+          .replace('wifi-like','Wi‑Fi-like')
+          .replace('cellular-like','Cellular-like')
+          .replace('unknown','network type unknown')
       },
-      device:({guess,confidence,monitors})=>{
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Confidence: ${conf}.`:'';
-        const monitorsText=monitors?` Displays: ${monitors}.`:'';
-        return `💻 <b>Device hypothesis:</b> looks like ${guess}.${confText}${monitorsText}`;
-      },
-      region:({local,timezone,ip,confidence,conflict,conflictLabel})=>{
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Confidence: ${conf}.`:'';
-        const localPart=local?`${local}${timezone?` (local TZ ${timezone})`:''}`:'';
-        let label='—';
-        if(ip && localPart){
-          label=conflict?`${localPart} / ${ip}`:ip;
-        }else if(ip){
-          label=ip;
-        }else if(localPart){
-          label=localPart;
-        }
-        const conflictText=conflict && conflictLabel?` ${conflictLabel}.`:'';
-        return `🗺️ <b>Likely region:</b> ${label}.${confText}${conflictText}`;
-      },
-      linkability:({level,signals})=>{
-        const reasons=signals&&signals.length?` Signals: ${signals.join(', ')}.`:'';
-        return `🎯 <b>Trackability without cookies:</b> ${level}.${reasons}`;
+      limitations:{
+        'device.class':'Sites tailor UX, pricing, and security controls to device classes.',
+        'device.model':'Approximate models make it easier to link your visits.',
+        'os.platform':'OS version determines patch cadence and security posture.',
+        'browser.engine':'The engine governs feature support and tracking protection.',
+        'network.profile':'Speed and latency affect personalisation and fraud checks.',
+        'vpn.probability':'VPN usage can trigger captchas, extra checks, or blocks.',
+        'location.region':'Region drives available catalogues, pricing, and compliance.',
+        'workspace.context':'Office-like setups hint at professional or shared devices.',
+        'device.peripherals':'Peripheral APIs reveal usage patterns and increase uniqueness.',
+        'storage.quota':'More quota lets sites persist more identifiers.',
+        'fingerprint.trackability':'Strong signals let sites recognise you without cookies.',
+        'browser.uaCh':'UA-CH exposes precise versions for targeting and compatibility.',
+        'privacy.local':'Nothing leaves your browser unless you decide to share it.',
+        'privacy.permissions':'Permissions granted elsewhere automatically apply here.'
       }
     },
     ip:{
@@ -635,57 +713,107 @@ const I18N = {
     },
     profiling:{
       title:'Profiling',
-      intro:'Yig‘ilgan signallar asosida ehtimoliy portret tuzamiz. Bu taxminlar brauzeringizdan tashqariga chiqmaydi.',
-      waiting:'Baholarni aniqlashtirish uchun IP va tezlik testini ishga tushiring.',
-      confidence:{high:'yuqori',med:'o‘rta',low:'past'},
-      vpnStates:{likely:'VPN yoki proksi ehtimoli yuqori',uncertain:'ko‘proq maʼlumot kerak',unlikely:'VPN belgisi sezilmadi'},
-      signals:{
-        tzMismatch:'tizim vaqt mintaqasi IP bilan mos emas',
-        language:'brauzer tili IP mamlakatidan farq qiladi',
-        asnDatacenter:'provayder VPN yoki data-markazga o‘xshaydi',
-        forwardedHeaders:'proksi sarlavhalari aniqlandi',
-        latencyHigh:'kechikish 250 ms dan yuqori',
-        desktop:'qurilma stol kompyuteriga o‘xshaydi'
+      intro:[
+        'Brauzer ko‘rsatadigan signallar asosida ehtimoliy profil tuzamiz. Hisob-kitoblar faqat sizning brauzeringizda bajariladi.',
+        'Har bir xulosa ishonchlilik darajasi, qo‘llangan usul va signal ro‘yxati bilan ko‘rsatiladi.'
+      ],
+      waiting:'Signallar yig‘ilmoqda…',
+      loading:'Profil tahlil qilinmoqda…',
+      none:'Maʼlumot yetarli emas. IP va tezlikni aniqlasangiz, profil aniqroq bo‘ladi.',
+      methods:{rule:'qoida','ua-ch':'UA-CH',measurement:'o‘lchov',inference:'inferensiya',observation:'kuzatuv'},
+      methodLead:'Usul:',
+      confidence:conf=>`Ishonchlilik ${Math.round(conf*100)}%`,
+      evidenceLead:'Signallar:',
+      evidenceNone:'Signallar mavjud emas',
+      limitationsLead:'Nega muhim:',
+      errors:{
+        load:'Profiling moduli yuklanmadi.',
+        run:msg=>`Profilni tuzib bo‘lmadi: ${msg}`
       },
-      monitors:{
-        single:'1 ta faol ekran',
-        multi:count=>`${count} ta faol ekran`,
-        unknown:'ekranlar soni nomaʼlum'
+      labels:{
+        'device.class':'Qurilma turi',
+        'device.model':'Qurilma modeli',
+        'os.platform':'Operatsion tizim',
+        'browser.engine':'Brauzer va dvijok',
+        'network.profile':'Tarmoq va tezlik',
+        'vpn.probability':'VPN/proksi ehtimoli',
+        'location.region':'Taxminiy mintaqa',
+        'workspace.context':'Ish muhiti',
+        'device.peripherals':'Ekranlar va periferiyalar',
+        'storage.quota':'Brauzer xotirasi',
+        'fingerprint.trackability':'Kukisiz kuzatish',
+        'browser.uaCh':'UA-CH maʼlumotlari',
+        'privacy.local':'Maxfiylik kafolati',
+        'privacy.permissions':'Ruxsat siyosati'
       },
-      regionConflict:'Mahalliy vaqt mintaqasi va IP turli hududlarni ko‘rsatmoqda',
-      linkLevels:{high:'yuqori xavf',med:'o‘rta xavf',low:'past xavf'},
-      linkSignals:{canvas:'canvas xeshi faol',audio:'audio xeshi faol'},
-      vpn:({prob,confidence,status,signals})=>{
-        const pct=Math.round(prob*100);
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Ishonchlilik: ${conf}.`:'';
-        const reasons=signals&&signals.length?` Signallar: ${signals.join(', ')}.`:'';
-        return `🕵️ <b>VPN/proksi:</b> ${status} (${pct}%).${confText}${reasons}`;
-      },
-      device:({guess,confidence,monitors})=>{
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Ishonchlilik: ${conf}.`:'';
-        const monitorsText=monitors?` Ekranlar: ${monitors}.`:'';
-        return `💻 <b>Qurilma gipotezasi:</b> ${guess}ga o‘xshaydi.${confText}${monitorsText}`;
-      },
-      region:({local,timezone,ip,confidence,conflict,conflictLabel})=>{
-        const conf=confidence?confidence.charAt(0).toUpperCase()+confidence.slice(1):'';
-        const confText=confidence?` Ishonchlilik: ${conf}.`:'';
-        const localPart=local?`${local}${timezone?` (mahalliy TZ ${timezone})`:''}`:'';
-        let label='—';
-        if(ip && localPart){
-          label=conflict?`${localPart} / ${ip}`:ip;
-        }else if(ip){
-          label=ip;
-        }else if(localPart){
-          label=localPart;
+      values:{
+        'device.class':finding=>{
+          const map={mobile:'Mobil qurilma',laptop:'Noutbuk',desktop:'Stol kompyuteri'};
+          return map[finding.value]||finding.value;
+        },
+        'vpn.probability':finding=>{
+          const map={'VPN/proxy likely':'VPN yoki proksi ehtimoli yuqori','VPN/proxy unlikely':'VPN yoki proksi ehtimoli past','VPN status unclear':'Maʼlumot yetarli emas'};
+          return map[finding.value]||finding.value;
+        },
+        'workspace.context':finding=>{
+          const lower=String(finding.value||'').toLowerCase();
+          if(lower.includes('office')) return 'Uy yoki ofisga o‘xshaydi (gipoteza)';
+          if(lower.includes('portable')) return 'Ko‘chma qurilma yoki jamoat tarmog‘i (gipoteza)';
+          return 'Muhit aniqlanmadi (gipoteza)';
+        },
+        'fingerprint.trackability':finding=>{
+          if(String(finding.value||'').toLowerCase().includes('high')) return 'Kukisiz kuzatish oson';
+          if(String(finding.value||'').toLowerCase().includes('medium')) return 'Kukisiz kuzatish o‘rtacha';
+          return 'Kukisiz kuzatish qiyin';
+        },
+        'privacy.local':()=> 'Barcha hisob-kitoblar brauzeringizda bajariladi.',
+        'privacy.permissions':()=> 'Qo‘shimcha signallar faqat siz ruxsat berganingizdan keyin olinadi.',
+        'browser.uaCh':finding=>finding.value,
+        'network.profile':finding=>String(finding.value||'')
+          .replace('wifi-like','Wi‑Fi ga o‘xshaydi')
+          .replace('cellular-like','Uyali tarmoqqa o‘xshaydi')
+          .replace('unknown','tarmoq turi nomaʼlum'),
+        'location.region':finding=>{
+          const raw=String(finding.value||'');
+          return raw
+            .replace('Local time zone','Mahalliy vaqt mintaqasi')
+            .replace('IP says','IP ko‘rsatmoqda')
+            .replace('IP country','IP bo‘yicha davlat')
+            .replace('Region unclear','Mintaqa nomaʼlum')
+            .replace(' (local & IP agree)',' (mahalliy va IP mos keladi)');
+        },
+        'device.peripherals':finding=>{
+          const raw=String(finding.value||'');
+          if(!raw) return raw;
+          if(raw.startsWith('Capabilities:')) return raw.replace('Capabilities:','Mavjud API:');
+          if(raw==='No special peripheral APIs exposed') return 'Qo‘shimcha periferik API ko‘rinmayapti';
+          return raw;
+        },
+        'storage.quota':finding=>{
+          const raw=String(finding.value||'');
+          if(!raw) return raw;
+          const match=raw.match(/Using ([^ ]+ MB) of ([^ ]+ MB) \(([^)]+)\)/);
+          if(match){
+            return `${match[1]} dan ${match[2]} foydalanilmoqda (${match[3]})`;
+          }
+          return raw.replace(/Using/i,'Foydalanilmoqda').replace(' of ',' dan ');
         }
-        const conflictText=conflict && conflictLabel?` ${conflictLabel}.`:'';
-        return `🗺️ <b>Ehtimoliy mintaqa:</b> ${label}.${confText}${conflictText}`;
       },
-      linkability:({level,signals})=>{
-        const reasons=signals&&signals.length?` Signallar: ${signals.join(', ')}.`:'';
-        return `🎯 <b>Kukisiz kuzatish darajasi:</b> ${level}.${reasons}`;
+      limitations:{
+        'device.class':'Saytlar qurilma turiga qarab interfeys va narxlarni moslaydi.',
+        'device.model':'Taxminiy model tashriflarni bog‘lashni osonlashtiradi.',
+        'os.platform':'OT versiyasi yangilanish va xavfsizlik darajasini ko‘rsatadi.',
+        'browser.engine':'Dvjok funksiyalar va kuzatuvdan himoyani belgilaydi.',
+        'network.profile':'Tezlik va kechikish shaxsiylashtirish hamda antifrodga taʼsir qiladi.',
+        'vpn.probability':'VPN qo‘shimcha tekshiruv yoki blokirovkalarni chaqirishi mumkin.',
+        'location.region':'Mintaqa katalog, narx va xizmatlarni belgilaydi.',
+        'workspace.context':'Ofisga o‘xshash muhit professional foydalanishni bildirishi mumkin.',
+        'device.peripherals':'Periferiyalar ishlatilish stsenariyini ochib beradi va izni kuchaytiradi.',
+        'storage.quota':'Katta kvota ko‘proq identifikator saqlashga imkon beradi.',
+        'fingerprint.trackability':'Kuchli signallar kukisiz ham qayta tanishga yordam beradi.',
+        'browser.uaCh':'UA-CH aniq versiyalarni ochib beradi va maqsadli ko‘rsatmalarga xizmat qiladi.',
+        'privacy.local':'Maʼlumotlar siz ulashmaguningizcha brauzerdan chiqmaydi.',
+        'privacy.permissions':'Boshqa saytga berilgan ruxsatlar shu yerda ham amal qiladi.'
       }
     },
     ip:{
@@ -1291,6 +1419,9 @@ async function computeSnapshot(){
     pointer,
     hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server:state.serverData, speed:state.speed
   };
+  try{
+    globalThis.__fingerprintBasic=basic;
+  }catch(_){/* ignore */}
   const json=JSON.stringify(sortDeep(basic));
   const fp=await sha256(json);
 
@@ -2294,134 +2425,83 @@ function updateSpeedSection(t){
   el.textContent=summary?`⚡ ${summary}`:'';
 }
 
-function profilingMonitorLabel(info,cfg){
-  const monitorsCfg=cfg?.monitors;
-  if(!monitorsCfg) return '';
-  if(!info){
-    return monitorsCfg.unknown||'';
+let profilerModulePromise=null;
+let profilerLoadError=null;
+let profilingSequence=0;
+
+function loadProfilerModule(){
+  if(profilerModulePromise) return profilerModulePromise;
+  if(globalThis.__profilerModule){
+    profilerModulePromise=Promise.resolve(globalThis.__profilerModule);
+    return profilerModulePromise;
   }
-  if(info.mode==='multi'){
-    const label=monitorsCfg.multi;
-    if(typeof label==='function') return label(info.count||2);
-    return label||'';
-  }
-  if(info.mode==='single'){
-    const label=monitorsCfg.single;
-    if(typeof label==='function') return label(info.count||1);
-    return label||'';
-  }
-  return monitorsCfg.unknown||'';
+  profilerLoadError=null;
+  profilerModulePromise=import('./src/profiler.js').then(mod=>{profilerLoadError=null;globalThis.__profilerModule=mod;return mod;}).catch(err=>{
+    profilerLoadError=err;
+    profilerModulePromise=null;
+    throw err;
+  });
+  return profilerModulePromise;
 }
 
-function computeVpnInsight(basic,t){
-  const cfg=t.profiling||{};
-  if(typeof cfg.vpn!=='function') return null;
-  const evaluation=(state.vpn&&state.vpn.checked)?state.vpn:(state.serverData?evaluateVpnState(state.serverData):{status:'uncertain',reasons:[],checked:false});
-  const reasons=Array.isArray(evaluation.reasons)?evaluation.reasons:[];
-  const tzMismatch=reasons.includes('timezone');
-  const langMismatch=reasons.includes('language');
-  const asn=reasons.includes('asn');
-  const forwarded=reasons.includes('forwarded');
-  const latencyHigh=state.speed.status==='done' && typeof state.speed.latency==='number' && state.speed.latency>250;
-  const desktop=!(basic?.uaMobile||basic?.uaHighEntropy?.mobile) && (basic?.touch?.maxTouchPoints||0)<=1;
-  let score=-1.1;
-  if(tzMismatch) score+=1.7;
-  if(langMismatch) score+=0.6;
-  if(asn) score+=2.4;
-  if(forwarded) score+=2.0;
-  if(latencyHigh) score+=0.9;
-  if(desktop) score+=0.4;
-  const prob=1/(1+Math.exp(-score));
-  const confidenceKey=prob>=0.82?'high':(prob>=0.58?'med':'low');
-  const confidenceLabel=cfg.confidence?.[confidenceKey]||confidenceKey;
-  const statusLabel=cfg.vpnStates?.[evaluation.status]||cfg.vpnStates?.uncertain||evaluation.status||'';
-  const signalsMap=cfg.signals||{};
-  const signalLabels=[];
-  if(tzMismatch && signalsMap.tzMismatch) signalLabels.push(signalsMap.tzMismatch);
-  if(langMismatch && signalsMap.language) signalLabels.push(signalsMap.language);
-  if(asn && signalsMap.asnDatacenter) signalLabels.push(signalsMap.asnDatacenter);
-  if(forwarded && signalsMap.forwardedHeaders) signalLabels.push(signalsMap.forwardedHeaders);
-  if(latencyHigh && signalsMap.latencyHigh) signalLabels.push(signalsMap.latencyHigh);
-  if(desktop && signalsMap.desktop) signalLabels.push(signalsMap.desktop);
-  return {prob,status:statusLabel,confidence:confidenceLabel,signals:signalLabels};
+function normalizeAsnCategory(value){
+  const str=String(value||'').toLowerCase();
+  if(!str) return 'unknown';
+  if(str.includes('residential')||str.includes('consumer')||str.includes('isp')||str.includes('mobile')||str.includes('cellular')) return 'residential';
+  if(str.includes('hosting')||str.includes('datacenter')||str.includes('data center')||str.includes('cloud')||str.includes('cdn')) return 'hosting';
+  if(str.includes('business')||str.includes('corporate')||str.includes('enterprise')||str.includes('university')) return 'corporate';
+  return 'unknown';
 }
 
-function computeDeviceInsight(basic,t){
-  const cfg=t.profiling||{};
-  if(typeof cfg.device!=='function') return null;
-  const guess=guessDevice(basic)||'—';
-  let confidenceKey='med';
-  const lowerGuess=guess.toLowerCase();
-  if(/macbook|iphone|ipad/.test(lowerGuess)) confidenceKey='high';
-  else if(lowerGuess.includes('android')||lowerGuess.includes('windows pc')||lowerGuess.includes('linux pc')) confidenceKey='med';
-  if(lowerGuess.includes('device')||lowerGuess==='—') confidenceKey='low';
-  const confidenceLabel=cfg.confidence?.[confidenceKey]||confidenceKey;
-  const monitors=profilingMonitorLabel(basic?.screen?.monitors,cfg);
-  return {guess,confidence:confidenceLabel,monitors};
+function buildProfilerIpGeo(){
+  if(!state.serverData) return undefined;
+  const details=state.serverData.details||extractCanonicalDetailsFromPayload(state.serverData.raw)||{};
+  const geo=state.serverData.geo||{};
+  const raw=state.serverData.raw||{};
+  const ip=state.serverData.ip||details.ip||raw.ip||null;
+  const country=details.country_name||details.country||geo.country_name||geo.country||raw.country_name||null;
+  const region=details.region||details.city||geo.region||geo.city||null;
+  const asnRaw=raw.asn||{};
+  const asn=details.asn||details.org||asnRaw.asn||asnRaw.name||raw.org||null;
+  const asnType=normalizeAsnCategory(details.asn_type||asnRaw.type||raw.connection?.type||raw.type);
+  const latency=typeof state.speed?.latency==='number'?state.speed.latency:(typeof raw.connection?.rtt==='number'?raw.connection.rtt:null);
+  const result={asnType};
+  if(ip) result.ip=String(ip);
+  if(country) result.country=String(country);
+  if(region) result.region=String(region);
+  if(asn) result.asn=String(asn);
+  if(latency!=null) result.rttMs=Number(latency);
+  return result;
 }
 
-function computeRegionInsight(basic,t){
-  const cfg=t.profiling||{};
-  if(typeof cfg.region!=='function') return null;
-  const timezone=basic?.timezone||LOCAL_TZ||'';
-  const localCity=timezone?tzCityName(timezone):'';
-  let ipLabel='';
-  let conflict=false;
-  if(state.serverData){
-    const details=state.serverData.details||extractCanonicalDetailsFromPayload(state.serverData.raw)||null;
-    const geo=state.serverData.geo||{};
-    const country=details?.country_name||geo.country||'';
-    const region=details?.region||'';
-    if(region && country) ipLabel=`${region}, ${country}`;
-    else ipLabel=country||region||'';
-    const ipTimezone=details?.timezone||null;
-    if(ipTimezone && timezone){
-      conflict=normalizeTimeZoneValue(ipTimezone)!==normalizeTimeZoneValue(timezone);
-    }
-  }
-  let confidenceKey='low';
-  if(ipLabel && localCity){
-    confidenceKey=conflict?'med':'high';
-  }else if(ipLabel || localCity){
-    confidenceKey='med';
-  }
-  const confidenceLabel=cfg.confidence?.[confidenceKey]||confidenceKey;
-  const conflictLabel=conflict?(cfg.regionConflict||''):'';
-  return {local:localCity,timezone,ip:ipLabel,confidence:confidenceLabel,conflict,conflictLabel};
+function formatProfilingValue(finding,cfg){
+  const values=cfg.values||{};
+  const formatter=values[finding.key];
+  if(typeof formatter==='function') return formatter(finding);
+  return finding.value;
 }
 
-function computeLinkabilityInsight(basic,t){
-  const cfg=t.profiling||{};
-  if(typeof cfg.linkability!=='function') return null;
-  const hasCanvas=!!(basic?.hashes?.canvas);
-  const hasAudio=!!(basic?.hashes?.audio);
-  let levelKey='low';
-  if(hasCanvas && hasAudio) levelKey='high';
-  else if(hasCanvas || hasAudio) levelKey='med';
-  const levelLabel=cfg.linkLevels?.[levelKey]||levelKey;
-  const signals=[];
-  const linkSignals=cfg.linkSignals||{};
-  if(hasCanvas && linkSignals.canvas) signals.push(linkSignals.canvas);
-  if(hasAudio && linkSignals.audio) signals.push(linkSignals.audio);
-  return {level:levelLabel,signals};
+function formatProfilingLimitations(finding,cfg){
+  const limits=cfg.limitations||{};
+  const entry=limits[finding.key];
+  if(typeof entry==='function') return entry(finding);
+  if(typeof entry==='string') return entry;
+  return finding.limitations||'';
 }
 
-function buildProfilingItems(basic,t){
-  if(!basic) return [];
-  const cfg=t.profiling||{};
-  const items=[];
-  const vpnData=computeVpnInsight(basic,t);
-  if(vpnData) items.push(cfg.vpn(vpnData));
-  const deviceData=computeDeviceInsight(basic,t);
-  if(deviceData) items.push(cfg.device(deviceData));
-  const regionData=computeRegionInsight(basic,t);
-  if(regionData) items.push(cfg.region(regionData));
-  const linkData=computeLinkabilityInsight(basic,t);
-  if(linkData) items.push(cfg.linkability(linkData));
-  return items.filter(Boolean);
+function ensureProfilerIntro(cfg,introEl){
+  if(!introEl) return;
+  introEl.innerHTML='';
+  const intro=cfg.intro;
+  const paragraphs=Array.isArray(intro)?intro:[intro];
+  paragraphs.filter(Boolean).forEach(text=>{
+    const p=document.createElement('p');
+    p.textContent=text;
+    introEl.appendChild(p);
+  });
 }
 
-function renderProfilingSection(basic,t){
+async function renderProfilingSection(basic,t){
   const section=getEl('profilingBlock');
   if(!section) return;
   const cfg=t.profiling||{};
@@ -2429,33 +2509,115 @@ function renderProfilingSection(basic,t){
   if(titleEl) titleEl.textContent=cfg.title||'Profiling';
   const introEl=getEl('profilingIntro');
   const listEl=getEl('profilingList');
-  if(introEl) introEl.innerHTML='';
-  if(listEl) listEl.innerHTML='';
-  const items=basic?buildProfilingItems(basic,t):[];
-  const paragraphs=[];
-  if(cfg.intro) paragraphs.push(cfg.intro);
-  if(!items.length && cfg.waiting) paragraphs.push(cfg.waiting);
-  if(introEl){
-    paragraphs.forEach(text=>{
-      const p=document.createElement('p');
-      p.textContent=text;
-      introEl.appendChild(p);
-    });
-  }
   if(listEl){
-    if(items.length){
-      listEl.style.display='block';
-      items.forEach(html=>{
-        const li=document.createElement('li');
-        li.innerHTML=html;
-        listEl.appendChild(li);
-      });
-    }else{
-      listEl.style.display='none';
-    }
+    listEl.innerHTML='';
+    listEl.style.display='none';
   }
-  const shouldShow=Boolean(paragraphs.length||items.length);
-  section.style.display=shouldShow?'block':'none';
+  ensureProfilerIntro(cfg,introEl);
+  if(!basic){
+    if(cfg.waiting && introEl){
+      const p=document.createElement('p');
+      p.textContent=cfg.waiting;
+      introEl.appendChild(p);
+    }
+    section.style.display='block';
+    return;
+  }
+  try{
+    globalThis.__fingerprintBasic=basic;
+  }catch(_){/* ignore */}
+  const runId=++profilingSequence;
+  if(listEl){
+    listEl.style.display='block';
+    const li=document.createElement('li');
+    li.className='small';
+    li.textContent=cfg.loading||'Building profile…';
+    listEl.appendChild(li);
+  }
+  const ipGeo=buildProfilerIpGeo();
+  try{
+    const mod=await loadProfilerModule();
+    if(runId!==profilingSequence) return;
+    if(profilerLoadError){
+      throw profilerLoadError;
+    }
+    const findings=await mod.runProfiling(ipGeo);
+    if(runId!==profilingSequence) return;
+    if(!listEl) return;
+    listEl.innerHTML='';
+    if(!findings.length){
+      if(cfg.none){
+        const li=document.createElement('li');
+        li.className='small';
+        li.textContent=cfg.none;
+        listEl.appendChild(li);
+        section.style.display='block';
+      }else{
+        listEl.style.display='none';
+        section.style.display=introEl && introEl.childElementCount?'block':'none';
+      }
+      return;
+    }
+    const methodLead=cfg.methodLead||'Method:';
+    findings.forEach(finding=>{
+      const li=document.createElement('li');
+      const label=cfg.labels?.[finding.key]||finding.label||finding.key;
+      const heading=document.createElement('div');
+      heading.innerHTML=`<b>${escapeHtml(label)}</b>`;
+      li.appendChild(heading);
+      const valueDiv=document.createElement('div');
+      valueDiv.className='small';
+      valueDiv.textContent=formatProfilingValue(finding,cfg);
+      li.appendChild(valueDiv);
+      const metaParts=[];
+      if(typeof cfg.confidence==='function') metaParts.push(cfg.confidence(finding.confidence));
+      else metaParts.push(`Confidence ${Math.round(finding.confidence*100)}%`);
+      if(finding.method){
+        const methodLabel=cfg.methods?.[finding.method]||finding.method;
+        if(methodLabel) metaParts.push(`${methodLead} ${methodLabel}`);
+      }
+      if(metaParts.length){
+        const meta=document.createElement('div');
+        meta.className='small';
+        meta.textContent=metaParts.join(' · ');
+        li.appendChild(meta);
+      }
+      if(finding.evidence && finding.evidence.length){
+        const evidence=document.createElement('div');
+        evidence.className='small';
+        evidence.textContent=`${cfg.evidenceLead||'Signals:'} ${finding.evidence.join(', ')}`;
+        li.appendChild(evidence);
+      }else if(cfg.evidenceNone){
+        const evidence=document.createElement('div');
+        evidence.className='small';
+        evidence.textContent=`${cfg.evidenceLead||'Signals:'} ${cfg.evidenceNone}`;
+        li.appendChild(evidence);
+      }
+      const limitationsText=formatProfilingLimitations(finding,cfg);
+      if(limitationsText){
+        const lim=document.createElement('div');
+        lim.className='small';
+        lim.textContent=`${cfg.limitationsLead||'Why it matters:'} ${limitationsText}`;
+        li.appendChild(lim);
+      }
+      listEl.appendChild(li);
+    });
+    section.style.display='block';
+  }catch(err){
+    if(runId!==profilingSequence) return;
+    if(listEl){
+      listEl.innerHTML='';
+      const li=document.createElement('li');
+      li.className='small';
+      const loadError=cfg.errors?.load||'Profiling module failed to load.';
+      const runError=cfg.errors?.run;
+      const message=profilerLoadError?loadError:(runError?runError(err.message||String(err)):String(err));
+      li.textContent=message;
+      listEl.appendChild(li);
+      listEl.style.display='block';
+    }
+    section.style.display='block';
+  }
 }
 
 let currentLang='ru';
