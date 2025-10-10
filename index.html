@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Fingerprint — by morgunov.tech</title>
   <meta name="description" content="Fingerprint показывает, какие данные о вас сразу получает сайт, как они влияют на приватность и какие шаги помогут защититься. Все расчеты выполняются локально." />
+  <link rel="canonical" href="https://morgunov.tech/fingerprint" />
+  <meta property="og:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
+  <meta property="og:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://morgunov.tech/fingerprint" />
+  <meta property="og:image" content="https://morgunov.tech/fingerprint/share-card.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
+  <meta name="twitter:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
+  <meta name="twitter:image" content="https://morgunov.tech/fingerprint/share-card.svg" />
   <style>
     :root{
       --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042;
@@ -58,9 +68,14 @@
     @media (max-width:920px){ .cards{grid-template-columns:1fr} }
     a{color:var(--accent);text-decoration:none}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s;text-align:center}
+    .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s,text-decoration-color .2s;text-align:center}
     .btn:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;box-shadow:0 10px 30px rgba(96,165,250,.25)}
+    .btn-primary:hover{background:var(--accent);color:#fff;filter:brightness(.95)}
+    .btn-primary:disabled{box-shadow:none}
+    .shock-actions{margin-bottom:10px}
     #shockList{list-style:none;margin:6px 0 0;padding:0}
     #shockList li{margin:4px 0}
     #advancedPanel{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:10px;background:rgba(96,165,250,0.08);display:none}
@@ -96,7 +111,6 @@
         <option value="en">🇬🇧 English</option>
         <option value="uz">🇺🇿 Oʻzbekcha</option>
       </select>
-      <button class="btn" id="printBtn"></button>
     </div>
   </header>
 
@@ -113,11 +127,13 @@
     <div id="uniqExample" class="small"></div>
     <div id="uniqAdviceTitle" class="small"></div>
     <ul id="uniqAdvice" class="advice-list small"></ul>
-    <div class="row" id="ipActionRow" style="margin:10px 0">
-      <button class="btn" id="ipBtn"></button>
-      <button class="btn" id="advancedBtn"></button>
-    </div>
     <div id="shock" class="danger" style="display:none">
+      <div class="row shock-actions" id="ipActionRow">
+        <button class="btn btn-primary" id="shareBtn"></button>
+        <button class="btn" id="printBtn"></button>
+        <button class="btn" id="ipBtn"></button>
+        <button class="btn" id="advancedBtn"></button>
+      </div>
       <div class="small" id="shockTitle"></div>
       <ul id="shockList"></ul>
       <div id="ipInfo" class="small" style="margin-top:10px"></div>
@@ -278,6 +294,16 @@ const I18N = {
     dntStatus:{on:'включена',off:'выключена',unknown:'браузер не сообщил'},
     memoryNote:'браузер округляет цифры, реальные значения могут отличаться',
     saveButton:'Сохранить PDF',
+    shareButton:'Поделиться результатом',
+    share:{
+      title:({pct})=>`Насколько вы анонимны: уникальнее, чем ${Math.round(pct)}% людей`,
+      tagline:'Узнай, насколько ты анонимен в сети',
+      text:({pct,url})=>`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей. Узнай, насколько ты анонимен в сети на Fingerprint — ${url||CANONICAL_URL}`,
+      shared:'Отправили! Спасибо, что делитесь.',
+      copied:'Ссылка скопирована',
+      error:'Не удалось поделиться автоматически. Попробуйте скопировать ссылку вручную.',
+      aria:({pct})=>`Поделиться результатом: уникальнее, чем ${Math.round(pct)}% пользователей`
+    },
     copy:{hint:'Нажмите, чтобы скопировать',done:'Скопировано'},
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
@@ -418,6 +444,16 @@ const I18N = {
     dntStatus:{on:'enabled',off:'disabled',unknown:'not reported'},
     memoryNote:'browser rounds numbers, actual RAM may differ',
     saveButton:'Save PDF',
+    shareButton:'Share result',
+    share:{
+      title:({pct})=>`How anonymous are you? More unique than ${Math.round(pct)}%`,
+      tagline:'See how anonymous you are online',
+      text:({pct,url})=>`My digital fingerprint is more unique than ${Math.round(pct)}% of people. See how anonymous you are on Fingerprint — ${url||CANONICAL_URL}`,
+      shared:'Shared — thank you!',
+      copied:'Link copied!',
+      error:'Could not share automatically. Please copy the link instead.',
+      aria:({pct})=>`Share result: more unique than ${Math.round(pct)}% of users`
+    },
     copy:{hint:'Click to copy',done:'Copied'},
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
@@ -558,6 +594,16 @@ const I18N = {
     dntStatus:{on:'yoqilgan',off:'o‘chirilgan',unknown:'brauzer maʼlumot bermadi'},
     memoryNote:'brauzer qiymatlarni taxmin qiladi, haqiqiy RAM boshqacha bo‘lishi mumkin',
     saveButton:'PDF ni saqlash',
+    shareButton:'Natijani ulashish',
+    share:{
+      title:({pct})=>`Qanchalik anonim ekansiz? ${Math.round(pct)}% daraja`,
+      tagline:'Internetda qanchalik anonimligingizni biling',
+      text:({pct,url})=>`Mening raqamli izi foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob. Fingerprint xizmatida o‘zingizning anonimlik darajangizni tekshirib ko‘ring — ${url||CANONICAL_URL}`,
+      shared:'Ulashildi — rahmat!',
+      copied:'Havola nusxalandi',
+      error:'Avtomatik ulashib boʻlmadi. Havolani qoʻlda nusxalab koʻring.',
+      aria:({pct})=>`Natijani ulashish: foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob`
+    },
     copy:{hint:'Nusxa olish uchun bosing',done:'Nusxalandi'},
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
@@ -577,6 +623,7 @@ const I18N = {
 // Calendar versioning keeps builds tied to release dates.
 const VERSION = '07.10.25';
 const VERSION_SCHEME = 'CalVer (DD.MM.YY)';
+const CANONICAL_URL = 'https://morgunov.tech/fingerprint';
 
 
 const LOCAL_TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||null;}catch(_){return null;}})();
@@ -1253,11 +1300,12 @@ const state={
   vpn:{status:'uncertain',reasons:[],checked:false},
   advanced:false,
   advancedData:null,
-  advancedLoading:false
+  advancedLoading:false,
+  sharePayload:null
 };
 let snapshotCache=null;
 let snapshotPromise=null;
-function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;if(state.advanced){state.advancedData=null;}state.advancedLoading=false;}
+function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;if(state.advanced){state.advancedData=null;}state.advancedLoading=false;state.sharePayload=null;}
 async function getSnapshot(){
   if(snapshotCache) return snapshotCache;
   if(snapshotPromise) return snapshotPromise;
@@ -2083,6 +2131,14 @@ async function render(lang){
   const langSelect=getEl('lang');
   Array.from(langSelect.options).forEach(opt=>{if(I18N[opt.value]) opt.textContent=I18N[opt.value].langOption;});
   langSelect.value=currentLang;
+  const shareBtn=getEl('shareBtn');
+  if(shareBtn){
+    shareBtn.textContent=t.shareButton;
+    shareBtn.dataset.label=t.shareButton;
+    shareBtn.setAttribute('aria-label',t.shareButton);
+    shareBtn.disabled=true;
+  }
+  state.sharePayload=null;
   getEl('introTitle').textContent=t.introTitle;
   const introTextEl=getEl('introText');
   introTextEl.textContent='';
@@ -2104,6 +2160,7 @@ async function render(lang){
   getEl('policyText').innerHTML=t.policyText;
   getEl('footerText').textContent=typeof t.footer==='function'?t.footer(VERSION,VERSION_SCHEME):t.footer;
   getEl('printBtn').textContent=t.saveButton;
+  getEl('printBtn').dataset.label=t.saveButton;
   const advBtn=getEl('advancedBtn');
   if(advBtn){
     const advTexts=t.advanced||{};
@@ -2208,6 +2265,16 @@ async function render(lang){
     bullets.forEach(text=>{const li=document.createElement('li');li.innerHTML=text;ul.appendChild(li);});
     shock.style.display=bullets.length?'block':'none';
 
+    const shareConfig=t.share||{};
+    const shareUrl=resolveShareUrl();
+    const shareText=typeof shareConfig.text==='function'?shareConfig.text({pct,headline:uniqCopy.headline,url:shareUrl}):`${uniqCopy.headline}. ${shareConfig.tagline||uniqCopy.note}`.trim();
+    const shareTitle=typeof shareConfig.title==='function'?shareConfig.title({pct,headline:uniqCopy.headline}):(shareConfig.title||shareConfig.tagline||uniqCopy.headline);
+    state.sharePayload={pct,headline:uniqCopy.headline,note:uniqCopy.note,text:shareText,url:shareUrl,title:shareTitle,tagline:shareConfig.tagline||uniqCopy.note};
+    if(shareBtn){
+      shareBtn.disabled=false;
+      shareBtn.setAttribute('aria-label',shareConfig.aria?shareConfig.aria({pct,headline:uniqCopy.headline}):shareTitle);
+    }
+
     const cards=getEl('cards');
     cards.textContent='';
     const frag=document.createDocumentFragment();
@@ -2299,6 +2366,138 @@ function detectLang(){
   }catch(_){return'ru';}
 }
 
+function resolveShareUrl(){
+  try{
+    const {origin,pathname}=window.location;
+    if(origin&&origin!=='null'&&origin.startsWith('http')){
+      const cleanPath=pathname.replace(/index\.html$/,'');
+      const base=`${origin}${cleanPath}`.replace(/\/$/,'');
+      return base||origin;
+    }
+  }catch(_){/* ignore */}
+  return CANONICAL_URL;
+}
+
+function svgEscape(str){
+  return String(str||'').replace(/[&<>'"]/g,ch=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  })[ch]);
+}
+
+function createShareCardSvg(payload,t){
+  const width=1200;
+  const height=630;
+  const pct=Math.round(payload.pct||0);
+  const headline=svgEscape(payload.headline||'Fingerprint snapshot');
+  const tagline=svgEscape(payload.tagline||'');
+  const note=svgEscape(payload.note||'');
+  const callout=svgEscape((t.share?.tagline)||'Fingerprint by morgunov.tech');
+  const pctText=`${pct}%`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f172a" />
+      <stop offset="1" stop-color="#111827" />
+    </linearGradient>
+  </defs>
+  <rect width="${width}" height="${height}" rx="36" fill="url(#bg)" />
+  <text x="72" y="120" fill="#60a5fa" font-size="42" font-family="'Inter','Segoe UI',sans-serif" font-weight="600">${callout}</text>
+  <text x="72" y="210" fill="#f8fafc" font-size="64" font-family="'Inter','Segoe UI',sans-serif" font-weight="700">${headline}</text>
+  <text x="72" y="280" fill="#cbd5f5" font-size="30" font-family="'Inter','Segoe UI',sans-serif" font-weight="500">${tagline}</text>
+  <text x="72" y="360" fill="#94a3b8" font-size="26" font-family="'Inter','Segoe UI',sans-serif">${note}</text>
+  <g>
+    <circle cx="1020" cy="240" r="140" fill="rgba(96,165,250,0.15)" />
+    <text x="940" y="250" fill="#60a5fa" font-size="120" font-family="'Inter','Segoe UI',sans-serif" font-weight="700">${pctText}</text>
+  </g>
+  <text x="72" y="520" fill="#64748b" font-size="26" font-family="'Inter','Segoe UI',sans-serif">${svgEscape(payload.url||CANONICAL_URL)}</text>
+</svg>`;
+}
+
+async function copyText(value){
+  if(navigator.clipboard&&window.isSecureContext){
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const textarea=document.createElement('textarea');
+  textarea.value=value;
+  textarea.setAttribute('readonly','');
+  textarea.style.position='absolute';
+  textarea.style.left='-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
+function flashShareMessage(btn,message,restore){
+  const original=restore||btn.dataset.label||btn.textContent;
+  btn.textContent=message;
+  setTimeout(()=>{
+    btn.textContent=btn.dataset.label||original;
+  },1800);
+}
+
+async function handleShareClick(){
+  const btn=getEl('shareBtn');
+  if(!btn)return;
+  const t=I18N[currentLang]||I18N.ru;
+  const payload=state.sharePayload;
+  if(!payload){
+    flashShareMessage(btn,t.share?.unavailable||t.ip?.button||t.saveButton,btn.dataset.label);
+    return;
+  }
+  const defaultLabel=btn.dataset.label||btn.textContent;
+  btn.disabled=true;
+  try{
+    const text=payload.text;
+    const title=payload.title;
+    const url=payload.url;
+    let shared=false;
+    if(typeof navigator.share==='function'){
+      let file=null;
+      if(typeof File==='function'){
+        try{
+          const svg=createShareCardSvg(payload,t);
+          file=new File([svg],'fingerprint-share.svg',{type:'image/svg+xml'});
+        }catch(_){file=null;}
+      }
+      const baseData={title,text,url};
+      if(file){
+        const richData={...baseData,files:[file]};
+        if(typeof navigator.canShare!=='function'||navigator.canShare(richData)){
+          await navigator.share(richData);
+          shared=true;
+        }
+      }
+      if(!shared){
+        await navigator.share(baseData);
+        shared=true;
+      }
+    }
+    if(shared){
+      flashShareMessage(btn,t.share?.shared||t.share?.success||t.copy?.done||'Shared!',defaultLabel);
+      return;
+    }
+    await copyText(`${text}\n${url}`);
+    flashShareMessage(btn,t.share?.copied||t.copy?.done||'Copied!',defaultLabel);
+  }catch(err){
+    try{
+      await copyText(`${payload.text}\n${payload.url}`);
+      flashShareMessage(btn,t.share?.copied||t.copy?.done||'Copied!',defaultLabel);
+    }catch(copyErr){
+      console.error('share failed',err,copyErr);
+      alert(t.share?.error||t.errorMessage?.(copyErr.message||String(copyErr))||String(copyErr));
+    }
+  }finally{
+    btn.disabled=false;
+  }
+}
+
 async function handleSaveClick(){
   const filename=`fingerprint-${new Date().toISOString().slice(0,10)}.html`;
   const html=document.documentElement.outerHTML;
@@ -2341,6 +2540,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   const sel=getEl('lang');
   const lang=detectLang();
   sel.value=lang;
+  const shareBtnEl=getEl('shareBtn');
+  if(shareBtnEl){
+    shareBtnEl.addEventListener('click',()=>{handleShareClick().catch(()=>{});});
+  }
   getEl('printBtn').addEventListener('click',()=>{handleSaveClick().catch(()=>{});});
   getEl('ipBtn').addEventListener('click',detectIpAndSpeed);
   getEl('advancedBtn').addEventListener('click',()=>{
