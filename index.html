@@ -254,7 +254,12 @@ const I18N = {
         'fingerprint.trackability':'Отслеживаемость без куки',
         'browser.uaCh':'UA-CH сигналы',
         'privacy.local':'Приватность',
-        'privacy.permissions':'Политика разрешений'
+        'privacy.permissions':'Политика разрешений',
+        'fingerprint.fonts':'Системные шрифты',
+        'privacy.cookies':'Статус cookie',
+        'privacy.supercookie':'Проверка суперкук',
+        'privacy.adblock':'Блокировщик рекламы',
+        'network.webrtcLeak':'WebRTC / DNS проверка'
       },
       values:{
         'device.class':finding=>{
@@ -310,6 +315,38 @@ const I18N = {
             return `Используется ${used} из ${total} (${match[3]})`;
           }
           return raw.replace(/Using/i,'Используется').replace(/MB/g,'МБ').replace(' of ',' из ');
+        },
+        'fingerprint.fonts':finding=>{
+          const raw=String(finding.value||'');
+          if(raw.startsWith('Detected fonts:')) return raw.replace('Detected fonts:','Обнаружены шрифты:');
+          if(raw==='System fonts not observable') return 'Системные шрифты не определены';
+          return raw;
+        },
+        'privacy.cookies':finding=>{
+          const raw=String(finding.value||'');
+          if(raw==='Cookies enabled') return 'Cookie включены';
+          if(raw==='Cookies blocked or disabled') return 'Cookie заблокированы или отключены';
+          return raw;
+        },
+        'privacy.supercookie':finding=>{
+          const raw=String(finding.value||'');
+          return raw
+            .replace('Multiple supercookie surfaces available','Доступно несколько хранилищ для суперкук')
+            .replace('Single supercookie surface available','Доступно одно хранилище для суперкук')
+            .replace('Supercookie surfaces blocked or unavailable','Суперкуки недоступны или заблокированы');
+        },
+        'privacy.adblock':finding=>{
+          const raw=String(finding.value||'');
+          if(raw==='Ad blocker likely enabled') return 'Похоже, блокировщик рекламы активен';
+          if(raw==='Ad blocker unlikely') return 'Блокировщик рекламы не обнаружен';
+          if(raw==='Ad blocker status unknown') return 'Не удалось определить блокировщик рекламы';
+          return raw;
+        },
+        'network.webrtcLeak':finding=>{
+          const raw=String(finding.value||'');
+          return raw
+            .replace('No local WebRTC addresses observed','Локальные адреса WebRTC не обнаружены')
+            .replace('Local/WebRTC IP exposure detected (hypothesis)','Возможна утечка IP через WebRTC (гипотеза)');
         }
       },
       limitations:{
@@ -326,7 +363,12 @@ const I18N = {
         'fingerprint.trackability':'Сильные сигналы упрощают повторное распознавание.',
         'browser.uaCh':'UA-CH раскрывает точные версии для таргетинга и совместимости.',
         'privacy.local':'Данные не покидают браузер, пока вы сами ими не поделитесь.',
-        'privacy.permissions':'Выданные ранее разрешения автоматически доступны сайтам.'
+        'privacy.permissions':'Выданные ранее разрешения автоматически доступны сайтам.',
+        'fingerprint.fonts':'Наборы шрифтов помогают сайтам отличать вас от других посетителей.',
+        'privacy.cookies':'Cookie позволяют сайтам узнавать вас и восстанавливать сессии.',
+        'privacy.supercookie':'Суперкуки используют резервные хранилища для долгосрочного отслеживания.',
+        'privacy.adblock':'Блокировщик рекламы влияет на персонализацию и может запускать антифрод-проверки.',
+        'network.webrtcLeak':'Утечки WebRTC могут раскрыть реальный IP даже при использовании VPN.'
       }
     },
     ip:{
@@ -513,7 +555,12 @@ const I18N = {
         'fingerprint.trackability':'Trackability without cookies',
         'browser.uaCh':'UA-CH transparency',
         'privacy.local':'Privacy guarantee',
-        'privacy.permissions':'Permissions policy'
+        'privacy.permissions':'Permissions policy',
+        'fingerprint.fonts':'System fonts',
+        'privacy.cookies':'Cookie status',
+        'privacy.supercookie':'Supercookie probe',
+        'privacy.adblock':'Ad blocker usage',
+        'network.webrtcLeak':'WebRTC / DNS leak test'
       },
       values:{
         'device.class':finding=>{
@@ -541,7 +588,39 @@ const I18N = {
         'network.profile':finding=>String(finding.value||'')
           .replace('wifi-like','Wi‑Fi-like')
           .replace('cellular-like','Cellular-like')
-          .replace('unknown','network type unknown')
+          .replace('unknown','network type unknown'),
+        'fingerprint.fonts':finding=>{
+          const raw=String(finding.value||'');
+          if(raw.startsWith('Detected fonts:')) return raw;
+          if(raw==='System fonts not observable') return 'System fonts could not be detected';
+          return raw;
+        },
+        'privacy.cookies':finding=>{
+          const raw=String(finding.value||'');
+          if(raw==='Cookies enabled') return 'Cookies appear to be enabled';
+          if(raw==='Cookies blocked or disabled') return 'Cookies seem blocked or disabled';
+          return raw;
+        },
+        'privacy.supercookie':finding=>{
+          const raw=String(finding.value||'');
+          return raw
+            .replace('Multiple supercookie surfaces available','Multiple storage surfaces available for supercookies')
+            .replace('Single supercookie surface available','One storage surface available for supercookies')
+            .replace('Supercookie surfaces blocked or unavailable','Supercookie storage appears blocked or unavailable');
+        },
+        'privacy.adblock':finding=>{
+          const raw=String(finding.value||'');
+          if(raw==='Ad blocker likely enabled') return 'Ad blocker likely detected';
+          if(raw==='Ad blocker unlikely') return 'Ad blocker not detected';
+          if(raw==='Ad blocker status unknown') return 'Ad blocker status could not be confirmed';
+          return raw;
+        },
+        'network.webrtcLeak':finding=>{
+          const raw=String(finding.value||'');
+          return raw
+            .replace('No local WebRTC addresses observed','No local WebRTC addresses were exposed')
+            .replace('Local/WebRTC IP exposure detected (hypothesis)','Possible WebRTC IP exposure (hypothesis)');
+        }
       },
       limitations:{
         'device.class':'Sites tailor UX, pricing, and security controls to device classes.',
@@ -557,7 +636,12 @@ const I18N = {
         'fingerprint.trackability':'Strong signals let sites recognise you without cookies.',
         'browser.uaCh':'UA-CH exposes precise versions for targeting and compatibility.',
         'privacy.local':'Nothing leaves your browser unless you decide to share it.',
-        'privacy.permissions':'Permissions granted elsewhere automatically apply here.'
+        'privacy.permissions':'Permissions granted elsewhere automatically apply here.',
+        'fingerprint.fonts':'Font sets can still single you out even when other signals are reduced.',
+        'privacy.cookies':'Cookies restore sessions and enable persistent recognition.',
+        'privacy.supercookie':'Backup storage layers can keep identifiers alive even after clearing cookies.',
+        'privacy.adblock':'Blocking ads affects monetisation and may trigger anti-fraud checks.',
+        'network.webrtcLeak':'WebRTC leaks can expose your real IP address despite VPN usage.'
       }
     },
     ip:{
@@ -744,7 +828,12 @@ const I18N = {
         'fingerprint.trackability':'Kukisiz kuzatish',
         'browser.uaCh':'UA-CH maʼlumotlari',
         'privacy.local':'Maxfiylik kafolati',
-        'privacy.permissions':'Ruxsat siyosati'
+        'privacy.permissions':'Ruxsat siyosati',
+        'fingerprint.fonts':'Tizim shriftlari',
+        'privacy.cookies':'Cookie holati',
+        'privacy.supercookie':'Supercookie testi',
+        'privacy.adblock':'Reklama bloklagichi',
+        'network.webrtcLeak':'WebRTC / DNS sinovi'
       },
       values:{
         'device.class':finding=>{
@@ -797,6 +886,38 @@ const I18N = {
             return `${match[1]} dan ${match[2]} foydalanilmoqda (${match[3]})`;
           }
           return raw.replace(/Using/i,'Foydalanilmoqda').replace(' of ',' dan ');
+        },
+        'fingerprint.fonts':finding=>{
+          const raw=String(finding.value||'');
+          if(raw.startsWith('Detected fonts:')) return raw.replace('Detected fonts:','Aniqlangan shriftlar:');
+          if(raw==='System fonts not observable') return 'Tizim shriftlari aniqlanmadi';
+          return raw;
+        },
+        'privacy.cookies':finding=>{
+          const raw=String(finding.value||'');
+          if(raw==='Cookies enabled') return 'Cookie yoqilgan';
+          if(raw==='Cookies blocked or disabled') return 'Cookie bloklangan yoki o‘chirilgan';
+          return raw;
+        },
+        'privacy.supercookie':finding=>{
+          const raw=String(finding.value||'');
+          return raw
+            .replace('Multiple supercookie surfaces available','Bir nechta supercookie xotiralari mavjud')
+            .replace('Single supercookie surface available','Bitta supercookie xotirasi mavjud')
+            .replace('Supercookie surfaces blocked or unavailable','Supercookie xotirasi yopilgan yoki mavjud emas');
+        },
+        'privacy.adblock':finding=>{
+          const raw=String(finding.value||'');
+          if(raw==='Ad blocker likely enabled') return 'Reklama bloklagichi ehtimol yoqilgan';
+          if(raw==='Ad blocker unlikely') return 'Reklama bloklagichi aniqlanmadi';
+          if(raw==='Ad blocker status unknown') return 'Reklama bloklagichi holati nomaʼlum';
+          return raw;
+        },
+        'network.webrtcLeak':finding=>{
+          const raw=String(finding.value||'');
+          return raw
+            .replace('No local WebRTC addresses observed','WebRTC mahalliy manzillari topilmadi')
+            .replace('Local/WebRTC IP exposure detected (hypothesis)','WebRTC orqali IP sizishi mumkin (gipoteza)');
         }
       },
       limitations:{
@@ -813,7 +934,12 @@ const I18N = {
         'fingerprint.trackability':'Kuchli signallar kukisiz ham qayta tanishga yordam beradi.',
         'browser.uaCh':'UA-CH aniq versiyalarni ochib beradi va maqsadli ko‘rsatmalarga xizmat qiladi.',
         'privacy.local':'Maʼlumotlar siz ulashmaguningizcha brauzerdan chiqmaydi.',
-        'privacy.permissions':'Boshqa saytga berilgan ruxsatlar shu yerda ham amal qiladi.'
+        'privacy.permissions':'Boshqa saytga berilgan ruxsatlar shu yerda ham amal qiladi.',
+        'fingerprint.fonts':'Shrift to‘plamlari sizni boshqa foydalanuvchilardan ajratishi mumkin.',
+        'privacy.cookies':'Cookie seanslarni tiklash va kuzatuv uchun ishlatiladi.',
+        'privacy.supercookie':'Supercookieʼlar qo‘shimcha xotirada uzoqroq saqlanib qolishi mumkin.',
+        'privacy.adblock':'Reklama bloklagichi monetizatsiyani o‘zgartiradi va qo‘shimcha tekshiruvlarni chaqirishi mumkin.',
+        'network.webrtcLeak':'WebRTC siz VPN ishlatsa ham haqiqiy IP manzilingizni ko‘rsatishi mumkin.'
       }
     },
     ip:{

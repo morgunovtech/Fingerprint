@@ -93,6 +93,24 @@ class Element {
   click() {
     (this.listeners.click || []).forEach(cb => cb({ type: 'click' }));
   }
+  get clientWidth() {
+    if (this.style && typeof this.style.width === 'string') {
+      const parsed = parseInt(this.style.width, 10);
+      if (!Number.isNaN(parsed)) return parsed;
+    }
+    return 100;
+  }
+  get clientHeight() {
+    if (this.style && typeof this.style.height === 'string') {
+      const parsed = parseInt(this.style.height, 10);
+      if (!Number.isNaN(parsed)) return parsed;
+    }
+    return 20;
+  }
+  get offsetParent() {
+    if (this.style && (this.style.display === 'none' || this.style.visibility === 'hidden')) return null;
+    return this.parentNode || null;
+  }
 }
 
 class DocumentFragment {
@@ -135,6 +153,16 @@ class Canvas2DContextStub {
   fillRect() {}
   fillText() {}
   rotate() {}
+  measureText() {
+    const parts = String(this.font || '').split(',');
+    const cleaned = parts[0].replace(/['"]/g, '').trim();
+    const primary = cleaned.replace(/^\d+px\s*/,'').trim() || 'sans-serif';
+    const fallbackRaw = parts[parts.length - 1] || '';
+    const fallback = fallbackRaw.replace(/['"]/g, '').trim() || primary;
+    const base = fallback === 'monospace' ? 90 : fallback === 'serif' ? 100 : 110;
+    const extra = availableFonts.has(primary) ? 15 : 0;
+    return { width: base + extra };
+  }
 }
 
 class WebGLContextStub {
@@ -190,6 +218,8 @@ const sharePayloads = [];
 const alerts = [];
 let printed = false;
 
+const availableFonts = new Set(['Arial', 'Roboto', 'Times New Roman']);
+
 const elements = new Map();
 const elementIds = [
   'lang','introTitle','introText','legend','uniqLine','uniqExample','uniqAdviceTitle','uniqAdvice','shock','shockList','ipInfo','speedResult','advancedPanel','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','advancedBtn','shockTitle','profilingBlock','profilingTitle','profilingIntro','profilingList'
@@ -221,6 +251,7 @@ elements.get('profilingList').tagName = 'UL';
 
 const documentElement = { outerHTML: html, lang: 'ru' };
 const bodyEl = new Element('body', 'body');
+const cookieStore = new Map();
 
 const documentStub = {
   documentElement,
@@ -288,8 +319,29 @@ documentStub.createRange = () => ({ createContextualFragment: () => new Document
 
 documentStub.documentElement = documentElement;
 
+Object.defineProperty(documentStub, 'cookie', {
+  get() {
+    return Array.from(cookieStore.entries()).map(([key, value]) => `${key}=${value}`).join('; ');
+  },
+  set(value) {
+    if (!value) return;
+    const [pair, ...attrs] = String(value).split(';');
+    const [name, rawVal = ''] = pair.split('=');
+    if (!name) return;
+    const trimmedName = name.trim();
+    const trimmedValue = rawVal.trim();
+    const expiresAttr = attrs.find(attr => attr.trim().toLowerCase().startsWith('expires='));
+    if (expiresAttr && expiresAttr.toLowerCase().includes('1970')) {
+      cookieStore.delete(trimmedName);
+    } else {
+      cookieStore.set(trimmedName, trimmedValue);
+    }
+  }
+});
+
 const localStore = new Map();
 const sessionStore = new Map();
+const indexedDbStore = new Map();
 const storageAPI = store => ({
   getItem: key => (store.has(key) ? store.get(key) : null),
   setItem: (key, value) => { store.set(key, String(value)); },
@@ -326,6 +378,41 @@ class OfflineAudioContextStub {
   startRendering() {
     return Promise.resolve({
       getChannelData: () => new Float32Array(256).fill(0.5)
+    });
+  }
+}
+
+class RTCPeerConnectionStub {
+  constructor() {
+    this._listeners = {};
+    setTimeout(() => {
+      this._emit('icecandidate', { candidate: { candidate: 'candidate:0 1 udp 2113937151 10.0.0.2 5000 typ host' } });
+      this._emit('icecandidate', { candidate: null });
+    }, 20);
+  }
+  createDataChannel() {
+    return {};
+  }
+  addEventListener(type, cb) {
+    if (!this._listeners[type]) this._listeners[type] = [];
+    this._listeners[type].push(cb);
+  }
+  set onicecandidate(cb) {
+    this._listeners.icecandidate = cb ? [cb] : [];
+  }
+  async createOffer() {
+    return {};
+  }
+  async setLocalDescription() {}
+  close() {}
+  _emit(type, event) {
+    const list = this._listeners[type] || [];
+    list.forEach(cb => {
+      try {
+        cb(event);
+      } catch (error) {
+        console.error('RTC listener error', error);
+      }
     });
   }
 }
@@ -469,7 +556,25 @@ const windowStub = {
   navigator: navigatorStub,
   localStorage: storageAPI(localStore),
   sessionStorage: storageAPI(sessionStore),
-  indexedDB: {},
+  indexedDB: {
+    open(name) {
+      const request = { result: null };
+      setTimeout(() => {
+        request.result = { close: () => {} };
+        if (typeof request.onupgradeneeded === 'function') request.onupgradeneeded({ target: { result: request.result } });
+        if (typeof request.onsuccess === 'function') request.onsuccess({ target: { result: request.result } });
+      }, 0);
+      return request;
+    },
+    deleteDatabase(name) {
+      indexedDbStore.delete(name);
+      const req = {};
+      setTimeout(() => {
+        if (typeof req.onsuccess === 'function') req.onsuccess({});
+      }, 0);
+      return req;
+    }
+  },
   devicePixelRatio: 2,
   screen: { width: 1512, height: 982, colorDepth: 24, isExtended: false, availLeft: 0, availTop: 0 },
   matchMedia: query => ({
@@ -479,6 +584,10 @@ const windowStub = {
     removeEventListener: () => {},
     addListener: () => {},
     removeListener: () => {}
+  }),
+  getComputedStyle: el => ({
+    display: el.style?.display ?? 'block',
+    visibility: el.style?.visibility ?? 'visible'
   }),
   location: { origin: 'https://example.com', pathname: '/fingerprint/index.html', href: 'https://example.com/fingerprint/index.html' },
   setTimeout,
@@ -503,6 +612,7 @@ const windowStub = {
   },
   fetch: fetchStub,
   OfflineAudioContext: OfflineAudioContextStub,
+  RTCPeerConnection: RTCPeerConnectionStub,
   print: () => { printed = true; }
 };
 
@@ -518,6 +628,7 @@ const sandbox = {
   TextEncoder,
   crypto: webcrypto,
   URL: windowStub.URL,
+  RTCPeerConnection: windowStub.RTCPeerConnection,
   Blob: windowStub.Blob,
   File: windowStub.File,
   fetch: fetchStub,

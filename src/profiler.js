@@ -6,6 +6,19 @@ const MAC_DISPLAY_MAP = [
   { width: 2732, height: 2048, label: 'Apple iPad Pro 12.9″' },
 ];
 
+const FONT_CANDIDATES = [
+  'Arial',
+  'Helvetica',
+  'Times New Roman',
+  'Courier New',
+  'Georgia',
+  'Roboto',
+  'Open Sans',
+  'SF Pro Text',
+  'Segoe UI',
+  'Noto Sans',
+];
+
 const CLAMP = (value, min = 0, max = 1) => {
   if (Number.isNaN(value)) return min;
   return Math.min(max, Math.max(min, value));
@@ -517,6 +530,280 @@ function buildTrackabilityFinding(signals) {
   };
 }
 
+function detectSystemFonts() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return null;
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx || typeof ctx.measureText !== 'function') return null;
+    const sample = 'mmmmmmmmmmlli';
+    const size = '72px';
+    const baselines = new Map();
+    ['monospace', 'serif', 'sans-serif'].forEach((fallback) => {
+      ctx.font = `${size} ${fallback}`;
+      baselines.set(fallback, ctx.measureText(sample).width);
+    });
+    const detected = [];
+    const evidence = [];
+    FONT_CANDIDATES.forEach((font) => {
+      const matched = ['monospace', 'serif', 'sans-serif'].some((fallback) => {
+        ctx.font = `${size} '${font}', ${fallback}`;
+        const width = ctx.measureText(sample).width;
+        const baseline = baselines.get(fallback) ?? width;
+        return Math.abs(width - baseline) > 0.1;
+      });
+      if (matched) {
+        detected.push(font);
+        evidence.push(`${font}=present`);
+      }
+    });
+    const value = detected.length ? `Detected fonts: ${detected.join(', ')}` : 'System fonts not observable';
+    return {
+      key: 'fingerprint.fonts',
+      label: 'System fonts',
+      value,
+      confidence: detected.length ? CLAMP(0.4 + detected.length * 0.05, 0, 0.75) : 0.3,
+      evidence,
+      method: 'measurement',
+      limitations: 'Font detection is approximate; browsers can mask or reduce this signal to limit fingerprinting.',
+    };
+  } catch (error) {
+    console.debug('Font detection failed', error);
+    return null;
+  }
+}
+
+function buildCookiesFinding() {
+  if (typeof navigator === 'undefined' || typeof document === 'undefined') return null;
+  const evidence = [];
+  const enabledFlag = typeof navigator.cookieEnabled === 'boolean' ? navigator.cookieEnabled : null;
+  if (enabledFlag != null) evidence.push(`navigator.cookieEnabled=${enabledFlag}`);
+  let writeSuccess = null;
+  try {
+    const testName = `fp_cookie_${Math.random().toString(36).slice(2)}`;
+    document.cookie = `${testName}=1; path=/; SameSite=Strict`;
+    writeSuccess = document.cookie.includes(`${testName}=1`);
+    document.cookie = `${testName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+    evidence.push(`write=${writeSuccess}`);
+  } catch (error) {
+    evidence.push(`writeError=${error?.message ?? 'failed'}`);
+  }
+  const enabled = writeSuccess ?? enabledFlag ?? false;
+  const value = enabled ? 'Cookies enabled' : 'Cookies blocked or disabled';
+  return {
+    key: 'privacy.cookies',
+    label: 'Cookies enabled',
+    value,
+    confidence: enabled ? 0.9 : 0.7,
+    evidence,
+    method: 'measurement',
+    limitations: 'Third-party or cross-site cookies may still be restricted even when first-party writes succeed.',
+  };
+}
+
+function checkStorageSurface(store, key, label, evidence) {
+  if (!store) {
+    evidence.push(`${label}=unavailable`);
+    return false;
+  }
+  try {
+    store.setItem(key, '1');
+    const success = store.getItem(key) === '1';
+    store.removeItem(key);
+    evidence.push(`${label}=${success}`);
+    return success;
+  } catch (error) {
+    evidence.push(`${label}=error`);
+    return false;
+  }
+}
+
+async function probeIndexedDb(key) {
+  try {
+    const idb = typeof indexedDB === 'undefined' ? undefined : indexedDB;
+    if (!idb?.open) return false;
+    return await new Promise((resolve) => {
+      let settled = false;
+      const request = idb.open(key, 1);
+      request.onerror = () => {
+        if (!settled) resolve(false);
+        settled = true;
+      };
+      request.onsuccess = () => {
+        try {
+          request.result.close();
+        } catch (error) {
+          console.debug('IndexedDB close failed', error);
+        }
+        try {
+          idb.deleteDatabase(key);
+        } catch (error) {
+          console.debug('IndexedDB delete failed', error);
+        }
+        if (!settled) resolve(true);
+        settled = true;
+      };
+      request.onupgradeneeded = () => {};
+    });
+  } catch (error) {
+    console.debug('IndexedDB probe failed', error);
+    return false;
+  }
+}
+
+async function runSupercookieProbe() {
+  if (typeof window === 'undefined') return null;
+  const key = `fp_sc_${Math.random().toString(36).slice(2)}`;
+  const evidence = [];
+  const local = checkStorageSurface(window.localStorage, key, 'localStorage', evidence);
+  const session = checkStorageSurface(window.sessionStorage, key, 'sessionStorage', evidence);
+  const indexed = await probeIndexedDb(key);
+  evidence.push(`indexedDB=${indexed}`);
+  const available = [local, session, indexed].filter(Boolean).length;
+  let value = 'Supercookie surfaces blocked or unavailable';
+  let confidence = 0.6;
+  if (available >= 2) {
+    value = 'Multiple supercookie surfaces available';
+    confidence = 0.7;
+  } else if (available === 1) {
+    value = 'Single supercookie surface available';
+    confidence = 0.65;
+  }
+  return {
+    key: 'privacy.supercookie',
+    label: 'Limited supercookie test',
+    value,
+    confidence,
+    evidence,
+    method: 'measurement',
+    limitations: 'Checks only first-party storage APIs; cross-site partitioning or purging policies may differ.',
+  };
+}
+
+function detectAdBlocker() {
+  if (typeof document === 'undefined') return null;
+  let blocked = null;
+  const evidence = [];
+  try {
+    const bait = document.createElement('div');
+    bait.className = 'ads banner ad-unit advert advertisement';
+    bait.textContent = '\u00a0';
+    bait.style.position = 'absolute';
+    bait.style.top = '-9999px';
+    bait.style.left = '-9999px';
+    bait.style.width = '728px';
+    bait.style.height = '90px';
+    document.body.appendChild(bait);
+    const win = typeof window === 'undefined' ? undefined : window;
+    const computed = win?.getComputedStyle ? win.getComputedStyle(bait) : null;
+    if (computed) {
+      blocked = computed.display === 'none' || computed.visibility === 'hidden';
+    } else if (typeof bait.offsetParent !== 'undefined') {
+      blocked = bait.offsetParent === null;
+    } else {
+      blocked = bait.clientHeight === 0 || bait.clientWidth === 0;
+    }
+    document.body.removeChild(bait);
+  } catch (error) {
+    console.debug('Ad blocker detection failed', error);
+  }
+  if (blocked != null) evidence.push(`hidden=${blocked}`);
+  const value = blocked == null ? 'Ad blocker status unknown' : blocked ? 'Ad blocker likely enabled' : 'Ad blocker unlikely';
+  const confidence = blocked == null ? 0.3 : blocked ? 0.6 : 0.5;
+  return {
+    key: 'privacy.adblock',
+    label: 'Ad blocker usage',
+    value,
+    confidence,
+    evidence,
+    method: 'observation',
+    limitations: 'Some blockers hide their presence and some privacy browsers block only remote trackers.',
+  };
+}
+
+async function runWebRtcLeakTest() {
+  if (typeof window === 'undefined') return null;
+  const RTCPeer = window?.RTCPeerConnection;
+  if (!RTCPeer) return null;
+  let pc = null;
+  const candidates = new Set();
+  try {
+    pc = new RTCPeer({ iceServers: [] });
+    if (pc.createDataChannel) {
+      try {
+        pc.createDataChannel('probe');
+      } catch (error) {
+        console.debug('RTC data channel failed', error);
+      }
+    }
+    const gatherPromise = new Promise((resolve) => {
+      let resolved = false;
+      const finish = () => {
+        if (!resolved) {
+          resolved = true;
+          resolve(candidates);
+        }
+      };
+      const timer = setTimeout(finish, 1500);
+      const handleCandidate = (event) => {
+        if (event?.candidate && event.candidate.candidate) {
+          candidates.add(event.candidate.candidate);
+        } else {
+          clearTimeout(timer);
+          finish();
+        }
+      };
+      if (pc) {
+        if (typeof pc.addEventListener === 'function') {
+          pc.addEventListener('icecandidate', handleCandidate);
+        } else {
+          pc.onicecandidate = handleCandidate;
+        }
+      }
+    });
+    const offer = await pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false });
+    await pc.setLocalDescription(offer);
+    await gatherPromise;
+  } catch (error) {
+    console.debug('WebRTC leak probe failed', error);
+  } finally {
+    try {
+      if (pc?.close) pc.close();
+    } catch (error) {
+      console.debug('WebRTC close failed', error);
+    }
+  }
+  const ips = new Set();
+  const types = new Set();
+  candidates.forEach((candidate) => {
+    const parts = candidate.split(' ');
+    if (parts.length > 4) {
+      ips.add(parts[4]);
+      const typeIndex = parts.indexOf('typ');
+      if (typeIndex >= 0 && parts[typeIndex + 1]) types.add(parts[typeIndex + 1]);
+    }
+  });
+  const evidence = [];
+  evidence.push(`candidates=${candidates.size}`);
+  if (types.size) evidence.push(`types=${Array.from(types).join('/')}`);
+  if (ips.size) evidence.push(`ips=${Array.from(ips).join(',')}`);
+  let value = 'No local WebRTC addresses observed';
+  let confidence = 0.5;
+  if (Array.from(types).some((type) => type === 'host' || type === 'srflx')) {
+    value = 'Local/WebRTC IP exposure detected (hypothesis)';
+    confidence = 0.6;
+  }
+  return {
+    key: 'network.webrtcLeak',
+    label: 'WebRTC / DNS leak test',
+    value,
+    confidence,
+    evidence,
+    method: 'measurement',
+    limitations: 'Modern browsers restrict ICE details; this probe checks only local candidates without sending data to servers.',
+  };
+}
+
 function buildGuaranteeFinding() {
   return {
     key: 'privacy.local',
@@ -690,6 +977,21 @@ export async function runProfiling(ip) {
   const trackSignals = collectTrackSignals(basic, deviceSignals);
   findings.push(buildTrackabilityFinding(trackSignals));
 
+  const fontsFinding = detectSystemFonts();
+  if (fontsFinding) findings.push(fontsFinding);
+
+  const cookiesFinding = buildCookiesFinding();
+  if (cookiesFinding) findings.push(cookiesFinding);
+
+  const supercookieFinding = await runSupercookieProbe();
+  if (supercookieFinding) findings.push(supercookieFinding);
+
+  const adblockFinding = detectAdBlocker();
+  if (adblockFinding) findings.push(adblockFinding);
+
+  const webrtcFinding = await runWebRtcLeakTest();
+  if (webrtcFinding) findings.push(webrtcFinding);
+
   const uaDumpEvidence = ua?.fullVersionList?.map((item) => `${item.brand} ${item.version}`)
     ?? navigator.userAgentData?.brands?.map((item) => `${item.brand} ${item.version}`)
     ?? [];
@@ -718,6 +1020,9 @@ export function selfTest() {
   console.assert(os.confidence >= 0.6, 'macOS confidence should be >= 0.6');
   runProfiling().then((result) => {
     console.assert(Array.isArray(result), 'runProfiling should resolve array');
+    const keys = new Set(result.map((item) => item.key));
+    console.assert(keys.has('privacy.cookies'), 'Cookies finding expected');
+    console.assert(keys.has('privacy.supercookie'), 'Supercookie finding expected');
   }).catch((error) => {
     console.error('runProfiling self test failed', error);
   });
