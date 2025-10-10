@@ -152,11 +152,7 @@
       </div>
       <div class="section-subtitle" id="shockTitle"></div>
       <ul id="shockList" class="advice-list small emoji-list"></ul>
-      <div id="profilingGroup" style="margin-top:12px" hidden>
-        <div id="profilingTitle" class="section-subtitle"></div>
-        <div id="profilingIntro" class="small"></div>
-        <ul id="profilingList" class="advice-list small"></ul>
-      </div>
+      <div id="profilingSummary" class="small" style="margin-top:12px"></div>
       <div id="ipInfo" class="small" style="margin-top:10px"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
@@ -272,12 +268,9 @@ const I18N = {
       },
       gpuKnown:chip=>`🎮 <b>Графика:</b> ${pillOr(chip)}`,
       gpuUnknown:'🎮 <b>Графика:</b> браузер не раскрывает точную модель',
-      canvasActive:'🎯 <b>Хеши canvas/audio активны</b> — вас можно сопоставить между сайтами',
-      canvasPassive:'🎯 <b>Хеши canvas/audio</b> могут помочь сопоставлять визиты',
       browser:browser=>`🌐 <b>Браузер:</b> ${pillOr(browser)}`,
-      screen:(screen,depth,monitorsText)=>{
+      screen:(screen,monitorsText)=>{
         const parts=[pillOr(screen)];
-        if(depth) parts.push(pillValue(`глубина ${depth}-бит`));
         if(monitorsText) parts.push(pillValue(monitorsText));
         return `🖥️ <b>Экран:</b> ${parts.filter(Boolean).join(' ')}`;
       },
@@ -287,31 +280,27 @@ const I18N = {
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
         return `🌍 <b>Языки интерфейса:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      storage:text=>{
-        if(!text) return `💾 <b>Хранилища:</b> ${pillOr('—')}`;
-        const parts=text.split(/,\s*/).map(pillValue).filter(Boolean);
-        return `💾 <b>Хранилища:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      deviceType:hasTouch=>{
+        const label=hasTouch?("С сенсорным экраном"):("Без сенсорного экрана");
+        return `🖐️ <b>Тип устройства:</b> ${pillOr(label)}`;
       },
-      touch:(points,pointer)=>{
-        const values=[];
-        if(points!=null) values.push(`${points} касаний`);
-        if(pointer) values.push(`указатель: ${pointer}`);
-        return `🖐️ <b>Способы управления:</b> ${values.length?pillList(values):pillOr('—')}`;
-      },
-      network:(type,downlink,rtt)=>{
-        const parts=[];
-        if(type&&type!=='—') parts.push(type);
-        if(downlink!=null) parts.push(`~${downlink} Мбит/с`);
-        if(rtt!=null) parts.push(`задержка ${rtt} мс`);
-        return `📶 <b>Подключение:</b> ${parts.length?pillList(parts):pillOr('—')}`;
-      },
+      localTime:value=>`⏰ <b>Локальное время:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Батарея:</b> ${pillOr(value)}`,
+      provider:value=>`🏢 <b>Провайдер:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${pillOr(status)}`,
       vpn:(status,reasons)=>{
         const parts=[pillOr(status)];
         if(reasons) parts.push(pillValue(reasons));
         return `🕵️ <b>VPN:</b> ${parts.filter(Boolean).join(' ')}`;
       },
-      speed:value=>`⚡ <b>Скорость сети:</b> ${pillOr(value)}`
+      connection:(type,downlink,rtt,speed)=>{
+        const pieces=[];
+        if(type&&type!=='—') pieces.push(type);
+        if(downlink) pieces.push(downlink);
+        if(rtt) pieces.push(rtt);
+        if(speed) pieces.push(speed);
+        return `📶 <b>Подключение и скорость:</b> ${pieces.length?pillList(pieces):pillOr('—')}`;
+      }
     },
     profiling:{
       title:'Профайлинг',
@@ -659,12 +648,9 @@ const I18N = {
       },
       gpuKnown:chip=>`🎮 <b>Graphics:</b> ${pillOr(chip)}`,
       gpuUnknown:'🎮 <b>Graphics:</b> the browser hides the exact model',
-      canvasActive:'🎯 <b>Canvas/audio hashes are active</b> — visits can be linked',
-      canvasPassive:'🎯 <b>Canvas/audio hashes</b> may link visits',
       browser:browser=>`🌐 <b>Browser:</b> ${pillOr(browser)}`,
-      screen:(screen,depth,monitorsText)=>{
+      screen:(screen,monitorsText)=>{
         const parts=[pillOr(screen)];
-        if(depth) parts.push(pillValue(`colour depth ${depth}-bit`));
         if(monitorsText) parts.push(pillValue(monitorsText));
         return `🖥️ <b>Screen:</b> ${parts.filter(Boolean).join(' ')}`;
       },
@@ -674,31 +660,27 @@ const I18N = {
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
         return `🌍 <b>Interface languages:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      storage:text=>{
-        if(!text) return `💾 <b>Storage:</b> ${pillOr('—')}`;
-        const parts=text.split(/,\s*/).map(pillValue).filter(Boolean);
-        return `💾 <b>Storage:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      deviceType:hasTouch=>{
+        const label=hasTouch?'Touch-enabled':'No touch screen';
+        return `🖐️ <b>Device type:</b> ${pillOr(label)}`;
       },
-      touch:(points,pointer)=>{
-        const values=[];
-        if(points!=null) values.push(`${points} touch points`);
-        if(pointer) values.push(`pointer: ${pointer}`);
-        return `🖐️ <b>Input methods:</b> ${values.length?pillList(values):pillOr('—')}`;
-      },
-      network:(type,downlink,rtt)=>{
-        const parts=[];
-        if(type&&type!=='—') parts.push(type);
-        if(downlink!=null) parts.push(`~${downlink} Mbps`);
-        if(rtt!=null) parts.push(`latency ${rtt} ms`);
-        return `📶 <b>Connection:</b> ${parts.length?pillList(parts):pillOr('—')}`;
-      },
+      localTime:value=>`⏰ <b>Local time:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Battery:</b> ${pillOr(value)}`,
+      provider:value=>`🏢 <b>Provider:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${pillOr(status)}`,
       vpn:(status,reasons)=>{
         const parts=[pillOr(status)];
         if(reasons) parts.push(pillValue(reasons));
         return `🕵️ <b>VPN:</b> ${parts.filter(Boolean).join(' ')}`;
       },
-      speed:value=>`⚡ <b>Connection speed:</b> ${pillOr(value)}`
+      connection:(type,downlink,rtt,speed)=>{
+        const pieces=[];
+        if(type&&type!=='—') pieces.push(type);
+        if(downlink) pieces.push(downlink);
+        if(rtt) pieces.push(rtt);
+        if(speed) pieces.push(speed);
+        return `📶 <b>Connection & speed:</b> ${pieces.length?pillList(pieces):pillOr('—')}`;
+      }
     },
     profiling:{
       title:'Profiling',
@@ -1018,12 +1000,9 @@ const I18N = {
       },
       gpuKnown:chip=>`🎮 <b>Grafika:</b> ${pillOr(chip)}`,
       gpuUnknown:'🎮 <b>Grafika:</b> brauzer aniq modelni bermadi',
-      canvasActive:'🎯 <b>Canvas/audio xeshlari yoqilgan</b> — tashriflarni bog‘lash mumkin',
-      canvasPassive:'🎯 <b>Canvas/audio xeshlari</b> tashriflarni bog‘lashi mumkin',
       browser:browser=>`🌐 <b>Brauzer:</b> ${pillOr(browser)}`,
-      screen:(screen,depth,monitorsText)=>{
+      screen:(screen,monitorsText)=>{
         const parts=[pillOr(screen)];
-        if(depth) parts.push(pillValue(`rang chuqurligi ${depth}-bit`));
         if(monitorsText) parts.push(pillValue(monitorsText));
         return `🖥️ <b>Ekran:</b> ${parts.filter(Boolean).join(' ')}`;
       },
@@ -1033,31 +1012,27 @@ const I18N = {
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
         return `🌍 <b>Interfeys tillari:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      storage:text=>{
-        if(!text) return `💾 <b>Saqlash:</b> ${pillOr('—')}`;
-        const parts=text.split(/,\s*/).map(pillValue).filter(Boolean);
-        return `💾 <b>Saqlash:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      deviceType:hasTouch=>{
+        const label=hasTouch?'Sensorli ekran bor':'Sensorli ekran yo‘q';
+        return `🖐️ <b>Qurilma turi:</b> ${pillOr(label)}`;
       },
-      touch:(points,pointer)=>{
-        const values=[];
-        if(points!=null) values.push(`${points} ta sensor nuqtasi`);
-        if(pointer) values.push(`ko‘rsatkich: ${pointer}`);
-        return `🖐️ <b>Boshqaruv usullari:</b> ${values.length?pillList(values):pillOr('—')}`;
-      },
-      network:(type,downlink,rtt)=>{
-        const parts=[];
-        if(type&&type!=='—') parts.push(type);
-        if(downlink!=null) parts.push(`~${downlink} Mbit/s`);
-        if(rtt!=null) parts.push(`kechikish ${rtt} ms`);
-        return `📶 <b>Aloqa:</b> ${parts.length?pillList(parts):pillOr('—')}`;
-      },
+      localTime:value=>`⏰ <b>Mahalliy vaqt:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Batareya:</b> ${pillOr(value)}`,
+      provider:value=>`🏢 <b>Provayder:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${pillOr(status)}`,
       vpn:(status,reasons)=>{
         const parts=[pillOr(status)];
         if(reasons) parts.push(pillValue(reasons));
         return `🕵️ <b>VPN:</b> ${parts.filter(Boolean).join(' ')}`;
       },
-      speed:value=>`⚡ <b>Internet tezligi:</b> ${pillOr(value)}`
+      connection:(type,downlink,rtt,speed)=>{
+        const pieces=[];
+        if(type&&type!=='—') pieces.push(type);
+        if(downlink) pieces.push(downlink);
+        if(rtt) pieces.push(rtt);
+        if(speed) pieces.push(speed);
+        return `📶 <b>Aloqa va tezlik:</b> ${pieces.length?pillList(pieces):pillOr('—')}`;
+      }
     },
     profiling:{
       title:'Profiling',
@@ -2021,11 +1996,12 @@ const state={
   fetchingIp:false,
   speed:{status:'idle',mbps:null,latency:null,error:null,note:null},
   vpn:{status:'uncertain',reasons:[],checked:false},
-  sharePayload:null
+  sharePayload:null,
+  profilingContext:null
 };
 let snapshotCache=null;
 let snapshotPromise=null;
-function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;state.sharePayload=null;}
+function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;state.sharePayload=null;state.profilingContext=null;}
 const THEME_KEY='fp_theme';
 const THEME_ORDER=['auto','light','dark'];
 const THEME_ICONS={auto:'🌓',light:'☀️',dark:'🌙'};
@@ -2715,8 +2691,7 @@ function formatDntStatus(value,t){
 
 function formatLanguagesList(langs){
   if(!Array.isArray(langs)||!langs.length) return '';
-  if(langs.length<=3) return langs.join(', ');
-  return `${langs.slice(0,3).join(', ')} +${langs.length-3}`;
+  return langs.join(', ');
 }
 
 function humanConnectionType(type){
@@ -2742,6 +2717,84 @@ function formatNetworkSummary(net){
     rtt=Math.round(net.rtt);
   }
   return {type,downlink,rtt};
+}
+
+function formatBatteryStatus(battery){
+  if(!battery||typeof battery.level!=='number') return '';
+  const pct=Math.max(0,Math.min(100,Math.round(battery.level*100)));
+  return `${pct}%${battery.charging?' ⚡':''}`;
+}
+
+function formatLocalTimeDisplay(basic){
+  const timezone=basic?.timezone||LOCAL_TZ||'UTC';
+  const locale=currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU');
+  try{
+    const stamp=timeInTZ(timezone,locale);
+    if(stamp){
+      return `${stamp}${timezone?` (${timezone})`:''}`;
+    }
+  }catch(_){/* ignore */}
+  return timezone||'';
+}
+
+function renderShockBullets(basic,t){
+  const ul=getEl('shockList');
+  if(!ul) return;
+  if(!basic){
+    ul.innerHTML='';
+    shockBulletCount=0;
+    syncShockVisibility();
+    return;
+  }
+  const s=basic.screen||{};
+  const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
+  const monitorLabel=formatMonitorText(s.monitors,t);
+  const chip=basic.gl&&basic.gl.renderer?guessAppleChip(basic.gl.renderer):null;
+  const geo=extractGeo(basic.server?.headers||{});
+  const city=geo.city?(geo.country?`${geo.city}, ${geo.country}`:geo.city):null;
+  const tzCity=tzCityName(basic.timezone||LOCAL_TZ||'');
+  const browserGuess=browserDisplayName(basic);
+  const permEntries=Object.entries(basic.perms||{});
+  const formattedPerms=formatPermissionEntries(permEntries,t);
+  const permSample=formattedPerms.length?formattedPerms.slice(0,3).join(', '):(t.permStates?.unknown||'—');
+  const languagesSummary=formatLanguagesList(basic.languages);
+  const dntLabel=formatDntStatus(basic.dnt,t);
+  const touchInfo=formatTouchSummary(basic.touch,basic.pointer,t);
+  const hasTouch=Boolean(touchInfo.points>0||((touchInfo.pointer||'').toLowerCase().includes('touch')));
+  const profiling=state.profilingContext;
+  const deviceLabel=profiling?.deviceLabel||guessDevice(basic);
+  const osLabel=profiling?.osLabel||guessOSVersion(basic);
+  const localTime=profiling?.localTime||formatLocalTimeDisplay(basic);
+  const batteryText=profiling?.batteryText||formatBatteryStatus(basic.battery);
+  const provider=profiling?.provider||state.serverData?.details?.org||state.serverData?.detailSource||null;
+  const vpnState=state.vpn||{status:'uncertain',reasons:[]};
+  const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
+  const vpnReasons=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
+  const networkInfo=formatNetworkSummary(basic.net);
+  const connectionType=profiling?.connectionRaw||networkInfo?.type||null;
+  const downlink=networkInfo&&networkInfo.downlink!=null?`~${networkInfo.downlink} ${t.units?.mbps||'Mbps'}`:null;
+  const rtt=networkInfo&&networkInfo.rtt!=null?`${t.labels?.latency||'Latency'} ${networkInfo.rtt} ${t.units?.ms||'ms'}`:null;
+  const speedSummary=state.speed.status==='running'?t.speed.running:(state.speed.status==='done'?formatSpeedSummary(t):'');
+  const bullets=[
+    city?t.shock.region(city):t.shock.tzFallback(tzCity),
+    t.shock.device(deviceLabel,osLabel),
+    chip?t.shock.gpuKnown(chip):t.shock.gpuUnknown,
+    t.shock.browser(browserGuess),
+    t.shock.screen(screenStr,monitorLabel),
+    t.shock.perms(permSample)
+  ];
+  bullets.push(t.shock.languages(languagesSummary||''));
+  bullets.push(t.shock.deviceType(hasTouch));
+  if(localTime) bullets.push(t.shock.localTime(localTime));
+  if(batteryText) bullets.push(t.shock.battery(batteryText));
+  if(provider) bullets.push(t.shock.provider(provider));
+  if(dntLabel) bullets.push(t.shock.dnt(dntLabel));
+  bullets.push(t.shock.vpn(vpnStatusLabel,vpnReasons));
+  bullets.push(t.shock.connection(connectionType,downlink,rtt,speedSummary));
+  ul.innerHTML='';
+  bullets.forEach(text=>{const li=document.createElement('li');li.innerHTML=text;ul.appendChild(li);});
+  shockBulletCount=bullets.length;
+  syncShockVisibility();
 }
 
 function formatStorageForShock(storage,cookiesEnabled,t){
@@ -3010,58 +3063,21 @@ function formatProfilingValue(finding,cfg){
   return finding.value;
 }
 
-function formatProfilingLimitations(finding,cfg){
-  const limits=cfg.limitations||{};
-  const entry=limits[finding.key];
-  if(typeof entry==='function') return entry(finding);
-  if(typeof entry==='string') return entry;
-  return finding.limitations||'';
-}
-
-function ensureProfilerIntro(cfg,introEl){
-  if(!introEl) return;
-  introEl.innerHTML='';
-  const intro=cfg.intro;
-  const paragraphs=Array.isArray(intro)?intro:[intro];
-  paragraphs.filter(Boolean).forEach(text=>{
-    const p=document.createElement('p');
-    p.textContent=text;
-    introEl.appendChild(p);
-  });
-}
-
 function syncShockVisibility(){
   const shock=getEl('shock');
   if(!shock) return;
-  const profilingGroup=getEl('profilingGroup');
-  const profilingVisible=Boolean(profilingGroup)&&!profilingGroup.hidden;
-  const show=shockBulletCount>0||profilingVisible;
+  const summaryEl=getEl('profilingSummary');
+  const summaryVisible=Boolean(summaryEl)&&Boolean(summaryEl.textContent&&summaryEl.textContent.trim());
+  const show=shockBulletCount>0||summaryVisible;
   shock.style.display=show?'block':'none';
 }
 
 async function renderProfilingSection(basic,t){
-  const group=getEl('profilingGroup');
-  if(!group) return;
   const cfg=t.profiling||{};
-  const titleEl=getEl('profilingTitle');
-  if(titleEl) titleEl.textContent=cfg.title||'Profiling';
-  const introEl=getEl('profilingIntro');
-  const listEl=getEl('profilingList');
-  if(listEl){
-    listEl.innerHTML='';
-    listEl.style.display='none';
-  }
+  const summaryEl=getEl('profilingSummary');
+  state.profilingContext=null;
   if(!basic){
-    if(introEl){
-      introEl.innerHTML='';
-      ensureProfilerIntro(cfg,introEl);
-      if(cfg.waiting){
-        const p=document.createElement('p');
-        p.textContent=cfg.waiting;
-        introEl.appendChild(p);
-      }
-    }
-    group.hidden=false;
+    if(summaryEl) summaryEl.textContent=cfg.waiting||'';
     syncShockVisibility();
     return;
   }
@@ -3069,13 +3085,7 @@ async function renderProfilingSection(basic,t){
     globalThis.__fingerprintBasic=basic;
   }catch(_){/* ignore */}
   const runId=++profilingSequence;
-  if(listEl){
-    listEl.style.display='block';
-    const li=document.createElement('li');
-    li.className='small';
-    li.textContent=cfg.loading||'Building profile…';
-    listEl.appendChild(li);
-  }
+  if(summaryEl) summaryEl.textContent=cfg.loading||'';
   const ipGeo=buildProfilerIpGeo();
   try{
     const mod=await loadProfilerModule();
@@ -3085,97 +3095,29 @@ async function renderProfilingSection(basic,t){
     }
     const findings=await mod.runProfiling(ipGeo);
     if(runId!==profilingSequence) return;
-    if(!listEl) return;
-    listEl.innerHTML='';
-    if(!findings.length){
-      if(cfg.none){
-        const li=document.createElement('li');
-        li.className='small';
-        li.textContent=cfg.none;
-        listEl.appendChild(li);
-        listEl.style.display='block';
-        group.hidden=false;
-        syncShockVisibility();
-      }else{
-        listEl.style.display='none';
-        group.hidden=!(introEl && introEl.childElementCount);
-        syncShockVisibility();
-      }
-      return;
-    }
     const context=buildProfilingContext(findings,basic,t);
-    if(introEl){
-      introEl.innerHTML='';
-      if(typeof cfg.summary==='function'){
+    state.profilingContext=context;
+    if(summaryEl){
+      summaryEl.textContent='';
+      if(findings.length && typeof cfg.summary==='function'){
         const summaryText=cfg.summary(context);
-        if(summaryText){
-          const p=document.createElement('p');
-          p.textContent=summaryText;
-          introEl.appendChild(p);
-        }
-      }
-      if(!introEl.childElementCount){
-        ensureProfilerIntro(cfg,introEl);
+        if(summaryText) summaryEl.textContent=summaryText;
+      }else if(cfg.none){
+        summaryEl.textContent=cfg.none;
       }
     }
-    const detailLabels=cfg.detailLabels||{};
-    const unknown=context.unknown||cfg.unknown||'—';
-    const details=[];
-    const addDetail=(label,value,confidenceFraction)=>{
-      if(!label) return;
-      const textParts=[`${label}: ${value||unknown}`];
-      if(confidenceFraction!=null){
-        const confidencePercent=Math.round(confidenceFraction*100);
-        if(typeof cfg.confidence==='function') textParts.push(cfg.confidence(confidenceFraction));
-        else textParts.push(`Confidence ${confidencePercent}%`);
-      }
-      details.push(textParts.join(' • '));
-    };
-    const deviceLabel=detailLabels.device||cfg.labels?.['device.model']||cfg.labels?.['device.class']||'Device';
-    const osLabel=detailLabels.os||cfg.labels?.['os.platform']||'OS';
-    const vpnLabel=detailLabels.vpn||cfg.labels?.['vpn.probability']||'VPN';
-    const locationLabel=detailLabels.location||cfg.labels?.['location.region']||'Location';
-    const connectionLabel=detailLabels.connection||cfg.labels?.['network.profile']||'Connection';
-    const speedLabel=detailLabels.speed||'Speed';
-    const providerLabel=detailLabels.provider||'Provider';
-    const batteryLabel=detailLabels.battery||'Battery';
-    const timeLabel=detailLabels.time||'Local time';
-    addDetail(deviceLabel,context.deviceLabel,context.deviceConfidence/100||null);
-    addDetail(osLabel,context.osLabel,context.osConfidence/100||null);
-    addDetail(vpnLabel,context.vpnLabel,context.vpnConfidence/100||null);
-    addDetail(locationLabel,context.location,null);
-    addDetail(connectionLabel,context.connection,null);
-    if(context.speedText) details.push(`${speedLabel}: ${context.speedText}`);
-    if(context.provider) details.push(`${providerLabel}: ${context.provider}`);
-    if(context.batteryText) details.push(`${batteryLabel}: ${context.batteryText}`);
-    if(context.localTime) details.push(`${timeLabel}: ${context.localTime}`);
-    if(details.length){
-      details.forEach(text=>{
-        const li=document.createElement('li');
-        li.className='small';
-        li.textContent=text;
-        listEl.appendChild(li);
-      });
-      listEl.style.display='block';
-    }else{
-      listEl.style.display='none';
-    }
-    group.hidden=false;
+    renderShockBullets(basic,t);
     syncShockVisibility();
   }catch(err){
     if(runId!==profilingSequence) return;
-    if(listEl){
-      listEl.innerHTML='';
-      const li=document.createElement('li');
-      li.className='small';
+    state.profilingContext=null;
+    if(summaryEl){
       const loadError=cfg.errors?.load||'Profiling module failed to load.';
       const runError=cfg.errors?.run;
       const message=profilerLoadError?loadError:(runError?runError(err.message||String(err)):String(err));
-      li.textContent=message;
-      listEl.appendChild(li);
-      listEl.style.display='block';
+      summaryEl.textContent=message;
     }
-    group.hidden=false;
+    renderShockBullets(basic,t);
     syncShockVisibility();
   }
 }
@@ -3187,9 +3129,14 @@ let renderToken=0;
 
 async function render(lang){
   const token=++renderToken;
+  const prevLang=currentLang;
   currentLang=(lang in I18N)?lang:'ru';
   const t=I18N[currentLang];
   document.documentElement.lang=currentLang;
+  if(prevLang!==currentLang){
+    langMenuIsOpen=false;
+    setLangMenu(false);
+  }
   const langBtn=getEl('langBtn');
   if(langBtn){
     langBtn.textContent=t.langButton||'Language';
@@ -3307,50 +3254,17 @@ async function render(lang){
     const s=basic.screen;
     const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
     const osVer=guessOSVersion(basic);
-    const device=guessDevice(basic);
-    const chip=basic.gl&&basic.gl.renderer?guessAppleChip(basic.gl.renderer):null;
-    const geo=extractGeo(basic.server?.headers||{});
-    const city=geo.city?(geo.country?`${geo.city}, ${geo.country}`:geo.city):null;
-    const tzCity=tzCityName(basic.timezone||LOCAL_TZ||'');
     const browserGuess=browserDisplayName(basic);
     const languagesSummary=formatLanguagesList(basic.languages);
     const permEntries=Object.entries(basic.perms||{});
     const formattedPerms=formatPermissionEntries(permEntries,t);
-    const permSample=formattedPerms.length?formattedPerms.slice(0,3).join(', '):(t.permStates?.unknown||'—');
     const monitorLabel=formatMonitorText(basic.screen?.monitors,t);
     const storageSummary=formatStorageForShock(basic.storage,basic.cookiesEnabled,t);
     const dntLabel=formatDntStatus(basic.dnt,t);
     const touchInfo=formatTouchSummary(basic.touch,basic.pointer,t);
     const networkInfo=formatNetworkSummary(basic.net);
 
-    const bullets=[
-      city?t.shock.region(city):t.shock.tzFallback(tzCity),
-      t.shock.device(device,osVer),
-      chip?t.shock.gpuKnown(chip):t.shock.gpuUnknown,
-      (basic.hashes.canvas&&basic.hashes.audio)?t.shock.canvasActive:t.shock.canvasPassive,
-      t.shock.browser(browserGuess),
-      t.shock.screen(screenStr,basic.screen.colorDepth,monitorLabel),
-      t.shock.perms(permSample)
-    ];
-    if(languagesSummary) bullets.push(t.shock.languages(languagesSummary));
-    if(storageSummary) bullets.push(t.shock.storage(storageSummary));
-    if(dntLabel) bullets.push(t.shock.dnt(dntLabel));
-    if(touchInfo) bullets.push(t.shock.touch(touchInfo.points,touchInfo.pointer));
-    if(networkInfo) bullets.push(t.shock.network(networkInfo.type,networkInfo.downlink,networkInfo.rtt));
-    const vpnState=state.vpn||{status:'uncertain',reasons:[]};
-    const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
-    const vpnReasons=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
-    bullets.push(t.shock.vpn(vpnStatusLabel,vpnReasons));
-    const speedSummary=formatSpeedSummary(t);
-    if(speedSummary && state.speed.status!=='idle'){
-      bullets.push(t.shock.speed(speedSummary));
-    }
-    const shock=getEl('shock');
-    const ul=getEl('shockList');
-    ul.innerHTML='';
-    bullets.forEach(text=>{const li=document.createElement('li');li.innerHTML=text;ul.appendChild(li);});
-    shockBulletCount=bullets.length;
-    syncShockVisibility();
+    renderShockBullets(basic,t);
 
     const shareConfig=t.share||{};
     const shareUrl=resolveShareUrl();
@@ -3389,7 +3303,7 @@ async function render(lang){
     const permVal=formattedPerms.length?formattedPerms.join(' • '):(t.permStates?.unknown||'—');
     const pluginsVal=basic.plugins?.length?String(basic.plugins.length):'0';
     const mediaVal=basic.media?.length?basic.media.map(m=>`${m.kind}:${m.label?t.units.yes:t.units.no}`).join(' • '):'—';
-    const batteryVal=basic.battery&&basic.battery.level!=null?`${Math.round(basic.battery.level*100)}% ${basic.battery.charging?'⚡':''}`:'—';
+    const batteryVal=formatBatteryStatus(basic.battery)||'—';
     const exposure=basic.exposure||{};
     const fontsVal=summariseList(exposure.fonts||[]);
     const trackersVal=summariseList(exposure.trackers||[]);

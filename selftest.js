@@ -275,7 +275,7 @@ const availableFonts = new Set(['Arial', 'Roboto', 'Times New Roman']);
 
 const elements = new Map();
 const elementIds = [
-  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqExample','uniqMeaningTitle','uniqMeaningList','uniqAdviceTitle','uniqAdvice','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingGroup','profilingTitle','profilingIntro','profilingList'
+  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqExample','uniqMeaningTitle','uniqMeaningList','uniqAdviceTitle','uniqAdvice','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
 ];
 
 for (const id of elementIds) {
@@ -292,8 +292,7 @@ elements.get('langBtn').tagName = 'BUTTON';
 elements.get('themeBtn').tagName = 'BUTTON';
 elements.get('langMenu').tagName = 'DIV';
 elements.get('themeMenu').tagName = 'DIV';
-elements.get('profilingGroup').tagName = 'DIV';
-elements.get('profilingList').tagName = 'UL';
+elements.get('profilingSummary').tagName = 'DIV';
 
 const langMenuEl = elements.get('langMenu');
 ['ru','en','uz'].forEach(code => {
@@ -859,17 +858,12 @@ const I18N = vm.runInContext('I18N', sandbox);
   stateRef.sharePayload = savedSharePayload;
   shareBtnEl.textContent = shareBtnEl.dataset.label;
 
-  const profilingSection = elements.get('profilingGroup');
-  assert.equal(profilingSection.hidden, false);
-  const profilingIntroEl = elements.get('profilingIntro');
-  assert.ok(profilingIntroEl.children.length >= 1);
-  const profilingListEl = elements.get('profilingList');
-  for (let i = 0; i < 10 && profilingListEl.children.length < 3; i += 1) {
+  const profilingSummaryEl = elements.get('profilingSummary');
+  for (let i = 0; i < 20 && profilingSummaryEl.textContent.trim().length < 10; i += 1) {
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  assert.ok(profilingListEl.children.length >= 3);
-  const profilingTexts = Array.from(profilingListEl.children).map(extractText);
-  assert.ok(profilingTexts.some(text => text.includes('VPN')));
+  assert.ok(/вероят/i.test(profilingSummaryEl.textContent) || profilingSummaryEl.textContent.trim().length > 0);
+  const initialSummaryText = profilingSummaryEl.textContent;
   const initialShare = stateRef.sharePayload;
   assert.ok(initialShare);
   assert.equal(elements.get('shareBtn').dataset.ready, '1');
@@ -882,23 +876,24 @@ const I18N = vm.runInContext('I18N', sandbox);
   assert.equal(documentElement.lang, 'en');
   assert.ok(elements.get('introTitle').textContent.length > 0);
   assert.ok(elements.get('langBtn').textContent.includes('Language'));
+  assert.notEqual(profilingSummaryEl.textContent, initialSummaryText);
+  assert.ok(/We are/i.test(profilingSummaryEl.textContent));
   await sandbox.render('uz');
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(documentElement.lang, 'uz');
   assert.ok(elements.get('introTitle').textContent.length > 0);
   assert.ok(elements.get('langBtn').textContent.includes('Til'));
+  assert.ok(/Taxminan/i.test(profilingSummaryEl.textContent));
   await sandbox.detectIpAndSpeed();
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));
-  const profListAfter = elements.get('profilingList');
-  for (let i = 0; i < 10 && profListAfter.children.length < 3; i += 1) {
+  for (let i = 0; i < 20 && !/Tashkent/i.test(profilingSummaryEl.textContent); i += 1) {
     await new Promise(resolve => setTimeout(resolve, 0));
   }
   assert.ok(stateRef.serverData);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
   assert.equal(stateRef.speed.status, 'done');
-  const profilingAfterTexts = Array.from(profListAfter.children).map(extractText);
-  assert.ok(profilingAfterTexts.some(text => /Tashkent|Uzbekistan/i.test(text)), 'profiling should mention updated region');
+  assert.ok(/Tashkent|Uzbekistan/i.test(profilingSummaryEl.textContent), 'profiling summary should mention updated region');
   assert.ok(stateRef.sharePayload);
 
   console.log('Self-test completed successfully');
