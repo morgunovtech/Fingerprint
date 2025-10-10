@@ -1747,154 +1747,132 @@ async function computeSnapshot(){
 function uniquenessLevel(pct){return pct>=70?'high':(pct>=40?'med':'low');}
 const CARD_CONTENT = {
   tz:{
-    risk:'med',
     label:{ru:'Часовой пояс',en:'Time zone',uz:'Vaqt mintaqasi'},
     use:{ru:'Часовой пояс выдаёт примерный регион проживания',en:'Your time zone hints at the region you live in',uz:'Vaqt mintaqasi qaysi hududda ekaningizni ko‘rsatadi'},
     ex:{ru:'Например, Москва и Лондон живут по разным часам',en:'For example, Moscow and London run on different clocks',uz:'Masalan, Moskva va London vaqtlari farq qiladi'},
     adv:{ru:'Синхронизируйте системное время и настройки VPN',en:'Keep your system clock and VPN settings in sync',uz:'Tizim vaqti va VPN sozlamalarini mos tuting'}
   },
   ua:{
-    risk:'med',
     label:{ru:'Браузер',en:'Browser',uz:'Brauzer'},
     use:{ru:'Название и версия браузера помогают отличить вас от большинства пользователей',en:'Browser name and version make it easy to separate you from the crowd',uz:'Brauzer nomi va versiyasi sizni boshqalardan ajratib turadi'},
     ex:{ru:'Например, Arc встречается реже, чем Chrome или Safari',en:'For example, Arc appears far less often than Chrome or Safari',uz:'Masalan, Arc Chrome yoki Safari ga qaraganda kam uchraydi'},
     adv:{ru:'Используйте обновлённые и массовые версии, когда важна анонимность',en:'Stick to up-to-date mainstream builds when anonymity matters',uz:'Maxfiylik zarur bo‘lsa, yangilanib turadigan ommabop versiyalardan foydalaning'}
   },
   plat:{
-    risk:'low',
     label:{ru:'Операционная система',en:'Operating system',uz:'Operatsion tizim'},
     use:{ru:'Тип и версия ОС помогают сопоставить устройство',en:'OS type and version help link the device',uz:'OT turi va versiyasi qurilmani aniqlashga yordam beradi'},
     ex:{ru:'Например, macOS 14 или Windows 11 выделяются',en:'For example, macOS 14 or Windows 11 stand out',uz:'Masalan, macOS 14 yoki Windows 11 darhol ajralib turadi'},
     adv:{ru:'Используйте отдельные устройства или виртуальные машины для чувствительных задач',en:'Use separate devices or virtual machines for sensitive tasks',uz:'Muhim ishlar uchun alohida qurilma yoki virtual mashina qo‘llang'}
   },
   screen:{
-    risk:'med',
     label:{ru:'Экран',en:'Screen',uz:'Ekran'},
     use:{ru:'Разрешение и плотность экрана подсказывают модель устройства',en:'Resolution and pixel density hint at the device model',uz:'Ekran o‘lchami va piksellar zichligi qurilma modelini ko‘rsatadi'},
     ex:{ru:'Например, 13" ноутбук и 4K монитор дают разные сочетания',en:'A 13" laptop and a 4K monitor produce very different combos',uz:'Masalan, 13" noutbuk va 4K monitor butunlay boshqa kombinatsiya beradi'},
     adv:{ru:'Отключайте лишние мониторы, когда хотите скрыть рабочую конфигурацию',en:'Disconnect extra monitors when you want to hide your work setup',uz:'Ishdagi sozlamani yashirmoqchi bo‘lsangiz, ortiqcha monitorlarni uzib qo‘ying'}
   },
   langs:{
-    risk:'med',
     label:{ru:'Языки',en:'Languages',uz:'Tillar'},
     use:{ru:'Языки интерфейса показывают, где и как вы обычно общаетесь',en:'Interface languages show where and how you normally browse',uz:'Interfeys tillari qayerda va qanday til ishlatishingizni ko‘rsatadi'},
     ex:{ru:'Например, ru + uz указывает на Центральную Азию',en:'For example, ru + uz points to Central Asia',uz:'Masalan, ru + uz kombinatsiyasi Markaziy Osiyaga ishora qiladi'},
     adv:{ru:'Храните только те языки, которыми действительно пользуетесь',en:'Keep only the languages you actively need',uz:'Faqat kerakli tillarni qoldiring'}
   },
   hw:{
-    risk:'low',
     label:{ru:'CPU / RAM',en:'CPU / RAM',uz:'CPU / RAM'},
     use:{ru:'Количество ядер и объём памяти выдают класс устройства',en:'Core count and memory size expose the device class',uz:'Yadrolar soni va xotira hajmi qurilma turini ochib beradi'},
     ex:{ru:'Смартфон с 6 ГБ отличается от ПК с 32 ГБ',en:'A phone with 6 GB looks different from a PC with 32 GB',uz:'6 GB telefon 32 GB kompyuterdan oson farqlanadi'},
     adv:{ru:'Для критичных задач используйте отдельное или изолированное устройство',en:'Use a dedicated or isolated device for critical tasks',uz:'Muhim vazifalar uchun alohida yoki izolyatsiyalangan qurilmadan foydalaning'}
   },
   store:{
-    risk:'med',
     label:{ru:'Хранилища',en:'Storage',uz:'Saqlash'},
     use:{ru:'Cookie и хранилища позволяют сайтам узнавать вас без входа',en:'Cookies and storage let sites recognise you without logging in',uz:'Cookie va saqlash saytga sizni akkauntsiz ham tanish imkonini beradi'},
     ex:{ru:'Если localStorage доступен, сайт может сохранить уникальный ID',en:'If localStorage is available, a site can store a unique ID',uz:'Agar localStorage mavjud bo‘lsa, sayt noyob ID saqlashi mumkin'},
     adv:{ru:'Регулярно очищайте хранилища или используйте приватные окна',en:'Regularly clear storage or rely on private windows',uz:'Saqlashni muntazam tozalang yoki maxfiy oynalardan foydalaning'}
   },
   dnt:{
-    risk:'low',
     label:{ru:'Настройка «Не отслеживать»',en:'“Do Not Track” setting',uz:'“Kuzatmang” sozlamasi'},
     use:{ru:'Сообщает сайтам, просите ли вы не отслеживать вас',en:'Tells sites you prefer not to be tracked',uz:'Saytlarga sizni kuzatmaslikni so‘rashingizni bildiradi'},
     ex:{ru:'Часть сервисов игнорирует этот сигнал',en:'Many services still ignore the signal',uz:'Ko‘plab servislar bu so‘rovni baribir eʼtiborsiz qoldiradi'},
     adv:{ru:'Дополняйте настройку блокировщиками и VPN',en:'Back it up with blockers and a VPN',uz:'Bu sozlamani bloklovchi va VPN bilan mustahkamlang'}
   },
   touch:{
-    risk:'low',
     label:{ru:'Касания/указатель',en:'Touch / pointer',uz:'Sensor / ko‘rsatkich'},
     use:{ru:'Количество касаний и тип указателя выдают устройство (ПК, планшет, смартфон)',en:'Touch points and pointer type reveal whether this is a PC, tablet, or phone',uz:'Sensor nuqtalari va ko‘rsatkich turi qurilma (PK, planshet, telefon) ekanini ko‘rsatadi'},
     ex:{ru:'0 касаний + «fine» = настольный ПК, 5 касаний = планшет',en:'0 touches + “fine” points to a desktop, 5 touches points to a tablet',uz:'0 sensor + “fine” bu stolüstü PK, 5 sensor esa planshetni anglatadi'},
     adv:{ru:'Разделяйте рабочие и личные устройства, чтобы сигналы не накладывались',en:'Keep work and personal devices separate so the signals do not mix',uz:'Ish va shaxsiy qurilmalarni alohida saqlang, shunda signallar aralashmaydi'}
   },
   net:{
-    risk:'med',
     label:{ru:'Сеть',en:'Network',uz:'Tarmoq'},
     use:{ru:'Тип подключения и задержка помогают системам антифрода узнать вас',en:'Connection type and latency feed anti-fraud systems',uz:'Ulanish turi va kechikish antifrod tizimlariga sizni aniqlashga yordam beradi'},
     ex:{ru:'Например, 4G и задержка 120 мс похожи на мобильную сеть',en:'For example, 4G with 120 ms latency looks like mobile data',uz:'Masalan, 4G va 120 ms kechikish mobil tarmoqni eslatadi'},
     adv:{ru:'Контролируйте VPN и прокси, чтобы характеристики не выбивались из привычных',en:'Keep VPN and proxy settings consistent so values do not look suspicious',uz:'VPN va proksi sozlamalarini mos tuting, shunda qiymatlar g‘alati ko‘rinmaydi'}
   },
   gl:{
-    risk:'high',
     label:{ru:'WebGL (GPU)',en:'WebGL (GPU)',uz:'WebGL (GPU)'},
     use:{ru:'WebGL раскрывает модель видеочипа, она редко совпадает у двух людей',en:'WebGL reveals your GPU model, which is rarely identical between users',uz:'WebGL GPU modelini ko‘rsatadi va bu ko‘pchilikda takrorlanmaydi'},
     ex:{ru:'Например, Apple M2 GPU виден на любом сайте с WebGL',en:'For example, an Apple M2 GPU is visible to any site using WebGL',uz:'Masalan, Apple M2 GPU WebGL ishlatadigan har qanday saytga ko‘rinadi'},
     adv:{ru:'Используйте приватные режимы или отдельный браузер, чтобы скрыть точный чип',en:'Use private modes or a separate browser to mask the exact chip',uz:'Aniq chipni yashirish uchun maxfiy rejim yoki alohida brauzerdan foydalaning'}
   },
   canvas:{
-    risk:'high',
     label:{ru:'Графический отпечаток (Canvas)',en:'Graphic fingerprint (Canvas)',uz:'Grafik iz (Canvas)'},
     use:{ru:'Браузер рисует невидимую картинку и получает уникальный хеш',en:'The browser draws an invisible image and gets a unique hash',uz:'Brauzer ko‘rinmas rasm chizib, noyob xesh oladi'},
     ex:{ru:'Совпадающий Canvas-хеш связывает действия на разных сайтах',en:'The same Canvas hash links activity across different sites',uz:'Bir xil Canvas xeshi turli saytlardagi harakatlarni bog‘laydi'},
     adv:{ru:'Включите защиту Canvas в настройках или расширениях',en:'Enable Canvas protection in settings or via extensions',uz:'Canvas himoyasini brauzer sozlamalarida yoki kengaytmada yoqing'}
   },
   audio:{
-    risk:'high',
     label:{ru:'Аудио-отпечаток',en:'Audio fingerprint',uz:'Audio izi'},
     use:{ru:'Звук генерируется и превращается в хеш, по нему вас узнают',en:'The browser generates a tone and turns it into a hash to recognise you',uz:'Brauzer tovush yaratib, xeshga aylantiradi va shu orqali sizi taniydi'},
     ex:{ru:'Совпадающий аудио-хеш означает ту же систему и настройки',en:'A matching audio hash points to the same system and settings',uz:'Bir xil audio xesh bir xil tizim va sozlamalarni ko‘rsatadi'},
     adv:{ru:'Включите аудиозащиту или используйте расширения с рандомизацией',en:'Enable audio protections or use extensions that randomise it',uz:'Audio himoyasini yoqing yoki tasodiflashtiruvchi kengaytmadan foydalaning'}
   },
   perm:{
-    risk:'med',
     label:{ru:'Разрешения',en:'Permissions',uz:'Ruxsatlar'},
     use:{ru:'Сайты видят, какие функции разрешены без дополнительных вопросов',en:'Sites see which features are already allowed without asking again',uz:'Saytlar qaysi funksiyalar qo‘shimcha so‘rovsiz ruxsat berilganini biladi'},
     ex:{ru:'Если камера разрешена, сайт сможет включить её сразу',en:'If the camera is allowed, a site can start it instantly',uz:'Kamera ruxsat etilgan bo‘lsa, sayt uni darhol yoqishi mumkin'},
     adv:{ru:'Периодически пересматривайте разрешения в настройках браузера',en:'Review permissions in your browser settings from time to time',uz:'Brauzer sozlamalarida ruxsatlarni vaqti-vaqti bilan ko‘rib chiqing'}
   },
   plugins:{
-    risk:'med',
     label:{ru:'Плагины',en:'Plugins',uz:'Plaginlar'},
     use:{ru:'Нестандартные плагины и расширения отличают ваш браузер от чужого',en:'Unusual plugins and extensions make your browser stand out',uz:'Noodatiy plaginlar va kengaytmalar brauzeringizni boshqalardan ajratib turadi'},
     ex:{ru:'Например, криптокошелёк или узкий корпоративный плагин сразу заметны',en:'For example, a crypto wallet or corporate plugin is easy to spot',uz:'Masalan, kripto hamyon yoki korporativ plagin darhol seziladi'},
     adv:{ru:'Удаляйте или отключайте то, чем не пользуетесь каждый день',en:'Remove or disable anything you do not use daily',uz:'Har kuni ishlatmaydigan plaginlarni olib tashlang yoki o‘chirib qo‘ying'}
   },
   media:{
-    risk:'med',
     label:{ru:'Медиа-устройства',en:'Media devices',uz:'Media qurilmalari'},
     use:{ru:'Перечень камер и микрофонов показывает, домашний это ПК или рабочее место студии',en:'Listing cameras and microphones shows whether this is a home PC or a studio rig',uz:'Kamera va mikrofon ro‘yxati bu uy PK si yoki studiya uskunasi ekanini ko‘rsatadi'},
     ex:{ru:'Несколько камер и микрофонов выдают стриминговое оборудование',en:'Multiple cameras and mics hint at streaming gear',uz:'Bir nechta kamera va mikrofon striming uskunasini anglatadi'},
     adv:{ru:'Отключайте лишние устройства или используйте заглушки',en:'Disconnect unused devices or use hardware blockers',uz:'Keraksiz qurilmalarni uzib qo‘ying yoki himoya qopqoq ishlating'}
   },
   bat:{
-    risk:'low',
     label:{ru:'Батарея',en:'Battery',uz:'Batareya'},
     use:{ru:'Уровень заряда намекает на переносное устройство или работу от сети',en:'Charge level hints whether this is portable or plugged in',uz:'Zaryad darajasi bu qurilma portativmi yoki tarmoqqa ulanganini ko‘rsatadi'},
     ex:{ru:'Например, 15% без зарядки — вероятно смартфон в дороге',en:'For example, 15% with no charger likely means a phone on the go',uz:'Masalan, 15% va zaryadlanmayotgan bo‘lsa, bu yo‘lda ketayotgan telefon bo‘lishi mumkin'},
     adv:{ru:'Старайтесь держать заряд в безопасном диапазоне и не передавайте его чужим сайтам без необходимости',en:'Keep the battery in a safe range and avoid sharing it with unknown sites unnecessarily',uz:'Zaryadni xavfsiz darajada saqlang va keraksiz saytlar bilan bo‘lishmang'}
   },
   fontsExposure:{
-    risk:'med',
     label:{ru:'Сторонние шрифты',en:'Third-party fonts',uz:'Tashqi shriftlar'},
     use:{ru:'Редкие шрифты выдают корпоративные настройки или конкретные приложения',en:'Unusual fonts reveal corporate setups or niche apps',uz:'Noodatiy shriftlar maxsus sozlamalar yoki dasturlarni fosh qiladi'},
     ex:{ru:'Например, фирменные гарнитуры компании сразу выделяют ваш браузер',en:'For example, corporate brand fonts instantly single out your browser',uz:'Masalan, korporativ brend shriftlari brauzeringizni darhol ajratib ko‘rsatadi'},
     adv:{ru:'Храните редкие шрифты в отдельном профиле или отключайте их перед чувствительными задачами',en:'Keep rare fonts in a separate profile or disable them before sensitive work',uz:'Kam uchraydigan shriftlarni alohida profilga o‘tkazing yoki muhim ishlar oldidan o‘chirib qo‘ying'}
   },
   trackerExposure:{
-    risk:'high',
     label:{ru:'Трекеры и пиксели',en:'Trackers & pixels',uz:'Trekerlar va piksel kodlar'},
     use:{ru:'Сторонние счётчики и пиксели помогают сопоставлять ваши визиты',en:'External analytics and pixels link your visits across pages',uz:'Tashqi hisoblagichlar va piksellar tashriflaringizni bog‘laydi'},
     ex:{ru:'Например, один и тот же analytics-код увидит вас и на других сайтах',en:'For example, the same analytics tag recognises you on other sites',uz:'Masalan, bir xil analytics kodi sizni boshqa saytlarda ham taniydi'},
     adv:{ru:'Установите блокировщик трекеров и ограничьте сторонние скрипты на чувствительных сайтах',en:'Install a tracker blocker and limit third-party scripts on sensitive sites',uz:'Trekerlarni bloklovchi kengaytma o‘rnating va tashqi skriptlarni cheklang'}
   },
   resourceExposure:{
-    risk:'med',
     label:{ru:'Другие сторонние загрузки',en:'Other third-party loads',uz:'Boshqa tashqi yuklamalar'},
     use:{ru:'Список сторонних доменов показывает, кому ещё уходит ваш трафик',en:'Extra domains show where else your traffic flows',uz:'Qo‘shimcha domenlar trafigingiz yana qayerga ketayotganini ko‘rsatadi'},
     ex:{ru:'Например, CDN из другой страны может подсказать ваш регион или интересы',en:'For example, a foreign CDN may hint at your region or interests',uz:'Masalan, boshqa mamlakatdagi CDN sizning hududingiz yoki qiziqishlaringizni bildirishi mumkin'},
     adv:{ru:'Отключайте лишние расширения и используйте режимы с изоляцией, чтобы ограничить внешний обмен данными',en:'Disable unused extensions and use isolated modes to limit external data exchange',uz:'Keraksiz kengaytmalarni o‘chirib qo‘ying va maʼlumot almashinuvini cheklash uchun izolyatsiyalangan rejimlardan foydalaning'}
   },
   fullness:{
-    risk:'low',
     label:{ru:'Полнота профиля',en:'Profile completeness',uz:'Profil to‘liqligi'},
     use:{ru:'Показывает, сколько сигналов ваш браузер раскрыл сайтам',en:'Shows how many signals your browser has revealed',uz:'Brauzer saytga nechta signalni ochib berganini ko‘rsatadi'},
     ex:{ru:'Чем больше заполнено, тем легче построить точный портрет',en:'The fuller the profile, the easier it is to build an accurate portrait',uz:'Maʼlumot qancha ko‘p bo‘lsa, aniq profil tuzish shunchalik oson'},
     adv:{ru:'Ограничивайте доступ к лишним функциям и очищайте данные',en:'Limit access to unnecessary features and clear data regularly',uz:'Keraksiz funksiyalarni cheklang va maʼlumotlarni muntazam tozalang'}
   },
   fp:{
-    risk:'high',
     label:{ru:'Итоговый Fingerprint',en:'Final fingerprint',uz:'Yakuniy fingerprint'},
     use:{ru:'Хеш объединяет все сигналы в одну строку — по ней вас находят снова',en:'The hash combines every signal so a site can find you again',uz:'Hash barcha signallarni bitta satrga birlashtiradi va sayt sizni yana topadi'},
     ex:{ru:'Совпадающий отпечаток на другом сайте значит, что это та же система',en:'A matching fingerprint on another site means it is the same system',uz:'Boshqa saytda ham xuddi shu fingerprint chiqsa, bu aynan o‘sha tizim degani'},
@@ -2448,27 +2426,51 @@ async function detectIpAndSpeed(){
   render(currentLang);
 }
 
-function createCard(key,value,t){
+function resolveLocaleText(map,lang,fallback=''){
+  if(!map) return fallback;
+  const order=[];
+  if(lang) order.push(lang);
+  order.push('en','ru','uz');
+  const seen=new Set();
+  for(const code of order){
+    if(!code || seen.has(code)) continue;
+    seen.add(code);
+    const candidate=map?.[code];
+    if(typeof candidate==='string' && candidate.trim()){
+      return candidate;
+    }
+  }
+  const first=Object.values(map).find(val=>typeof val==='string' && val.trim());
+  return first||fallback;
+}
+
+function createCard(key,value,t,lang){
   const info=CARD_CONTENT[key];
   const card=document.createElement('div');
   card.className='card';
   const title=document.createElement('div');
   title.className='title';
-  title.textContent=info.label[currentLang];
+  title.textContent=resolveLocaleText(info?.label,lang,'');
   card.appendChild(title);
   const valueEl=document.createElement('div');
   valueEl.className='val';
   valueEl.textContent=value??'—';
   card.appendChild(valueEl);
-  const useEl=document.createElement('div');
-  useEl.className='line hint small';
-  useEl.textContent=info.use[currentLang];
-  card.appendChild(useEl);
-  const exampleEl=document.createElement('div');
-  exampleEl.className='line small';
-  exampleEl.textContent=`${t.examplePrefix} ${info.ex[currentLang]}`;
-  card.appendChild(exampleEl);
-  const advText=info.adv?.[currentLang];
+  const useText=resolveLocaleText(info?.use,lang,'');
+  if(useText && useText.trim()){
+    const useEl=document.createElement('div');
+    useEl.className='line hint small';
+    useEl.textContent=useText;
+    card.appendChild(useEl);
+  }
+  const exampleText=resolveLocaleText(info?.ex,lang,'');
+  if(exampleText && exampleText.trim()){
+    const exampleEl=document.createElement('div');
+    exampleEl.className='line small';
+    exampleEl.textContent=`${t.examplePrefix} ${exampleText}`;
+    card.appendChild(exampleEl);
+  }
+  const advText=resolveLocaleText(info?.adv,lang,'');
   if(advText && advText.trim()){
     const advEl=document.createElement('div');
     advEl.className='line adv small';
@@ -2479,12 +2481,12 @@ function createCard(key,value,t){
 }
 
 function addCard(frag,key,value,t){
-  const {card}=createCard(key,value,t);
+  const {card}=createCard(key,value,t,currentLang);
   frag.appendChild(card);
 }
 
 function addHashCard(frag,key,value,t){
-  const {card,valueEl}=createCard(key,value||'—',t);
+  const {card,valueEl}=createCard(key,value||'—',t,currentLang);
   if(value){
     valueEl.classList.add('mono','copyable');
     valueEl.title=t.copy.hint;
@@ -2787,15 +2789,7 @@ async function collectExposureData(basic){
   return {
     fonts:Array.from(fonts),
     trackers:Array.from(trackers),
-    resources:Array.from(resources),
-    plugins:Array.isArray(basic.plugins)?basic.plugins.slice():[],
-    media:Array.isArray(basic.media)?basic.media.slice():[],
-    storage:{
-      local:basic.storage?.local,
-      session:basic.storage?.session,
-      idb:basic.storage?.indexedDB,
-      cookies:basic.cookiesEnabled
-    }
+    resources:Array.from(resources)
   };
 }
 
