@@ -693,6 +693,8 @@ sandbox.window.clearTimeout = clearTimeout;
 vm.createContext(sandbox);
 vm.runInContext(script, sandbox, { filename: 'index-inline.js' });
 const stateRef = vm.runInContext('state', sandbox);
+const invalidateSnapshot = vm.runInContext('invalidateSnapshot', sandbox);
+const I18N = vm.runInContext('I18N', sandbox);
 
 (async () => {
   const profilerModule = await import(new URL('./src/profiler.js', `file://${__dirname}/`).href);
@@ -749,11 +751,48 @@ const stateRef = vm.runInContext('state', sandbox);
   const svg = sandbox.createShareCardSvg({ pct: 56, headline: 'Test headline', note: 'Note', tagline: 'Tag', url: 'https://example.com' }, { share: { tagline: 'Preview tag' } });
   assert.ok(svg.includes('<svg'));
 
+  const baseKeys = Object.keys(I18N.ru);
+  for (const [lang, dict] of Object.entries(I18N)) {
+    const missing = baseKeys.filter(key => !(key in dict));
+    assert.deepEqual(missing, [], `Missing localization keys for ${lang}`);
+  }
+
   if (typeof documentStub._domReady === 'function') {
     await documentStub._domReady();
   }
-  await sandbox.render('ru');
+  invalidateSnapshot();
+  const shareBtnEl = elements.get('shareBtn');
+  const initialRender = sandbox.render('ru');
+  assert.equal(shareBtnEl.dataset.ready, '0');
+  assert.equal(shareBtnEl.getAttribute('aria-disabled'), 'true');
+  await initialRender;
   await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(shareBtnEl.dataset.ready, '1');
+  assert.equal(shareBtnEl.getAttribute('aria-disabled'), null);
+  const langBtnEl = elements.get('langBtn');
+  assert.equal(langBtnEl.textContent, 'Язык');
+  const themeBtnEl = elements.get('themeToggle');
+  assert.ok(themeBtnEl.textContent.includes('Тема'));
+  vm.runInContext('cycleThemePreference()', sandbox);
+  vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
+  assert.ok(documentElement.classList.contains('force-light'));
+  assert.ok(themeBtnEl.textContent.includes('Светлая'));
+  vm.runInContext('cycleThemePreference()', sandbox);
+  vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
+  assert.ok(documentElement.classList.contains('force-dark'));
+  assert.ok(!documentElement.classList.contains('force-light'));
+  vm.runInContext('cycleThemePreference()', sandbox);
+  vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
+  assert.ok(!documentElement.classList.contains('force-dark'));
+
+  const savedSharePayload = stateRef.sharePayload;
+  shareBtnEl.textContent = shareBtnEl.dataset.label;
+  stateRef.sharePayload = null;
+  await sandbox.handleShareClick();
+  assert.equal(shareBtnEl.textContent, I18N.ru.share.unavailable);
+  stateRef.sharePayload = savedSharePayload;
+  shareBtnEl.textContent = shareBtnEl.dataset.label;
+
   const profilingSection = elements.get('profilingBlock');
   assert.equal(profilingSection.style.display, 'block');
   const profilingIntroEl = elements.get('profilingIntro');
@@ -772,6 +811,16 @@ const stateRef = vm.runInContext('state', sandbox);
   assert.equal(sharePayloads.length, 1);
   await sandbox.handleSaveClick();
   assert.ok(printed || downloads.length > 0);
+  await sandbox.render('en');
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(documentElement.lang, 'en');
+  assert.ok(elements.get('introTitle').textContent.length > 0);
+  assert.ok(elements.get('langBtn').textContent.includes('Language'));
+  await sandbox.render('uz');
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(documentElement.lang, 'uz');
+  assert.ok(elements.get('introTitle').textContent.length > 0);
+  assert.ok(elements.get('langBtn').textContent.includes('Til'));
   await sandbox.detectIpAndSpeed();
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));
