@@ -4,12 +4,27 @@ const assert = require('node:assert/strict');
 const { performance } = require('node:perf_hooks');
 const { webcrypto } = require('node:crypto');
 
+function assertNoMergeMarkers(text, label) {
+  const patterns = [
+    /^<<<<<<< /m,
+    /^=======$/m,
+    /^>>>>>>> /m
+  ];
+  patterns.forEach(pattern => {
+    if (pattern.test(text)) {
+      throw new Error(`Merge conflict marker ${pattern.source} found in ${label}`);
+    }
+  });
+}
+
 const html = fs.readFileSync('index.html', 'utf8');
+assertNoMergeMarkers(html, 'index.html');
 const match = html.match(/<script>([\s\S]*)<\/script>/);
 if (!match) {
   throw new Error('Failed to extract inline script');
 }
 const script = match[1];
+assertNoMergeMarkers(script, 'inline script');
 
 class Element {
   constructor(id = null, tagName = 'div') {
