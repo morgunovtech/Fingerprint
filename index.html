@@ -37,13 +37,16 @@
     h1{font-size:22px;margin:0}
     .sub{color:var(--muted);font-size:14px}
     .toolbar{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap}
-    .lang-switcher{position:relative}
-    .lang-switcher button{white-space:nowrap}
-    .lang-menu{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:4px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:var(--shadow);min-width:120px;z-index:10}
-    .lang-menu button{border:1px solid var(--border);background:transparent;color:var(--text);padding:6px 10px;border-radius:8px;font:inherit;cursor:pointer;display:flex;justify-content:center;align-items:center}
-    .lang-menu button:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
-    .lang-menu button.active{border-color:var(--accent);color:var(--accent);background-color:rgba(96,165,250,0.12)}
+    .menu{position:relative}
+    .menu button{white-space:nowrap}
+    .menu-panel{position:absolute;right:0;top:calc(100% + 6px);display:flex;flex-direction:column;gap:4px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);box-shadow:var(--shadow);min-width:120px;z-index:10}
+    .menu-panel button{border:1px solid var(--border);background:transparent;color:var(--text);padding:6px 10px;border-radius:8px;font:inherit;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:6px}
+    .menu-panel button:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
+    .menu-panel button.active{border-color:var(--accent);color:var(--accent);background-color:rgba(96,165,250,0.12)}
+    .menu-panel button .menu-icon{font-size:16px}
     .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
+    .section-title{font-weight:700;font-size:18px;margin:0 0 8px}
+    .section-subtitle{font-weight:600;margin:12px 0 6px}
     .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:4px}
     .big[data-level="high"]{color:#ef4444}
     .big[data-level="med"]{color:#f59e0b}
@@ -55,8 +58,10 @@
     #introText p:last-child{margin-bottom:0}
     #uniqExample{margin:4px 0 0;color:var(--muted)}
     #uniqAdviceTitle{margin-top:10px;font-weight:600}
-    .advice-list{list-style:none;margin:6px 0 0;padding:0}
-    .advice-list li{margin:4px 0;padding-left:0}
+    .advice-list{list-style:disc;margin:6px 0 0 18px;padding:0}
+    .advice-list li{margin:4px 0;padding-left:4px}
+    .advice-list.emoji-list{list-style:none;margin-left:0;padding-left:0}
+    .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
@@ -72,16 +77,18 @@
     @media (max-width:920px){ .cards{grid-template-columns:1fr} }
     a{color:var(--accent);text-decoration:none}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s,text-decoration-color .2s;text-align:center}
+    .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s,text-decoration-color .2s;text-align:center;gap:6px}
+    .btn .btn-text{display:inline-flex;align-items:center}
     .btn:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     .btn:disabled{opacity:.55;cursor:not-allowed}
     .btn[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
-    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;box-shadow:0 10px 30px rgba(96,165,250,.25)}
-    .btn-primary:hover{background:var(--accent);color:#fff;filter:brightness(.95)}
-    .btn-primary:disabled{box-shadow:none}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#ec4899);color:#fff;border:none;font-weight:600;box-shadow:0 12px 32px rgba(99,102,241,.25)}
+    .btn-primary:hover{filter:brightness(.95);color:#fff}
+    .btn-primary:disabled{box-shadow:none;filter:none}
+    .btn-primary[aria-disabled="true"]{box-shadow:none;filter:none}
     .shock-actions{margin-bottom:10px}
-    #shockList{list-style:none;margin:6px 0 0;padding:0}
+    #shockList{margin:6px 0 0;padding:0}
     #shockList li{margin:4px 0}
     details{margin-top:8px}
     @media (max-width:720px){
@@ -104,21 +111,28 @@
   <header>
     <h1>Fingerprint</h1><span class="sub">by morgunov.tech</span>
     <div class="toolbar">
-      <div class="lang-switcher">
+      <div class="lang-switcher menu">
         <button class="btn" id="langBtn" aria-haspopup="true" aria-expanded="false">Язык</button>
-        <div class="lang-menu" id="langMenu" hidden>
+        <div class="menu-panel" id="langMenu" hidden>
           <button type="button" data-lang="ru" aria-label="Русский">🇷🇺</button>
           <button type="button" data-lang="en" aria-label="English">🇬🇧</button>
           <button type="button" data-lang="uz" aria-label="Oʻzbekcha">🇺🇿</button>
         </div>
       </div>
-      <button class="btn" id="themeToggle" type="button"></button>
+      <div class="theme-switcher menu">
+        <button class="btn" id="themeBtn" type="button" aria-haspopup="true" aria-expanded="false"><span class="menu-icon" aria-hidden="true">🌓</span><span class="btn-text">Тема</span></button>
+        <div class="menu-panel" id="themeMenu" hidden>
+          <button type="button" data-theme="auto" aria-label="Auto"><span class="menu-icon" aria-hidden="true">🌓</span></button>
+          <button type="button" data-theme="light" aria-label="Light"><span class="menu-icon" aria-hidden="true">☀️</span></button>
+          <button type="button" data-theme="dark" aria-label="Dark"><span class="menu-icon" aria-hidden="true">🌙</span></button>
+        </div>
+      </div>
     </div>
   </header>
 
   <!-- Block 1: Intro -->
   <section class="block">
-    <div id="introTitle" style="font-weight:700;margin-bottom:6px"></div>
+    <div id="introTitle" class="section-title"></div>
     <div id="introText" class="small"></div>
   </section>
 
@@ -126,33 +140,31 @@
   <section class="block">
     <div id="uniqLine" class="big"></div>
     <div id="uniqExample" class="small"></div>
-    <div id="uniqMeaningTitle" class="small" style="font-weight:600"></div>
+    <div id="uniqMeaningTitle" class="section-subtitle small"></div>
     <ul id="uniqMeaningList" class="advice-list small"></ul>
-    <div id="uniqAdviceTitle" class="small"></div>
+    <div id="uniqAdviceTitle" class="section-subtitle small"></div>
     <ul id="uniqAdvice" class="advice-list small"></ul>
     <div id="shock" class="danger" style="display:none">
       <div class="row shock-actions" id="ipActionRow">
-        <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn" id="printBtn"></button>
         <button class="btn" id="ipBtn"></button>
+        <button class="btn btn-primary" id="shareBtn"></button>
       </div>
-      <div class="small" id="shockTitle"></div>
-      <ul id="shockList"></ul>
+      <div class="section-subtitle" id="shockTitle"></div>
+      <ul id="shockList" class="advice-list small emoji-list"></ul>
+      <div id="profilingGroup" style="margin-top:12px" hidden>
+        <div id="profilingTitle" class="section-subtitle"></div>
+        <div id="profilingIntro" class="small"></div>
+        <ul id="profilingList" class="advice-list small"></ul>
+      </div>
       <div id="ipInfo" class="small" style="margin-top:10px"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
   </section>
 
-  <!-- Block 3: Профайлинг -->
-  <section class="block" id="profilingBlock" style="display:none">
-    <div id="profilingTitle" style="font-weight:700;margin-bottom:6px"></div>
-    <div id="profilingIntro" class="small"></div>
-    <ul id="profilingList" class="advice-list small"></ul>
-  </section>
-
   <!-- Block 4: Detailed cards -->
   <section class="block">
-    <div id="detailTitle" style="font-weight:700;margin-bottom:6px"></div>
+    <div id="detailTitle" class="section-title"></div>
     <div class="cards" id="cards"></div>
   </section>
 
@@ -187,7 +199,7 @@ const I18N = {
       'Объясняем, насколько уникален ваш «цифровой отпечаток» — набор параметров, по которым сайты узнают устройство без аккаунта.',
       'Рассказываем человеческим языком, какие риски несут эти сигналы и как ими управлять.',
       'Все вычисления выполняются локально: мы ничего не отправляем и не храним, регистрация не нужна.',
-      'Отдельная кнопка «Определить скорость интернета и IP-адрес» измерит соединение и покажет, что раскрывает ваш IP, включая оценку VPN.'
+      'Отдельная кнопка «Определить IP и уточнить данные» измерит соединение и покажет, что раскрывает ваш IP, включая оценку VPN.'
     ],
     uniqMeaningTitle:'Что это значит:',
     uniqMeaning:(pct,{level}={})=>{
@@ -251,23 +263,55 @@ const I18N = {
     detailTitle:'Какие данные видит сайт',
     shockTitle:'Что уже видно без IP:',
     shock:{
-      region:city=>`🗺️ <b>Местоположение по признакам:</b> ${city}`,
-      tzFallback:tz=>`🗺️ <b>Часовой пояс:</b> похоже на ${tz}`,
-      device:(device,os)=>`💻 <b>Устройство:</b> ${device}, система ${os}`,
-      gpuKnown:chip=>`🎮 <b>Графика:</b> ${chip}`,
+      region:city=>`🗺️ <b>Местоположение по признакам:</b> ${pillOr(city)}`,
+      tzFallback:tz=>`🗺️ <b>Часовой пояс:</b> ${pillOr(tz)}`,
+      device:(device,os)=>{
+        const parts=[pillOr(device)];
+        if(os) parts.push(pillOr(os));
+        return `💻 <b>Устройство:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      gpuKnown:chip=>`🎮 <b>Графика:</b> ${pillOr(chip)}`,
       gpuUnknown:'🎮 <b>Графика:</b> браузер не раскрывает точную модель',
       canvasActive:'🎯 <b>Хеши canvas/audio активны</b> — вас можно сопоставить между сайтами',
       canvasPassive:'🎯 <b>Хеши canvas/audio</b> могут помочь сопоставлять визиты',
-      browser:browser=>`🌐 <b>Браузер:</b> ${browser}`,
-      screen:(screen,depth,monitorsText)=>`🖥️ <b>Экран:</b> ${screen}, глубина цвета ${depth}-бит${monitorsText?` • ${monitorsText}`:''}`,
-      perms:perms=>`🔐 <b>Разрешения:</b> ${perms}`,
-      languages:list=>`🌍 <b>Языки интерфейса:</b> ${list}`,
-      storage:text=>`💾 <b>Хранилища:</b> ${text}`,
-      touch:(points,pointer)=>`🖐️ <b>Способы управления:</b> касаний ${points}, указатель ${pointer}`,
-      network:(type,downlink,rtt)=>`📶 <b>Тип сети:</b> ${type}${downlink?` • ~${downlink} Мбит/с`:''}${rtt?` • задержка ${rtt} мс`:''}`,
-      dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${status}`,
-      vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
-      speed:value=>`⚡ <b>Скорость сети:</b> ${value}`
+      browser:browser=>`🌐 <b>Браузер:</b> ${pillOr(browser)}`,
+      screen:(screen,depth,monitorsText)=>{
+        const parts=[pillOr(screen)];
+        if(depth) parts.push(pillValue(`глубина ${depth}-бит`));
+        if(monitorsText) parts.push(pillValue(monitorsText));
+        return `🖥️ <b>Экран:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      perms:perms=>`🔐 <b>Разрешения:</b> ${pillOr(perms)}`,
+      languages:list=>{
+        if(!list) return `🌍 <b>Языки интерфейса:</b> ${pillOr('—')}`;
+        const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
+        return `🌍 <b>Языки интерфейса:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      storage:text=>{
+        if(!text) return `💾 <b>Хранилища:</b> ${pillOr('—')}`;
+        const parts=text.split(/,\s*/).map(pillValue).filter(Boolean);
+        return `💾 <b>Хранилища:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      touch:(points,pointer)=>{
+        const values=[];
+        if(points!=null) values.push(`${points} касаний`);
+        if(pointer) values.push(`указатель: ${pointer}`);
+        return `🖐️ <b>Способы управления:</b> ${values.length?pillList(values):pillOr('—')}`;
+      },
+      network:(type,downlink,rtt)=>{
+        const parts=[];
+        if(type&&type!=='—') parts.push(type);
+        if(downlink!=null) parts.push(`~${downlink} Мбит/с`);
+        if(rtt!=null) parts.push(`задержка ${rtt} мс`);
+        return `📶 <b>Подключение:</b> ${parts.length?pillList(parts):pillOr('—')}`;
+      },
+      dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${pillOr(status)}`,
+      vpn:(status,reasons)=>{
+        const parts=[pillOr(status)];
+        if(reasons) parts.push(pillValue(reasons));
+        return `🕵️ <b>VPN:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      speed:value=>`⚡ <b>Скорость сети:</b> ${pillOr(value)}`
     },
     profiling:{
       title:'Профайлинг',
@@ -446,7 +490,7 @@ const I18N = {
       }
     },
     ip:{
-      button:'Определить IP и измерить скорость',
+      button:'Определить IP и уточнить данные',
       buttonLoading:'Определяем…',
       title:'Данные IP',
       none:'IP ещё не определён.',
@@ -542,7 +586,7 @@ const I18N = {
       'Explains how unique your “digital fingerprint” is — the combination of signals that lets sites recognise your device without an account.',
       'Breaks down the risks behind those signals and turns them into practical guidance.',
       'Everything runs locally in your browser: nothing is sent or stored, no account required.',
-      'The “Detect IP & run speed test” button measures your connection and reveals what your IP discloses, including our VPN guess.'
+      'The “Detect IP & refine data” button measures your connection and reveals what your IP discloses, including our VPN hypothesis.'
     ],
     uniqMeaningTitle:'What it means:',
     uniqMeaning:(pct,{level}={})=>{
@@ -606,23 +650,55 @@ const I18N = {
     detailTitle:'What a site can learn',
     shockTitle:'Already visible without IP:',
     shock:{
-      region:city=>`🗺️ <b>Approximate location:</b> ${city}`,
-      tzFallback:tz=>`🗺️ <b>Time zone hint:</b> looks like ${tz}`,
-      device:(device,os)=>`💻 <b>Device:</b> ${device}, system ${os}`,
-      gpuKnown:chip=>`🎮 <b>Graphics:</b> ${chip}`,
+      region:city=>`🗺️ <b>Approximate location:</b> ${pillOr(city)}`,
+      tzFallback:tz=>`🗺️ <b>Time zone hint:</b> ${pillOr(tz)}`,
+      device:(device,os)=>{
+        const parts=[pillOr(device)];
+        if(os) parts.push(pillOr(os));
+        return `💻 <b>Device:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      gpuKnown:chip=>`🎮 <b>Graphics:</b> ${pillOr(chip)}`,
       gpuUnknown:'🎮 <b>Graphics:</b> the browser hides the exact model',
       canvasActive:'🎯 <b>Canvas/audio hashes are active</b> — visits can be linked',
       canvasPassive:'🎯 <b>Canvas/audio hashes</b> may link visits',
-      browser:browser=>`🌐 <b>Browser:</b> ${browser}`,
-      screen:(screen,depth,monitorsText)=>`🖥️ <b>Screen:</b> ${screen}, colour depth ${depth}-bit${monitorsText?` • ${monitorsText}`:''}`,
-      perms:perms=>`🔐 <b>Permissions:</b> ${perms}`,
-      languages:list=>`🌍 <b>Interface languages:</b> ${list}`,
-      storage:text=>`💾 <b>Storage:</b> ${text}`,
-      touch:(points,pointer)=>`🖐️ <b>Input methods:</b> ${points} touch points, pointer ${pointer}`,
-      network:(type,downlink,rtt)=>`📶 <b>Connection type:</b> ${type}${downlink?` • ~${downlink} Mbps`:''}${rtt?` • latency ${rtt} ms`:''}`,
-      dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${status}`,
-      vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
-      speed:value=>`⚡ <b>Connection speed:</b> ${value}`
+      browser:browser=>`🌐 <b>Browser:</b> ${pillOr(browser)}`,
+      screen:(screen,depth,monitorsText)=>{
+        const parts=[pillOr(screen)];
+        if(depth) parts.push(pillValue(`colour depth ${depth}-bit`));
+        if(monitorsText) parts.push(pillValue(monitorsText));
+        return `🖥️ <b>Screen:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      perms:perms=>`🔐 <b>Permissions:</b> ${pillOr(perms)}`,
+      languages:list=>{
+        if(!list) return `🌍 <b>Interface languages:</b> ${pillOr('—')}`;
+        const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
+        return `🌍 <b>Interface languages:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      storage:text=>{
+        if(!text) return `💾 <b>Storage:</b> ${pillOr('—')}`;
+        const parts=text.split(/,\s*/).map(pillValue).filter(Boolean);
+        return `💾 <b>Storage:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      touch:(points,pointer)=>{
+        const values=[];
+        if(points!=null) values.push(`${points} touch points`);
+        if(pointer) values.push(`pointer: ${pointer}`);
+        return `🖐️ <b>Input methods:</b> ${values.length?pillList(values):pillOr('—')}`;
+      },
+      network:(type,downlink,rtt)=>{
+        const parts=[];
+        if(type&&type!=='—') parts.push(type);
+        if(downlink!=null) parts.push(`~${downlink} Mbps`);
+        if(rtt!=null) parts.push(`latency ${rtt} ms`);
+        return `📶 <b>Connection:</b> ${parts.length?pillList(parts):pillOr('—')}`;
+      },
+      dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${pillOr(status)}`,
+      vpn:(status,reasons)=>{
+        const parts=[pillOr(status)];
+        if(reasons) parts.push(pillValue(reasons));
+        return `🕵️ <b>VPN:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      speed:value=>`⚡ <b>Connection speed:</b> ${pillOr(value)}`
     },
     profiling:{
       title:'Profiling',
@@ -773,7 +849,7 @@ const I18N = {
       }
     },
     ip:{
-      button:'Detect IP & run speed test',
+      button:'Detect IP & refine data',
       buttonLoading:'Working…',
       title:'IP details',
       none:'IP has not been detected yet.',
@@ -869,7 +945,7 @@ const I18N = {
       '“Raqamli barmoq izi” — akkauntsiz ham qurilmangizni tanitadigan signallar to‘plami — qanchalik noyobligini tushuntiramiz.',
       'Bu signallar qanday xavf tug‘dirishini va nima qilish kerakligini aniq tavsiyalar bilan yetkazamiz.',
       'Hisob-kitoblar to‘liq brauzeringizda bajariladi: hech narsa yuborilmaydi, saqlanmaydi va ro‘yxatdan o‘tish talab etilmaydi.',
-      '“IP manzil va tezlikni aniqlash” tugmasi internet tezligini o‘lchab, IP orqali ko‘rinadigan maʼlumotlarni va VPN taxminini ko‘rsatadi.'
+      '“IPni aniqlash va maʼlumotlarni aniqlashtirish” tugmasi internet tezligini o‘lchab, IP orqali ko‘rinadigan maʼlumotlarni va VPN taxminini ko‘rsatadi.'
     ],
     uniqMeaningTitle:'Bu nimani anglatadi:',
     uniqMeaning:(pct,{level}={})=>{
@@ -933,23 +1009,55 @@ const I18N = {
     detailTitle:'Sayt nimalarni ko‘rishi mumkin',
     shockTitle:'IP so‘ralmasdan ko‘rinadiganlar:',
     shock:{
-      region:city=>`🗺️ <b>Taxminiy joylashuv:</b> ${city}`,
-      tzFallback:tz=>`🗺️ <b>Vaqt mintaqasi:</b> ${tz} ga o‘xshaydi`,
-      device:(device,os)=>`💻 <b>Qurilma:</b> ${device}, tizim ${os}`,
-      gpuKnown:chip=>`🎮 <b>Grafika:</b> ${chip}`,
+      region:city=>`🗺️ <b>Taxminiy joylashuv:</b> ${pillOr(city)}`,
+      tzFallback:tz=>`🗺️ <b>Vaqt mintaqasi:</b> ${pillOr(tz)}`,
+      device:(device,os)=>{
+        const parts=[pillOr(device)];
+        if(os) parts.push(pillOr(os));
+        return `💻 <b>Qurilma:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      gpuKnown:chip=>`🎮 <b>Grafika:</b> ${pillOr(chip)}`,
       gpuUnknown:'🎮 <b>Grafika:</b> brauzer aniq modelni bermadi',
       canvasActive:'🎯 <b>Canvas/audio xeshlari yoqilgan</b> — tashriflarni bog‘lash mumkin',
       canvasPassive:'🎯 <b>Canvas/audio xeshlari</b> tashriflarni bog‘lashi mumkin',
-      browser:browser=>`🌐 <b>Brauzer:</b> ${browser}`,
-      screen:(screen,depth,monitorsText)=>`🖥️ <b>Ekran:</b> ${screen}, rang chuqurligi ${depth}-bit${monitorsText?` • ${monitorsText}`:''}`,
-      perms:perms=>`🔐 <b>Ruxsatlar:</b> ${perms}`,
-      languages:list=>`🌍 <b>Interfeys tillari:</b> ${list}`,
-      storage:text=>`💾 <b>Saqlash:</b> ${text}`,
-      touch:(points,pointer)=>`🖐️ <b>Boshqaruv usullari:</b> sensor nuqtalari ${points}, ko‘rsatkich ${pointer}`,
-      network:(type,downlink,rtt)=>`📶 <b>Aloqa turi:</b> ${type}${downlink?` • ~${downlink} Mbit/s`:''}${rtt?` • kechikish ${rtt} ms`:''}`,
-      dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${status}`,
-      vpn:(status,reasons)=>`🕵️ <b>VPN:</b> ${status}${reasons?` (${reasons})`:''}`,
-      speed:value=>`⚡ <b>Internet tezligi:</b> ${value}`
+      browser:browser=>`🌐 <b>Brauzer:</b> ${pillOr(browser)}`,
+      screen:(screen,depth,monitorsText)=>{
+        const parts=[pillOr(screen)];
+        if(depth) parts.push(pillValue(`rang chuqurligi ${depth}-bit`));
+        if(monitorsText) parts.push(pillValue(monitorsText));
+        return `🖥️ <b>Ekran:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      perms:perms=>`🔐 <b>Ruxsatlar:</b> ${pillOr(perms)}`,
+      languages:list=>{
+        if(!list) return `🌍 <b>Interfeys tillari:</b> ${pillOr('—')}`;
+        const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
+        return `🌍 <b>Interfeys tillari:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      storage:text=>{
+        if(!text) return `💾 <b>Saqlash:</b> ${pillOr('—')}`;
+        const parts=text.split(/,\s*/).map(pillValue).filter(Boolean);
+        return `💾 <b>Saqlash:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      touch:(points,pointer)=>{
+        const values=[];
+        if(points!=null) values.push(`${points} ta sensor nuqtasi`);
+        if(pointer) values.push(`ko‘rsatkich: ${pointer}`);
+        return `🖐️ <b>Boshqaruv usullari:</b> ${values.length?pillList(values):pillOr('—')}`;
+      },
+      network:(type,downlink,rtt)=>{
+        const parts=[];
+        if(type&&type!=='—') parts.push(type);
+        if(downlink!=null) parts.push(`~${downlink} Mbit/s`);
+        if(rtt!=null) parts.push(`kechikish ${rtt} ms`);
+        return `📶 <b>Aloqa:</b> ${parts.length?pillList(parts):pillOr('—')}`;
+      },
+      dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${pillOr(status)}`,
+      vpn:(status,reasons)=>{
+        const parts=[pillOr(status)];
+        if(reasons) parts.push(pillValue(reasons));
+        return `🕵️ <b>VPN:</b> ${parts.filter(Boolean).join(' ')}`;
+      },
+      speed:value=>`⚡ <b>Internet tezligi:</b> ${pillOr(value)}`
     },
     profiling:{
       title:'Profiling',
@@ -1125,7 +1233,7 @@ const I18N = {
       }
     },
     ip:{
-      button:'IP aniqlash va tezlikni o‘lchash',
+      button:'IPni aniqlash va maʼlumotlarni aniqlashtirish',
       buttonLoading:'Aniqlanmoqda…',
       title:'IP maʼlumotlari',
       none:'IP hali aniqlanmagan.',
@@ -1891,6 +1999,22 @@ function escapeHtml(str){
   })[ch]);
 }
 
+function pillValue(value){
+  if(value==null) return '';
+  const str=String(value).trim();
+  if(!str) return '';
+  if(str.includes('<span class="pill">')) return str;
+  return `<span class="pill">${escapeHtml(str)}</span>`;
+}
+
+function pillList(values){
+  return values.map(pillValue).filter(Boolean).join(' ');
+}
+
+function pillOr(value,fallback='—'){
+  return pillValue(value)||pillValue(fallback);
+}
+
 const state={
   serverData:null,
   ipError:null,
@@ -1904,8 +2028,11 @@ let snapshotPromise=null;
 function invalidateSnapshot(){snapshotCache=null;snapshotPromise=null;state.sharePayload=null;}
 const THEME_KEY='fp_theme';
 const THEME_ORDER=['auto','light','dark'];
+const THEME_ICONS={auto:'🌓',light:'☀️',dark:'🌙'};
 let themePreference='auto';
 let langMenuIsOpen=false;
+let themeMenuIsOpen=false;
+let shockBulletCount=0;
 
 function loadThemePreference(){
   try{
@@ -1926,27 +2053,39 @@ function applyThemePreference(mode){
   }catch(_){/* ignore */}
 }
 
-function cycleThemePreference(){
-  const idx=THEME_ORDER.indexOf(themePreference);
-  const next=THEME_ORDER[(idx+1+THEME_ORDER.length)%THEME_ORDER.length];
-  applyThemePreference(next);
-}
-
 function updateThemeButton(t){
-  const btn=getEl('themeToggle');
+  const btn=getEl('themeBtn');
   if(!btn) return;
   const map=t.theme?.modes||{};
   const fallback={auto:'Auto',light:'Light',dark:'Dark'};
   const label=map[themePreference]||fallback[themePreference]||'Auto';
   const prefix=t.theme?.label||'Theme';
-  btn.textContent=`${prefix}: ${label}`;
+  const icon=THEME_ICONS[themePreference]||THEME_ICONS.auto;
+  btn.innerHTML=`<span class="menu-icon" aria-hidden="true">${icon}</span><span class="btn-text">${prefix}</span>`;
   btn.setAttribute('aria-label',`${prefix}: ${label}`);
+  const menu=getEl('themeMenu');
+  if(menu){
+    menu.querySelectorAll('button[data-theme]').forEach(item=>{
+      const value=item.dataset.theme||'';
+      const itemLabel=map[value]||fallback[value]||value;
+      item.setAttribute('aria-label',itemLabel);
+      item.classList.toggle('active',value===themePreference);
+    });
+  }
 }
 
 function setLangMenu(open){
   langMenuIsOpen=open;
   const btn=getEl('langBtn');
   const menu=getEl('langMenu');
+  if(btn) btn.setAttribute('aria-expanded',String(open));
+  if(menu) menu.hidden=!open;
+}
+
+function setThemeMenu(open){
+  themeMenuIsOpen=open;
+  const btn=getEl('themeBtn');
+  const menu=getEl('themeMenu');
   if(btn) btn.setAttribute('aria-expanded',String(open));
   if(menu) menu.hidden=!open;
 }
@@ -2891,9 +3030,18 @@ function ensureProfilerIntro(cfg,introEl){
   });
 }
 
+function syncShockVisibility(){
+  const shock=getEl('shock');
+  if(!shock) return;
+  const profilingGroup=getEl('profilingGroup');
+  const profilingVisible=Boolean(profilingGroup)&&!profilingGroup.hidden;
+  const show=shockBulletCount>0||profilingVisible;
+  shock.style.display=show?'block':'none';
+}
+
 async function renderProfilingSection(basic,t){
-  const section=getEl('profilingBlock');
-  if(!section) return;
+  const group=getEl('profilingGroup');
+  if(!group) return;
   const cfg=t.profiling||{};
   const titleEl=getEl('profilingTitle');
   if(titleEl) titleEl.textContent=cfg.title||'Profiling';
@@ -2913,7 +3061,8 @@ async function renderProfilingSection(basic,t){
         introEl.appendChild(p);
       }
     }
-    section.style.display='block';
+    group.hidden=false;
+    syncShockVisibility();
     return;
   }
   try{
@@ -2945,10 +3094,12 @@ async function renderProfilingSection(basic,t){
         li.textContent=cfg.none;
         listEl.appendChild(li);
         listEl.style.display='block';
-        section.style.display='block';
+        group.hidden=false;
+        syncShockVisibility();
       }else{
         listEl.style.display='none';
-        section.style.display=introEl && introEl.childElementCount?'block':'none';
+        group.hidden=!(introEl && introEl.childElementCount);
+        syncShockVisibility();
       }
       return;
     }
@@ -3009,7 +3160,8 @@ async function renderProfilingSection(basic,t){
     }else{
       listEl.style.display='none';
     }
-    section.style.display='block';
+    group.hidden=false;
+    syncShockVisibility();
   }catch(err){
     if(runId!==profilingSequence) return;
     if(listEl){
@@ -3023,7 +3175,8 @@ async function renderProfilingSection(basic,t){
       listEl.appendChild(li);
       listEl.style.display='block';
     }
-    section.style.display='block';
+    group.hidden=false;
+    syncShockVisibility();
   }
 }
 
@@ -3053,6 +3206,7 @@ async function render(lang){
   }
   updateThemeButton(t);
   setLangMenu(langMenuIsOpen);
+  setThemeMenu(themeMenuIsOpen);
   const shareBtn=getEl('shareBtn');
   if(shareBtn){
     shareBtn.textContent=t.shareButton;
@@ -3195,7 +3349,8 @@ async function render(lang){
     const ul=getEl('shockList');
     ul.innerHTML='';
     bullets.forEach(text=>{const li=document.createElement('li');li.innerHTML=text;ul.appendChild(li);});
-    shock.style.display=bullets.length?'block':'none';
+    shockBulletCount=bullets.length;
+    syncShockVisibility();
 
     const shareConfig=t.share||{};
     const shareUrl=resolveShareUrl();
@@ -3498,8 +3653,10 @@ document.addEventListener('DOMContentLoaded',()=>{
         event.stopPropagation();
         const value=btn.dataset.lang;
         if(!value) return;
+        langMenuIsOpen=false;
         setLangMenu(false);
         try{localStorage.setItem('fp_lang',value);}catch(_){/* ignore */}
+        langBtn.focus({preventScroll:true});
         render(value);
       });
     });
@@ -3509,11 +3666,28 @@ document.addEventListener('DOMContentLoaded',()=>{
       setLangMenu(false);
     });
   }
-  const themeBtn=getEl('themeToggle');
-  if(themeBtn){
-    themeBtn.addEventListener('click',()=>{
-      cycleThemePreference();
-      updateThemeButton(I18N[currentLang]||I18N.ru);
+  const themeBtn=getEl('themeBtn');
+  const themeMenu=getEl('themeMenu');
+  if(themeBtn&&themeMenu){
+    themeBtn.addEventListener('click',event=>{
+      event.stopPropagation();
+      setThemeMenu(!themeMenuIsOpen);
+    });
+    themeMenu.querySelectorAll('button[data-theme]').forEach(btn=>{
+      btn.addEventListener('click',event=>{
+        event.stopPropagation();
+        const value=btn.dataset.theme;
+        if(!value) return;
+        applyThemePreference(value);
+        updateThemeButton(I18N[currentLang]||I18N.ru);
+        setThemeMenu(false);
+        themeBtn.focus({preventScroll:true});
+      });
+    });
+    document.addEventListener('click',event=>{
+      if(themeMenuIsOpen&&!(themeMenu.contains(event.target)||event.target===themeBtn)){
+        setThemeMenu(false);
+      }
     });
   }
   render(lang);

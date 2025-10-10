@@ -42,10 +42,27 @@ class Element {
       _set: new Set(),
       add: (...cls) => cls.forEach(c => this.classList._set.add(c)),
       remove: (...cls) => cls.forEach(c => this.classList._set.delete(c)),
-      contains: c => this.classList._set.has(c)
+      contains: c => this.classList._set.has(c),
+      toggle: (cls, force) => {
+        if (force === undefined) {
+          if (this.classList._set.has(cls)) {
+            this.classList._set.delete(cls);
+            return false;
+          }
+          this.classList._set.add(cls);
+          return true;
+        }
+        if (force) {
+          this.classList._set.add(cls);
+          return true;
+        }
+        this.classList._set.delete(cls);
+        return false;
+      }
     };
     this.disabled = false;
     this.value = '';
+    this.hidden = false;
   }
   set textContent(value) {
     this._textContent = value;
@@ -90,12 +107,25 @@ class Element {
     if (!this.listeners[event]) this.listeners[event] = [];
     this.listeners[event].push(cb);
   }
+  focus() {
+    this._focused = true;
+  }
+  contains(node) {
+    if (node === this) return true;
+    if (!Array.isArray(this.children)) return false;
+    return this.children.some(child => (typeof child === 'object' && typeof child.contains === 'function') ? child.contains(node) : child === node);
+  }
   querySelectorAll(selector) {
     const results = [];
     const match = (node) => {
       if (!node || typeof node !== 'object') return;
       if (selector === 'button[data-lang]') {
         if (node.tagName === 'BUTTON' && node.dataset && Object.prototype.hasOwnProperty.call(node.dataset, 'lang')) {
+          results.push(node);
+        }
+      }
+      if (selector === 'button[data-theme]') {
+        if (node.tagName === 'BUTTON' && node.dataset && Object.prototype.hasOwnProperty.call(node.dataset, 'theme')) {
           results.push(node);
         }
       }
@@ -238,21 +268,12 @@ const availableFonts = new Set(['Arial', 'Roboto', 'Times New Roman']);
 
 const elements = new Map();
 const elementIds = [
-  'lang','introTitle','introText','legend','uniqLine','uniqExample','uniqAdviceTitle','uniqAdvice','shock','shockList','ipInfo','speedResult','advancedPanel','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','advancedBtn','shockTitle','profilingBlock','profilingTitle','profilingIntro','profilingList'
+  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqExample','uniqMeaningTitle','uniqMeaningList','uniqAdviceTitle','uniqAdvice','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingGroup','profilingTitle','profilingIntro','profilingList'
 ];
 
 for (const id of elementIds) {
   elements.set(id, new Element(id));
 }
-
-const selectEl = elements.get('lang');
-selectEl.tagName = 'SELECT';
-selectEl.options = [
-  { value: 'ru', textContent: '' },
-  { value: 'en', textContent: '' },
-  { value: 'uz', textContent: '' }
-];
-selectEl.value = 'ru';
 
 const shareBtnEl = elements.get('shareBtn');
 shareBtnEl.tagName = 'BUTTON';
@@ -260,10 +281,25 @@ const printBtnEl = elements.get('printBtn');
 printBtnEl.tagName = 'BUTTON';
 const ipBtnEl = elements.get('ipBtn');
 ipBtnEl.tagName = 'BUTTON';
-const advBtnEl = elements.get('advancedBtn');
-advBtnEl.tagName = 'BUTTON';
-elements.get('profilingBlock').tagName = 'SECTION';
+elements.get('langBtn').tagName = 'BUTTON';
+elements.get('themeBtn').tagName = 'BUTTON';
+elements.get('langMenu').tagName = 'DIV';
+elements.get('themeMenu').tagName = 'DIV';
+elements.get('profilingGroup').tagName = 'DIV';
 elements.get('profilingList').tagName = 'UL';
+
+const langMenuEl = elements.get('langMenu');
+['ru','en','uz'].forEach(code => {
+  const btn = new Element(null, 'button');
+  btn.dataset.lang = code;
+  langMenuEl.appendChild(btn);
+});
+const themeMenuEl = elements.get('themeMenu');
+['auto','light','dark'].forEach(mode => {
+  const btn = new Element(null, 'button');
+  btn.dataset.theme = mode;
+  themeMenuEl.appendChild(btn);
+});
 
 const docClassTokens = new Set();
 const documentElement = {
@@ -771,19 +807,21 @@ const I18N = vm.runInContext('I18N', sandbox);
   assert.equal(shareBtnEl.getAttribute('aria-disabled'), null);
   const langBtnEl = elements.get('langBtn');
   assert.equal(langBtnEl.textContent, 'Язык');
-  const themeBtnEl = elements.get('themeToggle');
-  assert.ok(themeBtnEl.textContent.includes('Тема'));
-  vm.runInContext('cycleThemePreference()', sandbox);
+  const themeBtnEl = elements.get('themeBtn');
+  assert.ok(themeBtnEl.innerHTML.includes('Тема'));
+  vm.runInContext("applyThemePreference('light')", sandbox);
   vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
   assert.ok(documentElement.classList.contains('force-light'));
-  assert.ok(themeBtnEl.textContent.includes('Светлая'));
-  vm.runInContext('cycleThemePreference()', sandbox);
+  assert.ok(themeBtnEl.innerHTML.includes('☀️'));
+  vm.runInContext("applyThemePreference('dark')", sandbox);
   vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
   assert.ok(documentElement.classList.contains('force-dark'));
   assert.ok(!documentElement.classList.contains('force-light'));
-  vm.runInContext('cycleThemePreference()', sandbox);
+  assert.ok(themeBtnEl.innerHTML.includes('🌙'));
+  vm.runInContext("applyThemePreference('auto')", sandbox);
   vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
   assert.ok(!documentElement.classList.contains('force-dark'));
+  assert.ok(themeBtnEl.innerHTML.includes('🌓'));
 
   const savedSharePayload = stateRef.sharePayload;
   shareBtnEl.textContent = shareBtnEl.dataset.label;
@@ -793,8 +831,8 @@ const I18N = vm.runInContext('I18N', sandbox);
   stateRef.sharePayload = savedSharePayload;
   shareBtnEl.textContent = shareBtnEl.dataset.label;
 
-  const profilingSection = elements.get('profilingBlock');
-  assert.equal(profilingSection.style.display, 'block');
+  const profilingSection = elements.get('profilingGroup');
+  assert.equal(profilingSection.hidden, false);
   const profilingIntroEl = elements.get('profilingIntro');
   assert.ok(profilingIntroEl.children.length >= 1);
   const profilingListEl = elements.get('profilingList');
