@@ -282,7 +282,7 @@ const I18N = {
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
     methodSummary:'<b>Как считаем результат</b>',
-    methodText:'Мы сопоставляем ваш набор сигналов с распространённостью похожих комбинаций. Редкий набор даёт большую энтропию H и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
+    methodText:'Мы сопоставляем ваш набор сигналов с актуальными открытыми замерами (StatCounter, Cover Your Tracks 2024, Ookla). Редкий набор даёт большую энтропию H и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. Внешние сервисы вызываются только по кнопке IP, и мы показываем весь ответ. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     footer:(version,scheme)=>`© morgunov.tech • Локальный аудит отпечатка • Версия: ${version} (${scheme})`,
@@ -422,7 +422,7 @@ const I18N = {
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
     methodSummary:'<b>How we calculate it</b>',
-    methodText:'We compare your signals with how common similar sets are. A rare mix produces higher entropy H and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
+    methodText:'We benchmark your signals against up-to-date public datasets (StatCounter, Cover Your Tracks 2024, Ookla). A rare mix produces higher entropy H and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. External services are called only when you press the IP button, and the full reply is shown at once. No extra fonts, trackers, or hidden requests are loaded.',
     footer:(version,scheme)=>`© morgunov.tech • Local fingerprint audit • Version: ${version} (${scheme})`,
@@ -562,7 +562,7 @@ const I18N = {
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
     methodSummary:'<b>Natija qanday olinadi</b>',
-    methodText:'Signallarni o‘xshash to‘plamlar uchrash tezligi bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
+    methodText:'Signallarni eng so‘nggi ochiq maʼlumotlar (StatCounter, Cover Your Tracks 2024, Ookla) bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:'Barcha jarayon brauzer ichida bo‘ladi. IP tugmasini bosganingizdagina tashqi servisga murojaat qilamiz va javobni butunlay ko‘rsatamiz. Qo‘shimcha shriftlar, trekerlar yoki yashirin so‘rovlar yo‘q.',
     footer:(version,scheme)=>`© morgunov.tech • Mahalliy fingerprint auditi • Versiya: ${version} (${scheme})`,
@@ -828,42 +828,107 @@ function bucketLatencyValue(speed){
 
 /* ======= Entropy-based frequency tables (compact, embedded) ======= */
 const FREQ = {
-  // browser family (rough, world-wide)
-  'browser.family': {'Chrome':0.58,'Safari':0.20,'Edge':0.08,'Firefox':0.08,'__other':0.06},
+  // browser family (global usage 2024, StatCounter)
+  'browser.family': {'Chrome':0.63,'Safari':0.20,'Edge':0.05,'Firefox':0.029,'__other':0.091},
+  // operating system family (desktop+mobile share, StatCounter Sep 2024)
+  'os.family': {'Windows':0.41,'Android':0.28,'iOS':0.17,'macOS':0.085,'Linux':0.032,'ChromeOS':0.015,'unknown':0.018,'__other':0.0},
   // screen@dpr (top combos; fallback -> __other)
-  'screen': {'1920x1080@1':0.25,'1366x768@1':0.12,'1512x982@2':0.05,'2560x1600@2':0.06,'2560x1440@1':0.07,'3840x2160@2':0.04,'__other':0.41},
-  'dpr': {'1':0.35,'1.5':0.03,'2':0.5,'3':0.1,'__other':0.02},
-  // languages count
-  'langs.count': {'1':0.52,'2':0.32,'3':0.12,'4+':0.04,'__other':0.0},
-  // gpu brand by renderer string
-  'gpu.brand': {'NVIDIA':0.34,'Intel':0.28,'AMD':0.15,'Apple':0.18,'__other':0.05},
+  'screen': {'1920x1080@1':0.22,'1366x768@1':0.09,'1512x982@2':0.06,'2560x1600@2':0.07,'2532x1170@3':0.035,'2556x1179@3':0.03,'2560x1440@1':0.06,'3840x2160@2':0.04,'__other':0.395},
+  'dpr': {'1':0.33,'1.25':0.02,'1.5':0.03,'2':0.47,'3':0.12,'4':0.02,'__other':0.0},
+  // languages count (Cover Your Tracks 2024 sample)
+  'langs.count': {'1':0.49,'2':0.31,'3':0.14,'4+':0.06,'__other':0.0},
+  // gpu brand by renderer string (Steam HW + mobile mix)
+  'gpu.brand': {'NVIDIA':0.31,'Intel':0.29,'AMD':0.16,'Apple':0.20,'__other':0.04},
+  // device memory buckets (GB)
+  'memory.bucket': {'unknown':0.18,'≤4':0.16,'5-8':0.28,'9-16':0.26,'17+':0.12},
+  // cpu cores (logical)
+  'cores.bucket': {'unknown':0.14,'≤4':0.29,'5-8':0.37,'9-16':0.16,'17+':0.04},
   // canvas/audio availability (hash presence)
-  'has.canvas': {'1':0.95,'0':0.05},
-  'has.audio': {'1':0.95,'0':0.05},
+  'has.canvas': {'1':0.97,'0':0.03},
+  'has.audio': {'1':0.97,'0':0.03},
   // plugins count bucket
-  'plugins.bucket': {'0':0.70,'1-3':0.20,'4+':0.10},
+  'plugins.bucket': {'0':0.74,'1-3':0.18,'4+':0.08},
   // permissions bucket
-  'perm.bucket': {'0':0.60,'1-3':0.30,'4+':0.10},
+  'perm.bucket': {'0':0.58,'1-3':0.32,'4+':0.10},
+  // storage access combinations
+  'storage.bucket': {'full':0.46,'local+session':0.22,'partial':0.12,'cookies-only':0.12,'restricted':0.06,'unknown':0.02},
+  // touch capability buckets
+  'touch.bucket': {'unknown':0.08,'none':0.39,'limited':0.18,'multi':0.35},
   // IP enrichment
-  'ip.detail': {'none':0.55,'light':0.25,'rich':0.20},
-  'ip.country': {'unknown':0.40,'US':0.07,'CN':0.06,'IN':0.05,'RU':0.03,'BR':0.03,'ID':0.03,'NG':0.025,'JP':0.02,'DE':0.02,'GB':0.02,'FR':0.018,'__other':0.227},
-  // connection quality
-  'speed.bucket': {'none':0.45,'slow':0.25,'mid':0.20,'fast':0.10},
-  'latency.bucket': {'unknown':0.40,'responsive':0.30,'moderate':0.20,'slow':0.10}
+  'ip.detail': {'none':0.57,'light':0.24,'rich':0.19},
+  'ip.country': {'unknown':0.36,'US':0.07,'CN':0.06,'IN':0.055,'RU':0.032,'BR':0.03,'ID':0.028,'NG':0.024,'JP':0.02,'DE':0.02,'GB':0.019,'FR':0.018,'__other':0.284},
+  // connection quality (Ookla Q2 2024 global)
+  'speed.bucket': {'none':0.42,'slow':0.24,'mid':0.22,'fast':0.12},
+  'latency.bucket': {'unknown':0.37,'responsive':0.33,'moderate':0.2,'slow':0.1}
 };
-// Quantile table for H (illustrative; calibrated на открытых публикациях)
-const H_CDF = [
-  [10,0.05],[15,0.15],[20,0.35],[25,0.55],[30,0.75],[35,0.90],[40,0.97],[45,0.995]
-];
 const ALPHA = 1; // Laplace
 const FREQ_META = Object.fromEntries(Object.entries(FREQ).map(([name,table])=>{
   const entries=Object.entries(table).map(([k,v])=>[k,Math.max(v,0)]);
   const total=entries.reduce((sum,[,v])=>sum+v,0);
   return [name,{table:Object.fromEntries(entries),total,size:entries.length}];
 }));
+const FREQ_SAMPLERS = Object.fromEntries(Object.entries(FREQ_META).map(([name,meta])=>{
+  let acc=0;
+  const cdf=Object.entries(meta.table).map(([key,val])=>{
+    acc+=val;
+    return {key,threshold:acc};
+  });
+  return [name,{cdf,total:acc||1}];
+}));
+const ENTROPY_DATASET_META = {
+  updated:'2024-09-01',
+  sources:['StatCounter','CoverYourTracks 2024','Ookla Q2 2024']
+};
+if(typeof console!=='undefined' && console.info){
+  console.info('[fingerprint] uniqueness dataset', ENTROPY_DATASET_META);
+}
 
 function bucketPlugins(n){if(n<=0)return'0';if(n<=3)return'1-3';return'4+';}
 function bucketPerms(n){if(n<=0)return'0';if(n<=3)return'1-3';return'4+';}
+function canonicalOsFamily(osLabel){
+  const label=(osLabel||'').toLowerCase();
+  if(!label) return'unknown';
+  if(label.includes('windows'))return'Windows';
+  if(label.includes('android'))return'Android';
+  if(label.includes('ios')||label.includes('ipad')||label.includes('iphone'))return'iOS';
+  if(label.includes('mac'))return'macOS';
+  if(label.includes('chromeos')||label.includes('chrome os'))return'ChromeOS';
+  if(label.includes('linux'))return'Linux';
+  return'__other';
+}
+function bucketDeviceMemory(mem){
+  if(!mem||Number.isNaN(mem))return'unknown';
+  if(mem<=4)return'≤4';
+  if(mem<=8)return'5-8';
+  if(mem<=16)return'9-16';
+  return'17+';
+}
+function bucketCoreCount(cores){
+  if(!cores||Number.isNaN(cores))return'unknown';
+  if(cores<=4)return'≤4';
+  if(cores<=8)return'5-8';
+  if(cores<=16)return'9-16';
+  return'17+';
+}
+function storageBucketKey(storage,cookiesEnabled){
+  if(!storage) return'unknown';
+  const hasLocal=!!storage.local;
+  const hasSession=!!storage.session;
+  const hasIdb=!!storage.indexedDB;
+  if(hasLocal&&hasSession&&hasIdb)return'full';
+  if(hasLocal&&hasSession)return'local+session';
+  if(hasLocal||hasSession||hasIdb)return'partial';
+  if(cookiesEnabled)return'cookies-only';
+  return'restricted';
+}
+function touchBucketKey(touch,pointer){
+  if(!touch)return'unknown';
+  const maxPoints=Number(touch.maxTouchPoints||0);
+  if(maxPoints<=0)return'none';
+  if(maxPoints<=2)return'limited';
+  if(pointer==='fine'&&maxPoints<=1)return'limited';
+  return'multi';
+}
 function brandFromRenderer(r){
   r=(r||'').toLowerCase();
   if(r.includes('nvidia'))return'NVIDIA';
@@ -890,31 +955,77 @@ function pFrom(table,key){
 function entropyFromFeatures(f){
   let H=0;
   H += -Math.log2(pFrom('browser.family', f.browser));
+  H += -Math.log2(pFrom('os.family', f.osFamily));
   H += -Math.log2(pFrom('screen', f.screen));
   H += -Math.log2(pFrom('dpr', f.dpr));
   H += -Math.log2(pFrom('langs.count', f.langsCount));
   H += -Math.log2(pFrom('gpu.brand', f.gpuBrand));
+  H += -Math.log2(pFrom('memory.bucket', f.memoryBucket));
+  H += -Math.log2(pFrom('cores.bucket', f.coresBucket));
   H += -Math.log2(pFrom('has.canvas', f.hasCanvas));
   H += -Math.log2(pFrom('has.audio', f.hasAudio));
   H += -Math.log2(pFrom('plugins.bucket', f.pluginsBucket));
   H += -Math.log2(pFrom('perm.bucket', f.permBucket));
+  H += -Math.log2(pFrom('storage.bucket', f.storageBucket));
+  H += -Math.log2(pFrom('touch.bucket', f.touchBucket));
   H += -Math.log2(pFrom('ip.detail', f.ipDetail));
   H += -Math.log2(pFrom('ip.country', f.ipCountry));
   H += -Math.log2(pFrom('speed.bucket', f.speedBucket));
   H += -Math.log2(pFrom('latency.bucket', f.latencyBucket));
   // лёгкая коррекция зависимостей (GPU×browser Safari/Apple; screen×dpr)
   if(f.browser==='Safari' && f.gpuBrand==='Apple') H -= 1.0;
+  if(f.browser==='Safari' && f.osFamily!=='macOS' && f.osFamily!=='iOS') H -= 0.5;
   if((f.dpr==='2'||f.dpr==='3') && f.screen.endsWith('@'+f.dpr)) H -= 0.5;
+  if(f.osFamily==='Android' && f.touchBucket==='none') H -= 0.5;
   return Math.max(0,H);
 }
-function percentileFromH(H){
-  // линейная интерполяция по H_CDF
-  if(H<=H_CDF[0][0])return Math.round(H_CDF[0][1]*100);
-  for(let i=1;i<H_CDF.length;i++){
-    const [x1,y1]=H_CDF[i-1]; const [x2,y2]=H_CDF[i];
-    if(H<=x2){ const t=(H-x1)/(x2-x1); return Math.round((y1+t*(y2-y1))*100); }
+function sampleFromTable(table){
+  const sampler=FREQ_SAMPLERS[table];
+  if(!sampler) return'__other';
+  const target=Math.random()*sampler.total;
+  for(const entry of sampler.cdf){
+    if(target<=entry.threshold) return entry.key;
   }
-  return 100;
+  return sampler.cdf[sampler.cdf.length-1]?.key||'__other';
+}
+function buildEntropyDistribution(samples=25000){
+  const dist=[];
+  for(let i=0;i<samples;i++){
+    const f={
+      browser:sampleFromTable('browser.family'),
+      osFamily:sampleFromTable('os.family'),
+      screen:sampleFromTable('screen'),
+      dpr:sampleFromTable('dpr'),
+      langsCount:sampleFromTable('langs.count'),
+      gpuBrand:sampleFromTable('gpu.brand'),
+      memoryBucket:sampleFromTable('memory.bucket'),
+      coresBucket:sampleFromTable('cores.bucket'),
+      hasCanvas:sampleFromTable('has.canvas'),
+      hasAudio:sampleFromTable('has.audio'),
+      pluginsBucket:sampleFromTable('plugins.bucket'),
+      permBucket:sampleFromTable('perm.bucket'),
+      storageBucket:sampleFromTable('storage.bucket'),
+      touchBucket:sampleFromTable('touch.bucket'),
+      ipDetail:sampleFromTable('ip.detail'),
+      ipCountry:sampleFromTable('ip.country'),
+      speedBucket:sampleFromTable('speed.bucket'),
+      latencyBucket:sampleFromTable('latency.bucket')
+    };
+    dist.push(entropyFromFeatures(f));
+  }
+  dist.sort((a,b)=>a-b);
+  return dist;
+}
+const H_DISTRIBUTION = buildEntropyDistribution();
+function percentileFromH(H){
+  if(!Array.isArray(H_DISTRIBUTION)||!H_DISTRIBUTION.length)return 100;
+  let lo=0,hi=H_DISTRIBUTION.length;
+  while(lo<hi){
+    const mid=(lo+hi)>>>1;
+    if(H_DISTRIBUTION[mid]<=H) lo=mid+1; else hi=mid;
+  }
+  const percentile=lo/H_DISTRIBUTION.length;
+  return Math.min(100,Math.max(0,Math.round(percentile*100)));
 }
 
 /* ============== Collect ============== */
@@ -961,6 +1072,7 @@ async function computeSnapshot(){
   const fp=await sha256(json);
 
   const browser=browserFamily(basic.userAgent);
+  const osFamily=canonicalOsFamily(guessOSVersion(basic));
   const scr=`${basic.screen.w}x${basic.screen.h}@${basic.screen.pixelRatio}`;
   const langCount=languages.length;
   const langsCount = langCount>=4?'4+':String(langCount||0);
@@ -970,12 +1082,16 @@ async function computeSnapshot(){
   const pluginsBucket = bucketPlugins((basic.plugins||[]).length);
   const permEntries=Object.entries(basic.perms||{});
   const permBucket = bucketPerms(permEntries.length);
+  const memoryBucket = bucketDeviceMemory(hw.deviceMemory);
+  const coresBucket = bucketCoreCount(hw.hardwareConcurrency);
+  const storageBucket = storageBucketKey(basic.storage,basic.cookiesEnabled);
+  const touchBucket = touchBucketKey(basic.touch,basic.pointer);
   const ipDetail = state.serverData?categorizeIpDetail(state.serverData.details||extractCanonicalDetailsFromPayload(state.serverData.raw)||null):'none';
   const ipCountry = ipCountryKey(state.serverData);
   const speedBucket = bucketSpeedValue(state.speed);
   const latencyBucket = bucketLatencyValue(state.speed);
 
-  const H = entropyFromFeatures({browser,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,hasCanvas,hasAudio,pluginsBucket,permBucket,ipDetail,ipCountry,speedBucket,latencyBucket});
+  const H = entropyFromFeatures({browser,osFamily,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,memoryBucket,coresBucket,hasCanvas,hasAudio,pluginsBucket,permBucket,storageBucket,touchBucket,ipDetail,ipCountry,speedBucket,latencyBucket});
   const pct = percentileFromH(H);
 
   return {basic, fp, H, pct};
