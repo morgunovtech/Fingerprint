@@ -24,8 +24,40 @@ type UaHighEntropy = {
   platform?: string | null;
   platformVersion?: string | null;
   model?: string | null;
+  mobile?: boolean | null;
   fullVersionList?: { brand: string; version: string }[] | null;
 };
+
+declare global {
+  interface NavigatorUADataBrand {
+    brand: string;
+    version: string;
+  }
+
+  interface NavigatorUAData {
+    brands?: NavigatorUADataBrand[];
+    mobile?: boolean;
+    platform?: string;
+    getHighEntropyValues?: (hints: string[]) => Promise<UaHighEntropy>;
+  }
+
+  interface Navigator {
+    userAgentData?: NavigatorUAData;
+    usb?: unknown;
+    hid?: unknown;
+    bluetooth?: unknown;
+    serial?: unknown;
+    connection?: {
+      effectiveType?: string;
+      downlink?: number;
+      rtt?: number;
+    };
+  }
+
+  interface Window {
+    __fingerprintBasic?: Record<string, unknown>;
+  }
+}
 
 type DeviceSignals = {
   mobileFlag?: boolean | null;
@@ -105,6 +137,69 @@ const MAC_DISPLAY_MAP: { width: number; height: number; label: string }[] = [
   { width: 2732, height: 2048, label: 'Apple iPad Pro 12.9″' },
 ];
 
+const IOS_DISPLAY_MAP: { width: number; height: number; label: string }[] = [
+  { width: 1290, height: 2796, label: 'Apple iPhone 15 Pro Max' },
+  { width: 1179, height: 2556, label: 'Apple iPhone 15 Pro' },
+  { width: 1284, height: 2778, label: 'Apple iPhone 14 Pro Max / 13 Pro Max' },
+  { width: 1170, height: 2532, label: 'Apple iPhone 14 / 13 (6.1″)' },
+  { width: 1125, height: 2436, label: 'Apple iPhone XS / 11 Pro (5.8″)' },
+  { width: 1242, height: 2688, label: 'Apple iPhone XS Max / 11 Pro Max' },
+  { width: 1133, height: 2360, label: 'Apple iPad Air 10.9″' },
+  { width: 1488, height: 2266, label: 'Apple iPad mini 8.3″' },
+];
+
+const ANDROID_MODEL_PREFIX: { pattern: RegExp; label: string }[] = [
+  { pattern: /^SM-S92/i, label: 'Samsung Galaxy S24 Ultra / S24+' },
+  { pattern: /^SM-S91/i, label: 'Samsung Galaxy S23 series' },
+  { pattern: /^SM-S90/i, label: 'Samsung Galaxy S22 series' },
+  { pattern: /^SM-F93/i, label: 'Samsung Galaxy Z Fold' },
+  { pattern: /^SM-F94/i, label: 'Samsung Galaxy Z Flip' },
+  { pattern: /^Pixel 8 Pro/i, label: 'Google Pixel 8 Pro' },
+  { pattern: /^Pixel 8/i, label: 'Google Pixel 8' },
+  { pattern: /^Pixel 7 Pro/i, label: 'Google Pixel 7 Pro' },
+  { pattern: /^Pixel 7/i, label: 'Google Pixel 7' },
+  { pattern: /^Pixel 6/i, label: 'Google Pixel 6' },
+  { pattern: /^2201123/i, label: 'Xiaomi 12 Pro' },
+  { pattern: /^M2102K1/i, label: 'Xiaomi Mi 11 Ultra' },
+];
+
+function matchDisplayModel(
+  width: number,
+  height: number,
+  map: { width: number; height: number; label: string }[],
+  tolerance = 4,
+): string | null {
+  if (!width || !height) return null;
+  const sorted = [width, height].sort((a, b) => a - b);
+  for (const entry of map) {
+    const target = [entry.width, entry.height].sort((a, b) => a - b);
+    const deltaW = Math.abs(target[0] - sorted[0]);
+    const deltaH = Math.abs(target[1] - sorted[1]);
+    if (deltaW <= tolerance && deltaH <= tolerance) {
+      return entry.label;
+    }
+  }
+  return null;
+}
+
+function describeAndroidModel(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const value = raw.trim();
+  if (!value) return null;
+  const upper = value.toUpperCase();
+  for (const entry of ANDROID_MODEL_PREFIX) {
+    if (entry.pattern.test(upper)) return entry.label;
+  }
+  if (/^SM-[A-Z0-9]+/.test(upper)) {
+    const suffix = upper.replace(/^SM-/, '').replace(/[A-Z]$/, '');
+    return `Samsung Galaxy ${suffix}`;
+  }
+  if (/^MIX|^MI/.test(upper)) {
+    return `Xiaomi ${value}`;
+  }
+  return value;
+}
+
 const CLAMP = (value: number, min = 0, max = 1): number => {
   if (Number.isNaN(value)) return min;
   return Math.min(max, Math.max(min, value));
@@ -116,11 +211,11 @@ const CLAMP = (value: number, min = 0, max = 1): number => {
 function detectGlRenderer(): string | null {
   try {
     const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
     if (!gl) return null;
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info') as WEBGL_debug_renderer_info | null;
     if (debugInfo) {
-      const value = gl.getParameter((debugInfo as WebGLDebugRendererInfo).UNMASKED_RENDERER_WEBGL);
+      const value = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
       return typeof value === 'string' ? value : null;
     }
     return null;
@@ -206,31 +301,56 @@ function inferModel(signals: ModelSignals): Finding | null {
   const evidence: string[] = [];
   const { ua, renderer, physicalWidth, physicalHeight } = signals;
   const matches: string[] = [];
+  const seen = new Set<string>();
   let label = 'Device model (approximate)';
   let confidence = 0.2;
 
-  if (ua?.model) {
-    evidence.push(`ua.model=${ua.model}`);
-    matches.push(ua.model);
-    confidence = Math.max(confidence, 0.6);
-  }
+  const addMatch = (candidate: string | null | undefined, weight: number, note?: string) => {
+    if (!candidate) return;
+    const value = candidate.trim();
+    if (!value || seen.has(value)) return;
+    seen.add(value);
+    matches.push(value);
+    confidence = Math.max(confidence, weight);
+    if (note) evidence.push(note);
+  };
+
+  const platform = ua?.platform?.toLowerCase() ?? '';
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
 
   if (renderer) {
     evidence.push(`webgl=${renderer}`);
-    if (/Apple M\d/.test(renderer)) {
-      matches.push('Apple Silicon GPU');
-      confidence = Math.max(confidence, 0.5);
+    const appleGpu = renderer.match(/Apple\s+(M\d+(?:\s+(?:Pro|Max|Ultra))?|GPU\s+[A-Z0-9 ]+)/i);
+    if (appleGpu) {
+      const labelGuess = appleGpu[1].trim();
+      const formatted = labelGuess.toUpperCase().startsWith('GPU') ? `Apple ${labelGuess}` : `Apple ${labelGuess}`;
+      addMatch(formatted, 0.55);
+    } else if (/Apple M\d/.test(renderer)) {
+      addMatch('Apple Silicon GPU', 0.5);
     }
   }
 
-  const displayMatch = MAC_DISPLAY_MAP.find((entry) => {
-    const deltaW = Math.abs(entry.width - physicalWidth);
-    const deltaH = Math.abs(entry.height - physicalHeight);
-    return deltaW <= 32 && deltaH <= 32;
-  });
-  if (displayMatch) {
-    matches.push(displayMatch.label);
-    confidence = Math.max(confidence, 0.7);
+  const macDisplay = matchDisplayModel(physicalWidth, physicalHeight, MAC_DISPLAY_MAP, 32);
+  if (macDisplay) {
+    addMatch(macDisplay, 0.75, `display=${physicalWidth}x${physicalHeight}`);
+  }
+
+  const isAppleMobile = platform.includes('ios') || /iphone|ipad|ipod/i.test(userAgent);
+  if (isAppleMobile) {
+    const iosDisplay = matchDisplayModel(physicalWidth, physicalHeight, IOS_DISPLAY_MAP, 6);
+    if (iosDisplay) {
+      addMatch(iosDisplay, 0.8, `display=${physicalWidth}x${physicalHeight}`);
+    }
+  }
+
+  if (ua?.model) {
+    evidence.push(`ua.model=${ua.model}`);
+    if (platform.includes('android') || /android/i.test(userAgent)) {
+      const friendly = describeAndroidModel(ua.model);
+      addMatch(friendly ?? ua.model, friendly ? 0.7 : 0.6);
+    } else {
+      addMatch(ua.model, 0.6);
+    }
   }
 
   if (!matches.length) {
@@ -854,9 +974,8 @@ async function runWebRtcLeakTest(): Promise<Finding | null> {
         }
       };
       if (pc) {
-        if ('onicecandidate' in pc) {
-          pc.onicecandidate = handleCandidate;
-        } else if (pc.addEventListener) {
+        pc.onicecandidate = handleCandidate;
+        if (typeof pc.addEventListener === 'function') {
           pc.addEventListener('icecandidate', handleCandidate);
         }
       }
@@ -981,14 +1100,18 @@ async function collectUaHighEntropy(): Promise<UaHighEntropy | null> {
   try {
     if (typeof navigator === 'undefined') return null;
     const uaData = navigator.userAgentData;
-    if (!uaData?.getHighEntropyValues) return uaData ? ({
-      platform: uaData.platform,
-      model: null,
-      architecture: undefined,
-      bitness: undefined,
-      platformVersion: undefined,
-      fullVersionList: uaData.brands ?? null,
-    }) : null;
+    if (!uaData) return null;
+    if (typeof uaData.getHighEntropyValues !== 'function') {
+      return {
+        platform: uaData.platform ?? null,
+        model: null,
+        architecture: undefined,
+        bitness: undefined,
+        platformVersion: undefined,
+        fullVersionList: uaData.brands ?? null,
+        mobile: uaData.mobile ?? null,
+      };
+    }
     const fields: Array<'architecture' | 'bitness' | 'platform' | 'platformVersion' | 'model' | 'fullVersionList'> = [
       'architecture',
       'bitness',
@@ -998,7 +1121,7 @@ async function collectUaHighEntropy(): Promise<UaHighEntropy | null> {
       'fullVersionList',
     ];
     const values = await uaData.getHighEntropyValues(fields);
-    return values;
+    return { ...values, mobile: values.mobile ?? uaData.mobile ?? null };
   } catch (error) {
     console.debug('UA high entropy hints unavailable', error);
     return null;
