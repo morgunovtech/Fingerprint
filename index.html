@@ -21,11 +21,16 @@
       --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042;
       --r:16px; --shadow:0 10px 30px rgba(0,0,0,.25);
       --accent:#60a5fa;
+      --fp-bg:#111827;
+      --fp-text-strong:#e2e8f0;
+      --fp-text-muted:#cbd5e1;
+      --fp-border-soft:rgba(148,163,184,.22);
+      --fp-shadow:0 28px 60px rgba(2,6,23,.5);
     }
-    :root.force-dark{ --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042; --shadow:0 10px 30px rgba(0,0,0,.25); --accent:#60a5fa; }
-    :root.force-light{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
+    :root.force-dark{ --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042; --shadow:0 10px 30px rgba(0,0,0,.25); --accent:#60a5fa; --fp-bg:#111827; --fp-text-strong:#e2e8f0; --fp-text-muted:#cbd5e1; --fp-border-soft:rgba(148,163,184,.22); --fp-shadow:0 28px 60px rgba(2,6,23,.5); }
+    :root.force-light{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; --fp-bg:#ffffff; --fp-text-strong:#0f172a; --fp-text-muted:#475569; --fp-border-soft:rgba(15,23,42,.12); --fp-shadow:0 26px 58px rgba(15,23,42,.16); }
     @media (prefers-color-scheme: light){
-      :root:not(.force-dark):not(.force-light){ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
+      :root:not(.force-dark):not(.force-light){ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; --fp-bg:#ffffff; --fp-text-strong:#0f172a; --fp-text-muted:#475569; --fp-border-soft:rgba(15,23,42,.12); --fp-shadow:0 26px 58px rgba(15,23,42,.16); }
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -33,6 +38,7 @@
          font:15px/1.65 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial;
          -webkit-font-smoothing:antialiased}
     .wrap{max-width:1100px;margin:24px auto 72px;padding:0 20px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     header{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
     h1{font-size:22px;margin:0}
     .sub{color:var(--muted);font-size:14px}
@@ -46,6 +52,21 @@
     .menu-panel button.active{border-color:var(--accent);color:var(--accent);background-color:rgba(96,165,250,0.12)}
     .menu-panel button .menu-icon{font-size:16px}
     .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
+    .intro-block{background:transparent;border:none;box-shadow:none;padding:0;margin:0 0 24px}
+    .intro-content{width:100%;padding:0}
+    .intro-content--rich{display:flex;justify-content:center}
+    .intro-content--rich .fp-section{width:100%;max-width:72ch;margin:0 auto;padding:clamp(1.75rem,3vw,2.6rem) clamp(1.25rem,3vw,2.75rem);border-radius:calc(var(--r)*1.125);border:1px solid var(--fp-border-soft);background:var(--fp-bg);color:var(--fp-text-strong);box-shadow:var(--fp-shadow);backdrop-filter:blur(6px)}
+    .intro-content--rich .fp-section :is(h2,h3){line-height:1.25;margin:1.5rem 0 0.75rem;color:var(--fp-text-muted)}
+    .intro-content--rich .fp-section h2{margin:0 0 1rem;font-size:clamp(1.6rem,2.5vw,2.1rem);font-weight:700;color:var(--fp-text-strong);text-wrap:balance}
+    .intro-content--rich .fp-section h3{font-size:clamp(1.1rem,1.8vw,1.25rem);font-weight:600}
+    .intro-content--rich .fp-section p{margin:0 0 1.1rem;line-height:1.75;color:var(--fp-text-strong);text-wrap:pretty}
+    .intro-content--rich .fp-section ul{margin:0 0 1.1rem 1.25rem;padding:0;color:var(--fp-text-strong)}
+    .intro-content--rich .fp-section li{margin:0.35rem 0;line-height:1.65}
+    .intro-content--rich .fp-section abbr[title]{text-decoration:underline dotted;cursor:help}
+    .intro-content--rich .fp-section{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; hanging-punctuation:first; hyphens:auto; word-break:break-word}
+    @media (max-width:720px){
+      .intro-content--rich .fp-section{padding:clamp(1.5rem,3vw,2rem) clamp(1rem,6vw,1.75rem)}
+    }
     .section-title{font-weight:700;font-size:18px;margin:0 0 8px}
     .section-subtitle{font-weight:600;margin:12px 0 6px}
     .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px}
@@ -135,9 +156,9 @@
   </header>
 
   <!-- Block 1: Intro -->
-  <section class="block">
-    <div id="introTitle" class="section-title"></div>
-    <div id="introText" class="small"></div>
+  <section class="block intro-block" aria-labelledby="introTitle">
+    <div id="introTitle" class="section-title sr-only"></div>
+    <div id="introText" class="intro-content"></div>
   </section>
 
   <!-- Block 2: Uniqueness + shock -->
@@ -200,14 +221,52 @@ const I18N = {
     langButton:'Язык',
     langLabels:{ru:'Русский',en:'Английский',uz:'Узбекский'},
     theme:{label:'Тема',modes:{auto:'Авто',light:'Светлая',dark:'Тёмная'}},
-    introTitle:'Для чего этот сервис',
+    introTitle:'«Цифровой отпечаток»: что это и зачем вам знать',
+    introRichHtml:/* html */`
+      <section class="fp-section" lang="ru" aria-labelledby="fp-title">
+        <h2 id="fp-title">«Цифровой отпечаток»: что это и зачем вам знать</h2>
+        <p>
+          У каждого устройства и браузера есть уникальный набор характеристик — «цифровой отпечаток».
+          Он позволяет распознавать вас между визитами и связывать действия на разных сайтах — даже без регистрации.
+        </p>
+        <h3>Как это работает</h3>
+        <p>
+          Вы посетили сайты n1, n2, n3 без логина. Затем на сайте n4 (например, соцсеть) создаёте аккаунт.
+          Брокеры данных (<abbr title="посредники, торгующие и агрегирующие пользовательские данные">data brokers</abbr>)
+          и рекламные сети, имеющие доступ к вашему отпечатку,
+          сопоставляют совпадающие признаки и связывают прежние посещения с конкретным человеком.
+        </p>
+        <h3>К чему это может привести</h3>
+        <ul class="fp-list">
+          <li>Навязчивый таргетинг и ценовая персонализация.</li>
+          <li>Сбор подробного профиля интересов и привычек.</li>
+          <li>Фишинг и социальная инженерия.</li>
+          <li>При утечках — риск шантажа и мошенничества.</li>
+        </ul>
+        <h3>Что делает этот сервис</h3>
+        <p>
+          Мы наглядно показываем, какие данные видны прямо сейчас, объясняем риски простым языком
+          и даём пошаговые советы, как уменьшить цифровой след.
+        </p>
+        <h3>Как мы обрабатываем данные</h3>
+        <p>
+          Все вычисления выполняются локально в вашем браузере: мы ничего никуда не отправляем и не храним; регистрация не нужна.
+          Вы можете сохранить результат в PDF или безопасно поделиться им с близкими — без раскрытия исходных данных.
+        </p>
+        <h3>Дополнительно: «Определить IP и уточнить данные»</h3>
+        <p>
+          По вашему запросу измерит скорость интернета, покажет, что раскрывает ваш IP-адрес,
+          и подскажет, похоже ли, что вы используете VPN.
+        </p>
+      </section>
+    `,
     introParagraphs:[
       'У каждого устройства и браузера есть уникальный набор характеристик — «цифровой отпечаток». Он позволяет распознавать вас между визитами и связывать действия на разных сайтах — даже без регистрации.',
-      'Как это работает. Вы посетили сайты n1, n2, n3 без логина. Затем на сайте n4 (например, соцсеть) создаёте аккаунт. Брокеры данных и рекламные сети сопоставляют совпадающие признаки и связывают прежние посещения с конкретным человеком.',
-      'К чему это может привести. Навязчивый таргетинг и ценовая персонализация, сбор подробного профиля, фишинг и социальная инженерия, а при утечках — риск шантажа и мошенничества.',
-      'Что делает этот сервис. Мы наглядно показываем, какие данные видны прямо сейчас, объясняем риски простым языком и даём пошаговые советы, как уменьшить цифровой след.',
-      'Как мы обрабатываем данные. Все вычисления выполняются локально в вашем браузере: мы ничего никуда не отправляем и не храним; регистрация не нужна. Вы можете сохранить результат в PDF или безопасно поделиться им с близкими — без раскрытия исходных данных.',
-      'Отдельная кнопка «Определить IP и уточнить данные» по вашему запросу измерит скорость интернета, покажет, что раскрывает ваш IP-адрес, и подскажет, похоже ли, что вы используете VPN.'
+      'Вы посетили сайты n1, n2, n3 без логина. Затем на сайте n4 (например, соцсеть) создаёте аккаунт. Брокеры данных и рекламные сети сопоставляют совпадающие признаки и связывают прежние посещения с конкретным человеком.',
+      'Навязчивый таргетинг и ценовая персонализация, сбор подробного профиля, фишинг и социальная инженерия, а при утечках — риск шантажа и мошенничества.',
+      'Мы наглядно показываем, какие данные видны прямо сейчас, объясняем риски простым языком и даём пошаговые советы, как уменьшить цифровой след.',
+      'Все вычисления выполняются локально в вашем браузере: мы ничего никуда не отправляем и не храним; регистрация не нужна. Вы можете сохранить результат в PDF или безопасно поделиться им с близкими — без раскрытия исходных данных.',
+      'Отдельная кнопка «Определить IP и уточнить данные» измеряет скорость интернета, показывает, что раскрывает ваш IP-адрес, и подсказывает, похоже ли, что вы используете VPN.'
     ],
     uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
     uniqPracticeTitle:'Что это значит на практике:',
@@ -593,14 +652,51 @@ const I18N = {
     langButton:'Language',
     langLabels:{ru:'Russian',en:'English',uz:'Uzbek'},
     theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark'}},
-    introTitle:'Why this service exists',
+    introTitle:'“Digital fingerprint”: what it is and why it matters',
+    introRichHtml:/* html */`
+      <section class="fp-section" lang="en" aria-labelledby="fp-title">
+        <h2 id="fp-title">“Digital fingerprint”: what it is and why it matters</h2>
+        <p>
+          Every device and browser exposes a unique mix of characteristics — a “digital fingerprint”.
+          It lets sites recognise you between visits and connect activity across services — even without an account.
+        </p>
+        <h3>How it works</h3>
+        <p>
+          You visit sites n1, n2, n3 without signing in. Later, on site n4 (for example a social network) you create an account.
+          Data brokers (<abbr title="intermediaries that trade and aggregate user data">data brokers</abbr>) and ad networks with access to your fingerprint
+          compare matching traits and link those previous visits to a specific person.
+        </p>
+        <h3>What it can lead to</h3>
+        <ul class="fp-list">
+          <li>Persistent targeting and price discrimination.</li>
+          <li>Deep profiles of your interests and habits.</li>
+          <li>Phishing and social engineering.</li>
+          <li>Extortion or fraud if the data leaks.</li>
+        </ul>
+        <h3>What this service does</h3>
+        <p>
+          We show which signals are visible right now, explain the risk in plain language,
+          and provide step-by-step tips to shrink your digital footprint.
+        </p>
+        <h3>How we process data</h3>
+        <p>
+          All calculations run locally in your browser: nothing is sent or stored, and you do not need to register.
+          You can save the result as a PDF or share it safely without exposing the raw data.
+        </p>
+        <h3>Extra: “Detect IP & refine data”</h3>
+        <p>
+          On demand it measures your connection speed, explains what your IP address reveals,
+          and estimates whether you appear to use a VPN.
+        </p>
+      </section>
+    `,
     introParagraphs:[
-      'Every device and browser exposes a unique mix of characteristics — a “digital fingerprint”. It lets sites recognise you across visits and link activity on different domains, even without logging in.',
-      'How it plays out: you browse sites n1, n2, n3 without signing in. Later you create an account on site n4 (for example, a social network). Data brokers and ad networks match the shared traits and attach those earlier visits to a real person.',
-      'Why it matters: aggressive targeting and price steering, deep profiling, phishing and social engineering — and if the data leaks, potential extortion or fraud.',
-      'What this service does: we surface the data that is visible right now, explain the risks in plain language, and give step-by-step advice to shrink your digital footprint.',
-      'How we handle data: everything runs locally in your browser. Nothing is sent or stored, no registration is required. You can save a PDF or safely share the result with trusted people without exposing raw data.',
-      'Need more detail? The “Detect IP & refine data” button runs on demand, measures your connection speed, shows what your IP reveals, and estimates whether a VPN is in use.'
+      'Every device and browser exposes a unique mix of characteristics — a “digital fingerprint”. It lets sites recognise you between visits and link activity across services, even without logging in.',
+      'You visit sites n1, n2, n3 without signing in. Later, on site n4 (for example a social network) you create an account. Data brokers and ad networks match the shared traits and attach those earlier visits to a real person.',
+      'Aggressive targeting and price steering, deep profiling, phishing and social engineering — and if the data leaks, potential extortion or fraud.',
+      'We surface the data that is visible right now, explain the risks in plain language, and give step-by-step advice to shrink your digital footprint.',
+      'Everything runs locally in your browser. Nothing is sent or stored, no registration is required. You can save a PDF or safely share the result with trusted people without exposing raw data.',
+      'The “Detect IP & refine data” button runs on demand, measures your connection speed, shows what your IP reveals, and estimates whether a VPN is in use.'
     ],
     uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
     uniqPracticeTitle:'What this means in practice:',
@@ -958,14 +1054,51 @@ const I18N = {
     langButton:'Til',
     langLabels:{ru:'Rus tili',en:'Ingliz tili',uz:'Oʻzbek tili'},
     theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi'}},
-    introTitle:'Servis nima uchun kerak',
+    introTitle:'“Raqamli barmoq izi”: bu nima va nega bilish kerak',
+    introRichHtml:/* html */`
+      <section class="fp-section" lang="uz" aria-labelledby="fp-title">
+        <h2 id="fp-title">“Raqamli barmoq izi”: bu nima va nega bilish kerak</h2>
+        <p>
+          Har bir qurilma va brauzer o‘ziga xos xususiyatlar to‘plamini ochib beradi — bu “raqamli barmoq izi”.
+          U saytlar uchun tashriflar orasida sizni aniqlash va turli xizmatlardagi faollikni bog‘lash imkonini beradi — hatto akkauntsiz ham.
+        </p>
+        <h3>Bu qanday ishlaydi</h3>
+        <p>
+          Siz n1, n2, n3 saytlarini akkauntsiz ko‘rasiz. Keyin n4 (masalan, ijtimoiy tarmoq) saytida akkaunt yaratasiz.
+          Ma’lumot brokerlari (<abbr title="foydalanuvchi maʼlumotlarini sotadigan va yigʻadigan vositachilar">data brokers</abbr>) va reklama tarmoqlari barmoq izidagi mos belgilarni taqqoslab,
+          oldingi tashriflarni aniq shaxsga bog‘laydi.
+        </p>
+        <h3>Bu nimaga olib kelishi mumkin</h3>
+        <ul class="fp-list">
+          <li>Tajovuzkor reklama va narxlarni individuallashtirish.</li>
+          <li>Qiziqish va odatlaringiz bo‘yicha chuqur profil.</li>
+          <li>Fishing va ijtimoiy muhandislik.</li>
+          <li>Ma’lumot sizib chiqsa — bosim yoki firibgarlik xavfi.</li>
+        </ul>
+        <h3>Servis nima qiladi</h3>
+        <p>
+          Bu yerda ayni damda ko‘rinib turgan signallarni ko‘rasiz, xavflar sodda tilda tushuntiriladi
+          va raqamli izni kamaytirish uchun bosqichma-bosqich tavsiyalar beriladi.
+        </p>
+        <h3>Ma’lumotlar qanday ishlanadi</h3>
+        <p>
+          Hisob-kitoblarning hammasi brauzeringizning o‘zida bajariladi: hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish shart emas.
+          Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.
+        </p>
+        <h3>Qo‘shimcha: “IP aniqlash va ma’lumotlarni aniqlashtirish”</h3>
+        <p>
+          So‘rov bo‘yicha internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi
+          va VPN ishlatilayotgani ehtimolini baholaydi.
+        </p>
+      </section>
+    `,
     introParagraphs:[
-      'Har bir qurilma va brauzer o‘ziga xos xususiyatlar to‘plamini ochib beradi — bu “raqamli barmoq izi”. U saytlar uchun sizni tashriflar orasida taniy olish va turli domenlardagi faollikni bog‘lash imkonini beradi, hatto akkauntsiz ham.',
-      'Bu qanday ishlaydi: siz n1, n2, n3 saytlarini akkauntsiz ko‘rasiz. Keyin n4 (masalan, ijtimoiy tarmoq) saytida akkaunt yaratasiz. Ma’lumot brokerlari va reklama tarmoqlari o‘xshash belgilarni taqqoslab, oldingi tashriflarni aniq shaxsga bog‘laydi.',
-      'Bu nimaga olib keladi: tajovuzkor reklama va narxlarni o‘zgartirish, chuqur profil yig‘ilishi, fishing va ijtimoiy muhandislik, ma’lumot sizib chiqsa — bosim yoki firibgarlik.',
-      'Servis nima qiladi: ayni damda ko‘rinib turgan ma’lumotlarni ko‘rsatadi, xatarlarni sodda tilda tushuntiradi va raqamli izni kamaytirish bo‘yicha bosqichma-bosqich tavsiyalar beradi.',
-      'Ma’lumotlar qanday ishlanadi: barcha hisob-kitob brauzeringizning o‘zida bajariladi. Hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish talab etilmaydi. Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.',
-      'Qo‘shimcha ma’lumot kerakmi? “IP aniqlash va ma’lumotlarni aniqlashtirish” tugmasi so‘rovingiz bo‘yicha internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi va VPN ishlatilayotganini taxmin qiladi.'
+      'Har bir qurilma va brauzer o‘ziga xos xususiyatlar to‘plamini ochib beradi — bu “raqamli barmoq izi”. U saytlar uchun tashriflar orasida sizni aniqlash va turli xizmatlardagi faollikni bog‘lash imkonini beradi — hatto akkauntsiz ham.',
+      'Siz n1, n2, n3 saytlarini akkauntsiz ko‘rasiz. Keyin n4 (masalan, ijtimoiy tarmoq) saytida akkaunt yaratasiz. Ma’lumot brokerlari va reklama tarmoqlari barmoq izidagi mos belgilarni taqqoslab, oldingi tashriflarni aniq shaxsga bog‘laydi.',
+      'Tajovuzkor reklama va narxlarni individuallashtirish, qiziqish va odatlar bo‘yicha chuqur profil, fishing va ijtimoiy muhandislik, ma’lumot sizib chiqsa — bosim yoki firibgarlik xavfi.',
+      'Bu servis ayni damda ko‘rinib turgan signallarni ko‘rsatadi, xavflarni sodda tilda tushuntiradi va raqamli izni kamaytirish bo‘yicha bosqichma-bosqich tavsiyalar beradi.',
+      'Hisob-kitoblarning hammasi brauzeringizning o‘zida bajariladi: hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish shart emas. Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.',
+      '“IP aniqlash va ma’lumotlarni aniqlashtirish” tugmasi internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi va VPN ishlatilayotganini taxmin qiladi.'
     ],
     uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
     uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
@@ -3371,15 +3504,22 @@ async function render(lang){
     shareBtn.setAttribute('aria-disabled','true');
   }
   state.sharePayload=null;
-  getEl('introTitle').textContent=t.introTitle;
+  const introTitleEl=getEl('introTitle');
+  introTitleEl.textContent=t.introTitle;
   const introTextEl=getEl('introText');
   introTextEl.textContent='';
-  const introParagraphs=Array.isArray(t.introParagraphs)?t.introParagraphs.filter(Boolean):[t.introText].filter(Boolean);
-  introParagraphs.forEach(text=>{
-    const p=document.createElement('p');
-    p.textContent=text;
-    introTextEl.appendChild(p);
-  });
+  if(t.introRichHtml){
+    introTextEl.innerHTML=t.introRichHtml;
+    introTextEl.classList.add('intro-content--rich');
+  }else{
+    introTextEl.classList.remove('intro-content--rich');
+    const introParagraphs=Array.isArray(t.introParagraphs)?t.introParagraphs.filter(Boolean):[t.introText].filter(Boolean);
+    introParagraphs.forEach(text=>{
+      const p=document.createElement('p');
+      p.textContent=text;
+      introTextEl.appendChild(p);
+    });
+  }
   getEl('detailTitle').textContent=t.detailTitle;
   getEl('shockTitle').textContent=t.shockTitle;
   getEl('methodSummary').innerHTML=t.methodSummary;
