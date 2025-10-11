@@ -21,16 +21,11 @@
       --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042;
       --r:16px; --shadow:0 10px 30px rgba(0,0,0,.25);
       --accent:#60a5fa;
-      --fp-bg:#111827;
-      --fp-text-strong:#e2e8f0;
-      --fp-text-muted:#cbd5e1;
-      --fp-border-soft:rgba(148,163,184,.22);
-      --fp-shadow:0 28px 60px rgba(2,6,23,.5);
     }
-    :root.force-dark{ --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042; --shadow:0 10px 30px rgba(0,0,0,.25); --accent:#60a5fa; --fp-bg:#111827; --fp-text-strong:#e2e8f0; --fp-text-muted:#cbd5e1; --fp-border-soft:rgba(148,163,184,.22); --fp-shadow:0 28px 60px rgba(2,6,23,.5); }
-    :root.force-light{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; --fp-bg:#ffffff; --fp-text-strong:#0f172a; --fp-text-muted:#475569; --fp-border-soft:rgba(15,23,42,.12); --fp-shadow:0 26px 58px rgba(15,23,42,.16); }
+    :root.force-dark{ --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042; --shadow:0 10px 30px rgba(0,0,0,.25); --accent:#60a5fa; }
+    :root.force-light{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
     @media (prefers-color-scheme: light){
-      :root:not(.force-dark):not(.force-light){ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; --fp-bg:#ffffff; --fp-text-strong:#0f172a; --fp-text-muted:#475569; --fp-border-soft:rgba(15,23,42,.12); --fp-shadow:0 26px 58px rgba(15,23,42,.16); }
+      :root:not(.force-dark):not(.force-light){ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -52,22 +47,15 @@
     .menu-panel button.active{border-color:var(--accent);color:var(--accent);background-color:rgba(96,165,250,0.12)}
     .menu-panel button .menu-icon{font-size:16px}
     .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
-    .intro-block{background:transparent;border:none;box-shadow:none;padding:0;margin:0 0 24px}
-    .intro-content{width:100%;padding:0}
-    .intro-content--rich{display:flex;justify-content:center}
-    .intro-content--rich .fp-section{width:100%;max-width:72ch;margin:0 auto;padding:clamp(1.75rem,3vw,2.6rem) clamp(1.25rem,3vw,2.75rem);border-radius:calc(var(--r)*1.125);border:1px solid var(--fp-border-soft);background:var(--fp-bg);color:var(--fp-text-strong);box-shadow:var(--fp-shadow);backdrop-filter:blur(6px)}
-    .intro-content--rich .fp-section :is(h2,h3){line-height:1.25;margin:1.5rem 0 0.75rem;color:var(--fp-text-muted)}
-    .intro-content--rich .fp-section h2{margin:0 0 1rem;font-size:clamp(1.6rem,2.5vw,2.1rem);font-weight:700;color:var(--fp-text-strong);text-wrap:balance}
-    .intro-content--rich .fp-section h3{font-size:clamp(1.1rem,1.8vw,1.25rem);font-weight:600}
-    .intro-content--rich .fp-section p{margin:0 0 1.1rem;line-height:1.75;color:var(--fp-text-strong);text-wrap:pretty}
-    .intro-content--rich .fp-section ul{margin:0 0 1.1rem 1.25rem;padding:0;color:var(--fp-text-strong)}
-    .intro-content--rich .fp-section li{margin:0.35rem 0;line-height:1.65}
-    .intro-content--rich .fp-section abbr[title]{text-decoration:underline dotted;cursor:help}
-    .intro-content--rich .fp-section{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; hanging-punctuation:first; hyphens:auto; word-break:break-word}
-    @media (max-width:720px){
-      .intro-content--rich .fp-section{padding:clamp(1.5rem,3vw,2rem) clamp(1rem,6vw,1.75rem)}
-    }
     .section-title{font-weight:700;font-size:18px;margin:0 0 8px}
+    .intro-content--rich{display:block}
+    .intro-content--rich .fp-section{margin:0;padding:0;color:var(--text)}
+    .intro-content--rich .fp-section h2{margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text)}
+    .intro-content--rich .fp-section h3{margin:14px 0 6px;font-size:15px;font-weight:600;color:var(--muted)}
+    .intro-content--rich .fp-section p{margin:6px 0;line-height:1.65;color:var(--text)}
+    .intro-content--rich .fp-section ul{margin:6px 0 0 18px;padding:0;color:var(--text)}
+    .intro-content--rich .fp-section li{margin:4px 0;line-height:1.55}
+    .intro-content--rich .fp-section abbr[title]{text-decoration:underline dotted;cursor:help}
     .section-subtitle{font-weight:600;margin:12px 0 6px}
     .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px}
     .big[data-level="high"]{color:#ef4444}
@@ -88,6 +76,7 @@
     .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
+    .shock-footer{display:flex;justify-content:flex-end;margin-top:12px}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
     .card{border:1px solid var(--border);border-radius:12px;padding:12px}
     .title{font-weight:700;margin-bottom:6px}
@@ -156,14 +145,28 @@
   </header>
 
   <!-- Block 1: Intro -->
-  <section class="block intro-block" aria-labelledby="introTitle">
-    <div id="introTitle" class="section-title sr-only"></div>
-    <div id="introText" class="intro-content"></div>
+  <section class="block">
+    <div id="introTitle" class="section-title"></div>
+    <div id="introText" class="small"></div>
   </section>
 
-  <!-- Block 2: Uniqueness + shock -->
+  <!-- Block 2: Shock findings -->
+  <section class="block" id="shockSection" style="display:none">
+    <div class="section-title" id="shockTitle"></div>
+    <div class="danger" id="shock" style="display:none">
+      <ul id="shockList" class="advice-list small emoji-list"></ul>
+      <div id="ipInfo" class="small" style="margin-top:10px"></div>
+      <div id="speedResult" class="small" style="margin-top:6px"></div>
+      <div class="shock-footer">
+        <button class="btn" id="printBtn"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Block 3: Uniqueness -->
   <section class="block" id="uniqBlock">
     <div id="uniqLine" class="big"></div>
+    <div id="uniqOutcome" class="small"></div>
     <div class="row shock-actions" id="uniqActions">
       <button class="btn btn-primary" id="shareBtn"></button>
     </div>
@@ -174,20 +177,6 @@
     <ul id="uniqRisksList" class="advice-list small"></ul>
     <div id="uniqAdviceTitle" class="section-subtitle small"></div>
     <ul id="uniqAdvice" class="advice-list small"></ul>
-    <div id="uniqOutcome" class="small"></div>
-  </section>
-
-  <section class="block" id="shockSection" style="display:none">
-    <div class="section-title" id="shockTitle"></div>
-    <div class="danger" id="shock" style="display:none">
-      <div class="row shock-actions" id="ipActionRow">
-        <button class="btn" id="ipBtn"></button>
-        <button class="btn" id="printBtn"></button>
-      </div>
-      <ul id="shockList" class="advice-list small emoji-list"></ul>
-      <div id="ipInfo" class="small" style="margin-top:10px"></div>
-      <div id="speedResult" class="small" style="margin-top:6px"></div>
-    </div>
   </section>
 
   <!-- Block 4: Detailed cards -->
@@ -344,12 +333,11 @@ const I18N = {
       fallback6:'Регулярно проверяйте настройки контент-блокеров и разрешений, чтобы они не включались сами собой.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
-    detailTitle:'Какие данные видит сайт',
-    shockTitle:'Что о вас знает сайт даже без IP (нажмите «Определить IP», чтобы получить расширенные данные)',
+    detailTitle:'Подробности',
+    shockTitle:'Что о вас знает сайт даже без IP',
     shock:{
-      region:value=>`🗺️ <b>Местоположение по сигналам:</b> ${pillOr(value)}`,
-      clock:(place,offset,time)=>{
-        const parts=[place,offset,time].filter(Boolean);
+      clock:(place,time)=>{
+        const parts=[place,time].filter(Boolean);
         return `⏰ <b>Часовой пояс и время:</b> ${parts.join(' ')}`;
       },
       clockFallback:'страна не определена',
@@ -358,7 +346,7 @@ const I18N = {
         if(hypothesis) pieces.push(hypothesis);
         return `💻 <b>Устройство:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
-      deviceHypothesis:model=>`скорее всего вы используете ${model}`,
+      deviceHypothesis:model=>`собранные сигналы указывают на ${model}`,
       browserPerms:(browser,perms)=>{
         const pieces=[browser,perms].filter(Boolean);
         return `🌐 <b>Браузер и разрешения:</b> ${pieces.join(' ')}`;
@@ -376,10 +364,8 @@ const I18N = {
       battery:value=>`🔋 <b>Батарея:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Провайдер:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${pillOr(status)}`,
-      vpnPrompt:'Нажмите «Определить IP и уточнить данные», чтобы получить больше сведений',
-      vpn:(status,reasons,prompt)=>{
-        const parts=[status,reasons].filter(Boolean).map(pillValue);
-        if(prompt) parts.push(`<span class="pill">${escapeHtml(prompt)}</span>`);
+      vpn:(status,reasons,action)=>{
+        const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       connection:summary=>`📶 <b>Подключение и скорость:</b> ${summary||pillOr('—')}`
@@ -607,7 +593,18 @@ const I18N = {
         forwarded:'в заголовках есть признаки прокси'
       }
     },
-    monitorText:{single:'браузер сообщает об одном экране',multi:count=>`браузер сообщает о ${count} активных экранах`,unknown:'браузер не раскрывает количество экранов'},
+    monitorText:{
+      single:'1 экран',
+      multi:count=>{
+        const mod10=count%10;
+        const mod100=count%100;
+        let word='экранов';
+        if(mod10===1&&mod100!==11) word='экран';
+        else if(mod10>=2&&mod10<=4&&(mod100<10||mod100>=20)) word='экрана';
+        return `${count} ${word}`;
+      },
+      unknown:'количество экранов не раскрывается'
+    },
     permNames:{
       geolocation:'геолокация',
       notifications:'уведомления',
@@ -617,7 +614,7 @@ const I18N = {
       'clipboard-write':'запись в буфер обмена',
       'persistent-storage':'постоянное хранилище'
     },
-    permStates:{granted:'разрешено',denied:'запрещено',prompt:'запросит перед доступом',unknown:'не сообщается'},
+    permStates:{granted:'✅ разрешено',denied:'❌ запрещено',prompt:'по запросу',unknown:'не сообщается'},
     pointerLabels:{fine:'мышь/трекпад',coarse:'тачскрин',none:'не сообщает'},
     dntStatus:{on:'включена',off:'выключена',unknown:'браузер не сообщил'},
     memoryNote:'браузер округляет цифры, реальные значения могут отличаться',
@@ -774,12 +771,12 @@ const I18N = {
       fallback6:'Review blocker settings and permissions regularly so they do not silently re-enable themselves.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
-    detailTitle:'What a site can learn',
-    shockTitle:'What a site already sees without IP (press “Detect IP” for richer data)',
+    detailTitle:'Details',
+    shockTitle:'What a site already sees without IP',
     shock:{
       region:value=>`🗺️ <b>Signals about your location:</b> ${pillOr(value)}`,
-      clock:(place,offset,time)=>{
-        const parts=[place,offset,time].filter(Boolean);
+      clock:(place,time)=>{
+        const parts=[place,time].filter(Boolean);
         return `⏰ <b>Time zone & clock:</b> ${parts.join(' ')}`;
       },
       clockFallback:'country unknown',
@@ -788,7 +785,7 @@ const I18N = {
         if(hypothesis) pieces.push(hypothesis);
         return `💻 <b>Device:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
-      deviceHypothesis:model=>`likely you use ${model}`,
+      deviceHypothesis:model=>`signals point to ${model}`,
       browserPerms:(browser,perms)=>{
         const pieces=[browser,perms].filter(Boolean);
         return `🌐 <b>Browser & permissions:</b> ${pieces.join(' ')}`;
@@ -806,10 +803,8 @@ const I18N = {
       battery:value=>`🔋 <b>Battery:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provider:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${pillOr(status)}`,
-      vpnPrompt:'Press “Detect IP & refine data” to unlock more evidence',
-      vpn:(status,reasons,prompt)=>{
-        const parts=[status,reasons].filter(Boolean).map(pillValue);
-        if(prompt) parts.push(`<span class="pill">${escapeHtml(prompt)}</span>`);
+      vpn:(status,reasons,action)=>{
+        const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       connection:summary=>`📶 <b>Connection & speed:</b> ${summary||pillOr('—')}`
@@ -1009,7 +1004,13 @@ const I18N = {
         forwarded:'proxy or VPN headers spotted'
       }
     },
-    monitorText:{single:'browser reports one active screen',multi:count=>`browser reports ${count} active screens`,unknown:'browser does not reveal the number of screens'},
+    monitorText:{
+      single:'1 screen',
+      multi:count=>{
+        return `${count} screens`;
+      },
+      unknown:'screen count not shared'
+    },
     permNames:{
       geolocation:'location',
       notifications:'notifications',
@@ -1019,7 +1020,7 @@ const I18N = {
       'clipboard-write':'write clipboard',
       'persistent-storage':'persistent storage'
     },
-    permStates:{granted:'allowed',denied:'blocked',prompt:'will ask before access',unknown:'not reported'},
+    permStates:{granted:'✅ allowed',denied:'❌ blocked',prompt:'on request',unknown:'not reported'},
     pointerLabels:{fine:'mouse/trackpad',coarse:'touchscreen',none:'not reported'},
     dntStatus:{on:'enabled',off:'disabled',unknown:'not reported'},
     memoryNote:'browser rounds numbers, actual RAM may differ',
@@ -1176,12 +1177,12 @@ const I18N = {
       fallback6:'Bloklagich va ruxsat sozlamalarini vaqti-vaqti bilan tekshirib turing — ular o‘z-o‘zidan yoqilib ketmasin.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
-    detailTitle:'Sayt nimalarni ko‘rishi mumkin',
-    shockTitle:'IP talab qilinmasdan ham ko‘rinadiganlar (batafsil uchun “IP aniqlash” tugmasini bosing)',
+    detailTitle:'Batafsil',
+    shockTitle:'IP talab qilinmasdan ham ko‘rinadiganlar',
     shock:{
       region:value=>`🗺️ <b>Joylashuv signallari:</b> ${pillOr(value)}`,
-      clock:(place,offset,time)=>{
-        const parts=[place,offset,time].filter(Boolean);
+      clock:(place,time)=>{
+        const parts=[place,time].filter(Boolean);
         return `⏰ <b>Vaqt mintaqasi va soat:</b> ${parts.join(' ')}`;
       },
       clockFallback:'mamlakat aniqlanmadi',
@@ -1208,10 +1209,8 @@ const I18N = {
       battery:value=>`🔋 <b>Batareya:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provayder:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${pillOr(status)}`,
-      vpnPrompt:'“IP aniqlash va maʼlumotlarni aniqlashtirish” tugmasini bosing',
-      vpn:(status,reasons,prompt)=>{
-        const parts=[status,reasons].filter(Boolean).map(pillValue);
-        if(prompt) parts.push(`<span class="pill">${escapeHtml(prompt)}</span>`);
+      vpn:(status,reasons,action)=>{
+        const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       connection:summary=>`📶 <b>Aloqa va tezlik:</b> ${summary||pillOr('—')}`
@@ -1436,7 +1435,11 @@ const I18N = {
         forwarded:'sarlavhalarda proksi yoki VPN izi bor'
       }
     },
-    monitorText:{single:'brauzer bitta faol ekran haqida maʼlum qiladi',multi:count=>`brauzer ${count} ta faol ekran haqida maʼlum qildi`,unknown:'brauzer ekranlar sonini bermadi'},
+    monitorText:{
+      single:'1 ta ekran',
+      multi:count=>`${count} ta ekran`,
+      unknown:'ekranlar soni ko‘rsatilmagan'
+    },
     permNames:{
       geolocation:'geolokatsiya',
       notifications:'bildirishnomalar',
@@ -1446,7 +1449,7 @@ const I18N = {
       'clipboard-write':'buf. xotiraga yozish',
       'persistent-storage':'doimiy xotira'
     },
-    permStates:{granted:'ruxsat berilgan',denied:'bloklangan',prompt:'kirishdan oldin so‘raydi',unknown:'maʼlumot yo‘q'},
+    permStates:{granted:'✅ ruxsat berilgan',denied:'❌ bloklangan',prompt:'so‘rov bo‘yicha',unknown:'maʼlumot yo‘q'},
     pointerLabels:{fine:'sichqoncha/trekpad',coarse:'sensor ekran',none:'maʼlumot yo‘q'},
     dntStatus:{on:'yoqilgan',off:'o‘chirilgan',unknown:'brauzer maʼlumot bermadi'},
     memoryNote:'brauzer qiymatlarni taxmin qiladi, haqiqiy RAM boshqacha bo‘lishi mumkin',
@@ -3022,9 +3025,6 @@ function buildDeviceSpecs(basic,profiling,t,hasTouch){
   const units=t.units||{};
   if(hw.hardwareConcurrency) specs.push(`${hw.hardwareConcurrency} ${units.cores||'cores'}`);
   if(hw.deviceMemory) specs.push(`≈${hw.deviceMemory} ${units.gb||'GB'}`);
-  if(hw.memoryLimitGb && (!hw.deviceMemory || Math.abs(hw.memoryLimitGb-hw.deviceMemory)>1)){
-    specs.push(`heap ≤${hw.memoryLimitGb} ${units.gb||'GB'}`);
-  }
   const screen=basic.screen||{};
   if(screen.w && screen.h && screen.pixelRatio){
     specs.push(`${screen.w}×${screen.h}@${screen.pixelRatio}`);
@@ -3100,25 +3100,11 @@ function renderShockBullets(basic,t){
   const tzInfo=describeTimeZoneLabel(timezone,locale);
   const tzCity=tzCityName(timezone);
   const details=state.serverData?.details||{};
-  let locationValue=profiling?.location||null;
-  if(!locationValue){
-    const ipParts=[details.city||details.region,details.country_name].filter(Boolean);
-    if(ipParts.length) locationValue=ipParts.join(', ');
-  }
-  if(!locationValue){
-    const fallbackCountry=details.country_name||tzInfo.country||t.shock.clockFallback||'';
-    const fallbackParts=[fallbackCountry,tzCity].filter(Boolean);
-    locationValue=fallbackParts.length?fallbackParts.join(', '):(tzCity||timezone||t.shock.clockFallback||'—');
-  }
   const placeParts=[];
   const countryLabel=details.country_name||tzInfo.country||t.shock.clockFallback||'';
   if(countryLabel) placeParts.push(pillValue(countryLabel));
   if(tzCity) placeParts.push(pillValue(tzCity));
   const placeHtml=placeParts.length?placeParts.join(' '):pillOr(t.shock.clockFallback||'—');
-  const offsetParts=[];
-  if(timezone) offsetParts.push(pillValue(timezone));
-  if(typeof basic.tzOffsetMinutes==='number') offsetParts.push(pillValue(utcOffsetStr(-basic.tzOffsetMinutes)));
-  const offsetHtml=offsetParts.join(' ');
   const timeHtml=`<span class="pill" data-clock-tz="${escapeHtml(timezone)}" data-clock-locale="${escapeHtml(locale)}" data-clock-seconds="1">${escapeHtml(timeInTZ(timezone,locale,true))}</span>`;
   const permEntries=Object.entries(basic.perms||{});
   const keyPerms=summarizeKeyPermissions(permEntries,t);
@@ -3128,29 +3114,41 @@ function renderShockBullets(basic,t){
   const provider=profiling?.provider||details.org||state.serverData?.detailSource||null;
   const vpnState=state.vpn||{status:'uncertain',reasons:[],checked:false};
   const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
-  const vpnReasons=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
-  let vpnPromptHtml='';
-  if(!state.serverData){
-    const inlineLabel=t.ip?.inline||t.ip?.button||'IP';
-    const buttonHtml=`<button type="button" class="btn btn-inline" data-inline-ip="1">${escapeHtml(inlineLabel)}</button>`;
-    const promptText=t.shock.vpnPrompt?escapeHtml(t.shock.vpnPrompt):'';
-    vpnPromptHtml=[promptText,buttonHtml].filter(Boolean).join(' ').trim();
-  }
+  const vpnReasonText=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
+  const vpnReasonHtml=vpnReasonText?pillList(vpnReasonText.split(/;\s*/).filter(Boolean)):'';
   const deviceSpecs=buildDeviceSpecs(basic,profiling,t,hasTouch);
   const connectionSummary=buildConnectionSummary(basic,profiling,t);
-  const bullets=[];
-  bullets.push(t.shock.region(locationValue||t.shock.clockFallback||'—'));
-  bullets.push(t.shock.clock(placeHtml,offsetHtml,timeHtml));
-  bullets.push(t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis));
-  bullets.push(t.shock.browserPerms(browserHtml,permHtml));
-  bullets.push(t.shock.languages(languagesSummary||''));
-  if(batteryText) bullets.push(t.shock.battery(batteryText));
-  if(provider) bullets.push(t.shock.provider(provider));
-  if(dntLabel) bullets.push(t.shock.dnt(dntLabel));
-  bullets.push(t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasons?vpnReasons:'',vpnPromptHtml));
-  bullets.push(t.shock.connection(connectionSummary));
+  const ipButton=ensureInlineIpButton(t);
+  const vpnActionSlot='<span data-vpn-slot></span>';
+  const bullets=[
+    {key:'clock',html:t.shock.clock(placeHtml,timeHtml)},
+    {key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)},
+    {key:'browser',html:t.shock.browserPerms(browserHtml,permHtml)},
+    {key:'languages',html:t.shock.languages(languagesSummary||'')}
+  ];
+  if(batteryText) bullets.push({key:'battery',html:t.shock.battery(batteryText)});
+  if(provider) bullets.push({key:'provider',html:t.shock.provider(provider)});
+  if(dntLabel) bullets.push({key:'dnt',html:t.shock.dnt(dntLabel)});
+  bullets.push({key:'connection',html:t.shock.connection(connectionSummary)});
+  bullets.push({key:'vpn',html:t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasonHtml,vpnActionSlot),button:ipButton});
   ul.innerHTML='';
-  bullets.filter(Boolean).forEach(text=>{const li=document.createElement('li');li.innerHTML=text;ul.appendChild(li);});
+  bullets.filter(Boolean).forEach(item=>{
+    const li=document.createElement('li');
+    let html=item.html||'';
+    if(item.key==='vpn'&&item.button){
+      if(html.includes(vpnActionSlot)){
+        html=html.replace(vpnActionSlot,'');
+      }
+      li.innerHTML=html;
+      if(li.innerHTML && !li.innerHTML.endsWith(' ')){
+        li.appendChild(document.createTextNode(' '));
+      }
+      li.appendChild(item.button);
+    }else{
+      li.innerHTML=html;
+    }
+    ul.appendChild(li);
+  });
   shockBulletCount=bullets.filter(Boolean).length;
   initClockIntervals(ul);
   syncShockVisibility();
@@ -3467,6 +3465,24 @@ let currentLang='ru';
 const cacheEls={};
 const getEl=id=>cacheEls[id]||(cacheEls[id]=document.getElementById(id));
 let renderToken=0;
+let inlineIpButton=null;
+
+function ensureInlineIpButton(t){
+  if(!inlineIpButton){
+    inlineIpButton=document.createElement('button');
+    inlineIpButton.type='button';
+    inlineIpButton.id='ipBtn';
+    inlineIpButton.className='btn btn-inline';
+    inlineIpButton.addEventListener('click',detectIpAndSpeed);
+  }
+  const label=t.ip?.button||'IP';
+  const loading=t.ip?.buttonLoading||label;
+  inlineIpButton.textContent=state.fetchingIp?loading:label;
+  inlineIpButton.dataset.label=label;
+  inlineIpButton.setAttribute('aria-label',label);
+  inlineIpButton.disabled=Boolean(state.fetchingIp);
+  return inlineIpButton;
+}
 
 async function render(lang){
   const token=++renderToken;
@@ -3529,9 +3545,7 @@ async function render(lang){
   getEl('footerText').textContent=typeof t.footer==='function'?t.footer(VERSION,VERSION_SCHEME):t.footer;
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
-  const ipBtn=getEl('ipBtn');
-  ipBtn.textContent=state.fetchingIp?t.ip.buttonLoading:t.ip.button;
-  ipBtn.disabled=state.fetchingIp;
+  ensureInlineIpButton(t);
   updateIpSection(t);
   updateSpeedSection(t);
   renderProfilingSection(snapshotCache?.basic||null,t);
@@ -3940,10 +3954,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(printBtn){
     printBtn.addEventListener('click',()=>{handleSaveClick().catch(()=>{});});
   }
-  const ipBtn=getEl('ipBtn');
-  if(ipBtn){
-    ipBtn.addEventListener('click',detectIpAndSpeed);
-  }
   const langBtn=getEl('langBtn');
   const langMenu=getEl('langMenu');
   if(langBtn&&langMenu){
@@ -4001,20 +4011,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       }
     });
   }
-  document.addEventListener('click',event=>{
-    const target=event.target instanceof HTMLElement?event.target:null;
-    if(!target) return;
-    const inlineBtn=target.closest('[data-inline-ip="1"]');
-    if(!inlineBtn) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if(state.fetchingIp) return;
-    const btn=getEl('ipBtn');
-    if(btn){
-      btn.focus({preventScroll:true});
-      btn.click();
-    }
-  });
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'){
       setLangMenu(false);
