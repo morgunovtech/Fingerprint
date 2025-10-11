@@ -123,7 +123,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Fingerprint</h1><span class="sub">by morgunov.tech</span>
+    <h1>Fingerprint</h1><span class="sub">by <a href="https://start.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a></span>
     <div class="toolbar">
       <div class="lang-switcher menu">
         <button class="btn" id="langBtn" aria-haspopup="true" aria-expanded="false">Язык</button>
@@ -198,11 +198,14 @@
   </section>
 
   <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
-    © morgunov.tech • Локальный аудит отпечатка • Версия: 07.10.25 (CalVer (DD.MM.YY))
+    © <a href="https://start.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: 2025-10-07 • <a href="https://t.me/raschet7" target="_blank" rel="noopener">Telegram</a> • <a href="https://start.morgunov.tech" target="_blank" rel="noopener">start.morgunov.tech</a>
   </footer>
 </div>
 
 <script>
+const PERSONAL_URL='https://start.morgunov.tech';
+const TELEGRAM_URL='https://t.me/raschet7';
+
 /* ================= I18N ================= */
 const I18N = {
   ru: {
@@ -623,8 +626,8 @@ const I18N = {
     share:{
       unavailable:'Подождите расчёта…',
       title:({pct})=>`Насколько вы анонимны: уникальнее, чем ${Math.round(pct)}% людей`,
-      tagline:'Узнай, насколько ты анонимен в сети',
-      text:({pct,url})=>`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей. Узнай, насколько ты анонимен в сети на Fingerprint — ${url||CANONICAL_URL}`,
+      tagline:'Проверь, что сайты узнают о тебе за секунды',
+      text:({pct,url})=>`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей. Проверь, что сайты узнают о тебе за секунды — ${url||CANONICAL_URL}`,
       shared:'Отправили! Спасибо, что делитесь.',
       copied:'Ссылка скопирована',
       error:'Не удалось поделиться автоматически. Попробуйте скопировать ссылку вручную.',
@@ -637,7 +640,7 @@ const I18N = {
     methodText:'Мы сопоставляем ваш набор сигналов с актуальными открытыми замерами (StatCounter, Cover Your Tracks 2024, Ookla). Редкий набор даёт большую энтропию H (в битах) и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. Внешние сервисы вызываются только по кнопке IP, и мы показываем весь ответ. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
-    footer:(version,scheme)=>`© morgunov.tech • Локальный аудит отпечатка • Версия: ${version} (${scheme})`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
     units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
@@ -1029,8 +1032,8 @@ const I18N = {
     share:{
       unavailable:'Wait until the calculation is ready…',
       title:({pct})=>`How anonymous are you? More unique than ${Math.round(pct)}%`,
-      tagline:'See how anonymous you are online',
-      text:({pct,url})=>`My digital fingerprint is more unique than ${Math.round(pct)}% of people. See how anonymous you are on Fingerprint — ${url||CANONICAL_URL}`,
+      tagline:'See what sites learn about you in seconds',
+      text:({pct,url})=>`My digital fingerprint is more unique than ${Math.round(pct)}% of people. See what sites learn about you in seconds — ${url||CANONICAL_URL}`,
       shared:'Shared — thank you!',
       copied:'Link copied!',
       error:'Could not share automatically. Please copy the link instead.',
@@ -1043,7 +1046,7 @@ const I18N = {
     methodText:'We benchmark your signals against up-to-date public datasets (StatCounter, Cover Your Tracks 2024, Ookla). A rare mix produces higher entropy H (in bits) and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. External services are called only when you press the IP button, and the full reply is shown at once. No extra fonts, trackers, or hidden requests are loaded.',
-    footer:(version,scheme)=>`© morgunov.tech • Local fingerprint audit • Version: ${version} (${scheme})`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • Version: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
     units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
@@ -1458,8 +1461,8 @@ const I18N = {
     share:{
       unavailable:'Hisob yakunlanishini kuting…',
       title:({pct})=>`Qanchalik anonim ekansiz? ${Math.round(pct)}% daraja`,
-      tagline:'Internetda qanchalik anonimligingizni biling',
-      text:({pct,url})=>`Mening raqamli izi foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob. Fingerprint xizmatida o‘zingizning anonimlik darajangizni tekshirib ko‘ring — ${url||CANONICAL_URL}`,
+      tagline:'Saytlar siz haqingizda nimalarni tezda bilishini ko‘ring',
+      text:({pct,url})=>`Mening raqamli izi foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob. Saytlar siz haqingizda nimalarni bir zumda bilishini ko‘ring — ${url||CANONICAL_URL}`,
       shared:'Ulashildi — rahmat!',
       copied:'Havola nusxalandi',
       error:'Avtomatik ulashib boʻlmadi. Havolani qoʻlda nusxalab koʻring.',
@@ -1472,7 +1475,7 @@ const I18N = {
     methodText:'Signallarni eng so‘nggi ochiq maʼlumotlar (StatCounter, Cover Your Tracks 2024, Ookla) bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni (bitlarda) oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:'Barcha jarayon brauzer ichida bo‘ladi. IP tugmasini bosganingizdagina tashqi servisga murojaat qilamiz va javobni butunlay ko‘rsatamiz. Qo‘shimcha shriftlar, trekerlar yoki yashirin so‘rovlar yo‘q.',
-    footer:(version,scheme)=>`© morgunov.tech • Mahalliy fingerprint auditi • Versiya: ${version} (${scheme})`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint auditi • Versiya: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
     units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
@@ -1481,9 +1484,8 @@ const I18N = {
   }
 };
 
-// Calendar versioning keeps builds tied to release dates.
-const VERSION = '07.10.25';
-const VERSION_SCHEME = 'CalVer (DD.MM.YY)';
+// Release version follows ISO 8601 (YYYY-MM-DD) for global clarity.
+const VERSION = '2025-10-07';
 const CANONICAL_URL = 'https://morgunov.tech/fingerprint';
 
 
@@ -3542,7 +3544,11 @@ async function render(lang){
   getEl('methodText').innerHTML=t.methodText;
   getEl('policySummary').innerHTML=t.policySummary;
   getEl('policyText').innerHTML=t.policyText;
-  getEl('footerText').textContent=typeof t.footer==='function'?t.footer(VERSION,VERSION_SCHEME):t.footer;
+  const footerEl=getEl('footerText');
+  if(footerEl){
+    const footerContent=typeof t.footer==='function'?t.footer(VERSION):t.footer;
+    footerEl.innerHTML=footerContent||'';
+  }
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
   ensureInlineIpButton(t);
