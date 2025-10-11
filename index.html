@@ -48,14 +48,14 @@
     .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
     .section-title{font-weight:700;font-size:18px;margin:0 0 8px}
     .section-subtitle{font-weight:600;margin:12px 0 6px}
-    .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:4px}
+    .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px}
     .big[data-level="high"]{color:#ef4444}
     .big[data-level="med"]{color:#f59e0b}
     .big[data-level="low"]{color:var(--text)}
-    .big .code-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(148,163,184,.15);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:.95em;color:inherit}
-    .big[data-level="high"] .code-pill{border-color:#ef4444;background:rgba(239,68,68,.14);color:#ef4444}
-    .big[data-level="med"] .code-pill{border-color:#f59e0b;background:rgba(245,158,11,.18);color:#b45309}
-    .big[data-level="low"] .code-pill{border-color:var(--border);background:rgba(148,163,184,.15);color:inherit}
+    .big .code-pill{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(148,163,184,.15);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1.05em;line-height:1.35;color:var(--text);text-align:center;text-wrap:balance;white-space:normal;box-shadow:inset 0 0 0 1px rgba(148,163,184,.16)}
+    .big[data-level="high"] .code-pill{border-color:#ef4444;background:rgba(239,68,68,.18);box-shadow:inset 0 0 0 1px rgba(239,68,68,.28);color:var(--text)}
+    .big[data-level="med"] .code-pill{border-color:#f59e0b;background:rgba(245,158,11,.2);box-shadow:inset 0 0 0 1px rgba(245,158,11,.28);color:var(--text)}
+    .big[data-level="low"] .code-pill{border-color:var(--border);background:rgba(148,163,184,.16);box-shadow:inset 0 0 0 1px rgba(148,163,184,.2)}
     .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:0;grid-column:1/-1;max-width:720px}
     #introText p{margin:6px 0}
     #introText p:first-child{margin-top:0}
