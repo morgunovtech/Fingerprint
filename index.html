@@ -33,6 +33,7 @@
          font:15px/1.65 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial;
          -webkit-font-smoothing:antialiased}
     .wrap{max-width:1100px;margin:24px auto 72px;padding:0 20px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     header{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
     h1{font-size:22px;margin:0}
     .sub{color:var(--muted);font-size:14px}
@@ -47,15 +48,23 @@
     .menu-panel button .menu-icon{font-size:16px}
     .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
     .section-title{font-weight:700;font-size:18px;margin:0 0 8px}
+    .intro-content--rich{display:block}
+    .intro-content--rich .fp-section{margin:0;padding:0;color:var(--text)}
+    .intro-content--rich .fp-section h2{margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text)}
+    .intro-content--rich .fp-section h3{margin:14px 0 6px;font-size:15px;font-weight:600;color:var(--muted)}
+    .intro-content--rich .fp-section p{margin:6px 0;line-height:1.65;color:var(--text)}
+    .intro-content--rich .fp-section ul{margin:6px 0 0 18px;padding:0;color:var(--text)}
+    .intro-content--rich .fp-section li{margin:4px 0;line-height:1.55}
+    .intro-content--rich .fp-section abbr[title]{text-decoration:underline dotted;cursor:help}
     .section-subtitle{font-weight:600;margin:12px 0 6px}
-    .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:4px}
+    .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px}
     .big[data-level="high"]{color:#ef4444}
     .big[data-level="med"]{color:#f59e0b}
     .big[data-level="low"]{color:var(--text)}
-    .big .code-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(148,163,184,.15);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:.95em;color:inherit}
-    .big[data-level="high"] .code-pill{border-color:#ef4444;background:rgba(239,68,68,.14);color:#ef4444}
-    .big[data-level="med"] .code-pill{border-color:#f59e0b;background:rgba(245,158,11,.18);color:#b45309}
-    .big[data-level="low"] .code-pill{border-color:var(--border);background:rgba(148,163,184,.15);color:inherit}
+    .big .code-pill{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(148,163,184,.15);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1.05em;line-height:1.35;color:var(--text);text-align:center;text-wrap:balance;white-space:normal;box-shadow:inset 0 0 0 1px rgba(148,163,184,.16)}
+    .big[data-level="high"] .code-pill{border-color:#ef4444;background:rgba(239,68,68,.18);box-shadow:inset 0 0 0 1px rgba(239,68,68,.28);color:var(--text)}
+    .big[data-level="med"] .code-pill{border-color:#f59e0b;background:rgba(245,158,11,.2);box-shadow:inset 0 0 0 1px rgba(245,158,11,.28);color:var(--text)}
+    .big[data-level="low"] .code-pill{border-color:var(--border);background:rgba(148,163,184,.16);box-shadow:inset 0 0 0 1px rgba(148,163,184,.2)}
     .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:0;grid-column:1/-1;max-width:720px}
     #introText p{margin:6px 0}
     #introText p:first-child{margin-top:0}
@@ -67,6 +76,7 @@
     .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
+    .shock-footer{display:flex;justify-content:flex-end;margin-top:12px}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
     .card{border:1px solid var(--border);border-radius:12px;padding:12px}
     .title{font-weight:700;margin-bottom:6px}
@@ -113,7 +123,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Fingerprint</h1><span class="sub">by morgunov.tech</span>
+    <h1>Fingerprint</h1><span class="sub">by <a href="https://start.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a></span>
     <div class="toolbar">
       <div class="lang-switcher menu">
         <button class="btn" id="langBtn" aria-haspopup="true" aria-expanded="false">Язык</button>
@@ -140,9 +150,23 @@
     <div id="introText" class="small"></div>
   </section>
 
-  <!-- Block 2: Uniqueness + shock -->
+  <!-- Block 2: Shock findings -->
+  <section class="block" id="shockSection" style="display:none">
+    <div class="section-title" id="shockTitle"></div>
+    <div class="danger" id="shock" style="display:none">
+      <ul id="shockList" class="advice-list small emoji-list"></ul>
+      <div id="ipInfo" class="small" style="margin-top:10px"></div>
+      <div id="speedResult" class="small" style="margin-top:6px"></div>
+      <div class="shock-footer">
+        <button class="btn" id="printBtn"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Block 3: Uniqueness -->
   <section class="block" id="uniqBlock">
     <div id="uniqLine" class="big"></div>
+    <div id="uniqOutcome" class="small"></div>
     <div class="row shock-actions" id="uniqActions">
       <button class="btn btn-primary" id="shareBtn"></button>
     </div>
@@ -153,20 +177,6 @@
     <ul id="uniqRisksList" class="advice-list small"></ul>
     <div id="uniqAdviceTitle" class="section-subtitle small"></div>
     <ul id="uniqAdvice" class="advice-list small"></ul>
-    <div id="uniqOutcome" class="small"></div>
-  </section>
-
-  <section class="block" id="shockSection" style="display:none">
-    <div class="section-title" id="shockTitle"></div>
-    <div class="danger" id="shock" style="display:none">
-      <div class="row shock-actions" id="ipActionRow">
-        <button class="btn" id="ipBtn"></button>
-        <button class="btn" id="printBtn"></button>
-      </div>
-      <ul id="shockList" class="advice-list small emoji-list"></ul>
-      <div id="ipInfo" class="small" style="margin-top:10px"></div>
-      <div id="speedResult" class="small" style="margin-top:6px"></div>
-    </div>
   </section>
 
   <!-- Block 4: Detailed cards -->
@@ -188,11 +198,14 @@
   </section>
 
   <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
-    © morgunov.tech • Локальный аудит отпечатка • Версия: 07.10.25 (CalVer (DD.MM.YY))
+    © <a href="https://start.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: 2025-10-07 • <a href="https://t.me/raschet7" target="_blank" rel="noopener">Telegram</a> • <a href="https://start.morgunov.tech" target="_blank" rel="noopener">start.morgunov.tech</a>
   </footer>
 </div>
 
 <script>
+const PERSONAL_URL='https://start.morgunov.tech';
+const TELEGRAM_URL='https://t.me/raschet7';
+
 /* ================= I18N ================= */
 const I18N = {
   ru: {
@@ -200,14 +213,52 @@ const I18N = {
     langButton:'Язык',
     langLabels:{ru:'Русский',en:'Английский',uz:'Узбекский'},
     theme:{label:'Тема',modes:{auto:'Авто',light:'Светлая',dark:'Тёмная'}},
-    introTitle:'Для чего этот сервис',
+    introTitle:'«Цифровой отпечаток»: что это и зачем вам знать',
+    introRichHtml:/* html */`
+      <section class="fp-section" lang="ru" aria-labelledby="fp-title">
+        <h2 id="fp-title">«Цифровой отпечаток»: что это и зачем вам знать</h2>
+        <p>
+          У каждого устройства и браузера есть уникальный набор характеристик — «цифровой отпечаток».
+          Он позволяет распознавать вас между визитами и связывать действия на разных сайтах — даже без регистрации.
+        </p>
+        <h3>Как это работает</h3>
+        <p>
+          Вы посетили сайты n1, n2, n3 без логина. Затем на сайте n4 (например, соцсеть) создаёте аккаунт.
+          Брокеры данных (<abbr title="посредники, торгующие и агрегирующие пользовательские данные">data brokers</abbr>)
+          и рекламные сети, имеющие доступ к вашему отпечатку,
+          сопоставляют совпадающие признаки и связывают прежние посещения с конкретным человеком.
+        </p>
+        <h3>К чему это может привести</h3>
+        <ul class="fp-list">
+          <li>Навязчивый таргетинг и ценовая персонализация.</li>
+          <li>Сбор подробного профиля интересов и привычек.</li>
+          <li>Фишинг и социальная инженерия.</li>
+          <li>При утечках — риск шантажа и мошенничества.</li>
+        </ul>
+        <h3>Что делает этот сервис</h3>
+        <p>
+          Мы наглядно показываем, какие данные видны прямо сейчас, объясняем риски простым языком
+          и даём пошаговые советы, как уменьшить цифровой след.
+        </p>
+        <h3>Как мы обрабатываем данные</h3>
+        <p>
+          Все вычисления выполняются локально в вашем браузере: мы ничего никуда не отправляем и не храним; регистрация не нужна.
+          Вы можете сохранить результат в PDF или безопасно поделиться им с близкими — без раскрытия исходных данных.
+        </p>
+        <h3>Дополнительно: «Определить IP и уточнить данные»</h3>
+        <p>
+          По вашему запросу измерит скорость интернета, покажет, что раскрывает ваш IP-адрес,
+          и подскажет, похоже ли, что вы используете VPN.
+        </p>
+      </section>
+    `,
     introParagraphs:[
       'У каждого устройства и браузера есть уникальный набор характеристик — «цифровой отпечаток». Он позволяет распознавать вас между визитами и связывать действия на разных сайтах — даже без регистрации.',
-      'Как это работает. Вы посетили сайты n1, n2, n3 без логина. Затем на сайте n4 (например, соцсеть) создаёте аккаунт. Брокеры данных и рекламные сети сопоставляют совпадающие признаки и связывают прежние посещения с конкретным человеком.',
-      'К чему это может привести. Навязчивый таргетинг и ценовая персонализация, сбор подробного профиля, фишинг и социальная инженерия, а при утечках — риск шантажа и мошенничества.',
-      'Что делает этот сервис. Мы наглядно показываем, какие данные видны прямо сейчас, объясняем риски простым языком и даём пошаговые советы, как уменьшить цифровой след.',
-      'Как мы обрабатываем данные. Все вычисления выполняются локально в вашем браузере: мы ничего никуда не отправляем и не храним; регистрация не нужна. Вы можете сохранить результат в PDF или безопасно поделиться им с близкими — без раскрытия исходных данных.',
-      'Отдельная кнопка «Определить IP и уточнить данные» по вашему запросу измерит скорость интернета, покажет, что раскрывает ваш IP-адрес, и подскажет, похоже ли, что вы используете VPN.'
+      'Вы посетили сайты n1, n2, n3 без логина. Затем на сайте n4 (например, соцсеть) создаёте аккаунт. Брокеры данных и рекламные сети сопоставляют совпадающие признаки и связывают прежние посещения с конкретным человеком.',
+      'Навязчивый таргетинг и ценовая персонализация, сбор подробного профиля, фишинг и социальная инженерия, а при утечках — риск шантажа и мошенничества.',
+      'Мы наглядно показываем, какие данные видны прямо сейчас, объясняем риски простым языком и даём пошаговые советы, как уменьшить цифровой след.',
+      'Все вычисления выполняются локально в вашем браузере: мы ничего никуда не отправляем и не храним; регистрация не нужна. Вы можете сохранить результат в PDF или безопасно поделиться им с близкими — без раскрытия исходных данных.',
+      'Отдельная кнопка «Определить IP и уточнить данные» измеряет скорость интернета, показывает, что раскрывает ваш IP-адрес, и подсказывает, похоже ли, что вы используете VPN.'
     ],
     uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
     uniqPracticeTitle:'Что это значит на практике:',
@@ -285,12 +336,11 @@ const I18N = {
       fallback6:'Регулярно проверяйте настройки контент-блокеров и разрешений, чтобы они не включались сами собой.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
-    detailTitle:'Какие данные видит сайт',
-    shockTitle:'Что о вас знает сайт даже без IP (нажмите «Определить IP», чтобы получить расширенные данные)',
+    detailTitle:'Подробности',
+    shockTitle:'Что о вас знает сайт даже без IP',
     shock:{
-      region:value=>`🗺️ <b>Местоположение по сигналам:</b> ${pillOr(value)}`,
-      clock:(place,offset,time)=>{
-        const parts=[place,offset,time].filter(Boolean);
+      clock:(place,time)=>{
+        const parts=[place,time].filter(Boolean);
         return `⏰ <b>Часовой пояс и время:</b> ${parts.join(' ')}`;
       },
       clockFallback:'страна не определена',
@@ -299,7 +349,7 @@ const I18N = {
         if(hypothesis) pieces.push(hypothesis);
         return `💻 <b>Устройство:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
-      deviceHypothesis:model=>`скорее всего вы используете ${model}`,
+      deviceHypothesis:model=>`собранные сигналы указывают на ${model}`,
       browserPerms:(browser,perms)=>{
         const pieces=[browser,perms].filter(Boolean);
         return `🌐 <b>Браузер и разрешения:</b> ${pieces.join(' ')}`;
@@ -317,10 +367,8 @@ const I18N = {
       battery:value=>`🔋 <b>Батарея:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Провайдер:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${pillOr(status)}`,
-      vpnPrompt:'Нажмите «Определить IP и уточнить данные», чтобы получить больше сведений',
-      vpn:(status,reasons,prompt)=>{
-        const parts=[status,reasons].filter(Boolean).map(pillValue);
-        if(prompt) parts.push(`<span class="pill">${escapeHtml(prompt)}</span>`);
+      vpn:(status,reasons,action)=>{
+        const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       connection:summary=>`📶 <b>Подключение и скорость:</b> ${summary||pillOr('—')}`
@@ -548,7 +596,18 @@ const I18N = {
         forwarded:'в заголовках есть признаки прокси'
       }
     },
-    monitorText:{single:'браузер сообщает об одном экране',multi:count=>`браузер сообщает о ${count} активных экранах`,unknown:'браузер не раскрывает количество экранов'},
+    monitorText:{
+      single:'1 экран',
+      multi:count=>{
+        const mod10=count%10;
+        const mod100=count%100;
+        let word='экранов';
+        if(mod10===1&&mod100!==11) word='экран';
+        else if(mod10>=2&&mod10<=4&&(mod100<10||mod100>=20)) word='экрана';
+        return `${count} ${word}`;
+      },
+      unknown:'количество экранов не раскрывается'
+    },
     permNames:{
       geolocation:'геолокация',
       notifications:'уведомления',
@@ -558,7 +617,7 @@ const I18N = {
       'clipboard-write':'запись в буфер обмена',
       'persistent-storage':'постоянное хранилище'
     },
-    permStates:{granted:'разрешено',denied:'запрещено',prompt:'запросит перед доступом',unknown:'не сообщается'},
+    permStates:{granted:'✅ разрешено',denied:'❌ запрещено',prompt:'по запросу',unknown:'не сообщается'},
     pointerLabels:{fine:'мышь/трекпад',coarse:'тачскрин',none:'не сообщает'},
     dntStatus:{on:'включена',off:'выключена',unknown:'браузер не сообщил'},
     memoryNote:'браузер округляет цифры, реальные значения могут отличаться',
@@ -567,8 +626,8 @@ const I18N = {
     share:{
       unavailable:'Подождите расчёта…',
       title:({pct})=>`Насколько вы анонимны: уникальнее, чем ${Math.round(pct)}% людей`,
-      tagline:'Узнай, насколько ты анонимен в сети',
-      text:({pct,url})=>`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей. Узнай, насколько ты анонимен в сети на Fingerprint — ${url||CANONICAL_URL}`,
+      tagline:'Проверь, что сайты узнают о тебе за секунды',
+      text:({pct,url})=>`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей. Проверь, что сайты узнают о тебе за секунды — ${url||CANONICAL_URL}`,
       shared:'Отправили! Спасибо, что делитесь.',
       copied:'Ссылка скопирована',
       error:'Не удалось поделиться автоматически. Попробуйте скопировать ссылку вручную.',
@@ -581,7 +640,7 @@ const I18N = {
     methodText:'Мы сопоставляем ваш набор сигналов с актуальными открытыми замерами (StatCounter, Cover Your Tracks 2024, Ookla). Редкий набор даёт большую энтропию H (в битах) и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. Внешние сервисы вызываются только по кнопке IP, и мы показываем весь ответ. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
-    footer:(version,scheme)=>`© morgunov.tech • Локальный аудит отпечатка • Версия: ${version} (${scheme})`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
     units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
@@ -593,14 +652,51 @@ const I18N = {
     langButton:'Language',
     langLabels:{ru:'Russian',en:'English',uz:'Uzbek'},
     theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark'}},
-    introTitle:'Why this service exists',
+    introTitle:'“Digital fingerprint”: what it is and why it matters',
+    introRichHtml:/* html */`
+      <section class="fp-section" lang="en" aria-labelledby="fp-title">
+        <h2 id="fp-title">“Digital fingerprint”: what it is and why it matters</h2>
+        <p>
+          Every device and browser exposes a unique mix of characteristics — a “digital fingerprint”.
+          It lets sites recognise you between visits and connect activity across services — even without an account.
+        </p>
+        <h3>How it works</h3>
+        <p>
+          You visit sites n1, n2, n3 without signing in. Later, on site n4 (for example a social network) you create an account.
+          Data brokers (<abbr title="intermediaries that trade and aggregate user data">data brokers</abbr>) and ad networks with access to your fingerprint
+          compare matching traits and link those previous visits to a specific person.
+        </p>
+        <h3>What it can lead to</h3>
+        <ul class="fp-list">
+          <li>Persistent targeting and price discrimination.</li>
+          <li>Deep profiles of your interests and habits.</li>
+          <li>Phishing and social engineering.</li>
+          <li>Extortion or fraud if the data leaks.</li>
+        </ul>
+        <h3>What this service does</h3>
+        <p>
+          We show which signals are visible right now, explain the risk in plain language,
+          and provide step-by-step tips to shrink your digital footprint.
+        </p>
+        <h3>How we process data</h3>
+        <p>
+          All calculations run locally in your browser: nothing is sent or stored, and you do not need to register.
+          You can save the result as a PDF or share it safely without exposing the raw data.
+        </p>
+        <h3>Extra: “Detect IP & refine data”</h3>
+        <p>
+          On demand it measures your connection speed, explains what your IP address reveals,
+          and estimates whether you appear to use a VPN.
+        </p>
+      </section>
+    `,
     introParagraphs:[
-      'Every device and browser exposes a unique mix of characteristics — a “digital fingerprint”. It lets sites recognise you across visits and link activity on different domains, even without logging in.',
-      'How it plays out: you browse sites n1, n2, n3 without signing in. Later you create an account on site n4 (for example, a social network). Data brokers and ad networks match the shared traits and attach those earlier visits to a real person.',
-      'Why it matters: aggressive targeting and price steering, deep profiling, phishing and social engineering — and if the data leaks, potential extortion or fraud.',
-      'What this service does: we surface the data that is visible right now, explain the risks in plain language, and give step-by-step advice to shrink your digital footprint.',
-      'How we handle data: everything runs locally in your browser. Nothing is sent or stored, no registration is required. You can save a PDF or safely share the result with trusted people without exposing raw data.',
-      'Need more detail? The “Detect IP & refine data” button runs on demand, measures your connection speed, shows what your IP reveals, and estimates whether a VPN is in use.'
+      'Every device and browser exposes a unique mix of characteristics — a “digital fingerprint”. It lets sites recognise you between visits and link activity across services, even without logging in.',
+      'You visit sites n1, n2, n3 without signing in. Later, on site n4 (for example a social network) you create an account. Data brokers and ad networks match the shared traits and attach those earlier visits to a real person.',
+      'Aggressive targeting and price steering, deep profiling, phishing and social engineering — and if the data leaks, potential extortion or fraud.',
+      'We surface the data that is visible right now, explain the risks in plain language, and give step-by-step advice to shrink your digital footprint.',
+      'Everything runs locally in your browser. Nothing is sent or stored, no registration is required. You can save a PDF or safely share the result with trusted people without exposing raw data.',
+      'The “Detect IP & refine data” button runs on demand, measures your connection speed, shows what your IP reveals, and estimates whether a VPN is in use.'
     ],
     uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
     uniqPracticeTitle:'What this means in practice:',
@@ -678,12 +774,12 @@ const I18N = {
       fallback6:'Review blocker settings and permissions regularly so they do not silently re-enable themselves.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
-    detailTitle:'What a site can learn',
-    shockTitle:'What a site already sees without IP (press “Detect IP” for richer data)',
+    detailTitle:'Details',
+    shockTitle:'What a site already sees without IP',
     shock:{
       region:value=>`🗺️ <b>Signals about your location:</b> ${pillOr(value)}`,
-      clock:(place,offset,time)=>{
-        const parts=[place,offset,time].filter(Boolean);
+      clock:(place,time)=>{
+        const parts=[place,time].filter(Boolean);
         return `⏰ <b>Time zone & clock:</b> ${parts.join(' ')}`;
       },
       clockFallback:'country unknown',
@@ -692,7 +788,7 @@ const I18N = {
         if(hypothesis) pieces.push(hypothesis);
         return `💻 <b>Device:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
-      deviceHypothesis:model=>`likely you use ${model}`,
+      deviceHypothesis:model=>`signals point to ${model}`,
       browserPerms:(browser,perms)=>{
         const pieces=[browser,perms].filter(Boolean);
         return `🌐 <b>Browser & permissions:</b> ${pieces.join(' ')}`;
@@ -710,10 +806,8 @@ const I18N = {
       battery:value=>`🔋 <b>Battery:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provider:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${pillOr(status)}`,
-      vpnPrompt:'Press “Detect IP & refine data” to unlock more evidence',
-      vpn:(status,reasons,prompt)=>{
-        const parts=[status,reasons].filter(Boolean).map(pillValue);
-        if(prompt) parts.push(`<span class="pill">${escapeHtml(prompt)}</span>`);
+      vpn:(status,reasons,action)=>{
+        const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       connection:summary=>`📶 <b>Connection & speed:</b> ${summary||pillOr('—')}`
@@ -913,7 +1007,13 @@ const I18N = {
         forwarded:'proxy or VPN headers spotted'
       }
     },
-    monitorText:{single:'browser reports one active screen',multi:count=>`browser reports ${count} active screens`,unknown:'browser does not reveal the number of screens'},
+    monitorText:{
+      single:'1 screen',
+      multi:count=>{
+        return `${count} screens`;
+      },
+      unknown:'screen count not shared'
+    },
     permNames:{
       geolocation:'location',
       notifications:'notifications',
@@ -923,7 +1023,7 @@ const I18N = {
       'clipboard-write':'write clipboard',
       'persistent-storage':'persistent storage'
     },
-    permStates:{granted:'allowed',denied:'blocked',prompt:'will ask before access',unknown:'not reported'},
+    permStates:{granted:'✅ allowed',denied:'❌ blocked',prompt:'on request',unknown:'not reported'},
     pointerLabels:{fine:'mouse/trackpad',coarse:'touchscreen',none:'not reported'},
     dntStatus:{on:'enabled',off:'disabled',unknown:'not reported'},
     memoryNote:'browser rounds numbers, actual RAM may differ',
@@ -932,8 +1032,8 @@ const I18N = {
     share:{
       unavailable:'Wait until the calculation is ready…',
       title:({pct})=>`How anonymous are you? More unique than ${Math.round(pct)}%`,
-      tagline:'See how anonymous you are online',
-      text:({pct,url})=>`My digital fingerprint is more unique than ${Math.round(pct)}% of people. See how anonymous you are on Fingerprint — ${url||CANONICAL_URL}`,
+      tagline:'See what sites learn about you in seconds',
+      text:({pct,url})=>`My digital fingerprint is more unique than ${Math.round(pct)}% of people. See what sites learn about you in seconds — ${url||CANONICAL_URL}`,
       shared:'Shared — thank you!',
       copied:'Link copied!',
       error:'Could not share automatically. Please copy the link instead.',
@@ -946,7 +1046,7 @@ const I18N = {
     methodText:'We benchmark your signals against up-to-date public datasets (StatCounter, Cover Your Tracks 2024, Ookla). A rare mix produces higher entropy H (in bits) and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. External services are called only when you press the IP button, and the full reply is shown at once. No extra fonts, trackers, or hidden requests are loaded.',
-    footer:(version,scheme)=>`© morgunov.tech • Local fingerprint audit • Version: ${version} (${scheme})`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • Version: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
     units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
@@ -958,14 +1058,51 @@ const I18N = {
     langButton:'Til',
     langLabels:{ru:'Rus tili',en:'Ingliz tili',uz:'Oʻzbek tili'},
     theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi'}},
-    introTitle:'Servis nima uchun kerak',
+    introTitle:'“Raqamli barmoq izi”: bu nima va nega bilish kerak',
+    introRichHtml:/* html */`
+      <section class="fp-section" lang="uz" aria-labelledby="fp-title">
+        <h2 id="fp-title">“Raqamli barmoq izi”: bu nima va nega bilish kerak</h2>
+        <p>
+          Har bir qurilma va brauzer o‘ziga xos xususiyatlar to‘plamini ochib beradi — bu “raqamli barmoq izi”.
+          U saytlar uchun tashriflar orasida sizni aniqlash va turli xizmatlardagi faollikni bog‘lash imkonini beradi — hatto akkauntsiz ham.
+        </p>
+        <h3>Bu qanday ishlaydi</h3>
+        <p>
+          Siz n1, n2, n3 saytlarini akkauntsiz ko‘rasiz. Keyin n4 (masalan, ijtimoiy tarmoq) saytida akkaunt yaratasiz.
+          Ma’lumot brokerlari (<abbr title="foydalanuvchi maʼlumotlarini sotadigan va yigʻadigan vositachilar">data brokers</abbr>) va reklama tarmoqlari barmoq izidagi mos belgilarni taqqoslab,
+          oldingi tashriflarni aniq shaxsga bog‘laydi.
+        </p>
+        <h3>Bu nimaga olib kelishi mumkin</h3>
+        <ul class="fp-list">
+          <li>Tajovuzkor reklama va narxlarni individuallashtirish.</li>
+          <li>Qiziqish va odatlaringiz bo‘yicha chuqur profil.</li>
+          <li>Fishing va ijtimoiy muhandislik.</li>
+          <li>Ma’lumot sizib chiqsa — bosim yoki firibgarlik xavfi.</li>
+        </ul>
+        <h3>Servis nima qiladi</h3>
+        <p>
+          Bu yerda ayni damda ko‘rinib turgan signallarni ko‘rasiz, xavflar sodda tilda tushuntiriladi
+          va raqamli izni kamaytirish uchun bosqichma-bosqich tavsiyalar beriladi.
+        </p>
+        <h3>Ma’lumotlar qanday ishlanadi</h3>
+        <p>
+          Hisob-kitoblarning hammasi brauzeringizning o‘zida bajariladi: hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish shart emas.
+          Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.
+        </p>
+        <h3>Qo‘shimcha: “IP aniqlash va ma’lumotlarni aniqlashtirish”</h3>
+        <p>
+          So‘rov bo‘yicha internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi
+          va VPN ishlatilayotgani ehtimolini baholaydi.
+        </p>
+      </section>
+    `,
     introParagraphs:[
-      'Har bir qurilma va brauzer o‘ziga xos xususiyatlar to‘plamini ochib beradi — bu “raqamli barmoq izi”. U saytlar uchun sizni tashriflar orasida taniy olish va turli domenlardagi faollikni bog‘lash imkonini beradi, hatto akkauntsiz ham.',
-      'Bu qanday ishlaydi: siz n1, n2, n3 saytlarini akkauntsiz ko‘rasiz. Keyin n4 (masalan, ijtimoiy tarmoq) saytida akkaunt yaratasiz. Ma’lumot brokerlari va reklama tarmoqlari o‘xshash belgilarni taqqoslab, oldingi tashriflarni aniq shaxsga bog‘laydi.',
-      'Bu nimaga olib keladi: tajovuzkor reklama va narxlarni o‘zgartirish, chuqur profil yig‘ilishi, fishing va ijtimoiy muhandislik, ma’lumot sizib chiqsa — bosim yoki firibgarlik.',
-      'Servis nima qiladi: ayni damda ko‘rinib turgan ma’lumotlarni ko‘rsatadi, xatarlarni sodda tilda tushuntiradi va raqamli izni kamaytirish bo‘yicha bosqichma-bosqich tavsiyalar beradi.',
-      'Ma’lumotlar qanday ishlanadi: barcha hisob-kitob brauzeringizning o‘zida bajariladi. Hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish talab etilmaydi. Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.',
-      'Qo‘shimcha ma’lumot kerakmi? “IP aniqlash va ma’lumotlarni aniqlashtirish” tugmasi so‘rovingiz bo‘yicha internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi va VPN ishlatilayotganini taxmin qiladi.'
+      'Har bir qurilma va brauzer o‘ziga xos xususiyatlar to‘plamini ochib beradi — bu “raqamli barmoq izi”. U saytlar uchun tashriflar orasida sizni aniqlash va turli xizmatlardagi faollikni bog‘lash imkonini beradi — hatto akkauntsiz ham.',
+      'Siz n1, n2, n3 saytlarini akkauntsiz ko‘rasiz. Keyin n4 (masalan, ijtimoiy tarmoq) saytida akkaunt yaratasiz. Ma’lumot brokerlari va reklama tarmoqlari barmoq izidagi mos belgilarni taqqoslab, oldingi tashriflarni aniq shaxsga bog‘laydi.',
+      'Tajovuzkor reklama va narxlarni individuallashtirish, qiziqish va odatlar bo‘yicha chuqur profil, fishing va ijtimoiy muhandislik, ma’lumot sizib chiqsa — bosim yoki firibgarlik xavfi.',
+      'Bu servis ayni damda ko‘rinib turgan signallarni ko‘rsatadi, xavflarni sodda tilda tushuntiradi va raqamli izni kamaytirish bo‘yicha bosqichma-bosqich tavsiyalar beradi.',
+      'Hisob-kitoblarning hammasi brauzeringizning o‘zida bajariladi: hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish shart emas. Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.',
+      '“IP aniqlash va ma’lumotlarni aniqlashtirish” tugmasi internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi va VPN ishlatilayotganini taxmin qiladi.'
     ],
     uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
     uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
@@ -1043,12 +1180,12 @@ const I18N = {
       fallback6:'Bloklagich va ruxsat sozlamalarini vaqti-vaqti bilan tekshirib turing — ular o‘z-o‘zidan yoqilib ketmasin.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
-    detailTitle:'Sayt nimalarni ko‘rishi mumkin',
-    shockTitle:'IP talab qilinmasdan ham ko‘rinadiganlar (batafsil uchun “IP aniqlash” tugmasini bosing)',
+    detailTitle:'Batafsil',
+    shockTitle:'IP talab qilinmasdan ham ko‘rinadiganlar',
     shock:{
       region:value=>`🗺️ <b>Joylashuv signallari:</b> ${pillOr(value)}`,
-      clock:(place,offset,time)=>{
-        const parts=[place,offset,time].filter(Boolean);
+      clock:(place,time)=>{
+        const parts=[place,time].filter(Boolean);
         return `⏰ <b>Vaqt mintaqasi va soat:</b> ${parts.join(' ')}`;
       },
       clockFallback:'mamlakat aniqlanmadi',
@@ -1075,10 +1212,8 @@ const I18N = {
       battery:value=>`🔋 <b>Batareya:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provayder:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${pillOr(status)}`,
-      vpnPrompt:'“IP aniqlash va maʼlumotlarni aniqlashtirish” tugmasini bosing',
-      vpn:(status,reasons,prompt)=>{
-        const parts=[status,reasons].filter(Boolean).map(pillValue);
-        if(prompt) parts.push(`<span class="pill">${escapeHtml(prompt)}</span>`);
+      vpn:(status,reasons,action)=>{
+        const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       connection:summary=>`📶 <b>Aloqa va tezlik:</b> ${summary||pillOr('—')}`
@@ -1303,7 +1438,11 @@ const I18N = {
         forwarded:'sarlavhalarda proksi yoki VPN izi bor'
       }
     },
-    monitorText:{single:'brauzer bitta faol ekran haqida maʼlum qiladi',multi:count=>`brauzer ${count} ta faol ekran haqida maʼlum qildi`,unknown:'brauzer ekranlar sonini bermadi'},
+    monitorText:{
+      single:'1 ta ekran',
+      multi:count=>`${count} ta ekran`,
+      unknown:'ekranlar soni ko‘rsatilmagan'
+    },
     permNames:{
       geolocation:'geolokatsiya',
       notifications:'bildirishnomalar',
@@ -1313,7 +1452,7 @@ const I18N = {
       'clipboard-write':'buf. xotiraga yozish',
       'persistent-storage':'doimiy xotira'
     },
-    permStates:{granted:'ruxsat berilgan',denied:'bloklangan',prompt:'kirishdan oldin so‘raydi',unknown:'maʼlumot yo‘q'},
+    permStates:{granted:'✅ ruxsat berilgan',denied:'❌ bloklangan',prompt:'so‘rov bo‘yicha',unknown:'maʼlumot yo‘q'},
     pointerLabels:{fine:'sichqoncha/trekpad',coarse:'sensor ekran',none:'maʼlumot yo‘q'},
     dntStatus:{on:'yoqilgan',off:'o‘chirilgan',unknown:'brauzer maʼlumot bermadi'},
     memoryNote:'brauzer qiymatlarni taxmin qiladi, haqiqiy RAM boshqacha bo‘lishi mumkin',
@@ -1322,8 +1461,8 @@ const I18N = {
     share:{
       unavailable:'Hisob yakunlanishini kuting…',
       title:({pct})=>`Qanchalik anonim ekansiz? ${Math.round(pct)}% daraja`,
-      tagline:'Internetda qanchalik anonimligingizni biling',
-      text:({pct,url})=>`Mening raqamli izi foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob. Fingerprint xizmatida o‘zingizning anonimlik darajangizni tekshirib ko‘ring — ${url||CANONICAL_URL}`,
+      tagline:'Saytlar siz haqingizda nimalarni tezda bilishini ko‘ring',
+      text:({pct,url})=>`Mening raqamli izi foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob. Saytlar siz haqingizda nimalarni bir zumda bilishini ko‘ring — ${url||CANONICAL_URL}`,
       shared:'Ulashildi — rahmat!',
       copied:'Havola nusxalandi',
       error:'Avtomatik ulashib boʻlmadi. Havolani qoʻlda nusxalab koʻring.',
@@ -1336,7 +1475,7 @@ const I18N = {
     methodText:'Signallarni eng so‘nggi ochiq maʼlumotlar (StatCounter, Cover Your Tracks 2024, Ookla) bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni (bitlarda) oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:'Barcha jarayon brauzer ichida bo‘ladi. IP tugmasini bosganingizdagina tashqi servisga murojaat qilamiz va javobni butunlay ko‘rsatamiz. Qo‘shimcha shriftlar, trekerlar yoki yashirin so‘rovlar yo‘q.',
-    footer:(version,scheme)=>`© morgunov.tech • Mahalliy fingerprint auditi • Versiya: ${version} (${scheme})`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint auditi • Versiya: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
     units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
@@ -1345,9 +1484,8 @@ const I18N = {
   }
 };
 
-// Calendar versioning keeps builds tied to release dates.
-const VERSION = '07.10.25';
-const VERSION_SCHEME = 'CalVer (DD.MM.YY)';
+// Release version follows ISO 8601 (YYYY-MM-DD) for global clarity.
+const VERSION = '2025-10-07';
 const CANONICAL_URL = 'https://morgunov.tech/fingerprint';
 
 
@@ -2889,9 +3027,6 @@ function buildDeviceSpecs(basic,profiling,t,hasTouch){
   const units=t.units||{};
   if(hw.hardwareConcurrency) specs.push(`${hw.hardwareConcurrency} ${units.cores||'cores'}`);
   if(hw.deviceMemory) specs.push(`≈${hw.deviceMemory} ${units.gb||'GB'}`);
-  if(hw.memoryLimitGb && (!hw.deviceMemory || Math.abs(hw.memoryLimitGb-hw.deviceMemory)>1)){
-    specs.push(`heap ≤${hw.memoryLimitGb} ${units.gb||'GB'}`);
-  }
   const screen=basic.screen||{};
   if(screen.w && screen.h && screen.pixelRatio){
     specs.push(`${screen.w}×${screen.h}@${screen.pixelRatio}`);
@@ -2967,25 +3102,11 @@ function renderShockBullets(basic,t){
   const tzInfo=describeTimeZoneLabel(timezone,locale);
   const tzCity=tzCityName(timezone);
   const details=state.serverData?.details||{};
-  let locationValue=profiling?.location||null;
-  if(!locationValue){
-    const ipParts=[details.city||details.region,details.country_name].filter(Boolean);
-    if(ipParts.length) locationValue=ipParts.join(', ');
-  }
-  if(!locationValue){
-    const fallbackCountry=details.country_name||tzInfo.country||t.shock.clockFallback||'';
-    const fallbackParts=[fallbackCountry,tzCity].filter(Boolean);
-    locationValue=fallbackParts.length?fallbackParts.join(', '):(tzCity||timezone||t.shock.clockFallback||'—');
-  }
   const placeParts=[];
   const countryLabel=details.country_name||tzInfo.country||t.shock.clockFallback||'';
   if(countryLabel) placeParts.push(pillValue(countryLabel));
   if(tzCity) placeParts.push(pillValue(tzCity));
   const placeHtml=placeParts.length?placeParts.join(' '):pillOr(t.shock.clockFallback||'—');
-  const offsetParts=[];
-  if(timezone) offsetParts.push(pillValue(timezone));
-  if(typeof basic.tzOffsetMinutes==='number') offsetParts.push(pillValue(utcOffsetStr(-basic.tzOffsetMinutes)));
-  const offsetHtml=offsetParts.join(' ');
   const timeHtml=`<span class="pill" data-clock-tz="${escapeHtml(timezone)}" data-clock-locale="${escapeHtml(locale)}" data-clock-seconds="1">${escapeHtml(timeInTZ(timezone,locale,true))}</span>`;
   const permEntries=Object.entries(basic.perms||{});
   const keyPerms=summarizeKeyPermissions(permEntries,t);
@@ -2995,29 +3116,41 @@ function renderShockBullets(basic,t){
   const provider=profiling?.provider||details.org||state.serverData?.detailSource||null;
   const vpnState=state.vpn||{status:'uncertain',reasons:[],checked:false};
   const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
-  const vpnReasons=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
-  let vpnPromptHtml='';
-  if(!state.serverData){
-    const inlineLabel=t.ip?.inline||t.ip?.button||'IP';
-    const buttonHtml=`<button type="button" class="btn btn-inline" data-inline-ip="1">${escapeHtml(inlineLabel)}</button>`;
-    const promptText=t.shock.vpnPrompt?escapeHtml(t.shock.vpnPrompt):'';
-    vpnPromptHtml=[promptText,buttonHtml].filter(Boolean).join(' ').trim();
-  }
+  const vpnReasonText=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
+  const vpnReasonHtml=vpnReasonText?pillList(vpnReasonText.split(/;\s*/).filter(Boolean)):'';
   const deviceSpecs=buildDeviceSpecs(basic,profiling,t,hasTouch);
   const connectionSummary=buildConnectionSummary(basic,profiling,t);
-  const bullets=[];
-  bullets.push(t.shock.region(locationValue||t.shock.clockFallback||'—'));
-  bullets.push(t.shock.clock(placeHtml,offsetHtml,timeHtml));
-  bullets.push(t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis));
-  bullets.push(t.shock.browserPerms(browserHtml,permHtml));
-  bullets.push(t.shock.languages(languagesSummary||''));
-  if(batteryText) bullets.push(t.shock.battery(batteryText));
-  if(provider) bullets.push(t.shock.provider(provider));
-  if(dntLabel) bullets.push(t.shock.dnt(dntLabel));
-  bullets.push(t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasons?vpnReasons:'',vpnPromptHtml));
-  bullets.push(t.shock.connection(connectionSummary));
+  const ipButton=ensureInlineIpButton(t);
+  const vpnActionSlot='<span data-vpn-slot></span>';
+  const bullets=[
+    {key:'clock',html:t.shock.clock(placeHtml,timeHtml)},
+    {key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)},
+    {key:'browser',html:t.shock.browserPerms(browserHtml,permHtml)},
+    {key:'languages',html:t.shock.languages(languagesSummary||'')}
+  ];
+  if(batteryText) bullets.push({key:'battery',html:t.shock.battery(batteryText)});
+  if(provider) bullets.push({key:'provider',html:t.shock.provider(provider)});
+  if(dntLabel) bullets.push({key:'dnt',html:t.shock.dnt(dntLabel)});
+  bullets.push({key:'connection',html:t.shock.connection(connectionSummary)});
+  bullets.push({key:'vpn',html:t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasonHtml,vpnActionSlot),button:ipButton});
   ul.innerHTML='';
-  bullets.filter(Boolean).forEach(text=>{const li=document.createElement('li');li.innerHTML=text;ul.appendChild(li);});
+  bullets.filter(Boolean).forEach(item=>{
+    const li=document.createElement('li');
+    let html=item.html||'';
+    if(item.key==='vpn'&&item.button){
+      if(html.includes(vpnActionSlot)){
+        html=html.replace(vpnActionSlot,'');
+      }
+      li.innerHTML=html;
+      if(li.innerHTML && !li.innerHTML.endsWith(' ')){
+        li.appendChild(document.createTextNode(' '));
+      }
+      li.appendChild(item.button);
+    }else{
+      li.innerHTML=html;
+    }
+    ul.appendChild(li);
+  });
   shockBulletCount=bullets.filter(Boolean).length;
   initClockIntervals(ul);
   syncShockVisibility();
@@ -3334,6 +3467,24 @@ let currentLang='ru';
 const cacheEls={};
 const getEl=id=>cacheEls[id]||(cacheEls[id]=document.getElementById(id));
 let renderToken=0;
+let inlineIpButton=null;
+
+function ensureInlineIpButton(t){
+  if(!inlineIpButton){
+    inlineIpButton=document.createElement('button');
+    inlineIpButton.type='button';
+    inlineIpButton.id='ipBtn';
+    inlineIpButton.className='btn btn-inline';
+    inlineIpButton.addEventListener('click',detectIpAndSpeed);
+  }
+  const label=t.ip?.button||'IP';
+  const loading=t.ip?.buttonLoading||label;
+  inlineIpButton.textContent=state.fetchingIp?loading:label;
+  inlineIpButton.dataset.label=label;
+  inlineIpButton.setAttribute('aria-label',label);
+  inlineIpButton.disabled=Boolean(state.fetchingIp);
+  return inlineIpButton;
+}
 
 async function render(lang){
   const token=++renderToken;
@@ -3371,27 +3522,36 @@ async function render(lang){
     shareBtn.setAttribute('aria-disabled','true');
   }
   state.sharePayload=null;
-  getEl('introTitle').textContent=t.introTitle;
+  const introTitleEl=getEl('introTitle');
+  introTitleEl.textContent=t.introTitle;
   const introTextEl=getEl('introText');
   introTextEl.textContent='';
-  const introParagraphs=Array.isArray(t.introParagraphs)?t.introParagraphs.filter(Boolean):[t.introText].filter(Boolean);
-  introParagraphs.forEach(text=>{
-    const p=document.createElement('p');
-    p.textContent=text;
-    introTextEl.appendChild(p);
-  });
+  if(t.introRichHtml){
+    introTextEl.innerHTML=t.introRichHtml;
+    introTextEl.classList.add('intro-content--rich');
+  }else{
+    introTextEl.classList.remove('intro-content--rich');
+    const introParagraphs=Array.isArray(t.introParagraphs)?t.introParagraphs.filter(Boolean):[t.introText].filter(Boolean);
+    introParagraphs.forEach(text=>{
+      const p=document.createElement('p');
+      p.textContent=text;
+      introTextEl.appendChild(p);
+    });
+  }
   getEl('detailTitle').textContent=t.detailTitle;
   getEl('shockTitle').textContent=t.shockTitle;
   getEl('methodSummary').innerHTML=t.methodSummary;
   getEl('methodText').innerHTML=t.methodText;
   getEl('policySummary').innerHTML=t.policySummary;
   getEl('policyText').innerHTML=t.policyText;
-  getEl('footerText').textContent=typeof t.footer==='function'?t.footer(VERSION,VERSION_SCHEME):t.footer;
+  const footerEl=getEl('footerText');
+  if(footerEl){
+    const footerContent=typeof t.footer==='function'?t.footer(VERSION):t.footer;
+    footerEl.innerHTML=footerContent||'';
+  }
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
-  const ipBtn=getEl('ipBtn');
-  ipBtn.textContent=state.fetchingIp?t.ip.buttonLoading:t.ip.button;
-  ipBtn.disabled=state.fetchingIp;
+  ensureInlineIpButton(t);
   updateIpSection(t);
   updateSpeedSection(t);
   renderProfilingSection(snapshotCache?.basic||null,t);
@@ -3800,10 +3960,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(printBtn){
     printBtn.addEventListener('click',()=>{handleSaveClick().catch(()=>{});});
   }
-  const ipBtn=getEl('ipBtn');
-  if(ipBtn){
-    ipBtn.addEventListener('click',detectIpAndSpeed);
-  }
   const langBtn=getEl('langBtn');
   const langMenu=getEl('langMenu');
   if(langBtn&&langMenu){
@@ -3861,20 +4017,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       }
     });
   }
-  document.addEventListener('click',event=>{
-    const target=event.target instanceof HTMLElement?event.target:null;
-    if(!target) return;
-    const inlineBtn=target.closest('[data-inline-ip="1"]');
-    if(!inlineBtn) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if(state.fetchingIp) return;
-    const btn=getEl('ipBtn');
-    if(btn){
-      btn.focus({preventScroll:true});
-      btn.click();
-    }
-  });
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'){
       setLangMenu(false);
