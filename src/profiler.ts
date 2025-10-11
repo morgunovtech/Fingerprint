@@ -24,8 +24,40 @@ type UaHighEntropy = {
   platform?: string | null;
   platformVersion?: string | null;
   model?: string | null;
+  mobile?: boolean | null;
   fullVersionList?: { brand: string; version: string }[] | null;
 };
+
+declare global {
+  interface NavigatorUADataBrand {
+    brand: string;
+    version: string;
+  }
+
+  interface NavigatorUAData {
+    brands?: NavigatorUADataBrand[];
+    mobile?: boolean;
+    platform?: string;
+    getHighEntropyValues?: (hints: string[]) => Promise<UaHighEntropy>;
+  }
+
+  interface Navigator {
+    userAgentData?: NavigatorUAData;
+    usb?: unknown;
+    hid?: unknown;
+    bluetooth?: unknown;
+    serial?: unknown;
+    connection?: {
+      effectiveType?: string;
+      downlink?: number;
+      rtt?: number;
+    };
+  }
+
+  interface Window {
+    __fingerprintBasic?: Record<string, unknown>;
+  }
+}
 
 type DeviceSignals = {
   mobileFlag?: boolean | null;
@@ -116,11 +148,11 @@ const CLAMP = (value: number, min = 0, max = 1): number => {
 function detectGlRenderer(): string | null {
   try {
     const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
     if (!gl) return null;
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info') as WEBGL_debug_renderer_info | null;
     if (debugInfo) {
-      const value = gl.getParameter((debugInfo as WebGLDebugRendererInfo).UNMASKED_RENDERER_WEBGL);
+      const value = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
       return typeof value === 'string' ? value : null;
     }
     return null;
@@ -854,9 +886,8 @@ async function runWebRtcLeakTest(): Promise<Finding | null> {
         }
       };
       if (pc) {
-        if ('onicecandidate' in pc) {
-          pc.onicecandidate = handleCandidate;
-        } else if (pc.addEventListener) {
+        pc.onicecandidate = handleCandidate;
+        if (typeof pc.addEventListener === 'function') {
           pc.addEventListener('icecandidate', handleCandidate);
         }
       }
@@ -981,14 +1012,18 @@ async function collectUaHighEntropy(): Promise<UaHighEntropy | null> {
   try {
     if (typeof navigator === 'undefined') return null;
     const uaData = navigator.userAgentData;
-    if (!uaData?.getHighEntropyValues) return uaData ? ({
-      platform: uaData.platform,
-      model: null,
-      architecture: undefined,
-      bitness: undefined,
-      platformVersion: undefined,
-      fullVersionList: uaData.brands ?? null,
-    }) : null;
+    if (!uaData) return null;
+    if (typeof uaData.getHighEntropyValues !== 'function') {
+      return {
+        platform: uaData.platform ?? null,
+        model: null,
+        architecture: undefined,
+        bitness: undefined,
+        platformVersion: undefined,
+        fullVersionList: uaData.brands ?? null,
+        mobile: uaData.mobile ?? null,
+      };
+    }
     const fields: Array<'architecture' | 'bitness' | 'platform' | 'platformVersion' | 'model' | 'fullVersionList'> = [
       'architecture',
       'bitness',
@@ -998,7 +1033,7 @@ async function collectUaHighEntropy(): Promise<UaHighEntropy | null> {
       'fullVersionList',
     ];
     const values = await uaData.getHighEntropyValues(fields);
-    return values;
+    return { ...values, mobile: values.mobile ?? uaData.mobile ?? null };
   } catch (error) {
     console.debug('UA high entropy hints unavailable', error);
     return null;
