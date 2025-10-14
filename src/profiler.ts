@@ -117,17 +117,47 @@ type StorageSignals = {
   quota?: number;
 };
 
-const FONT_CANDIDATES = [
-  'Arial',
-  'Helvetica',
-  'Times New Roman',
-  'Courier New',
-  'Georgia',
-  'Roboto',
-  'Open Sans',
-  'SF Pro Text',
-  'Segoe UI',
-  'Noto Sans',
+type BraveNavigator = Navigator & {
+  brave?: {
+    isBrave?: () => Promise<boolean>;
+  };
+};
+
+type WebRtcLeakSignals = {
+  candidates: string[];
+  addresses: string[];
+  maskedHostnames: string[];
+  candidateTypes: string[];
+};
+
+type FontCandidate = {
+  name: string;
+  category: 'native' | 'external';
+};
+
+const FONT_CANDIDATES: FontCandidate[] = [
+  { name: 'Arial', category: 'native' },
+  { name: 'Helvetica', category: 'native' },
+  { name: 'Times New Roman', category: 'native' },
+  { name: 'Courier New', category: 'native' },
+  { name: 'Georgia', category: 'native' },
+  { name: 'Verdana', category: 'native' },
+  { name: 'Trebuchet MS', category: 'native' },
+  { name: 'SF Pro Text', category: 'native' },
+  { name: 'Segoe UI', category: 'native' },
+  { name: 'Noto Sans', category: 'native' },
+  { name: 'Roboto', category: 'native' },
+  { name: 'Open Sans', category: 'external' },
+  { name: 'Inter', category: 'external' },
+  { name: 'Source Sans Pro', category: 'external' },
+  { name: 'Source Code Pro', category: 'external' },
+  { name: 'Fira Code', category: 'external' },
+  { name: 'JetBrains Mono', category: 'external' },
+  { name: 'Lato', category: 'external' },
+  { name: 'Montserrat', category: 'external' },
+  { name: 'PT Sans', category: 'external' },
+  { name: 'Ubuntu', category: 'external' },
+  { name: 'Avenir Next', category: 'external' },
 ];
 
 const MAC_DISPLAY_MAP: { width: number; height: number; label: string }[] = [
@@ -761,29 +791,38 @@ function detectSystemFonts(): Finding | null {
       ctx.font = `${size} ${fallback}`;
       baselines.set(fallback, ctx.measureText(sample).width);
     });
-    const detected: string[] = [];
+    const nativeFonts: string[] = [];
+    const externalFonts: string[] = [];
     const evidence: string[] = [];
-    FONT_CANDIDATES.forEach((font) => {
+    FONT_CANDIDATES.forEach(({ name, category }) => {
       const matched = ['monospace', 'serif', 'sans-serif'].some((fallback) => {
-        ctx.font = `${size} '${font}', ${fallback}`;
+        ctx.font = `${size} '${name}', ${fallback}`;
         const width = ctx.measureText(sample).width;
         const baseline = baselines.get(fallback) ?? width;
         return Math.abs(width - baseline) > 0.1;
       });
       if (matched) {
-        detected.push(font);
-        evidence.push(`${font}=present`);
+        if (category === 'external') externalFonts.push(name);
+        else nativeFonts.push(name);
+        evidence.push(`${name}=${category}`);
       }
     });
-    const value = detected.length ? `Detected fonts: ${detected.join(', ')}` : 'System fonts not observable';
+    const parts: string[] = [];
+    if (externalFonts.length) parts.push(`External: ${externalFonts.join(', ')}`);
+    if (nativeFonts.length) parts.push(`Native: ${nativeFonts.join(', ')}`);
+    const value = parts.length ? parts.join(' • ') : 'System fonts not observable';
+    const totalDetected = nativeFonts.length + externalFonts.length;
+    const confidenceBase = totalDetected ? 0.45 : 0.3;
+    const confidence = CLAMP(confidenceBase + externalFonts.length * 0.07 + nativeFonts.length * 0.03, 0, 0.85);
     return {
       key: 'fingerprint.fonts',
       label: 'System fonts',
       value,
-      confidence: detected.length ? CLAMP(0.4 + detected.length * 0.05, 0, 0.75) : 0.3,
+      confidence,
       evidence,
       method: 'measurement',
-      limitations: 'Font detection is approximate; browsers can mask or reduce this signal to limit fingerprinting.',
+      limitations:
+        'Font detection is approximate; browsers can mask results or expose only a subset, especially in privacy modes.',
     };
   } catch (error) {
     console.debug('Font detection failed', error);
@@ -807,10 +846,10 @@ function buildCookiesFinding(): Finding | null {
     evidence.push(`writeError=${(error as Error).message}`);
   }
   const enabled = writeSuccess ?? enabledFlag ?? false;
-  const value = enabled ? 'Cookies enabled' : 'Cookies blocked or disabled';
+  const value = enabled ? 'Enabled' : 'Disabled';
   return {
     key: 'privacy.cookies',
-    label: 'Cookies enabled',
+    label: 'Cookies status',
     value,
     confidence: enabled ? 0.9 : 0.7,
     evidence,
@@ -900,6 +939,44 @@ async function runSupercookieProbe(): Promise<Finding | null> {
   };
 }
 
+function identifyAdBlockVendor(): string | null {
+  if (typeof window === 'undefined') return null;
+  const win = window as typeof window & Record<string, unknown>;
+  const nav = (typeof navigator !== 'undefined' ? (navigator as BraveNavigator) : undefined);
+  if (nav?.brave && typeof nav.brave.isBrave === 'function') return 'Brave Shields';
+
+  const signatureChecks: { name: string; match: () => boolean }[] = [
+    {
+      name: 'uBlock Origin',
+      match: () => ['uBO', 'ublock', 'ublock0', '_uBlock', 'ublockOrigin'].some((key) => key in win),
+    },
+    {
+      name: 'AdGuard',
+      match: () => ['adguard', 'AdGuard', 'adguardProductName'].some((key) => key in win),
+    },
+    {
+      name: 'Ghostery',
+      match: () => ['ghostery', '__ghostery'].some((key) => key in win),
+    },
+    {
+      name: 'Privacy Badger',
+      match: () => 'pbjs' in win,
+    },
+  ];
+  for (const entry of signatureChecks) {
+    try {
+      if (entry.match()) return entry.name;
+    } catch (error) {
+      console.debug('Adblock signature check failed', error);
+    }
+  }
+  if (typeof document !== 'undefined') {
+    const attr = document.documentElement?.getAttribute('data-adblocker');
+    if (attr) return `Custom blocker (${attr})`;
+  }
+  return null;
+}
+
 function detectAdBlocker(): Finding | null {
   if (typeof document === 'undefined') return null;
   let blocked: boolean | null = null;
@@ -928,8 +1005,10 @@ function detectAdBlocker(): Finding | null {
     console.debug('Ad blocker detection failed', error);
   }
   if (blocked != null) evidence.push(`hidden=${blocked}`);
-  const value = blocked == null ? 'Ad blocker status unknown' : blocked ? 'Ad blocker likely enabled' : 'Ad blocker unlikely';
-  const confidence = blocked == null ? 0.3 : blocked ? 0.6 : 0.5;
+  const vendor = blocked ? identifyAdBlockVendor() : null;
+  if (vendor) evidence.push(`vendor=${vendor}`);
+  const value = blocked == null ? 'Status unknown' : blocked ? `Detected (${vendor ?? 'unknown blocker'})` : 'Not detected';
+  const confidence = blocked == null ? 0.3 : blocked ? (vendor ? 0.7 : 0.6) : 0.5;
   return {
     key: 'privacy.adblock',
     label: 'Ad blocker usage',
@@ -937,40 +1016,48 @@ function detectAdBlocker(): Finding | null {
     confidence,
     evidence,
     method: 'observation',
-    limitations: 'Some blockers hide their presence and some privacy browsers block only remote trackers.',
+    limitations:
+      'Detection relies on DOM side effects and public APIs. Some blockers intentionally obfuscate their presence or operate per-site.',
   };
 }
 
-async function runWebRtcLeakTest(): Promise<Finding | null> {
+const ICE_GATHER_TIMEOUT_MS = 1500;
+
+type IceCandidateDetails = {
+  address?: string;
+  type?: string;
+};
+
+async function collectWebRtcLeakSignals(): Promise<WebRtcLeakSignals | null> {
   if (typeof window === 'undefined') return null;
   const RTCPeer = (window as typeof window & { RTCPeerConnection?: typeof RTCPeerConnection }).RTCPeerConnection;
   if (!RTCPeer) return null;
   let pc: RTCPeerConnection | null = null;
   const candidates = new Set<string>();
   try {
-    pc = new RTCPeer({ iceServers: [] });
+    pc = new RTCPeer({ iceServers: [], iceCandidatePoolSize: 1 });
     if (pc.createDataChannel) {
       try {
-        pc.createDataChannel('probe');
+        pc.createDataChannel('probe', { negotiated: true, id: 0 });
       } catch (error) {
         console.debug('RTC data channel failed', error);
       }
     }
-    const gatherPromise = new Promise<Set<string>>((resolve) => {
-      let resolved = false;
-      const finish = () => {
-        if (!resolved) {
-          resolved = true;
-          resolve(candidates);
+    const gatherPromise = new Promise<void>((resolve) => {
+      let finished = false;
+      const settle = () => {
+        if (!finished) {
+          finished = true;
+          resolve();
         }
       };
-      const timer = setTimeout(finish, 1500);
+      const timer = setTimeout(settle, ICE_GATHER_TIMEOUT_MS);
       const handleCandidate = (event: RTCPeerConnectionIceEvent) => {
         if (event.candidate && event.candidate.candidate) {
           candidates.add(event.candidate.candidate);
         } else {
           clearTimeout(timer);
-          finish();
+          settle();
         }
       };
       if (pc) {
@@ -992,34 +1079,141 @@ async function runWebRtcLeakTest(): Promise<Finding | null> {
       console.debug('WebRTC close failed', error);
     }
   }
-  const ips = new Set<string>();
+  if (!candidates.size) return { candidates: [], addresses: [], maskedHostnames: [], candidateTypes: [] };
+  const addresses = new Set<string>();
+  const masked = new Set<string>();
   const types = new Set<string>();
   candidates.forEach((candidate) => {
-    const parts = candidate.split(' ');
-    if (parts.length > 4) {
-      ips.add(parts[4]);
-      const typeIndex = parts.indexOf('typ');
-      if (typeIndex >= 0 && parts[typeIndex + 1]) types.add(parts[typeIndex + 1]);
+    const details = parseIceCandidate(candidate);
+    if (details.type) types.add(details.type);
+    if (details.address) {
+      if (details.address.toLowerCase().includes('local')) masked.add(details.address);
+      else addresses.add(details.address);
     }
   });
-  const evidence: string[] = [];
-  evidence.push(`candidates=${candidates.size}`);
-  if (types.size) evidence.push(`types=${Array.from(types).join('/')}`);
-  if (ips.size) evidence.push(`ips=${Array.from(ips).join(',')}`);
-  let value = 'No local WebRTC addresses observed';
-  let confidence = 0.5;
-  if (Array.from(types).some((type) => type === 'host' || type === 'srflx')) {
-    value = 'Local/WebRTC IP exposure detected (hypothesis)';
-    confidence = 0.6;
+  return {
+    candidates: Array.from(candidates),
+    addresses: Array.from(addresses),
+    maskedHostnames: Array.from(masked),
+    candidateTypes: Array.from(types),
+  };
+}
+
+function parseIceCandidate(candidate: string): IceCandidateDetails {
+  const parts = candidate.trim().split(' ');
+  const details: IceCandidateDetails = {};
+  if (parts.length > 4) details.address = parts[4];
+  const typeIndex = parts.indexOf('typ');
+  if (typeIndex >= 0 && parts[typeIndex + 1]) details.type = parts[typeIndex + 1];
+  return details;
+}
+
+function isIpAddress(address: string): boolean {
+  return /^(?:\d{1,3}\.){3}\d{1,3}$/.test(address) || address.includes('::') || /^[0-9a-f:]+$/i.test(address);
+}
+
+function isPrivateIp(address: string): boolean {
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(address)) {
+    const parts = address.split('.').map((item) => Number.parseInt(item, 10));
+    if (parts.length !== 4 || parts.some((item) => Number.isNaN(item))) return false;
+    if (parts[0] === 10) return true;
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+    if (parts[0] === 192 && parts[1] === 168) return true;
+    if (parts[0] === 169 && parts[1] === 254) return true;
+    return false;
   }
+  const lower = address.toLowerCase();
+  return lower.startsWith('fc') || lower.startsWith('fd') || lower.startsWith('fe80');
+}
+
+function buildWebRtcFinding(signals: WebRtcLeakSignals | null): Finding | null {
+  if (!signals) {
+    return {
+      key: 'network.webrtcLeak',
+      label: 'WebRTC leak test',
+      value: 'Unavailable (RTCPeerConnection not supported)',
+      confidence: 0.2,
+      evidence: [],
+      method: 'observation',
+      limitations: 'WebRTC APIs disabled or unsupported; leak status cannot be measured locally.',
+    };
+  }
+  const evidence: string[] = [];
+  evidence.push(`candidates=${signals.candidates.length}`);
+  if (signals.candidateTypes.length) evidence.push(`types=${signals.candidateTypes.join('/')}`);
+  if (signals.addresses.length) evidence.push(`addresses=${signals.addresses.join(',')}`);
+  if (signals.maskedHostnames.length) evidence.push(`mdns=${signals.maskedHostnames.join(',')}`);
+
+  const leakTypes = signals.candidateTypes.filter((type) => type === 'host' || type === 'srflx');
+  const exposesRealIp = signals.addresses.some((address) => isIpAddress(address) && !address.toLowerCase().includes('local'));
+
+  let value = 'No local WebRTC addresses observed';
+  let confidence = 0.4;
+  if (leakTypes.length && exposesRealIp) {
+    value = `Potential WebRTC IP exposure via ${Array.from(new Set(leakTypes)).join('/')}`;
+    confidence = 0.65;
+  } else if (leakTypes.length) {
+    value = 'WebRTC host candidates observed (likely masked)';
+    confidence = 0.55;
+  } else if (signals.candidates.length) {
+    value = 'ICE gathering completed without host candidates';
+    confidence = 0.45;
+  }
+
   return {
     key: 'network.webrtcLeak',
-    label: 'WebRTC / DNS leak test',
+    label: 'WebRTC leak test',
     value,
     confidence,
     evidence,
     method: 'measurement',
-    limitations: 'Modern browsers restrict ICE details; this probe checks only local candidates without sending data to servers.',
+    limitations: 'Modern browsers limit ICE details; the probe inspects only locally gathered candidates with no external servers.',
+  };
+}
+
+function buildDnsLeakFinding(signals: WebRtcLeakSignals | null): Finding | null {
+  if (!signals) {
+    return {
+      key: 'network.dnsLeak',
+      label: 'DNS leak test',
+      value: 'Unavailable (WebRTC not supported)',
+      confidence: 0.2,
+      evidence: [],
+      method: 'observation',
+      limitations: 'DNS leak heuristic relies on WebRTC ICE candidates and cannot run without WebRTC support.',
+    };
+  }
+  const evidence: string[] = [];
+  if (signals.addresses.length) evidence.push(`addresses=${signals.addresses.join(',')}`);
+  if (signals.maskedHostnames.length) evidence.push(`mdns=${signals.maskedHostnames.join(',')}`);
+  if (signals.candidateTypes.length) evidence.push(`types=${signals.candidateTypes.join('/')}`);
+
+  const publicIps = signals.addresses.filter((address) => isIpAddress(address) && !isPrivateIp(address));
+  const localIps = signals.addresses.filter((address) => isIpAddress(address) && isPrivateIp(address));
+
+  let value = 'DNS leak status unknown (no ICE candidates)';
+  let confidence = 0.35;
+  if (!signals.candidates.length) {
+    value = 'DNS leak status unknown (no WebRTC activity)';
+  } else if (signals.maskedHostnames.length && !signals.addresses.length) {
+    value = 'mDNS hostnames observed (WebRTC masking active)';
+    confidence = 0.55;
+  } else if (publicIps.length) {
+    value = `Public IP exposed via WebRTC (${publicIps.join(', ')})`;
+    confidence = 0.7;
+  } else if (localIps.length) {
+    value = `Local IPs exposed via WebRTC (${localIps.join(', ')})`;
+    confidence = 0.6;
+  }
+
+  return {
+    key: 'network.dnsLeak',
+    label: 'DNS leak test',
+    value,
+    confidence,
+    evidence,
+    method: 'measurement',
+    limitations: 'Assesses DNS leakage heuristically from WebRTC ICE results; does not contact external resolvers or log data.',
   };
 }
 
@@ -1243,8 +1437,11 @@ export async function runProfiling(ip?: IpGeo): Promise<Finding[]> {
   const adblockFinding = detectAdBlocker();
   if (adblockFinding) findings.push(adblockFinding);
 
-  const webrtcFinding = await runWebRtcLeakTest();
+  const webRtcSignals = await collectWebRtcLeakSignals();
+  const webrtcFinding = buildWebRtcFinding(webRtcSignals);
   if (webrtcFinding) findings.push(webrtcFinding);
+  const dnsLeakFinding = buildDnsLeakFinding(webRtcSignals);
+  if (dnsLeakFinding) findings.push(dnsLeakFinding);
 
   const uaDumpEvidence = ua?.fullVersionList?.map((item) => `${item.brand} ${item.version}`) ?? navigator.userAgentData?.brands?.map((item) => `${item.brand} ${item.version}`) ?? [];
   findings.push({
