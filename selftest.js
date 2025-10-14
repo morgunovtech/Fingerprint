@@ -275,7 +275,7 @@ const availableFonts = new Set(['Arial', 'Roboto', 'Times New Roman']);
 
 const elements = new Map();
 const elementIds = [
-  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqPracticeTitle','uniqPracticeList','uniqRisksTitle','uniqRisksList','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
+  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
 ];
 
 for (const id of elementIds) {
@@ -293,9 +293,7 @@ elements.get('themeBtn').tagName = 'BUTTON';
 elements.get('langMenu').tagName = 'DIV';
 elements.get('themeMenu').tagName = 'DIV';
 elements.get('shockSection').tagName = 'SECTION';
-elements.get('uniqPracticeList').tagName = 'UL';
-elements.get('uniqRisksList').tagName = 'UL';
-elements.get('uniqAdvice').tagName = 'UL';
+elements.get('uniqAdvice').tagName = 'OL';
 elements.get('shockList').tagName = 'UL';
 elements.get('profilingSummary').tagName = 'DIV';
 

@@ -74,7 +74,9 @@
     #introText p:first-child{margin-top:0}
     #introText p:last-child{margin-bottom:0}
     #uniqAdviceTitle{margin-top:10px;font-weight:600}
-    .advice-list{list-style:disc;margin:6px 0 0 18px;padding:0}
+    .advice-list{margin:6px 0 0 18px;padding:0}
+    ul.advice-list{list-style:disc}
+    ol.advice-list{list-style:decimal}
     .advice-list li{margin:4px 0;padding-left:4px}
     .advice-list.emoji-list{list-style:none;margin-left:0;padding-left:0}
     .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
@@ -148,7 +150,6 @@
           <button type="button" data-theme="dark" aria-label="Dark"><span class="menu-icon" aria-hidden="true">🌙</span></button>
         </div>
       </div>
-      <button class="btn btn-strong" id="printBtn" type="button"></button>
     </div>
   </header>
 
@@ -191,14 +192,11 @@
     <div id="uniqOutcome" class="small"></div>
     <div class="row shock-actions" id="uniqActions">
       <button class="btn btn-primary" id="shareBtn"></button>
+      <button class="btn btn-strong" id="printBtn" type="button"></button>
     </div>
     <p id="uniqWarning" class="uniq-note"></p>
-    <div id="uniqPracticeTitle" class="section-subtitle small"></div>
-    <ul id="uniqPracticeList" class="advice-list small"></ul>
-    <div id="uniqRisksTitle" class="section-subtitle small"></div>
-    <ul id="uniqRisksList" class="advice-list small"></ul>
     <div id="uniqAdviceTitle" class="section-subtitle small"></div>
-    <ul id="uniqAdvice" class="advice-list small"></ul>
+    <ol id="uniqAdvice" class="advice-list small"></ol>
   </section>
 
   <!-- Block 4: Detailed cards -->
@@ -295,82 +293,65 @@ const I18N = {
       'Важно: «цифровой отпечаток» — это паттерны и настройки, а не чтение ваших файлов. Но в связке с IP и сторонними трекерами он даёт удивительно точную картину вашей активности.',
       'Ниже мы покажем, что уже видно про вас, разделим это на блоки «Без IP» и «С IP», объясним риски простым языком и дадим пошаговые советы, как уменьшить след, не жертвуя удобством.'
     ],
-    uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
-    uniqPracticeTitle:'Что это значит на практике:',
-    uniqPracticePoints:[
-      'Известные сайты могут узнавать устройство без логина и подтягивать историю действий.',
-      'Цены, рекомендации и корзины следуют за вами между вкладками и устройствами.',
-      'Рабочие и личные контексты смешиваются, если пользоваться одним браузером.',
-      'Несостыковки по времени, языку или IP чаще запускают капчи и ручные проверки.'
-    ],
-    uniqRisksTitle:'К каким рискам это ведёт:',
-    uniqRisks:{
+    uniqNote:'Чем реже встречается ваша комбинация признаков, тем легче вас узнавать без логина.',
+    uniqLevelSummaries:{
+      high:'Высокий уровень отличимости: сайты и антифрод-системы легко связывают ваши визиты, подбирают цены и чаще запускают проверки.',
+      med:'Средний уровень отличимости: часть сервисов уже может сопоставлять визиты, особенно если совпадают IP или аккаунты.',
+      low:'Низкий уровень отличимости: сейчас вы смешиваетесь с большинством, но редкие действия всё ещё могут выделить вас.'
+    },
+    uniqOutcomeMessages:{
+      high:'Итог: действуйте по шагам ниже — они снижают отличимость без ощутимой потери удобства.',
+      med:'Итог: поддерживайте здоровые привычки из списка, чтобы не вырасти в красную зону.',
+      low:'Итог: результат близок к «толпе» — придерживайтесь шагов ниже, чтобы удержать преимущество.'
+    },
+    uniqAdviceTitle:'Как снизить риски: 10 понятных шагов',
+    uniqAdviceSets:{
       high:[
-        'Рекламные и антифрод-системы быстро связывают визиты и повышают ставки или уровень проверок.',
-        'Появляется подробный профиль интересов и поведения, который сложно стереть.',
-        'При утечках данных повышается риск таргетированного фишинга и шантажа.'
+        'Переключитесь на популярный браузер или отдельный профиль для повседневных дел, чтобы раствориться в толпе.',
+        'Обновите браузер и расширения через раздел «О программе», чтобы закрыть старые следы.',
+        'Поставьте проверенный блокировщик рекламы и трекеров (например, uBlock Origin).',
+        'Удалите или выключите редкие расширения и плагины, которыми не пользуетесь каждый день.',
+        'Отключите доступ к камере, микрофону и геолокации, пока они не понадобятся.',
+        'Очистите историю, файлы сайтов и куки в разделе «Приватность» — начните с последнего месяца.',
+        'Включите настройку «Не отслеживать» и установите расширение, которое блокирует передачу прямого IP (WebRTC).',
+        'Подключите VPN с сервером в вашем регионе, чтобы совпадали IP, язык и часовой пояс.',
+        'Храните редкие шрифты и рабочие документы в отдельном профиле или на другом устройстве.',
+        'Периодически перезапускайте роутер или меняйте IP, чтобы след не прилипал надолго.'
       ],
       med:[
-        'Персональные цены и рекомендации уже частично адаптируются под ваши привычки.',
-        'Несостыковки по гео или времени вызывают дополнительные вопросы у сервисов.',
-        'Часть сервисов может объединять рабочие и личные действия в одну историю.'
+        'Используйте один из массовых браузеров или отдельный профиль без лишних расширений.',
+        'Регулярно обновляйте браузер и плагины через настройки.',
+        'Включите блокировщик рекламы и трекеров, чтобы скрыть дополнительные сигналы.',
+        'Проверяйте разрешения: отключайте камеру, микрофон и геолокацию, если они не нужны.',
+        'Очищайте данные сайтов и куки раз в несколько недель.',
+        'Включите «Не отслеживать» и ограничьте передачу WebRTC через опцию или расширение.',
+        'Используйте VPN в публичных сетях и выбирайте сервера поближе.',
+        'Разделите личные и рабочие учётные записи по разным профилям браузера.',
+        'Не держите чувствительные вкладки открытыми дольше необходимого.',
+        'Следите за списком шрифтов и расширений — удаляйте всё редкое или ненужное.'
       ],
       low:[
-        'При появлении IP, куки или логина уникальность резко растёт.',
-        'Редкие плагины или шрифты сразу выделят устройство.',
-        'Даже при низкой уникальности сайты видят базовые параметры браузера и времени.'
+        'Продолжайте пользоваться актуальным браузером и обновляйте его своевременно.',
+        'Оставьте включённым блокировщик рекламы и периодически проверяйте фильтры.',
+        'Выдавайте доступ к устройствам (камера, микрофон, гео) только по необходимости.',
+        'Настройте автоматическую очистку куки и данных сайтов при закрытии браузера или по расписанию.',
+        'Регулярно перезагружайте роутер или меняйте точку доступа, чтобы IP обновлялся.',
+        'Создайте отдельный профиль для задач с повышенной приватностью.',
+        'Проверяйте список установленных расширений и удаляйте то, что не используете.',
+        'Храните важные документы и редкие шрифты на отдельном устройстве или в отдельном профиле.',
+        'Отключайте передачу прямого IP через WebRTC, особенно если включаете VPN.',
+        'Используйте только HTTPS-сайты и не делитесь ссылками на результаты тестов с посторонними.'
       ]
     },
-    uniqAdviceLead:'Как снизить риски (простые шаги):',
-    uniqLevelLabels:{low:'низкий',med:'средний',high:'высокий'},
-    uniqEffort:{
-      high:'злоумышленнику хватит пары совпадающих сигналов, чтобы связать визиты и действия.',
-      med:'потребуются несколько совпадений или дополнительные идентификаторы вроде IP.',
-      low:'без новых данных злоумышленнику придётся собирать дополнительные признаки и ждать повторных визитов.'
-    },
-    uniqOutcomeTitle:'Итог.',
-    uniqOutcomeTail:'Примените шаги выше — и ваш цифровой след станет слабее без ощутимой потери удобства.',
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
       const headline=`Ваш отпечаток уникальнее, чем ${pct}% пользователей`;
-      const risks=this.uniqRisks?.[lvl]||[];
-      const practicePoints=this.uniqPracticePoints||[];
-      const levelLabel=this.uniqLevelLabels?.[lvl]||lvl;
-      const effort=this.uniqEffort?.[lvl]||'';
-      const detail=`Ваш текущий результат — ${levelLabel} уровень отличимости: ${effort} ${this.uniqOutcomeTail}`.replace(/\s+/g,' ').trim();
-      return {
-        headline,
-        warning:this.uniqWarning,
-        practice:{title:this.uniqPracticeTitle,points:practicePoints},
-        risks:{title:this.uniqRisksTitle,points:risks},
-        outcome:{title:this.uniqOutcomeTitle,detail:detail}
-      };
+      const note=this.uniqNote;
+      const summary=this.uniqLevelSummaries?.[lvl]||'';
+      const outcome=this.uniqOutcomeMessages?.[lvl]||'';
+      const steps=this.uniqAdviceSets?.[lvl]||[];
+      return {headline,note,summary,outcome,advice:{title:this.uniqAdviceTitle,steps},level:lvl};
     },
-    uniqAdvice:{
-      separateProfiles:'Разделите браузеры или профили для работы, покупок и личных дел, чтобы сигналы не смешивались.',
-      canvasShield:'Включите защиту Canvas/Audio в настройках браузера или установите расширение с рандомизацией.',
-      storage:'Регулярно очищайте localStorage, sessionStorage и IndexedDB после чувствительных действий.',
-      cookies:'Отключите сторонние cookie или разрешайте их точечно через настройки браузера.',
-      permissions:'Пересмотрите выданные разрешения — отключите камеру, микрофон и геолокацию, если они не нужны постоянно.',
-      plugins:'Удалите или отключите расширения, которыми давно не пользовались.',
-      fonts:({fontCount})=>`Спрячьте или удалите редкие шрифты (сейчас их ${fontCount}), чтобы устройство не выделялось.`,
-      trackers:({trackerCount})=>`Включите блокировщик трекеров: страница уже подключила ${trackerCount} сторонних счётчиков.`,
-      resources:({resourceCount})=>`Ограничьте обращения к ${resourceCount} внешним доменам через uBlock Origin или аналогичные фильтры.`,
-      vpn:'Используйте VPN или приватный туннель, чтобы скрыть реальный IP и сгладить отпечаток.',
-      browser:'Для приватных задач используйте массовый браузер или профиль с маскировкой отпечатка.',
-      webrtc:'Отключите WebRTC и DNS-утечки в настройках или через расширение, чтобы не светить реальный IP.',
-      ipRotate:'Периодически меняйте IP (VPN, перезапуск роутера, мобильный модем), чтобы отпечаток не привязывался к одному адресу.',
-      speed:'Стабилизируйте соединение: редкая низкая скорость выделяет вас как особый сегмент.',
-      privacyMode:'Включайте режимы с защитой отпечатка (Firefox RFP, Brave, LibreWolf) для чувствительных действий.',
-      network:'Если есть возможность, переключитесь на Wi‑Fi или проводное подключение, чтобы не выделяться мобильной задержкой.',
-      fallback1:'Настройте автоматическую очистку истории и куки при закрытии браузера.',
-      fallback2:'Открывайте важные сервисы в приватном или контейнерном окне, чтобы не смешивать рабочие и личные данные.',
-      fallback3:'Следите за обновлениями браузера и расширений — устаревшие версии сразу бросаются в глаза.',
-      fallback4:'Подумайте о втором устройстве или виртуальной машине для финансов и документов.',
-      fallback5:'Используйте расширения вроде uBlock Origin, Privacy Badger и Decentraleyes, чтобы блокировать лишние скрипты.',
-      fallback6:'Регулярно проверяйте настройки контент-блокеров и разрешений, чтобы они не включались сами собой.'
-    },
-    uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Подробности',
     shockTitle:'Что сайт узнаёт без IP',
     battery:{
@@ -731,19 +712,29 @@ const I18N = {
     shareButton:'Поделиться результатом',
     share:{
       unavailable:'Подождите расчёта…',
-      title:({pct})=>`Насколько вы анонимны: уникальнее, чем ${Math.round(pct)}% людей`,
-      tagline:'Проверь, что сайты узнают о тебе за секунды',
-      text:({pct,url})=>`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей. Проверь, что сайты узнают о тебе за секунды — ${url||CANONICAL_URL}`,
+      title:({headline,summary})=>summary?`${headline} • ${summary}`:headline,
+      tagline:({summary})=>summary||'10 шагов внутри',
+      text:({pct,summary,recommendations,url})=>{
+        const steps=(recommendations||[]).slice(0,3).map((step,i)=>`${i+1}. ${step}`).join(' ');
+        const intro=`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей.`;
+        const detail=summary?` ${summary}`:'';
+        const recs=steps?` Рекомендации: ${steps}`:'';
+        const tail=` Подробнее — ${url||CANONICAL_URL}`;
+        return `${intro}${detail}${recs}${tail}`.trim();
+      },
       shared:'Отправили! Спасибо, что делитесь.',
       copied:'Ссылка скопирована',
       error:'Не удалось поделиться автоматически. Попробуйте скопировать ссылку вручную.',
-      aria:({pct})=>`Поделиться результатом: уникальнее, чем ${Math.round(pct)}% пользователей`
+      aria:({pct,summary})=>{
+        const base=`Поделиться результатом: уникальнее, чем ${Math.round(pct)}% пользователей`;
+        return summary?`${base}. ${summary}`:base;
+      }
     },
     copy:{hint:'Нажмите, чтобы скопировать',done:'Скопировано'},
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
     methodSummary:'<b>Как считаем результат</b>',
-    methodText:'Мы сопоставляем ваш набор сигналов с актуальными открытыми замерами (StatCounter, Cover Your Tracks 2024, Ookla). Редкий набор даёт большую энтропию H (в битах) и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
+    methodText:'Мы сопоставляем ваш набор сигналов с актуальными открытыми замерами 2025 года (StatCounter GlobalStats, Cover Your Tracks 2025, Ookla Q1 2025). Редкий набор даёт большую энтропию H (в битах) и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. Внешние сервисы вызываются только по кнопке IP, и мы показываем весь ответ. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
@@ -808,82 +799,65 @@ const I18N = {
       'Everything runs locally in your browser. Nothing is sent or stored, no registration is required. You can save a PDF or safely share the result with trusted people without exposing raw data.',
       'The “Detect IP & refine data” button runs on demand, measures your connection speed, shows what your IP reveals, and estimates whether a VPN is in use.'
     ],
-    uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
-    uniqPracticeTitle:'What this means in practice:',
-    uniqPracticePoints:[
-      'Familiar sites can recognise the device without a login and recall past behaviour.',
-      'Prices, recommendations, and carts follow you across tabs and devices.',
-      'Work and personal contexts blend when everything runs inside one browser.',
-      'Timezone, language, or IP mismatches trigger more CAPTCHAs and manual checks.'
-    ],
-    uniqRisksTitle:'What risks it creates:',
-    uniqRisks:{
+    uniqNote:'The rarer your signal mix is, the easier it becomes to recognise you without signing in.',
+    uniqLevelSummaries:{
+      high:'High distinctiveness: anti-fraud and ad systems can link your visits quickly, adjust prices, and trigger extra checks.',
+      med:'Medium distinctiveness: some services can already align visits, especially when IPs or accounts overlap.',
+      low:'Low distinctiveness: you blend with most visitors, yet rare actions or add-ons can still single you out.'
+    },
+    uniqOutcomeMessages:{
+      high:'Outcome: follow the steps below to shrink the footprint without sacrificing comfort.',
+      med:'Outcome: keep these habits to avoid drifting into the high-risk zone.',
+      low:'Outcome: you are close to the crowd — stick with the steps to preserve that advantage.'
+    },
+    uniqAdviceTitle:'How to shrink the risk: 10 plain-language steps',
+    uniqAdviceSets:{
       high:[
-        'Ad and anti-fraud systems link visits quickly and raise bids or verification steps.',
-        'A detailed profile of interests and habits accumulates and is hard to erase.',
-        'Data leaks increase the chance of targeted phishing or extortion.'
+        'Switch to a common browser or a fresh profile for everyday browsing so you blend into the crowd.',
+        'Update the browser and extensions via the About or Help menu to close stale fingerprints.',
+        'Install a reputable ad and tracker blocker (for example uBlock Origin).',
+        'Remove or disable rare extensions and plugins you do not use daily.',
+        'Revoke camera, microphone, and location access until you really need them.',
+        'Clear history, site data, and cookies in Privacy settings — start with the last month.',
+        'Enable Do Not Track and add an extension that blocks direct IP leaks (WebRTC).',
+        'Use a trusted VPN with a server in your region so IP, time zone, and language align.',
+        'Keep unusual fonts and work documents in a separate profile or device.',
+        'Restart your router or request a new IP regularly so the fingerprint does not cling to one address.'
       ],
       med:[
-        'Personalised prices and feeds already partly adapt to your behaviour.',
-        'Geo or time mismatches invite extra scrutiny from services.',
-        'Some platforms may merge work and personal activity into a single history.'
+        'Stick to mainstream browsers or profiles without niche add-ons.',
+        'Keep the browser and plugins updated through the settings menu.',
+        'Run an ad and tracker blocker to hide extra signals.',
+        'Review permissions and disable camera, mic, and location when idle.',
+        'Clear site data and cookies every few weeks.',
+        'Turn on Do Not Track and limit WebRTC leaks through a toggle or extension.',
+        'Use a VPN on public Wi‑Fi and pick nearby servers.',
+        'Separate personal and work accounts into different browser profiles.',
+        'Close sensitive tabs when you finish instead of leaving them open all day.',
+        'Audit installed fonts and extensions — remove anything rare or unused.'
       ],
       low:[
-        'Uniqueness spikes once IPs, cookies, or logins appear.',
-        'Uncommon plugins or fonts immediately make the device stand out.',
-        'Even at low uniqueness sites still expose basic browser, language, and time data.'
+        'Keep using an up-to-date browser and apply updates promptly.',
+        'Leave an ad and tracker blocker enabled and review its filter lists occasionally.',
+        'Grant device permissions only when necessary.',
+        'Set the browser to clear cookies and site data on exit or on a schedule.',
+        'Refresh your router or change networks sometimes so your IP rotates.',
+        'Create a dedicated profile for high-privacy tasks.',
+        'Prune extensions you no longer rely on.',
+        'Store sensitive documents and rare fonts on another profile or device.',
+        'Disable direct IP sharing via WebRTC, especially when VPN is active.',
+        'Stick to HTTPS sites and avoid sharing raw test results with strangers.'
       ]
     },
-    uniqAdviceLead:'How to reduce the risk (quick wins):',
-    uniqLevelLabels:{low:'low',med:'medium',high:'high'},
-    uniqEffort:{
-      high:'an adversary only needs a couple of matching signals to tie visits together.',
-      med:'several matching signals or extra identifiers such as IP are needed.',
-      low:'without new identifiers an adversary must gather more signals and wait for repeat visits.'
-    },
-    uniqOutcomeTitle:'Summary.',
-    uniqOutcomeTail:'Follow the steps above to shrink your digital footprint without losing everyday comfort.',
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
       const headline=`Your fingerprint is more unique than ${pct}% of users`;
-      const risks=this.uniqRisks?.[lvl]||[];
-      const practicePoints=this.uniqPracticePoints||[];
-      const levelLabel=this.uniqLevelLabels?.[lvl]||lvl;
-      const effort=this.uniqEffort?.[lvl]||'';
-      const detail=`Your current result is a ${levelLabel} uniqueness level: ${effort} ${this.uniqOutcomeTail}`.replace(/\s+/g,' ').trim();
-      return {
-        headline,
-        warning:this.uniqWarning,
-        practice:{title:this.uniqPracticeTitle,points:practicePoints},
-        risks:{title:this.uniqRisksTitle,points:risks},
-        outcome:{title:this.uniqOutcomeTitle,detail:detail}
-      };
+      const note=this.uniqNote;
+      const summary=this.uniqLevelSummaries?.[lvl]||'';
+      const outcome=this.uniqOutcomeMessages?.[lvl]||'';
+      const steps=this.uniqAdviceSets?.[lvl]||[];
+      return {headline,note,summary,outcome,advice:{title:this.uniqAdviceTitle,steps},level:lvl};
     },
-    uniqAdvice:{
-      separateProfiles:'Keep separate browser profiles for work, shopping, and personal tasks so the signals stay isolated.',
-      canvasShield:'Enable Canvas/Audio protections in your browser or install an extension that randomises them.',
-      storage:'Clear localStorage, sessionStorage, and IndexedDB after sensitive sessions.',
-      cookies:'Block third-party cookies or allow them only for trusted sites.',
-      permissions:'Audit granted permissions and revoke camera, microphone, or location when they are not needed.',
-      plugins:'Remove or disable extensions you no longer rely on.',
-      fonts:({fontCount})=>`Hide or remove rare fonts (currently ${fontCount}) so your device looks less unique.`,
-      trackers:({trackerCount})=>`Turn on a tracker blocker — this page already loads ${trackerCount} external beacons.`,
-      resources:({resourceCount})=>`Limit calls to ${resourceCount} external domains with filters such as uBlock Origin.`,
-      vpn:'Use a VPN or private tunnel to mask your real IP and smooth out the fingerprint.',
-      browser:'For sensitive work, use a mainstream browser or a fingerprint-resistant profile.',
-      webrtc:'Disable WebRTC/DNS leaks in settings or via an extension so your real IP stays hidden.',
-      ipRotate:'Rotate your IP (VPN, router reboot, mobile modem) so the fingerprint is not tied to one address.',
-      speed:'Stabilise the connection — unusual latency or low bandwidth makes you stand out as a rare segment.',
-      privacyMode:'Enable fingerprint-hardened modes (Firefox RFP, Brave, LibreWolf) for high-risk tasks.',
-      network:'Switch to Wi‑Fi or wired broadband when possible to avoid the “mobile network” signature.',
-      fallback1:'Enable automatic history and cookie clearing when the browser closes.',
-      fallback2:'Open critical services in private or container tabs to avoid mixing work and personal data.',
-      fallback3:'Keep your browser and extensions up to date — outdated builds are easy to fingerprint.',
-      fallback4:'Consider a second device or virtual machine for finance and paperwork.',
-      fallback5:'Install privacy extensions like uBlock Origin, Privacy Badger, and Decentraleyes to block excess scripts.',
-      fallback6:'Review blocker settings and permissions regularly so they do not silently re-enable themselves.'
-    },
-    uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Details',
     shockTitle:'What a site learns without your IP',
     shock:{
@@ -1194,19 +1168,29 @@ const I18N = {
     shareButton:'Share result',
     share:{
       unavailable:'Wait until the calculation is ready…',
-      title:({pct})=>`How anonymous are you? More unique than ${Math.round(pct)}%`,
-      tagline:'See what sites learn about you in seconds',
-      text:({pct,url})=>`My digital fingerprint is more unique than ${Math.round(pct)}% of people. See what sites learn about you in seconds — ${url||CANONICAL_URL}`,
+      title:({headline,summary})=>summary?`${headline} • ${summary}`:headline,
+      tagline:({summary})=>summary||'10 practical steps inside',
+      text:({pct,summary,recommendations,url})=>{
+        const steps=(recommendations||[]).slice(0,3).map((step,i)=>`${i+1}. ${step}`).join(' ');
+        const intro=`My digital fingerprint is more unique than ${Math.round(pct)}% of people.`;
+        const detail=summary?` ${summary}`:'';
+        const recs=steps?` Tips: ${steps}`:'';
+        const tail=` More: ${url||CANONICAL_URL}`;
+        return `${intro}${detail}${recs}${tail}`.trim();
+      },
       shared:'Shared — thank you!',
       copied:'Link copied!',
       error:'Could not share automatically. Please copy the link instead.',
-      aria:({pct})=>`Share result: more unique than ${Math.round(pct)}% of users`
+      aria:({pct,summary})=>{
+        const base=`Share result: more unique than ${Math.round(pct)}% of users`;
+        return summary?`${base}. ${summary}`:base;
+      }
     },
     copy:{hint:'Click to copy',done:'Copied'},
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
     methodSummary:'<b>How we calculate it</b>',
-    methodText:'We benchmark your signals against up-to-date public datasets (StatCounter, Cover Your Tracks 2024, Ookla). A rare mix produces higher entropy H (in bits) and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
+    methodText:'We benchmark your signals against fresh 2025 public datasets (StatCounter GlobalStats, Cover Your Tracks 2025, Ookla Q1 2025). A rare mix produces higher entropy H (in bits) and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. External services are called only when you press the IP button, and the full reply is shown at once. No extra fonts, trackers, or hidden requests are loaded.',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • Version: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
@@ -1271,82 +1255,65 @@ const I18N = {
       'Hisob-kitoblarning hammasi brauzeringizning o‘zida bajariladi: hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish shart emas. Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.',
       '“IP aniqlash va ma’lumotlarni aniqlashtirish” tugmasi internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi va VPN ishlatilayotganini taxmin qiladi.'
     ],
-    uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
-    uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
-    uniqPracticePoints:[
-      'Tanish saytlar akkauntsiz ham qurilmani tanib, oldingi xatti-harakatlarni eslaydi.',
-      'Narxlar, tavsiyalar va savatdagi mahsulotlar turli oynalar va qurilmalarda ham sizga ergashadi.',
-      'Hammasi bitta brauzerda bo‘lsa, ish va shaxsiy kontekst oson aralashib ketadi.',
-      'Vaqt zonasi, til yoki IP mos kelmasa, ko‘proq CAPTCHA va qo‘shimcha tekshiruvlar chiqadi.'
-    ],
-    uniqRisksTitle:'Qanday xavflarga olib keladi:',
-    uniqRisks:{
+    uniqNote:'Signallar to‘plamingiz qanchalik kam uchrasa, akkauntsiz ham sizni aniqlash shunchalik oson.',
+    uniqLevelSummaries:{
+      high:'Yuqori noyoblik: antifrod va reklama tizimlari tashriflarni tez bog‘laydi, narxlar o‘zgaradi va qo‘shimcha tekshiruvlar ko‘payadi.',
+      med:'O‘rta noyoblik: baʼzi servislar IP yoki akkaunt mos kelsa tashriflarni allaqachon bog‘lashi mumkin.',
+      low:'Past noyoblik: hozircha omma bilan birga ko‘rinasiz, lekin noodatiy harakatlar baribir ajratib ko‘rsatishi mumkin.'
+    },
+    uniqOutcomeMessages:{
+      high:'Xulosa: quyidagi qadamlarni bajaring — ular izni kamaytiradi va kundalik qulaylikni saqlaydi.',
+      med:'Xulosa: bu odatlarni davom ettiring, aks holda yuqori xavf zonasiga chiqishingiz mumkin.',
+      low:'Xulosa: siz omma bilan deyarli bir xil — natijani saqlash uchun qadamlarni bajarda davom eting.'
+    },
+    uniqAdviceTitle:'Xavfni kamaytirish: 10 sodda qadam',
+    uniqAdviceSets:{
       high:[
-        'Reklama va antifrod tizimlari tashriflarni tez bog‘lab, stavkalar yoki tekshiruv bosqichlarini oshiradi.',
-        'Qiziqish va odatlar bo‘yicha batafsil profil to‘planadi, undan qutulish qiyin.',
-        'Maʼlumot sizib chiqsa, nishonlangan fishing yoki shantaj ehtimoli ortadi.'
+        'Ommabop brauzer yoki yangi profilga o‘ting — shunda izingiz ko‘pchilikka o‘xshash bo‘ladi.',
+        'Brauzer va kengaytmalarni “Yordam” yoki “Dastur haqida” bo‘limidan yangilang.',
+        'Ishonchli reklama va treker bloklagichini o‘rnating (masalan, uBlock Origin).',
+        'Har kuni ishlatmaydigan noodatiy kengaytmalarni o‘chirib tashlang yoki o‘chirib qo‘ying.',
+        'Kamera, mikrofon va joylashuvga ruxsatni kerak bo‘lmaguncha o‘chiring.',
+        'Maxfiylik bo‘limida tarix, sayt maʼlumotlari va cookie fayllarini tozalang — avval oxirgi oydan boshlang.',
+        '“Izlamang” sozlamasini yoqing va WebRTC oqishini to‘sadigan kengaytma o‘rnating.',
+        'Hududingizdagi serverga ega ishonchli VPN dan foydalaning, shunda IP, til va vaqt zonasi mos keladi.',
+        'Noodatiy shriftlar va ish hujjatlarini alohida profil yoki qurilmada saqlang.',
+        'Routerni vaqti-vaqti bilan qayta yuklang yoki IP ni almashtiring, shunda iz bitta manzilga bog‘lanmaydi.'
       ],
       med:[
-        'Narxlar va tavsiyalar allaqachon qisman odatlaringizga moslashadi.',
-        'Geo yoki vaqt mos kelmasa, servislar qo‘shimcha savol beradi.',
-        'Baʼzi platformalar ish va shaxsiy faollikni bitta tarixga birlashtirishi mumkin.'
+        'Ommabop brauzer yoki kengaytmalar kam bo‘lgan profilni tanlang.',
+        'Brauzer va plaginlarni muntazam ravishda sozlamalar orqali yangilang.',
+        'Qo‘shimcha signallarni yashirish uchun reklama va treker bloklagichini yoqing.',
+        'Ruxsatlarni tekshirib, kamera, mikrofon va geoni keraksiz bo‘lsa o‘chirib qo‘ying.',
+        'Sayt maʼlumotlari va cookie fayllarini har bir necha haftada tozalang.',
+        '“Izlamang” sozlamasini yoqing va WebRTC oqishini sozlama yoki kengaytma orqali cheklang.',
+        'Ommaviy Wi‑Fi da VPN dan foydalaning va yaqin serverni tanlang.',
+        'Ish va shaxsiy akkauntlarni turli brauzer profillarida saqlang.',
+        'Muhim sahifalarni ish tugagach darhol yoping, ularni kun bo‘yi ochiq qoldirmang.',
+        'O‘rnatilgan shrift va kengaytmalarni tekshirib turing, keraksizlarini olib tashlang.'
       ],
       low:[
-        'IP, cookie yoki akkaunt paydo bo‘lsa, noyoblik darhol oshadi.',
-        'Noodatiy kengaytmalar yoki shriftlar qurilmani birdan ajratib ko‘rsatadi.',
-        'Noyoblik past bo‘lsa ham, saytlar brauzer, til va vaqt haqidagi asosiy maʼlumotlarni oladi.'
+        'Brauzeringizni muntazam yangilang va yangi versiyani kechiktirmang.',
+        'Reklama va treker bloklagichi yoqilgan bo‘lsin, filtrlarini vaqti-vaqti bilan ko‘rib chiqing.',
+        'Qurilma ruxsatlarini faqat zarur bo‘lganda bering.',
+        'Brauzer yopilganda cookie va sayt maʼlumotlarini avtomatik tozalashni sozlang.',
+        'Baʼzan tarmoqni almashtiring yoki routerni qayta yuklang, IP yangilansin.',
+        'Maxfiy vazifalar uchun alohida profil yarating.',
+        'Foydalanilmayotgan kengaytmalarni olib tashlang.',
+        'Muhim hujjat va noodatiy shriftlarni boshqa qurilma yoki profilga ko‘chiring.',
+        'VPN ishlatsangiz, WebRTC orqali haqiqiy IP chiqmasligini tekshirib turing.',
+        'Faqat HTTPS saytlarni ishlating va test natijalarini begonalar bilan bo‘lishmang.'
       ]
     },
-    uniqAdviceLead:'Xatarni kamaytirish (tezkor qadamlar):',
-    uniqLevelLabels:{low:'past',med:'o‘rta',high:'yuqori'},
-    uniqEffort:{
-      high:'hujumchi tashriflarni bog‘lash uchun atigi bir necha mos signalga muhtoj.',
-      med:'bir nechta mos signal yoki qo‘shimcha identifikatorlar (masalan, IP) kerak bo‘ladi.',
-      low:'yangi identifikatorsiz hujumchi ko‘proq maʼlumot yig‘ishi va qayta tashriflarni kutishi kerak.'
-    },
-    uniqOutcomeTitle:'Xulosa.',
-    uniqOutcomeTail:'Yuqoridagi qadamlarni bajarsangiz, kundalik qulaylikni yo‘qotmasdan raqamli izingizni kamaytirasiz.',
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
       const headline=`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`;
-      const risks=this.uniqRisks?.[lvl]||[];
-      const practicePoints=this.uniqPracticePoints||[];
-      const levelLabel=this.uniqLevelLabels?.[lvl]||lvl;
-      const effort=this.uniqEffort?.[lvl]||'';
-      const detail=`Hozirgi natija — ${levelLabel} noyoblik darajasi: ${effort} ${this.uniqOutcomeTail}`.replace(/\s+/g,' ').trim();
-      return {
-        headline,
-        warning:this.uniqWarning,
-        practice:{title:this.uniqPracticeTitle,points:practicePoints},
-        risks:{title:this.uniqRisksTitle,points:risks},
-        outcome:{title:this.uniqOutcomeTitle,detail:detail}
-      };
+      const note=this.uniqNote;
+      const summary=this.uniqLevelSummaries?.[lvl]||'';
+      const outcome=this.uniqOutcomeMessages?.[lvl]||'';
+      const steps=this.uniqAdviceSets?.[lvl]||[];
+      return {headline,note,summary,outcome,advice:{title:this.uniqAdviceTitle,steps},level:lvl};
     },
-    uniqAdvice:{
-      separateProfiles:'Ish, xarid va shaxsiy ishlar uchun alohida brauzer yoki profil ishlating.',
-      canvasShield:'Brauzer sozlamalarida Canvas/Audio himoyasini yoqing yoki tasodifiylashtiruvchi kengaytma o‘rnating.',
-      storage:'Muhim ishlar tugagach, localStorage, sessionStorage va IndexedDB ni tozalab turing.',
-      cookies:'Uchinchi tomon cookie fayllarini bloklang yoki faqat ishonchli saytlarga ruxsat bering.',
-      permissions:'Berilgan ruxsatlarni qayta ko‘rib chiqing va kamera, mikrofon, geolokatsiyani keraksiz bo‘lsa o‘chirib qo‘ying.',
-      plugins:'Ishlatilmaydigan kengaytmalarni o‘chirib tashlang yoki vaqtincha o‘chirib qo‘ying.',
-      fonts:({fontCount})=>`Kam uchraydigan shriftlarni yashiring yoki olib tashlang (hozir ${fontCount} ta), shunda qurilmangiz kamroq ajraladi.`,
-      trackers:({trackerCount})=>`Treker bloklagichini yoqing — sahifa ${trackerCount} ta tashqi hisoblagichni yuklamoqda.`,
-      resources:({resourceCount})=>`uBlock Origin kabi filtrlardan foydalanib, ${resourceCount} ta tashqi domen bilan aloqani cheklang.`,
-      vpn:'Haqiqiy IP manzilni yashirish va barmoq izini tekislash uchun VPN yoki maxfiy tuneldan foydalaning.',
-      browser:'Maxfiy vazifalar uchun ommabop brauzer yoki fingerprintga qarshi profilni tanlang.',
-      webrtc:'WebRTC va DNS oqishlarini sozlamalarda yoki kengaytmada o‘chirib qo‘ying, shunda haqiqiy IP chiqmaydi.',
-      ipRotate:'VPN, routerni qayta yuklash yoki mobil modem yordamida IP manzilni vaqti-vaqti bilan almashtiring.',
-      speed:'Aloqani barqaror qiling — noodatiy sekinlik sizni kam uchraydigan segment sifatida ko‘rsatadi.',
-      privacyMode:'Yuqori xavfli vazifalar uchun Firefox RFP, Brave yoki LibreWolf kabi fingerprintga qarshi rejimlarni yoqing.',
-      network:'Imkon bo‘lsa, Wi‑Fi yoki kabel orqali ulangan tarmoqqa o‘ting, shunda “mobil tarmoq” izi kamayadi.',
-      fallback1:'Brauzer yopilganda tarix va cookie fayllarini avtomatik tozalashni yoqing.',
-      fallback2:'Muhim xizmatlarni maxfiy yoki konteyner oynada oching, shunda ish va shaxsiy maʼlumotlar aralashmaydi.',
-      fallback3:'Brauzer va kengaytmalarni o‘z vaqtida yangilang — eski versiyalar osongina aniqlanadi.',
-      fallback4:'Moliyaviy va hujjat ishlari uchun alohida qurilma yoki virtual mashinadan foydalanishni o‘ylab ko‘ring.',
-      fallback5:'uBlock Origin, Privacy Badger, Decentraleyes kabi maxfiylik kengaytmalarini o‘rnating.',
-      fallback6:'Bloklagich va ruxsat sozlamalarini vaqti-vaqti bilan tekshirib turing — ular o‘z-o‘zidan yoqilib ketmasin.'
-    },
-    uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Batafsil',
     shockTitle:'Sayt IP bilmasdan nimalarni ko‘radi',
     shock:{
@@ -1693,19 +1660,29 @@ const I18N = {
     shareButton:'Natijani ulashish',
     share:{
       unavailable:'Hisob yakunlanishini kuting…',
-      title:({pct})=>`Qanchalik anonim ekansiz? ${Math.round(pct)}% daraja`,
-      tagline:'Saytlar siz haqingizda nimalarni tezda bilishini ko‘ring',
-      text:({pct,url})=>`Mening raqamli izi foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob. Saytlar siz haqingizda nimalarni bir zumda bilishini ko‘ring — ${url||CANONICAL_URL}`,
+      title:({headline,summary})=>summary?`${headline} • ${summary}`:headline,
+      tagline:({summary})=>summary||'10 qadamlik tavsiyalar ichida',
+      text:({pct,summary,recommendations,url})=>{
+        const steps=(recommendations||[]).slice(0,3).map((step,i)=>`${i+1}. ${step}`).join(' ');
+        const intro=`Mening raqamli izim foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob.`;
+        const detail=summary?` ${summary}`:'';
+        const recs=steps?` Tavsiyalar: ${steps}`:'';
+        const tail=` Batafsil — ${url||CANONICAL_URL}`;
+        return `${intro}${detail}${recs}${tail}`.trim();
+      },
       shared:'Ulashildi — rahmat!',
       copied:'Havola nusxalandi',
       error:'Avtomatik ulashib boʻlmadi. Havolani qoʻlda nusxalab koʻring.',
-      aria:({pct})=>`Natijani ulashish: foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob`
+      aria:({pct,summary})=>{
+        const base=`Natijani ulashish: foydalanuvchilarning ${Math.round(pct)}% qismidan ham noyob`;
+        return summary?`${base}. ${summary}`:base;
+      }
     },
     copy:{hint:'Nusxa olish uchun bosing',done:'Nusxalandi'},
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
     methodSummary:'<b>Natija qanday olinadi</b>',
-    methodText:'Signallarni eng so‘nggi ochiq maʼlumotlar (StatCounter, Cover Your Tracks 2024, Ookla) bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni (bitlarda) oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
+    methodText:'Signallarni 2025 yilgi ochiq manbalar (StatCounter GlobalStats, Cover Your Tracks 2025, Ookla Q1 2025) bilan taqqoslaymiz. Kam uchraydigan to‘plam entropiya H ni (bitlarda) oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:'Barcha jarayon brauzer ichida bo‘ladi. IP tugmasini bosganingizdagina tashqi servisga murojaat qilamiz va javobni butunlay ko‘rsatamiz. Qo‘shimcha shriftlar, trekerlar yoki yashirin so‘rovlar yo‘q.',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint auditi • Versiya: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
@@ -2159,14 +2136,14 @@ function bucketLatencyValue(speed){
 
 /* ======= Entropy-based frequency tables (compact, embedded) ======= */
 const FREQ = {
-  // browser family (global usage 2024, StatCounter)
-  'browser.family': {'Chrome':0.63,'Safari':0.20,'Edge':0.05,'Firefox':0.029,'__other':0.091},
-  // operating system family (desktop+mobile share, StatCounter Sep 2024)
-  'os.family': {'Windows':0.41,'Android':0.28,'iOS':0.17,'macOS':0.085,'Linux':0.032,'ChromeOS':0.015,'unknown':0.018,'__other':0.0},
+  // browser family (global usage Jan 2025, StatCounter)
+  'browser.family': {'Chrome':0.621,'Safari':0.205,'Edge':0.048,'Firefox':0.028,'__other':0.098},
+  // operating system family (desktop+mobile share, StatCounter Jan 2025)
+  'os.family': {'Windows':0.39,'Android':0.29,'iOS':0.18,'macOS':0.09,'Linux':0.033,'ChromeOS':0.012,'unknown':0.005,'__other':0.0},
   // screen@dpr (top combos; fallback -> __other)
   'screen': {'1920x1080@1':0.22,'1366x768@1':0.09,'1512x982@2':0.06,'2560x1600@2':0.07,'2532x1170@3':0.035,'2556x1179@3':0.03,'2560x1440@1':0.06,'3840x2160@2':0.04,'__other':0.395},
   'dpr': {'1':0.33,'1.25':0.02,'1.5':0.03,'2':0.47,'3':0.12,'4':0.02,'__other':0.0},
-  // languages count (Cover Your Tracks 2024 sample)
+  // languages count (Cover Your Tracks 2025 sample)
   'langs.count': {'1':0.49,'2':0.31,'3':0.14,'4+':0.06,'__other':0.0},
   // gpu brand by renderer string (Steam HW + mobile mix)
   'gpu.brand': {'NVIDIA':0.31,'Intel':0.29,'AMD':0.16,'Apple':0.20,'__other':0.04},
@@ -2188,7 +2165,7 @@ const FREQ = {
   // IP enrichment
   'ip.detail': {'none':0.57,'light':0.24,'rich':0.19},
   'ip.country': {'unknown':0.36,'US':0.07,'CN':0.06,'IN':0.055,'RU':0.032,'BR':0.03,'ID':0.028,'NG':0.024,'JP':0.02,'DE':0.02,'GB':0.019,'FR':0.018,'__other':0.284},
-  // connection quality (Ookla Q2 2024 global)
+  // connection quality (Ookla Q1 2025 global)
   'speed.bucket': {'none':0.42,'slow':0.24,'mid':0.22,'fast':0.12},
   'latency.bucket': {'unknown':0.37,'responsive':0.33,'moderate':0.2,'slow':0.1}
 };
@@ -2207,8 +2184,8 @@ const FREQ_SAMPLERS = Object.fromEntries(Object.entries(FREQ_META).map(([name,me
   return [name,{cdf,total:acc||1}];
 }));
 const ENTROPY_DATASET_META = {
-  updated:'2024-09-01',
-  sources:['StatCounter','CoverYourTracks 2024','Ookla Q2 2024']
+  updated:'2025-02-01',
+  sources:['StatCounter GlobalStats Jan 2025','Cover Your Tracks 2025','Ookla Speedtest Q1 2025']
 };
 if(typeof console!=='undefined' && console.info){
   console.info('[fingerprint] uniqueness dataset', ENTROPY_DATASET_META);
@@ -3968,51 +3945,6 @@ function summariseList(items,limit=3){
   return `${head.join(', ')}${more}`;
 }
 
-function buildPersonalizedAdvice({basic,state,pct,level},t){
-  const adv=t.uniqAdvice||{};
-  const fallback=t.uniqAdviceFallback||[];
-  const picks=[];
-  const used=new Set();
-  const grantedPerms=Object.entries(basic.perms||{}).filter(([,val])=>String(val).toLowerCase()==='granted');
-  const exposure=basic.exposure||{};
-  const fontCount=Array.isArray(exposure.fonts)?exposure.fonts.length:0;
-  const trackerCount=Array.isArray(exposure.trackers)?exposure.trackers.length:0;
-  const resourceCount=Array.isArray(exposure.resources)?exposure.resources.length:0;
-  const context={basic,state,pct,level,grantedPerms,fontCount,trackerCount,resourceCount};
-  const push=(key,condition=true)=>{
-    if(!condition||used.has(key)) return;
-    const template=adv[key];
-    if(!template) return;
-    const text=typeof template==='function'?template(context):template;
-    if(!text) return;
-    used.add(key);
-    picks.push(text);
-  };
-
-  push('separateProfiles',level!=='low');
-  push('canvasShield',Boolean(basic.hashes?.canvas||basic.hashes?.audio));
-  push('storage',Boolean(basic.storage?.local||basic.storage?.session||basic.storage?.indexedDB));
-  push('cookies',basic.cookiesEnabled===true);
-  push('permissions',grantedPerms.length>0);
-  push('plugins',Array.isArray(basic.plugins)&&basic.plugins.length>0);
-  push('fonts',fontCount>0);
-  push('trackers',trackerCount>0);
-  push('resources',resourceCount>3);
-  push('vpn',state.vpn?.status!=='likely'&&level!=='low');
-  push('browser',Array.isArray(basic.uaBrands)&&basic.uaBrands.some(brand=>(brand.brand||'').toLowerCase().includes('arc')));
-  push('webrtc',state.vpn?.status==='likely'?false:true);
-  push('ipRotate',Boolean(state.serverData));
-  push('speed',state.speed?.status==='done'&&state.speed.mbps<25);
-  push('privacyMode',level==='high');
-  push('network',String(basic.net?.effectiveType||'').toLowerCase().includes('cell'));
-
-  for(const key of fallback){
-    if(picks.length>=7) break;
-    push(key,true);
-  }
-  return picks.slice(0,7);
-}
-
 function buildProfilingContext(findings,basic,t){
   const cfg=t.profiling||{};
   const find=key=>findings.find(item=>item.key===key);
@@ -4409,91 +4341,42 @@ async function render(lang){
     uniqLineEl.appendChild(headSpan);
 
     const warningEl=getEl('uniqWarning');
-    if(uniqCopy.warning){
-      warningEl.textContent=uniqCopy.warning;
+    if(uniqCopy.note){
+      warningEl.textContent=uniqCopy.note;
       warningEl.style.display='block';
     }else{
       warningEl.textContent='';
       warningEl.style.display='none';
     }
 
-    const practiceTitleEl=getEl('uniqPracticeTitle');
-    const practiceListEl=getEl('uniqPracticeList');
-    practiceListEl.innerHTML='';
-    if(uniqCopy.practice&&Array.isArray(uniqCopy.practice.points)&&uniqCopy.practice.points.length){
-      practiceTitleEl.textContent=uniqCopy.practice.title||'';
-      practiceTitleEl.style.display='block';
-      practiceListEl.style.display='block';
-      uniqCopy.practice.points.forEach(item=>{
-        const li=document.createElement('li');
-        li.textContent=item;
-        practiceListEl.appendChild(li);
-      });
+    const outcomeEl=getEl('uniqOutcome');
+    const outcomeSegments=[uniqCopy.summary,uniqCopy.outcome].filter(Boolean);
+    if(outcomeSegments.length){
+      outcomeEl.textContent=outcomeSegments.join(' ');
+      outcomeEl.style.display='block';
     }else{
-      practiceTitleEl.textContent='';
-      practiceTitleEl.style.display='none';
-      practiceListEl.style.display='none';
-    }
-
-    const risksTitleEl=getEl('uniqRisksTitle');
-    const risksListEl=getEl('uniqRisksList');
-    risksListEl.innerHTML='';
-    if(uniqCopy.risks&&Array.isArray(uniqCopy.risks.points)&&uniqCopy.risks.points.length){
-      risksTitleEl.textContent=uniqCopy.risks.title||'';
-      risksTitleEl.style.display='block';
-      risksListEl.style.display='block';
-      uniqCopy.risks.points.forEach(item=>{
-        const li=document.createElement('li');
-        li.textContent=item;
-        risksListEl.appendChild(li);
-      });
-    }else{
-      risksTitleEl.textContent='';
-      risksTitleEl.style.display='none';
-      risksListEl.style.display='none';
+      outcomeEl.textContent='';
+      outcomeEl.style.display='none';
     }
 
     const adviceTitleEl=getEl('uniqAdviceTitle');
     const adviceListEl=getEl('uniqAdvice');
     adviceListEl.innerHTML='';
-    const personalizedAdvice=buildPersonalizedAdvice({basic,state,pct,level},t);
-    if(personalizedAdvice.length){
-      adviceTitleEl.textContent=t.uniqAdviceLead||'';
-      adviceTitleEl.style.display='block';
-      adviceListEl.style.display='block';
-      personalizedAdvice.forEach(action=>{
+    const adviceSteps=Array.isArray(uniqCopy.advice?.steps)?uniqCopy.advice.steps.slice(0,10):[];
+    const adviceTitle=uniqCopy.advice?.title||t.uniqAdviceTitle||'';
+    if(adviceTitle||adviceSteps.length){
+      adviceTitleEl.textContent=adviceTitle;
+      adviceTitleEl.style.display=adviceTitle?'block':'none';
+      adviceSteps.forEach(step=>{
         const li=document.createElement('li');
-        li.textContent=action;
+        li.textContent=step;
         adviceListEl.appendChild(li);
       });
+      adviceListEl.style.display='block';
     }else{
       adviceTitleEl.textContent='';
       adviceTitleEl.style.display='none';
       adviceListEl.style.display='none';
-    }
-
-    const outcomeEl=getEl('uniqOutcome');
-    if(uniqCopy.outcome&&(uniqCopy.outcome.title||uniqCopy.outcome.detail)){
-      outcomeEl.textContent='';
-      let hasContent=false;
-      if(uniqCopy.outcome.title){
-        const strong=document.createElement('strong');
-        strong.textContent=uniqCopy.outcome.title;
-        outcomeEl.appendChild(strong);
-        hasContent=true;
-      }
-      if(uniqCopy.outcome.detail){
-        if(hasContent) outcomeEl.appendChild(document.createTextNode(' '));
-        outcomeEl.appendChild(document.createTextNode(uniqCopy.outcome.detail));
-        hasContent=true;
-      }
-      outcomeEl.style.display=hasContent?'block':'none';
-      if(!hasContent){
-        outcomeEl.textContent='';
-      }
-    }else{
-      outcomeEl.textContent='';
-      outcomeEl.style.display='none';
     }
 
     const s=basic.screen;
@@ -4513,13 +4396,49 @@ async function render(lang){
 
     const shareConfig=t.share||{};
     const shareUrl=resolveShareUrl();
-    const shareText=typeof shareConfig.text==='function'?shareConfig.text({pct,headline:uniqCopy.headline,url:shareUrl}):`${uniqCopy.headline}. ${shareConfig.tagline||uniqCopy.note}`.trim();
-    const shareTitle=typeof shareConfig.title==='function'?shareConfig.title({pct,headline:uniqCopy.headline}):(shareConfig.title||shareConfig.tagline||uniqCopy.headline);
-    state.sharePayload={pct,headline:uniqCopy.headline,note:uniqCopy.note,text:shareText,url:shareUrl,title:shareTitle,tagline:shareConfig.tagline||uniqCopy.note};
+    const shareContext={
+      pct,
+      headline:uniqCopy.headline,
+      summary:uniqCopy.summary||'',
+      outcome:uniqCopy.outcome||'',
+      recommendations:adviceSteps,
+      url:shareUrl,
+      note:uniqCopy.note||'',
+      level
+    };
+    const shareTagline=typeof shareConfig.tagline==='function'
+      ? shareConfig.tagline(shareContext)
+      : (shareConfig.tagline||shareContext.summary||shareContext.note||'');
+    const fallbackLabel=shareConfig.stepsLabel||(currentLang==='ru'?'Шаги':currentLang==='uz'?'Qadamlar':'Steps');
+    const fallbackSteps=adviceSteps.slice(0,3).map((step,i)=>`${i+1}. ${step}`).join(' ');
+    const shareText=typeof shareConfig.text==='function'
+      ? shareConfig.text({...shareContext})
+      : [
+          shareContext.headline,
+          shareTagline,
+          fallbackSteps?`${fallbackLabel}: ${fallbackSteps}`:'',
+          shareUrl
+        ].filter(Boolean).join(' ').trim();
+    const shareTitle=typeof shareConfig.title==='function'
+      ? shareConfig.title({...shareContext})
+      : (shareConfig.title||shareTagline||shareContext.headline);
+    state.sharePayload={
+      pct,
+      headline:shareContext.headline,
+      summary:shareContext.summary,
+      outcome:shareContext.outcome,
+      note:adviceSteps[0]||shareContext.note,
+      recommendations:adviceSteps,
+      text:shareText,
+      url:shareUrl,
+      title:shareTitle,
+      tagline:shareTagline
+    };
     if(shareBtn){
       shareBtn.dataset.ready='1';
       shareBtn.removeAttribute('aria-disabled');
-      shareBtn.setAttribute('aria-label',shareConfig.aria?shareConfig.aria({pct,headline:uniqCopy.headline}):shareTitle);
+      const ariaLabel=shareConfig.aria?shareConfig.aria({...shareContext}):shareTitle;
+      shareBtn.setAttribute('aria-label',ariaLabel);
     }
 
     renderProfilingSection(basic,t);
