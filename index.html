@@ -47,7 +47,9 @@
     .menu-panel button.active{border-color:var(--accent);color:var(--accent);background-color:rgba(96,165,250,0.12)}
     .menu-panel button .menu-icon{font-size:16px}
     .block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
-    .section-title{font-weight:700;font-size:18px;margin:0 0 8px}
+    .section-title{font-weight:700;font-size:18px;margin:0}
+    .section-header{display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+    .section-actions{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .intro-content--rich{display:block}
     .intro-content--rich .fp-section{margin:0;padding:0;color:var(--text)}
     .intro-content--rich .fp-section h2{margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text)}
@@ -76,7 +78,6 @@
     .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
-    .shock-footer{display:flex;justify-content:flex-end;margin-top:12px}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
     .card{border:1px solid var(--border);border-radius:12px;padding:12px}
     .title{font-weight:700;margin-bottom:6px}
@@ -91,7 +92,6 @@
     a{color:var(--accent);text-decoration:none}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s,text-decoration-color .2s;text-align:center;gap:6px}
-    .btn-inline{padding:6px 12px;font-size:13px;border-radius:8px;margin-left:8px}
     .btn .btn-text{display:inline-flex;align-items:center}
     .btn:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -101,6 +101,10 @@
     .btn-primary:hover{filter:brightness(.95);color:#fff}
     .btn-primary:disabled{box-shadow:none;filter:none}
     .btn-primary[aria-disabled="true"]{box-shadow:none;filter:none}
+    .btn-strong{background:linear-gradient(135deg,#1d4ed8,#9333ea);color:#fff;border:none;font-weight:600;box-shadow:0 10px 28px rgba(79,70,229,.24);padding:8px 16px;border-radius:10px}
+    .btn-strong:hover{filter:brightness(.95);color:#fff}
+    .btn-strong:disabled{box-shadow:none;filter:none;opacity:.8}
+    .btn-strong[aria-disabled="true"]{box-shadow:none;filter:none;opacity:.8}
     .shock-actions{margin:16px 0 12px}
     #shockList{margin:6px 0 0;padding:0}
     #shockList li{margin:4px 0}
@@ -152,22 +156,29 @@
 
   <!-- Block 2: Shock findings -->
   <section class="block" id="shockSection" style="display:none">
-    <div class="section-title" id="shockTitle"></div>
+    <div class="section-header">
+      <div class="section-title" id="shockTitle"></div>
+      <div class="section-actions">
+        <button class="btn btn-strong" id="printBtn"></button>
+      </div>
+    </div>
     <div class="danger" id="shock" style="display:none">
       <ul id="shockList" class="advice-list small emoji-list"></ul>
-      <div id="ipInfo" class="small" style="margin-top:10px"></div>
-      <div id="speedResult" class="small" style="margin-top:6px"></div>
-      <div class="shock-footer">
-        <button class="btn" id="printBtn"></button>
-      </div>
     </div>
   </section>
 
   <!-- Block 2b: Advanced leak checks -->
   <section class="block" id="advancedSection" style="display:none">
-    <div class="section-title" id="advancedTitle"></div>
+    <div class="section-header">
+      <div class="section-title" id="advancedTitle"></div>
+      <div class="section-actions">
+        <button class="btn btn-strong" id="ipBtn"></button>
+      </div>
+    </div>
     <div class="danger" id="advanced" style="display:none">
       <ul id="advancedList" class="advice-list small emoji-list"></ul>
+      <div id="speedResult" class="small" style="margin-top:6px"></div>
+      <div id="ipInfo" class="small" style="margin-top:10px"></div>
     </div>
   </section>
 
@@ -325,7 +336,7 @@ const I18N = {
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Подробности',
-    shockTitle:'Что о вас знает сайт даже без IP',
+    shockTitle:'Что сайт узнаёт без IP',
     battery:{
       label:'Battery API',
       statuses:{charging:'заряжается',discharging:'от батареи',unknown:'статус неизвестен'}
@@ -381,6 +392,15 @@ const I18N = {
     advanced:{
       ipStatus:{exposed:'IP засвечен',hidden:'IP скрыт',unknown:'Статус не определён'},
       ip:label=>`🧠 <b>Засвечен IP:</b> ${pillOr(label)}`,
+      provider:value=>`🏢 <b>Провайдер:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      vpn:(status,reasons)=>{
+        const parts=[status,reasons].filter(Boolean);
+        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      connectionType:value=>`📶 <b>Тип подключения:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionBrowser:value=>`📡 <b>Браузер сообщает:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionTest:value=>`⚡ <b>Тест скорости:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionStatus:value=>`⏳ <b>Тест скорости:</b> ${value&&value.trim()?value:pillOr('—')}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
         return `🛰️ <b>WebRTC leak detection (ICE-кандидаты):</b> ${parts.join(' ')}`;
@@ -817,7 +837,7 @@ const I18N = {
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Details',
-    shockTitle:'What a site already sees without IP',
+    shockTitle:'What a site learns without your IP',
     shock:{
       clockSources:{ip:'IP hint',system:'System settings',zone:'Time zone ID',time:'Local time'},
       locationSources:{ip:'IP scan',system:'System',zone:'Time zone'},
@@ -869,6 +889,15 @@ const I18N = {
     advanced:{
       ipStatus:{exposed:'IP exposed',hidden:'IP not exposed',unknown:'Status unknown'},
       ip:label=>`🧠 <b>IP exposure:</b> ${pillOr(label)}`,
+      provider:value=>`🏢 <b>Provider:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      vpn:(status,reasons)=>{
+        const parts=[status,reasons].filter(Boolean);
+        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      connectionType:value=>`📶 <b>Connection type:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionBrowser:value=>`📡 <b>Browser API:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionTest:value=>`⚡ <b>Speed test:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionStatus:value=>`⏳ <b>Speed test:</b> ${value&&value.trim()?value:pillOr('—')}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
         return `🛰️ <b>WebRTC leak detection (ICE):</b> ${parts.join(' ')}`;
@@ -1270,7 +1299,7 @@ const I18N = {
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Batafsil',
-    shockTitle:'IP talab qilinmasdan ham ko‘rinadiganlar',
+    shockTitle:'Sayt IP bilmasdan nimalarni ko‘radi',
     shock:{
       clockSources:{ip:'IP manbasi',system:'Tizim sozlamalari',zone:'Vaqt zonasi',time:'Mahalliy vaqt'},
       locationSources:{ip:'IP manbasi',system:'Tizim',zone:'Vaqt zonasi'},
@@ -1322,6 +1351,15 @@ const I18N = {
     advanced:{
       ipStatus:{exposed:'IP ko‘rinmoqda',hidden:'IP yashiringan',unknown:'Holat nomaʼlum'},
       ip:label=>`🧠 <b>IP ko‘rinishi:</b> ${pillOr(label)}`,
+      provider:value=>`🏢 <b>Provayder:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      vpn:(status,reasons)=>{
+        const parts=[status,reasons].filter(Boolean);
+        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      connectionType:value=>`📶 <b>Ulanish turi:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionBrowser:value=>`📡 <b>Brauzer ma’lumoti:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionTest:value=>`⚡ <b>Tezlik testi:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionStatus:value=>`⏳ <b>Tezlik testi:</b> ${value&&value.trim()?value:pillOr('—')}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
         return `🛰️ <b>WebRTC oqish testi (ICE nomzodlari):</b> ${parts.join(' ')}`;
@@ -3433,8 +3471,7 @@ function renderShockBullets(basic,t){
   const connectionSummary=buildConnectionSummary(basic,profiling,t);
   const adblockSummary=normalizeSummary(profiling?.adblockSummary||null);
   const adblockValue=adblockSummary.value?pillOr(adblockSummary.value):pillOr(unknownLabel);
-  const ipButton=ensureInlineIpButton(t);
-  const vpnActionSlot='<span data-vpn-slot></span>';
+  ensureInlineIpButton(t);
   const shockBullets=[
     {key:'country',html:t.shock.country(countryContent)},
     {key:'city',html:t.shock.city(cityContent)},
@@ -3444,25 +3481,13 @@ function renderShockBullets(basic,t){
     {key:'adblock',html:t.shock.adblock(adblockValue)},
     {key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)},
     {key:'languages',html:t.shock.languages(languagesSummary||'')},
-    {key:'battery',html:t.shock.battery(batteryText||'')},
-    {key:'connection',html:t.shock.connection(connectionSummary)}
+    {key:'battery',html:t.shock.battery(batteryText||'')}
   ];
-  if(provider) shockBullets.push({key:'provider',html:t.shock.provider(provider)});
-  shockBullets.push({key:'vpn',html:t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasonHtml,vpnActionSlot),button:ipButton});
-
   const shockItems=shockBullets.filter(item=>item&&item.html);
   ul.innerHTML='';
   shockItems.forEach(item=>{
     const li=document.createElement('li');
-    let html=item.html||'';
-    if(item.key==='vpn'&&item.button){
-      if(html.includes(vpnActionSlot)) html=html.replace(vpnActionSlot,'');
-      li.innerHTML=html;
-      if(li.innerHTML && !li.innerHTML.endsWith(' ')) li.appendChild(document.createTextNode(' '));
-      li.appendChild(item.button);
-    }else{
-      li.innerHTML=html;
-    }
+    li.innerHTML=item.html||'';
     ul.appendChild(li);
   });
   shockBulletCount=shockItems.length;
@@ -3485,9 +3510,37 @@ function renderShockBullets(basic,t){
     const exposureKey=inferIpExposure(webrtcSummary,dnsSummary);
     ipExposureLabel=advanced.ipStatus?.[exposureKey]||advanced.ipStatus?.unknown||unknownLabel;
   }
+  const vpnStatusHtml=pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||'');
   const advancedBullets=[];
   if(typeof advanced.ip==='function') advancedBullets.push({key:'ip',html:advanced.ip(ipExposureLabel)});
   else advancedBullets.push({key:'ip',html:`🧠 <b>IP exposure:</b> ${pillOr(ipExposureLabel)}`});
+  if(provider){
+    const providerHtml=pillOr(provider);
+    if(typeof advanced.provider==='function') advancedBullets.push({key:'provider',html:advanced.provider(providerHtml)});
+    else advancedBullets.push({key:'provider',html:`🏢 <b>Provider:</b> ${providerHtml}`});
+  }
+  if(typeof advanced.vpn==='function') advancedBullets.push({key:'vpn',html:advanced.vpn(vpnStatusHtml,vpnReasonHtml)});
+  else{
+    const parts=[vpnStatusHtml,vpnReasonHtml].filter(Boolean);
+    advancedBullets.push({key:'vpn',html:`🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`});
+  }
+  if(connectionSummary.type && typeof advanced.connectionType==='function'){
+    advancedBullets.push({key:'connectionType',html:advanced.connectionType(connectionSummary.type)});
+  }else if(connectionSummary.type){
+    advancedBullets.push({key:'connectionType',html:`📶 <b>Connection type:</b> ${connectionSummary.type}`});
+  }
+  if(connectionSummary.browser){
+    if(typeof advanced.connectionBrowser==='function') advancedBullets.push({key:'connectionBrowser',html:advanced.connectionBrowser(connectionSummary.browser)});
+    else advancedBullets.push({key:'connectionBrowser',html:`📡 <b>Browser API:</b> ${connectionSummary.browser}`});
+  }
+  if(connectionSummary.test){
+    if(typeof advanced.connectionTest==='function') advancedBullets.push({key:'connectionTest',html:advanced.connectionTest(connectionSummary.test)});
+    else advancedBullets.push({key:'connectionTest',html:`⚡ <b>Speed test:</b> ${connectionSummary.test}`});
+  }
+  if(connectionSummary.status){
+    if(typeof advanced.connectionStatus==='function') advancedBullets.push({key:'connectionStatus',html:advanced.connectionStatus(connectionSummary.status)});
+    else advancedBullets.push({key:'connectionStatus',html:`⏳ <b>Speed test:</b> ${connectionSummary.status}`});
+  }
   if(typeof advanced.webrtc==='function') advancedBullets.push({key:'webrtc',html:advanced.webrtc(webrtcSummary.value,webrtcDetails)});
   if(typeof advanced.dns==='function') advancedBullets.push({key:'dns',html:advanced.dns(dnsSummary.value,dnsDetails)});
   if(typeof advanced.tls==='function') advancedBullets.push({key:'tls',html:advanced.tls(tlsSummary.value,tlsDetails)});
@@ -3846,11 +3899,20 @@ let inlineIpButton=null;
 
 function ensureInlineIpButton(t){
   if(!inlineIpButton){
-    inlineIpButton=document.createElement('button');
+    inlineIpButton=getEl('ipBtn');
+    if(!inlineIpButton){
+      inlineIpButton=document.createElement('button');
+      inlineIpButton.id='ipBtn';
+      inlineIpButton.className='btn btn-strong';
+      const advancedHeader=document.querySelector('#advancedSection .section-actions');
+      if(advancedHeader) advancedHeader.appendChild(inlineIpButton);
+    }
     inlineIpButton.type='button';
-    inlineIpButton.id='ipBtn';
-    inlineIpButton.className='btn btn-inline';
-    inlineIpButton.addEventListener('click',detectIpAndSpeed);
+    inlineIpButton.classList.add('btn','btn-strong');
+    if(!inlineIpButton.dataset.bound){
+      inlineIpButton.addEventListener('click',detectIpAndSpeed);
+      inlineIpButton.dataset.bound='1';
+    }
   }
   const label=t.ip?.button||'IP';
   const loading=t.ip?.buttonLoading||label;
