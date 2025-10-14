@@ -338,6 +338,10 @@ const I18N = {
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Подробности',
     shockTitle:'Что о вас знает сайт даже без IP',
+    battery:{
+      label:'Battery API',
+      statuses:{charging:'заряжается',discharging:'от батареи',unknown:'статус неизвестен'}
+    },
     shock:{
       clock:(place,time)=>{
         const parts=[place,time].filter(Boolean);
@@ -356,7 +360,7 @@ const I18N = {
       },
       ua:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧾 <b>User-Agent парсер:</b> ${parts.join(' ')}`;
+        return `🧾 <b>User-Agent парсер (классификация):</b> ${parts.join(' ')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Языки интерфейса:</b> ${pillOr('—')}`;
@@ -368,7 +372,7 @@ const I18N = {
         const label=hasTouch?('С сенсорным экраном'):('Без сенсорного экрана');
         return `🖐️ <b>Тип устройства:</b> ${pillOr(label)}`;
       },
-      battery:value=>`🔋 <b>Батарея:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Провайдер:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${pillOr(status)}`,
       vpn:(status,reasons,action)=>{
@@ -378,19 +382,19 @@ const I18N = {
       connection:summary=>`📶 <b>Подключение и скорость:</b> ${summary||pillOr('—')}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🛰️ <b>WebRTC (ICE):</b> ${parts.join(' ')}`;
+        return `🛰️ <b>WebRTC leak detection (ICE-кандидаты):</b> ${parts.join(' ')}`;
       },
       dns:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧭 <b>DNS-утечка:</b> ${parts.join(' ')}`;
+        return `🧭 <b>DNS leak test (резолверы):</b> ${parts.join(' ')}`;
       },
       tls:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🔐 <b>TLS / JA3 отпечаток:</b> ${parts.join(' ')}`;
+        return `🔐 <b>TLS/JA3 отпечаток клиента:</b> ${parts.join(' ')}`;
       },
       headers:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `📨 <b>HTTPS-заголовки:</b> ${parts.join(' ')}`;
+        return `📨 <b>HTTPS-заголовки (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
       },
       pending:'проверяем…',
       error:'ошибка сканирования'
@@ -423,7 +427,7 @@ const I18N = {
         connection:'Подключение',
         speed:'Скорость',
         provider:'Провайдер',
-        battery:'Батарея',
+        battery:'Battery API',
         time:'Локальное время',
         ua:'User-Agent',
         webrtc:'WebRTC',
@@ -527,9 +531,11 @@ const I18N = {
         },
         'fingerprint.fonts':finding=>{
           const raw=String(finding.value||'');
-          if(raw.startsWith('Detected fonts:')) return raw.replace('Detected fonts:','Обнаружены шрифты:');
+          if(!raw) return raw;
           if(raw==='System fonts not observable') return 'Системные шрифты не определены';
-          return raw;
+          return raw
+            .replace('External:', 'Сторонние:')
+            .replace('Native:', 'Системные:');
         },
         'privacy.cookies':finding=>{
           const raw=String(finding.value||'');
@@ -683,6 +689,10 @@ const I18N = {
     langButton:'Language',
     langLabels:{ru:'Russian',en:'English',uz:'Uzbek'},
     theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark'}},
+    battery:{
+      label:'Battery API',
+      statuses:{charging:'plugged in',discharging:'on battery',unknown:'status unknown'}
+    },
     introTitle:'“Digital fingerprint”: what it is and why it matters',
     introRichHtml:/* html */`
       <section class="fp-section" lang="en" aria-labelledby="fp-title">
@@ -826,7 +836,7 @@ const I18N = {
       },
       ua:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧾 <b>User-Agent parser:</b> ${parts.join(' ')}`;
+        return `🧾 <b>User-Agent parser (device class):</b> ${parts.join(' ')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Interface languages:</b> ${pillOr('—')}`;
@@ -838,7 +848,7 @@ const I18N = {
         const label=hasTouch?'Touch-enabled':'No touch screen';
         return `🖐️ <b>Device type:</b> ${pillOr(label)}`;
       },
-      battery:value=>`🔋 <b>Battery:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provider:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${pillOr(status)}`,
       vpn:(status,reasons,action)=>{
@@ -848,19 +858,19 @@ const I18N = {
       connection:summary=>`📶 <b>Connection & speed:</b> ${summary||pillOr('—')}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🛰️ <b>WebRTC (ICE):</b> ${parts.join(' ')}`;
+        return `🛰️ <b>WebRTC leak detection (ICE):</b> ${parts.join(' ')}`;
       },
       dns:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧭 <b>DNS leak:</b> ${parts.join(' ')}`;
+        return `🧭 <b>DNS leak test (resolvers):</b> ${parts.join(' ')}`;
       },
       tls:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🔐 <b>TLS / JA3:</b> ${parts.join(' ')}`;
+        return `🔐 <b>TLS / JA3 fingerprint:</b> ${parts.join(' ')}`;
       },
       headers:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `📨 <b>HTTPS headers:</b> ${parts.join(' ')}`;
+        return `📨 <b>HTTPS headers (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
       },
       pending:'checking…',
       error:'scan failed'
@@ -893,7 +903,7 @@ const I18N = {
         connection:'Connection',
         speed:'Speed',
         provider:'Provider',
-        battery:'Battery',
+        battery:'Battery API',
         time:'Local time',
         ua:'User-Agent',
         webrtc:'WebRTC',
@@ -1120,6 +1130,10 @@ const I18N = {
     langButton:'Til',
     langLabels:{ru:'Rus tili',en:'Ingliz tili',uz:'Oʻzbek tili'},
     theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi'}},
+    battery:{
+      label:'Battery API',
+      statuses:{charging:'zaryadlanmoqda',discharging:'batareyadan ishlamoqda',unknown:'holat nomaʼlum'}
+    },
     introTitle:'“Raqamli barmoq izi”: bu nima va nega bilish kerak',
     introRichHtml:/* html */`
       <section class="fp-section" lang="uz" aria-labelledby="fp-title">
@@ -1263,7 +1277,7 @@ const I18N = {
       },
       ua:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧾 <b>User-Agent tahlili:</b> ${parts.join(' ')}`;
+        return `🧾 <b>User-Agent tahlili (klassifikatsiya):</b> ${parts.join(' ')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Interfeys tillari:</b> ${pillOr('—')}`;
@@ -1275,7 +1289,7 @@ const I18N = {
         const label=hasTouch?'Sensorli ekran bor':'Sensorli ekran yo‘q';
         return `🖐️ <b>Qurilma turi:</b> ${pillOr(label)}`;
       },
-      battery:value=>`🔋 <b>Batareya:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provayder:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${pillOr(status)}`,
       vpn:(status,reasons,action)=>{
@@ -1285,19 +1299,19 @@ const I18N = {
       connection:summary=>`📶 <b>Aloqa va tezlik:</b> ${summary||pillOr('—')}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🛰️ <b>WebRTC (ICE):</b> ${parts.join(' ')}`;
+        return `🛰️ <b>WebRTC oqish testi (ICE nomzodlari):</b> ${parts.join(' ')}`;
       },
       dns:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧭 <b>DNS oqishi:</b> ${parts.join(' ')}`;
+        return `🧭 <b>DNS oqish testi (rezolverlar):</b> ${parts.join(' ')}`;
       },
       tls:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🔐 <b>TLS / JA3:</b> ${parts.join(' ')}`;
+        return `🔐 <b>TLS/JA3 mijoz izi:</b> ${parts.join(' ')}`;
       },
       headers:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `📨 <b>HTTPS sarlavhalari:</b> ${parts.join(' ')}`;
+        return `📨 <b>HTTPS sarlavhalari (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
       },
       pending:'tekshirilmoqda…',
       error:'skan xatosi'
@@ -1330,7 +1344,7 @@ const I18N = {
         connection:'Ulanish',
         speed:'Tezlik',
         provider:'Provayder',
-        battery:'Batareya',
+        battery:'Battery API',
         time:'Mahalliy vaqt',
         ua:'User-Agent',
         webrtc:'WebRTC',
@@ -1431,9 +1445,11 @@ const I18N = {
         },
         'fingerprint.fonts':finding=>{
           const raw=String(finding.value||'');
-          if(raw.startsWith('Detected fonts:')) return raw.replace('Detected fonts:','Aniqlangan shriftlar:');
+          if(!raw) return raw;
           if(raw==='System fonts not observable') return 'Tizim shriftlari aniqlanmadi';
-          return raw;
+          return raw
+            .replace('External:', 'Tashqi:')
+            .replace('Native:', 'Tizimiy:');
         },
         'privacy.cookies':finding=>{
           const raw=String(finding.value||'');
@@ -2215,7 +2231,7 @@ const CARD_CONTENT = {
     adv:{ru:'Отключайте лишние устройства или используйте заглушки',en:'Disconnect unused devices or use hardware blockers',uz:'Keraksiz qurilmalarni uzib qo‘ying yoki himoya qopqoq ishlating'}
   },
   bat:{
-    label:{ru:'Батарея',en:'Battery',uz:'Batareya'},
+    label:{ru:'Battery API',en:'Battery API',uz:'Battery API'},
     use:{ru:'Уровень заряда намекает на переносное устройство или работу от сети',en:'Charge level hints whether this is portable or plugged in',uz:'Zaryad darajasi bu qurilma portativmi yoki tarmoqqa ulanganini ko‘rsatadi'},
     ex:{ru:'Например, 15% без зарядки — вероятно смартфон в дороге',en:'For example, 15% with no charger likely means a phone on the go',uz:'Masalan, 15% va zaryadlanmayotgan bo‘lsa, bu yo‘lda ketayotgan telefon bo‘lishi mumkin'},
     adv:{ru:'Старайтесь держать заряд в безопасном диапазоне и не передавайте его чужим сайтам без необходимости',en:'Keep the battery in a safe range and avoid sharing it with unknown sites unnecessarily',uz:'Zaryadni xavfsiz darajada saqlang va keraksiz saytlar bilan bo‘lishmang'}
@@ -3009,10 +3025,17 @@ function formatNetworkSummary(net){
   return {type,downlink,rtt};
 }
 
-function formatBatteryStatus(battery){
+function formatBatteryStatus(battery,t){
   if(!battery||typeof battery.level!=='number') return '';
   const pct=Math.max(0,Math.min(100,Math.round(battery.level*100)));
-  return `${pct}%${battery.charging?' ⚡':''}`;
+  const statusMap=t?.battery?.statuses||{};
+  let statusKey='unknown';
+  if(battery.charging===true) statusKey='charging';
+  else if(battery.charging===false) statusKey='discharging';
+  const statusLabel=statusMap[statusKey]||'';
+  const icon=battery.charging?' ⚡':'';
+  const suffix=statusLabel?` (${statusLabel})`:'';
+  return `${pct}%${icon}${suffix}`;
 }
 
 function formatLocalTimeDisplay(basic){
@@ -3216,7 +3239,7 @@ function renderShockBullets(basic,t){
   const keyPerms=summarizeKeyPermissions(permEntries,t);
   const permHtml=keyPerms.length?pillList(keyPerms):pillOr(t.permStates?.unknown||'—');
   const browserHtml=pillOr(browserDisplayName(basic));
-  const batteryText=profiling?.batteryText||formatBatteryStatus(basic.battery);
+  const batteryText=profiling?.batteryText||formatBatteryStatus(basic.battery,t);
   const provider=profiling?.provider||details.org||state.serverData?.detailSource||null;
   const vpnState=state.vpn||{status:'uncertain',reasons:[],checked:false};
   const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
@@ -3383,11 +3406,7 @@ function buildProfilingContext(findings,basic,t){
   const locale=currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU');
   const localTime=timeInTZ(timezone,locale);
   const battery=basic?.battery;
-  let batteryText=null;
-  if(battery&&typeof battery.level==='number'){
-    const pct=Math.max(0,Math.min(100,Math.round(battery.level*100)));
-    batteryText=`${pct}%${battery.charging?' ⚡':''}`;
-  }
+  const batteryText=formatBatteryStatus(battery,t)||null;
   const netSummary=formatNetworkSummary(basic?.net);
   const units=t.units||{};
   const labels=t.labels||{};
@@ -3864,7 +3883,7 @@ async function render(lang){
     const permVal=formattedPerms.length?formattedPerms.join(' • '):(t.permStates?.unknown||'—');
     const pluginsVal=basic.plugins?.length?String(basic.plugins.length):'0';
     const mediaVal=basic.media?.length?basic.media.map(m=>`${m.kind}:${m.label?t.units.yes:t.units.no}`).join(' • '):'—';
-    const batteryVal=formatBatteryStatus(basic.battery)||'—';
+    const batteryVal=formatBatteryStatus(basic.battery,t)||'—';
     const exposure=basic.exposure||{};
     const fontsVal=summariseList(exposure.fonts||[]);
     const trackersVal=summariseList(exposure.trackers||[]);

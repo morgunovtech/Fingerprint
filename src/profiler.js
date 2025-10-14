@@ -1,15 +1,27 @@
 /* eslint-disable no-console */
 const FONT_CANDIDATES = [
-  'Arial',
-  'Helvetica',
-  'Times New Roman',
-  'Courier New',
-  'Georgia',
-  'Roboto',
-  'Open Sans',
-  'SF Pro Text',
-  'Segoe UI',
-  'Noto Sans',
+  { name: 'Arial', category: 'native' },
+  { name: 'Helvetica', category: 'native' },
+  { name: 'Times New Roman', category: 'native' },
+  { name: 'Courier New', category: 'native' },
+  { name: 'Georgia', category: 'native' },
+  { name: 'Verdana', category: 'native' },
+  { name: 'Trebuchet MS', category: 'native' },
+  { name: 'SF Pro Text', category: 'native' },
+  { name: 'Segoe UI', category: 'native' },
+  { name: 'Noto Sans', category: 'native' },
+  { name: 'Roboto', category: 'native' },
+  { name: 'Open Sans', category: 'external' },
+  { name: 'Inter', category: 'external' },
+  { name: 'Source Sans Pro', category: 'external' },
+  { name: 'Source Code Pro', category: 'external' },
+  { name: 'Fira Code', category: 'external' },
+  { name: 'JetBrains Mono', category: 'external' },
+  { name: 'Lato', category: 'external' },
+  { name: 'Montserrat', category: 'external' },
+  { name: 'PT Sans', category: 'external' },
+  { name: 'Ubuntu', category: 'external' },
+  { name: 'Avenir Next', category: 'external' },
 ];
 const MAC_DISPLAY_MAP = [
   { width: 3456, height: 2234, label: 'Apple MacBook Pro 16″' },
@@ -646,26 +658,38 @@ function detectSystemFonts() {
       ctx.font = `${size} ${fallback}`;
       baselines.set(fallback, ctx.measureText(sample).width);
     });
-    const detected = [];
+    const nativeFonts = [];
+    const externalFonts = [];
     const evidence = [];
-    FONT_CANDIDATES.forEach((font) => {
+    FONT_CANDIDATES.forEach(({ name, category }) => {
       const matched = ['monospace', 'serif', 'sans-serif'].some((fallback) => {
-        ctx.font = `${size} '${font}', ${fallback}`;
+        ctx.font = `${size} '${name}', ${fallback}`;
         const width = ctx.measureText(sample).width;
         const baseline = baselines.get(fallback) ?? width;
         return Math.abs(width - baseline) > 0.1;
       });
       if (matched) {
-        detected.push(font);
-        evidence.push(`${font}=present`);
+        if (category === 'external')
+          externalFonts.push(name);
+        else
+          nativeFonts.push(name);
+        evidence.push(`${name}=${category}`);
       }
     });
-    const value = detected.length ? `Detected fonts: ${detected.join(', ')}` : 'System fonts not observable';
+    const parts = [];
+    if (externalFonts.length)
+      parts.push(`External: ${externalFonts.join(', ')}`);
+    if (nativeFonts.length)
+      parts.push(`Native: ${nativeFonts.join(', ')}`);
+    const value = parts.length ? parts.join(' • ') : 'System fonts not observable';
+    const totalDetected = nativeFonts.length + externalFonts.length;
+    const confidenceBase = totalDetected ? 0.45 : 0.3;
+    const confidence = CLAMP(confidenceBase + externalFonts.length * 0.07 + nativeFonts.length * 0.03, 0, 0.85);
     return {
       key: 'fingerprint.fonts',
       label: 'System fonts',
       value,
-      confidence: detected.length ? CLAMP(0.4 + detected.length * 0.05, 0, 0.75) : 0.3,
+      confidence,
       evidence,
       method: 'measurement',
       limitations: 'Font detection is approximate; browsers can mask or reduce this signal to limit fingerprinting.',
@@ -1117,6 +1141,8 @@ function buildTlsJa3Finding(info) {
     evidence.push(`profile=${estimate.profile}`);
   if (estimate.signature)
     evidence.push(`sig=${truncate(estimate.signature, 90)}`);
+  if (estimate.hash)
+    evidence.push(`ja3=${estimate.hash}`);
   if (!estimate.hash) {
     return {
       key: 'network.tlsJa3',
@@ -1128,11 +1154,12 @@ function buildTlsJa3Finding(info) {
       limitations: 'Estimated locally from UA hints; actual TLS handshakes may differ when routed through VPNs or proxies.',
     };
   }
+  const summary = [estimate.hash, estimate.profile].filter(Boolean).join(' • ');
   return {
     key: 'network.tlsJa3',
     label: 'TLS JA3 fingerprint',
-    value: estimate.hash,
-    confidence: 0.5,
+    value: summary || estimate.hash,
+    confidence: 0.55,
     evidence,
     method: 'inference',
     limitations: 'Signature derived from common TLS client profiles; anti-fingerprinting layers or intermediaries may override it.',
@@ -1330,7 +1357,7 @@ function buildWebRtcFinding(signals) {
     };
   }
   const evidence = [];
-  evidence.push(`ICE ${signals.candidates.length}`);
+  evidence.push(`ICE candidates=${signals.candidates.length}`);
   if (signals.candidateTypes.length)
     evidence.push(`Types ${signals.candidateTypes.join('/')}`);
   if (signals.addresses.length)
@@ -1341,19 +1368,19 @@ function buildWebRtcFinding(signals) {
   const exposesRealIp = signals.addresses.some((address) => isIpAddress(address) && !address.toLowerCase().includes('local'));
   const candidateCount = signals.candidates.length;
   const typeLabel = Array.from(new Set(leakTypes)).join('/') || 'relay';
-  let value = candidateCount === 0 ? 'No ICE candidates (WebRTC disabled?)' : `${candidateCount} ICE candidate${candidateCount === 1 ? '' : 's'}`;
-  let confidence = candidateCount === 0 ? 0.3 : 0.4;
+  let value = candidateCount === 0 ? 'No ICE candidates observed (WebRTC disabled?)' : `${candidateCount} ICE candidate${candidateCount === 1 ? '' : 's'} gathered`;
+  let confidence = candidateCount === 0 ? 0.3 : 0.45;
   if (leakTypes.length && exposesRealIp) {
-    value = `${candidateCount} ICE ${typeLabel} candidate(s) expose IP`;
-    confidence = 0.65;
+    value = `${candidateCount} ICE ${typeLabel} candidate(s) expose real IP`;
+    confidence = 0.7;
   }
   else if (leakTypes.length) {
     value = `${candidateCount} ICE ${typeLabel} candidate(s) masked via mDNS`;
-    confidence = 0.55;
+    confidence = 0.6;
   }
   else if (candidateCount) {
     value = `${candidateCount} ICE candidate(s) without host details`;
-    confidence = 0.45;
+    confidence = 0.5;
   }
   return {
     key: 'network.webrtcLeak',
@@ -1378,6 +1405,8 @@ function buildDnsLeakFinding(signals) {
     };
   }
   const evidence = [];
+  if (signals.candidates.length)
+    evidence.push(`ICE candidates=${signals.candidates.length}`);
   if (signals.addresses.length)
     evidence.push(`IPs ${truncate(signals.addresses.join(', '), 70)}`);
   if (signals.maskedHostnames.length)
@@ -1386,18 +1415,18 @@ function buildDnsLeakFinding(signals) {
     evidence.push(`Types ${signals.candidateTypes.join('/')}`);
   const publicIps = signals.addresses.filter((address) => isIpAddress(address) && !isPrivateIp(address));
   const localIps = signals.addresses.filter((address) => isIpAddress(address) && isPrivateIp(address));
-  let value = !signals.candidates.length ? 'No WebRTC activity (DNS leak unknown)' : 'No DNS IPs exposed via ICE';
-  let confidence = !signals.candidates.length ? 0.3 : 0.4;
+  let value = !signals.candidates.length ? 'No WebRTC activity (DNS leak unknown)' : 'No DNS servers exposed via ICE';
+  let confidence = !signals.candidates.length ? 0.3 : 0.45;
   if (signals.maskedHostnames.length && !signals.addresses.length) {
-    value = 'mDNS hostnames only (masking active)';
+    value = 'Only mDNS hostnames returned (masking active)';
     confidence = 0.55;
   }
   else if (publicIps.length) {
-    value = `Public IP via ICE: ${truncate(publicIps.join(', '), 60)}`;
+    value = `DNS resolvers via ICE: ${truncate(publicIps.join(', '), 60)}`;
     confidence = 0.7;
   }
   else if (localIps.length) {
-    value = `Local IP via ICE: ${truncate(localIps.join(', '), 60)}`;
+    value = `Local DNS via ICE: ${truncate(localIps.join(', '), 60)}`;
     confidence = 0.6;
   }
   return {
