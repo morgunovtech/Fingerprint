@@ -354,6 +354,10 @@ const I18N = {
         const pieces=[browser,perms].filter(Boolean);
         return `🌐 <b>Браузер и разрешения:</b> ${pieces.join(' ')}`;
       },
+      ua:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🧾 <b>User-Agent парсер:</b> ${parts.join(' ')}`;
+      },
       languages:list=>{
         if(!list) return `🌍 <b>Языки интерфейса:</b> ${pillOr('—')}`;
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
@@ -371,7 +375,25 @@ const I18N = {
         const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      connection:summary=>`📶 <b>Подключение и скорость:</b> ${summary||pillOr('—')}`
+      connection:summary=>`📶 <b>Подключение и скорость:</b> ${summary||pillOr('—')}`,
+      webrtc:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🛰️ <b>WebRTC (ICE):</b> ${parts.join(' ')}`;
+      },
+      dns:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🧭 <b>DNS-утечка:</b> ${parts.join(' ')}`;
+      },
+      tls:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🔐 <b>TLS / JA3 отпечаток:</b> ${parts.join(' ')}`;
+      },
+      headers:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `📨 <b>HTTPS-заголовки:</b> ${parts.join(' ')}`;
+      },
+      pending:'проверяем…',
+      error:'ошибка сканирования'
     },
     profiling:{
       title:'Профайлинг',
@@ -402,7 +424,12 @@ const I18N = {
         speed:'Скорость',
         provider:'Провайдер',
         battery:'Батарея',
-        time:'Локальное время'
+        time:'Локальное время',
+        ua:'User-Agent',
+        webrtc:'WebRTC',
+        dns:'DNS',
+        tls:'TLS / JA3',
+        headers:'HTTP-заголовки'
       },
       waiting:'Собираем сигналы…',
       loading:'Анализируем профиль…',
@@ -437,7 +464,11 @@ const I18N = {
         'privacy.cookies':'Статус cookie',
         'privacy.supercookie':'Проверка суперкук',
         'privacy.adblock':'Блокировщик рекламы',
-        'network.webrtcLeak':'WebRTC / DNS проверка'
+        'network.webrtcLeak':'WebRTC (ICE)',
+        'network.dnsLeak':'DNS проверка',
+        'network.tlsJa3':'TLS / JA3 отпечаток',
+        'browser.uaDetailed':'Парсер User-Agent',
+        'network.requestHeaders':'HTTPS-заголовки'
       },
       values:{
         'device.class':finding=>{
@@ -793,6 +824,10 @@ const I18N = {
         const pieces=[browser,perms].filter(Boolean);
         return `🌐 <b>Browser & permissions:</b> ${pieces.join(' ')}`;
       },
+      ua:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🧾 <b>User-Agent parser:</b> ${parts.join(' ')}`;
+      },
       languages:list=>{
         if(!list) return `🌍 <b>Interface languages:</b> ${pillOr('—')}`;
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
@@ -810,7 +845,25 @@ const I18N = {
         const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      connection:summary=>`📶 <b>Connection & speed:</b> ${summary||pillOr('—')}`
+      connection:summary=>`📶 <b>Connection & speed:</b> ${summary||pillOr('—')}`,
+      webrtc:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🛰️ <b>WebRTC (ICE):</b> ${parts.join(' ')}`;
+      },
+      dns:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🧭 <b>DNS leak:</b> ${parts.join(' ')}`;
+      },
+      tls:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🔐 <b>TLS / JA3:</b> ${parts.join(' ')}`;
+      },
+      headers:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `📨 <b>HTTPS headers:</b> ${parts.join(' ')}`;
+      },
+      pending:'checking…',
+      error:'scan failed'
     },
     profiling:{
       title:'Profiling',
@@ -841,7 +894,12 @@ const I18N = {
         speed:'Speed',
         provider:'Provider',
         battery:'Battery',
-        time:'Local time'
+        time:'Local time',
+        ua:'User-Agent',
+        webrtc:'WebRTC',
+        dns:'DNS',
+        tls:'TLS / JA3',
+        headers:'HTTPS headers'
       },
       waiting:'Collecting signals…',
       loading:'Crunching the profile…',
@@ -876,7 +934,11 @@ const I18N = {
         'privacy.cookies':'Cookie status',
         'privacy.supercookie':'Supercookie probe',
         'privacy.adblock':'Ad blocker usage',
-        'network.webrtcLeak':'WebRTC / DNS leak test'
+        'network.webrtcLeak':'WebRTC (ICE) test',
+        'network.dnsLeak':'DNS leak test',
+        'network.tlsJa3':'TLS / JA3 fingerprint',
+        'browser.uaDetailed':'User-Agent parser',
+        'network.requestHeaders':'HTTPS headers'
       },
       values:{
         'device.class':finding=>{
@@ -1199,6 +1261,10 @@ const I18N = {
         const pieces=[browser,perms].filter(Boolean);
         return `🌐 <b>Brauzer va ruxsatlar:</b> ${pieces.join(' ')}`;
       },
+      ua:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🧾 <b>User-Agent tahlili:</b> ${parts.join(' ')}`;
+      },
       languages:list=>{
         if(!list) return `🌍 <b>Interfeys tillari:</b> ${pillOr('—')}`;
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
@@ -1216,7 +1282,25 @@ const I18N = {
         const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      connection:summary=>`📶 <b>Aloqa va tezlik:</b> ${summary||pillOr('—')}`
+      connection:summary=>`📶 <b>Aloqa va tezlik:</b> ${summary||pillOr('—')}`,
+      webrtc:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🛰️ <b>WebRTC (ICE):</b> ${parts.join(' ')}`;
+      },
+      dns:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🧭 <b>DNS oqishi:</b> ${parts.join(' ')}`;
+      },
+      tls:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `🔐 <b>TLS / JA3:</b> ${parts.join(' ')}`;
+      },
+      headers:(status,details)=>{
+        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        return `📨 <b>HTTPS sarlavhalari:</b> ${parts.join(' ')}`;
+      },
+      pending:'tekshirilmoqda…',
+      error:'skan xatosi'
     },
     profiling:{
       title:'Profiling',
@@ -1247,7 +1331,12 @@ const I18N = {
         speed:'Tezlik',
         provider:'Provayder',
         battery:'Batareya',
-        time:'Mahalliy vaqt'
+        time:'Mahalliy vaqt',
+        ua:'User-Agent',
+        webrtc:'WebRTC',
+        dns:'DNS',
+        tls:'TLS / JA3',
+        headers:'HTTPS sarlavhalari'
       },
       waiting:'Signallar yig‘ilmoqda…',
       loading:'Profil tahlil qilinmoqda…',
@@ -1282,7 +1371,11 @@ const I18N = {
         'privacy.cookies':'Cookie holati',
         'privacy.supercookie':'Supercookie testi',
         'privacy.adblock':'Reklama bloklagichi',
-        'network.webrtcLeak':'WebRTC / DNS sinovi'
+        'network.webrtcLeak':'WebRTC (ICE) sinovi',
+        'network.dnsLeak':'DNS oqish testi',
+        'network.tlsJa3':'TLS / JA3 izi',
+        'browser.uaDetailed':'User-Agent tahlili',
+        'network.requestHeaders':'HTTPS sarlavhalari'
       },
       values:{
         'device.class':finding=>{
@@ -2193,7 +2286,8 @@ const state={
   speed:{status:'idle',mbps:null,latency:null,error:null,note:null},
   vpn:{status:'uncertain',reasons:[],checked:false},
   sharePayload:null,
-  profilingContext:null
+  profilingContext:null,
+  profilingStatus:'idle'
 };
 let snapshotCache=null;
 let snapshotPromise=null;
@@ -3089,10 +3183,20 @@ function renderShockBullets(basic,t){
     ul.innerHTML='';
     shockBulletCount=0;
     syncShockVisibility();
+    state.profilingStatus='idle';
     return;
   }
   clearClockIntervals();
   const profiling=state.profilingContext;
+  const profilingStatus=state.profilingStatus||'idle';
+  const unknownLabel=t.permStates?.unknown||'—';
+  const pendingLabel=t.shock?.pending||unknownLabel;
+  const errorLabel=t.shock?.error||unknownLabel;
+  const fallbackSummary=()=>({value:profilingStatus==='running'?pendingLabel:profilingStatus==='error'?errorLabel:unknownLabel,evidence:[]});
+  const normalizeSummary=summary=>{
+    if(summary&&(summary.value||summary.evidence?.length)) return summary;
+    return fallbackSummary();
+  };
   const languagesSummary=formatLanguagesList(basic.languages);
   const dntLabel=formatDntStatus(basic.dnt,t);
   const touchInfo=formatTouchSummary(basic.touch,basic.pointer,t);
@@ -3122,16 +3226,31 @@ function renderShockBullets(basic,t){
   const connectionSummary=buildConnectionSummary(basic,profiling,t);
   const ipButton=ensureInlineIpButton(t);
   const vpnActionSlot='<span data-vpn-slot></span>';
-  const bullets=[
-    {key:'clock',html:t.shock.clock(placeHtml,timeHtml)},
-    {key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)},
-    {key:'browser',html:t.shock.browserPerms(browserHtml,permHtml)},
-    {key:'languages',html:t.shock.languages(languagesSummary||'')}
-  ];
-  if(batteryText) bullets.push({key:'battery',html:t.shock.battery(batteryText)});
+  const bullets=[];
+  bullets.push({key:'clock',html:t.shock.clock(placeHtml,timeHtml)});
+  bullets.push({key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)});
+  bullets.push({key:'browser',html:t.shock.browserPerms(browserHtml,permHtml)});
+  const uaSummary=normalizeSummary(profiling?.uaSummary||null);
+  const uaDetails=uaSummary.evidence&&uaSummary.evidence.length?pillList(uaSummary.evidence):'';
+  bullets.push({key:'ua',html:t.shock.ua(uaSummary.value,uaDetails)});
+  bullets.push({key:'languages',html:t.shock.languages(languagesSummary||'')});
+  const batterySummary=batteryText||'';
+  bullets.push({key:'battery',html:t.shock.battery(batterySummary)});
   if(provider) bullets.push({key:'provider',html:t.shock.provider(provider)});
   if(dntLabel) bullets.push({key:'dnt',html:t.shock.dnt(dntLabel)});
   bullets.push({key:'connection',html:t.shock.connection(connectionSummary)});
+  const webrtcSummary=normalizeSummary(profiling?.webrtcSummary||null);
+  const webrtcDetails=webrtcSummary.evidence&&webrtcSummary.evidence.length?pillList(webrtcSummary.evidence):'';
+  bullets.push({key:'webrtc',html:t.shock.webrtc(webrtcSummary.value,webrtcDetails)});
+  const dnsSummary=normalizeSummary(profiling?.dnsSummary||null);
+  const dnsDetails=dnsSummary.evidence&&dnsSummary.evidence.length?pillList(dnsSummary.evidence):'';
+  bullets.push({key:'dns',html:t.shock.dns(dnsSummary.value,dnsDetails)});
+  const tlsSummary=normalizeSummary(profiling?.tlsSummary||null);
+  const tlsDetails=tlsSummary.evidence&&tlsSummary.evidence.length?pillList(tlsSummary.evidence):'';
+  bullets.push({key:'tls',html:t.shock.tls(tlsSummary.value,tlsDetails)});
+  const headerSummary=normalizeSummary(profiling?.headerSummary||null);
+  const headerDetails=headerSummary.evidence&&headerSummary.evidence.length?pillList(headerSummary.evidence):'';
+  bullets.push({key:'headers',html:t.shock.headers(headerSummary.value,headerDetails)});
   bullets.push({key:'vpn',html:t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasonHtml,vpnActionSlot),button:ipButton});
   ul.innerHTML='';
   bullets.filter(Boolean).forEach(item=>{
@@ -3244,6 +3363,17 @@ function buildProfilingContext(findings,basic,t){
   const vpnFinding=find('vpn.probability');
   const locationFinding=find('location.region');
   const networkFinding=find('network.profile');
+  const webrtcFinding=find('network.webrtcLeak');
+  const dnsFinding=find('network.dnsLeak');
+  const tlsFinding=find('network.tlsJa3');
+  const uaFinding=find('browser.uaDetailed');
+  const headersFinding=find('network.requestHeaders');
+  const shockCtx=finding=>{
+    if(!finding) return null;
+    const value=formatProfilingValue(finding,cfg)||'';
+    const evidence=Array.isArray(finding.evidence)?finding.evidence.slice(0,4):[];
+    return {value,evidence};
+  };
   const deviceLabel=deviceFinding?formatProfilingValue(deviceFinding,cfg):null;
   const osLabel=osFinding?formatProfilingValue(osFinding,cfg):null;
   const vpnLabel=vpnFinding?formatProfilingValue(vpnFinding,cfg):null;
@@ -3310,6 +3440,11 @@ function buildProfilingContext(findings,basic,t){
     locationFinding,
     networkFinding
   };
+  ctx.webrtcSummary=shockCtx(webrtcFinding)||{value:'',evidence:[]};
+  ctx.dnsSummary=shockCtx(dnsFinding)||{value:'',evidence:[]};
+  ctx.tlsSummary=shockCtx(tlsFinding)||{value:'',evidence:[]};
+  ctx.uaSummary=shockCtx(uaFinding)||{value:'',evidence:[]};
+  ctx.headerSummary=shockCtx(headersFinding)||{value:'',evidence:[]};
   return ctx;
 }
 
@@ -3433,6 +3568,7 @@ function syncShockVisibility(){
 async function renderProfilingSection(basic,t){
   state.profilingContext=null;
   if(!basic){
+    state.profilingStatus='idle';
     renderShockBullets(null,t);
     syncShockVisibility();
     return;
@@ -3443,6 +3579,8 @@ async function renderProfilingSection(basic,t){
   const runId=++profilingSequence;
   const ipGeo=buildProfilerIpGeo();
   try{
+    state.profilingStatus='running';
+    renderShockBullets(basic,t);
     const mod=await loadProfilerModule();
     if(runId!==profilingSequence) return;
     if(profilerLoadError){
@@ -3452,11 +3590,13 @@ async function renderProfilingSection(basic,t){
     if(runId!==profilingSequence) return;
     const context=buildProfilingContext(findings,basic,t);
     state.profilingContext=context;
+    state.profilingStatus='ready';
     renderShockBullets(basic,t);
     syncShockVisibility();
   }catch(err){
     if(runId!==profilingSequence) return;
     state.profilingContext=null;
+    state.profilingStatus='error';
     console.error('Profiling error',err);
     renderShockBullets(basic,t);
     syncShockVisibility();

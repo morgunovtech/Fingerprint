@@ -27,6 +27,11 @@ const IOS_DISPLAY_MAP = [
   { width: 1133, height: 2360, label: 'Apple iPad Air 10.9″' },
   { width: 1488, height: 2266, label: 'Apple iPad mini 8.3″' },
 ];
+const truncate = (value, maxLength = 80) => {
+  if (value.length <= maxLength)
+    return value;
+  return `${value.slice(0, Math.max(0, maxLength - 1))}…`;
+};
 const ANDROID_MODEL_PREFIX = [
   { pattern: /^SM-S92/i, label: 'Samsung Galaxy S24 Ultra / S24+' },
   { pattern: /^SM-S91/i, label: 'Samsung Galaxy S23 series' },
@@ -784,6 +789,46 @@ async function runSupercookieProbe() {
     limitations: 'Checks only first-party storage APIs; cross-site partitioning or purging policies may differ.',
   };
 }
+function identifyAdBlockVendor() {
+  if (typeof window === 'undefined')
+    return null;
+  const win = window;
+  const nav = typeof navigator !== 'undefined' ? navigator : undefined;
+  if (nav?.brave && typeof nav.brave.isBrave === 'function')
+    return 'Brave Shields';
+  const signatureChecks = [
+    {
+      name: 'uBlock Origin',
+      match: () => ['uBO', 'ublock', 'ublock0', '_uBlock', 'ublockOrigin'].some((key) => key in win),
+    },
+    {
+      name: 'AdGuard',
+      match: () => ['adguard', 'AdGuard', 'adguardProductName'].some((key) => key in win),
+    },
+    {
+      name: 'Ghostery',
+      match: () => ['ghostery', '__ghostery'].some((key) => key in win),
+    },
+    {
+      name: 'Privacy Badger',
+      match: () => 'pbjs' in win,
+    },
+  ];
+  for (const entry of signatureChecks) {
+    try {
+      if (entry.match())
+        return entry.name;
+    } catch (error) {
+      console.debug('Adblock signature check failed', error);
+    }
+  }
+  if (typeof document !== 'undefined') {
+    const attr = document.documentElement?.getAttribute('data-adblocker');
+    if (attr)
+      return `Custom blocker (${attr})`;
+  }
+  return null;
+}
 function detectAdBlocker() {
   if (typeof document === 'undefined')
     return null;
@@ -816,8 +861,11 @@ function detectAdBlocker() {
   }
   if (blocked != null)
     evidence.push(`hidden=${blocked}`);
-  const value = blocked == null ? 'Ad blocker status unknown' : blocked ? 'Ad blocker likely enabled' : 'Ad blocker unlikely';
-  const confidence = blocked == null ? 0.3 : blocked ? 0.6 : 0.5;
+  const vendor = blocked ? identifyAdBlockVendor() : null;
+  if (vendor)
+    evidence.push(`vendor=${vendor}`);
+  const value = blocked == null ? 'Status unknown' : blocked ? `Detected (${vendor ?? 'unknown blocker'})` : 'Not detected';
+  const confidence = blocked == null ? 0.3 : blocked ? (vendor ? 0.7 : 0.6) : 0.5;
   return {
     key: 'privacy.adblock',
     label: 'Ad blocker usage',
@@ -825,10 +873,372 @@ function detectAdBlocker() {
     confidence,
     evidence,
     method: 'observation',
-    limitations: 'Some blockers hide their presence and some privacy browsers block only remote trackers.',
+    limitations: 'Detection relies on DOM side effects and public APIs. Some blockers intentionally obfuscate their presence or operate per-site.',
   };
 }
-async function runWebRtcLeakTest() {
+const normalizeDeviceClass = (value) => {
+  switch (value) {
+    case 'desktop':
+      return 'Desktop';
+    case 'mobile':
+      return 'Mobile';
+    case 'tablet':
+      return 'Tablet';
+    default:
+      return 'Unknown device';
+  }
+};
+const canonicalPlatformName = (value) => {
+  if (!value)
+    return null;
+  const lower = value.toLowerCase();
+  if (lower.includes('mac'))
+    return 'macOS';
+  if (lower.includes('win'))
+    return 'Windows';
+  if (lower === 'ios' || lower.includes('iphone'))
+    return 'iOS';
+  if (lower.includes('ipad'))
+    return 'iPadOS';
+  if (lower.includes('android'))
+    return 'Android';
+  if (lower.includes('linux'))
+    return 'Linux';
+  if (lower.includes('cros') || lower.includes('chrome os'))
+    return 'ChromeOS';
+  return value;
+};
+const parseUserAgentDetailed = (uaHints) => {
+  const nav = typeof navigator === 'undefined' ? undefined : navigator;
+  const uaString = nav?.userAgent ?? '';
+  const lower = uaString.toLowerCase();
+  const getVersion = (regex) => {
+    const match = regex.exec(uaString);
+    return match ? match[1] : null;
+  };
+  const browserPatterns = [
+    { name: 'Edge', regex: /Edg\/(\d+[\.\d]*)/i },
+    { name: 'Opera', regex: /OPR\/(\d+[\.\d]*)/i },
+    { name: 'Vivaldi', regex: /Vivaldi\/(\d+[\.\d]*)/i },
+    { name: 'Samsung Browser', regex: /SamsungBrowser\/(\d+[\.\d]*)/i },
+    { name: 'Yandex Browser', regex: /YaBrowser\/(\d+[\.\d]*)/i },
+    { name: 'DuckDuckGo', regex: /DuckDuckGo\/(\d+[\.\d]*)/i },
+    { name: 'Whale', regex: /Whale\/(\d+[\.\d]*)/i },
+    { name: 'Brave', regex: /Brave\/(\d+[\.\d]*)/i },
+    { name: 'Chrome', regex: /CriOS\/(\d+[\.\d]*)/i },
+  ];
+  let browserName = 'Unknown';
+  let browserVersion = null;
+  for (const entry of browserPatterns) {
+    const match = entry.regex.exec(uaString);
+    if (match) {
+      browserName = entry.name;
+      browserVersion = match[1];
+      break;
+    }
+  }
+  if (browserName === 'Unknown') {
+    if (/chrome\//i.test(uaString) && /safari/i.test(uaString)) {
+      browserName = 'Chrome';
+      browserVersion = getVersion(/Chrome\/(\d+[\.\d]*)/i);
+    }
+    else if (/firefox\//i.test(uaString)) {
+      browserName = 'Firefox';
+      browserVersion = getVersion(/Firefox\/(\d+[\.\d]*)/i);
+    }
+    else if (/safari/i.test(uaString) && /version\//i.test(uaString)) {
+      browserVersion = getVersion(/Version\/(\d+[\.\d]*)/i);
+      browserName = /iphone|ipad|ipod/.test(lower) ? 'Mobile Safari' : 'Safari';
+    }
+    else if (/safari\//i.test(uaString)) {
+      browserName = 'Safari';
+      browserVersion = getVersion(/Safari\/(\d+[\.\d]*)/i);
+    }
+    else if (/msie |trident\//i.test(uaString)) {
+      browserName = 'Internet Explorer';
+      browserVersion = getVersion(/(?:MSIE |rv:)([\d.]+)/i);
+    }
+  }
+  if (browserName === 'Chrome' && nav?.brave)
+    browserName = 'Brave';
+  const browserMajorRaw = browserVersion ? Number.parseInt(browserVersion.split('.')[0], 10) : null;
+  const browserMajor = Number.isFinite(browserMajorRaw ?? NaN) ? browserMajorRaw : null;
+  let osName = canonicalPlatformName(uaHints?.platform ?? null) ?? null;
+  let osVersion = uaHints?.platformVersion ?? null;
+  const winMatch = /windows nt ([\d.]+)/i.exec(uaString);
+  if (winMatch) {
+    osName = 'Windows';
+    const versionMap = {
+      '10.0': '10/11',
+      '6.3': '8.1',
+      '6.2': '8',
+      '6.1': '7',
+      '6.0': 'Vista',
+      '5.1': 'XP',
+    };
+    osVersion = versionMap[winMatch[1]] ?? osVersion;
+    if (!osVersion && uaHints?.platformVersion) {
+      const parsed = Number.parseInt((uaHints.platformVersion.split('.')[0] ?? ''), 10);
+      if (Number.isFinite(parsed)) {
+        if (parsed >= 15)
+          osVersion = '11';
+        else if (parsed === 14)
+          osVersion = '10';
+      }
+    }
+  }
+  const macMatch = /mac os x (\d+[_.\d]*)/i.exec(uaString);
+  if (macMatch) {
+    osName = 'macOS';
+    osVersion = macMatch[1].replace(/_/g, '.');
+  }
+  const ipadMatch = /ipad(?:;|).*?os (\d+[_.\d]*)/i.exec(uaString);
+  if (ipadMatch) {
+    osName = 'iPadOS';
+    osVersion = ipadMatch[1].replace(/_/g, '.');
+  }
+  const iphoneMatch = /iphone(?: os)? (\d+[_.\d]*)/i.exec(uaString);
+  if (iphoneMatch) {
+    osName = 'iOS';
+    osVersion = iphoneMatch[1].replace(/_/g, '.');
+  }
+  const androidMatch = /android (\d+[\.\d]*)/i.exec(uaString);
+  if (androidMatch) {
+    osName = 'Android';
+    osVersion = androidMatch[1];
+  }
+  if (/cros/i.test(uaString)) {
+    osName = 'ChromeOS';
+    osVersion = uaHints?.platformVersion ?? null;
+  }
+  if (/linux/i.test(uaString) && !osName)
+    osName = 'Linux';
+  let deviceClass = 'unknown';
+  if (/ipad|tablet/.test(lower))
+    deviceClass = 'tablet';
+  else if (/android/.test(lower) && !/mobile/.test(lower))
+    deviceClass = 'tablet';
+  else if (/mobi|iphone|ipod|android/.test(lower))
+    deviceClass = 'mobile';
+  else if (osName && ['windows', 'macos', 'linux', 'chromeos'].includes(osName.toLowerCase()))
+    deviceClass = 'desktop';
+  else if ((nav?.maxTouchPoints ?? 0) > 0 && deviceClass === 'unknown')
+    deviceClass = 'mobile';
+  return {
+    browserName,
+    browserVersion,
+    browserMajor,
+    osName,
+    osVersion,
+    deviceClass,
+    model: uaHints?.model ?? null,
+  };
+};
+const JA3_PROFILES = [
+  {
+    label: 'Chromium TLS 1.3',
+    browsers: ['chrome', 'edge', 'opera', 'vivaldi', 'brave', 'yandex browser', 'duckduckgo', 'samsung browser', 'arc', 'whale'],
+    minVersion: 110,
+    signature: '771,4865-4866-4867-49196-49200-49195-49199-52393-52392-49188-49192-49187-49191-49162-49172-156-157-47-53,0-11-10-35-16-23-65281-13-45-43-51-57-0-27-17513-2570-17516-18,29-23-24,0',
+    hash: 'e7d705a3286e19ea42f587b344ee6865',
+  },
+  {
+    label: 'Firefox TLS 1.3',
+    browsers: ['firefox'],
+    minVersion: 100,
+    signature: '771,4865-4866-4867-49196-49200-49195-49199-49188-49192-49162-49172-156-157-47-53,0-11-10-35-16-5-18-51-45-13-65281-43-23-17513-27,29-23-24,0',
+    hash: 'a66f8fd9dfb9e870bdb64a0e7a26b00a',
+  },
+  {
+    label: 'Safari 17+ (macOS)',
+    browsers: ['safari'],
+    minVersion: 17,
+    platformMatches: (info) => info.osName?.toLowerCase() === 'macos',
+    signature: '771,4865-4866-4867-49195-49199-49196-49200-49188-49192-49162-49172-49187-49191-156-157-47-53,0-11-10-35-16-5-18-13-51-45-65281-27-17513,29-23-24,0',
+    hash: '769f5f1f2b8ab51f5c0ee3c05f9d3ad0',
+  },
+  {
+    label: 'Safari 17+ (iOS/iPadOS)',
+    browsers: ['mobile safari', 'safari'],
+    minVersion: 17,
+    platformMatches: (info) => {
+      const os = info.osName?.toLowerCase();
+      return os === 'ios' || os === 'ipados';
+    },
+    signature: '771,4865-4866-4867-49195-49199-49196-49200-49188-49192-49162-49172-49187-49191-156-157-47-53,0-11-10-35-16-5-18-13-45-51-27-17513,29-23-24,0',
+    hash: '0a4a7e03659bc0cb6a75d6a5b51a35a4',
+  },
+];
+const estimateJa3Fingerprint = (info) => {
+  const browser = info.browserName.toLowerCase();
+  for (const profile of JA3_PROFILES) {
+    if (!profile.browsers.includes(browser))
+      continue;
+    if (profile.minVersion && (info.browserMajor ?? -Infinity) < profile.minVersion)
+      continue;
+    if (profile.maxVersion && (info.browserMajor ?? Infinity) > profile.maxVersion)
+      continue;
+    if (profile.platformMatches && !profile.platformMatches(info))
+      continue;
+    return { hash: profile.hash, signature: profile.signature, profile: profile.label };
+  }
+  return { hash: null, signature: null, profile: null };
+};
+function buildUaParserFinding(info) {
+  const browserLabel = [info.browserName, info.browserVersion].filter(Boolean).join(' ').trim() || 'Browser unknown';
+  const osLabel = [info.osName, info.osVersion].filter(Boolean).join(' ').trim() || 'OS unknown';
+  const deviceLabel = normalizeDeviceClass(info.deviceClass);
+  let value = `${browserLabel} on ${osLabel}`;
+  if (deviceLabel && deviceLabel !== 'Unknown device')
+    value = `${value} (${deviceLabel})`;
+  if (info.model)
+    value = `${value}, model ${info.model}`;
+  const evidence = [`browser=${browserLabel}`, `os=${osLabel}`, `device=${deviceLabel}`];
+  if (info.model)
+    evidence.push(`model=${info.model}`);
+  return {
+    key: 'browser.uaDetailed',
+    label: 'User-Agent parser',
+    value,
+    confidence: value.includes('unknown') ? 0.3 : 0.6,
+    evidence,
+    method: 'observation',
+    limitations: 'Derived from UA string and high-entropy hints; spoofing or privacy protections may change the reported values.',
+  };
+}
+function buildTlsJa3Finding(info) {
+  const estimate = estimateJa3Fingerprint(info);
+  const browserLabel = [info.browserName, info.browserVersion].filter(Boolean).join(' ').trim() || 'browser unknown';
+  const osLabel = [info.osName, info.osVersion].filter(Boolean).join(' ').trim() || 'os unknown';
+  const evidence = [`browser=${browserLabel}`, `os=${osLabel}`];
+  if (info.deviceClass && info.deviceClass !== 'unknown')
+    evidence.push(`device=${info.deviceClass}`);
+  if (estimate.profile)
+    evidence.push(`profile=${estimate.profile}`);
+  if (estimate.signature)
+    evidence.push(`sig=${truncate(estimate.signature, 90)}`);
+  if (!estimate.hash) {
+    return {
+      key: 'network.tlsJa3',
+      label: 'TLS JA3 fingerprint',
+      value: 'Unknown (insufficient heuristics)',
+      confidence: 0.2,
+      evidence,
+      method: 'inference',
+      limitations: 'Estimated locally from UA hints; actual TLS handshakes may differ when routed through VPNs or proxies.',
+    };
+  }
+  return {
+    key: 'network.tlsJa3',
+    label: 'TLS JA3 fingerprint',
+    value: estimate.hash,
+    confidence: 0.5,
+    evidence,
+    method: 'inference',
+    limitations: 'Signature derived from common TLS client profiles; anti-fingerprinting layers or intermediaries may override it.',
+  };
+}
+const extractHeadersFromBasic = (basic) => {
+  if (!basic || typeof basic !== 'object')
+    return null;
+  const server = basic.server;
+  if (!server || typeof server !== 'object')
+    return null;
+  const headersRaw = server.headers;
+  if (!headersRaw || typeof headersRaw !== 'object')
+    return null;
+  const entries = Object.entries(headersRaw);
+  if (!entries.length)
+    return null;
+  const normalized = {};
+  for (const [key, value] of entries) {
+    if (value == null)
+      continue;
+    const str = Array.isArray(value) ? value.map((item) => String(item)).join(', ') : String(value);
+    normalized[key.toLowerCase()] = str;
+  }
+  return normalized;
+};
+function buildRequestHeadersFinding(basic) {
+  const headers = extractHeadersFromBasic(basic);
+  if (!headers) {
+    return {
+      key: 'network.requestHeaders',
+      label: 'HTTPS headers viewer',
+      value: 'Headers unavailable (run IP scan)',
+      confidence: 0.2,
+      evidence: [],
+      method: 'observation',
+      limitations: 'Requires the optional /headers probe; no header data leaves your browser during this check.',
+    };
+  }
+  const interesting = [
+    ['accept', 'Accept'],
+    ['accept-language', 'Accept-Language'],
+    ['referer', 'Referer'],
+    ['origin', 'Origin'],
+    ['content-security-policy', 'CSP'],
+    ['sec-fetch-site', 'Sec-Fetch-Site'],
+    ['sec-fetch-mode', 'Sec-Fetch-Mode'],
+    ['sec-fetch-dest', 'Sec-Fetch-Dest'],
+    ['sec-ch-ua', 'Sec-CH-UA'],
+    ['sec-ch-ua-platform', 'Sec-CH-UA-Platform'],
+    ['sec-ch-ua-mobile', 'Sec-CH-UA-Mobile'],
+  ];
+  const evidence = [];
+  const summaryPieces = [];
+  for (const [key, label] of interesting) {
+    const value = headers[key];
+    if (!value)
+      continue;
+    const clean = truncate(value, 90);
+    evidence.push(`${label}: ${clean}`);
+    if (['accept', 'referer', 'origin', 'content-security-policy'].includes(key))
+      summaryPieces.push(`${label}: ${truncate(value, 60)}`);
+  }
+  if (!summaryPieces.length)
+    summaryPieces.push('Headers captured');
+  return {
+    key: 'network.requestHeaders',
+    label: 'HTTPS headers viewer',
+    value: summaryPieces.join(' • '),
+    confidence: 0.45,
+    evidence,
+    method: 'observation',
+    limitations: 'Headers shown reflect the latest local /headers fetch; proxies or privacy filters may rewrite them en route.',
+  };
+}
+const ICE_GATHER_TIMEOUT_MS = 1500;
+const parseIceCandidate = (candidate) => {
+  const parts = candidate.trim().split(' ');
+  const details = {};
+  if (parts.length > 4)
+    details.address = parts[4];
+  const typeIndex = parts.indexOf('typ');
+  if (typeIndex >= 0 && parts[typeIndex + 1])
+    details.type = parts[typeIndex + 1];
+  return details;
+};
+const isIpAddress = (address) => /^(?:\d{1,3}\.){3}\d{1,3}$/.test(address) || address.includes('::') || /^[0-9a-f:]+$/i.test(address);
+const isPrivateIp = (address) => {
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(address)) {
+    const parts = address.split('.').map((item) => Number.parseInt(item, 10));
+    if (parts.length !== 4 || parts.some((item) => Number.isNaN(item)))
+      return false;
+    if (parts[0] === 10)
+      return true;
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31)
+      return true;
+    if (parts[0] === 192 && parts[1] === 168)
+      return true;
+    if (parts[0] === 169 && parts[1] === 254)
+      return true;
+    return false;
+  }
+  const lower = address.toLowerCase();
+  return lower.startsWith('fc') || lower.startsWith('fd') || lower.startsWith('fe80');
+};
+async function collectWebRtcLeakSignals() {
   if (typeof window === 'undefined')
     return null;
   const RTCPeer = window.RTCPeerConnection;
@@ -837,38 +1247,37 @@ async function runWebRtcLeakTest() {
   let pc = null;
   const candidates = new Set();
   try {
-    pc = new RTCPeer({ iceServers: [] });
+    pc = new RTCPeer({ iceServers: [], iceCandidatePoolSize: 1 });
     if (pc.createDataChannel) {
       try {
-        pc.createDataChannel('probe');
+        pc.createDataChannel('probe', { negotiated: true, id: 0 });
       }
       catch (error) {
         console.debug('RTC data channel failed', error);
       }
     }
     const gatherPromise = new Promise((resolve) => {
-      let resolved = false;
-      const finish = () => {
-        if (!resolved) {
-          resolved = true;
-          resolve(candidates);
+      let finished = false;
+      const settle = () => {
+        if (!finished) {
+          finished = true;
+          resolve();
         }
       };
-      const timer = setTimeout(finish, 1500);
+      const timer = setTimeout(settle, ICE_GATHER_TIMEOUT_MS);
       const handleCandidate = (event) => {
         if (event.candidate && event.candidate.candidate) {
           candidates.add(event.candidate.candidate);
         }
         else {
           clearTimeout(timer);
-          finish();
+          settle();
         }
       };
       if (pc) {
         pc.onicecandidate = handleCandidate;
-        if (typeof pc.addEventListener === 'function') {
+        if (typeof pc.addEventListener === 'function')
           pc.addEventListener('icecandidate', handleCandidate);
-        }
       }
     });
     const offer = await pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false });
@@ -885,37 +1294,120 @@ async function runWebRtcLeakTest() {
       console.debug('WebRTC close failed', error);
     }
   }
-  const ips = new Set();
+  if (!candidates.size)
+    return { candidates: [], addresses: [], maskedHostnames: [], candidateTypes: [] };
+  const addresses = new Set();
+  const masked = new Set();
   const types = new Set();
   candidates.forEach((candidate) => {
-    const parts = candidate.split(' ');
-    if (parts.length > 4) {
-      ips.add(parts[4]);
-      const typeIndex = parts.indexOf('typ');
-      if (typeIndex >= 0 && parts[typeIndex + 1])
-        types.add(parts[typeIndex + 1]);
+    const details = parseIceCandidate(candidate);
+    if (details.type)
+      types.add(details.type);
+    if (details.address) {
+      if (details.address.toLowerCase().includes('local'))
+        masked.add(details.address);
+      else
+        addresses.add(details.address);
     }
   });
+  return {
+    candidates: Array.from(candidates),
+    addresses: Array.from(addresses),
+    maskedHostnames: Array.from(masked),
+    candidateTypes: Array.from(types),
+  };
+}
+function buildWebRtcFinding(signals) {
+  if (!signals) {
+    return {
+      key: 'network.webrtcLeak',
+      label: 'WebRTC leak test',
+      value: 'Unavailable (RTCPeerConnection not supported)',
+      confidence: 0.2,
+      evidence: [],
+      method: 'observation',
+      limitations: 'WebRTC APIs disabled or unsupported; leak status cannot be measured locally.',
+    };
+  }
   const evidence = [];
-  evidence.push(`candidates=${candidates.size}`);
-  if (types.size)
-    evidence.push(`types=${Array.from(types).join('/')}`);
-  if (ips.size)
-    evidence.push(`ips=${Array.from(ips).join(',')}`);
-  let value = 'No local WebRTC addresses observed';
-  let confidence = 0.5;
-  if (Array.from(types).some((type) => type === 'host' || type === 'srflx')) {
-    value = 'Local/WebRTC IP exposure detected (hypothesis)';
-    confidence = 0.6;
+  evidence.push(`ICE ${signals.candidates.length}`);
+  if (signals.candidateTypes.length)
+    evidence.push(`Types ${signals.candidateTypes.join('/')}`);
+  if (signals.addresses.length)
+    evidence.push(`IPs ${truncate(signals.addresses.join(', '), 70)}`);
+  if (signals.maskedHostnames.length)
+    evidence.push(`mDNS ${truncate(signals.maskedHostnames.join(', '), 70)}`);
+  const leakTypes = signals.candidateTypes.filter((type) => type === 'host' || type === 'srflx');
+  const exposesRealIp = signals.addresses.some((address) => isIpAddress(address) && !address.toLowerCase().includes('local'));
+  const candidateCount = signals.candidates.length;
+  const typeLabel = Array.from(new Set(leakTypes)).join('/') || 'relay';
+  let value = candidateCount === 0 ? 'No ICE candidates (WebRTC disabled?)' : `${candidateCount} ICE candidate${candidateCount === 1 ? '' : 's'}`;
+  let confidence = candidateCount === 0 ? 0.3 : 0.4;
+  if (leakTypes.length && exposesRealIp) {
+    value = `${candidateCount} ICE ${typeLabel} candidate(s) expose IP`;
+    confidence = 0.65;
+  }
+  else if (leakTypes.length) {
+    value = `${candidateCount} ICE ${typeLabel} candidate(s) masked via mDNS`;
+    confidence = 0.55;
+  }
+  else if (candidateCount) {
+    value = `${candidateCount} ICE candidate(s) without host details`;
+    confidence = 0.45;
   }
   return {
     key: 'network.webrtcLeak',
-    label: 'WebRTC / DNS leak test',
+    label: 'WebRTC leak test',
     value,
     confidence,
     evidence,
     method: 'measurement',
-    limitations: 'Modern browsers restrict ICE details; this probe checks only local candidates without sending data to servers.',
+    limitations: 'Modern browsers limit ICE details; the probe inspects only locally gathered candidates with no external servers.',
+  };
+}
+function buildDnsLeakFinding(signals) {
+  if (!signals) {
+    return {
+      key: 'network.dnsLeak',
+      label: 'DNS leak test',
+      value: 'Unavailable (WebRTC not supported)',
+      confidence: 0.2,
+      evidence: [],
+      method: 'observation',
+      limitations: 'DNS leak heuristic relies on WebRTC ICE candidates and cannot run without WebRTC support.',
+    };
+  }
+  const evidence = [];
+  if (signals.addresses.length)
+    evidence.push(`IPs ${truncate(signals.addresses.join(', '), 70)}`);
+  if (signals.maskedHostnames.length)
+    evidence.push(`mDNS ${truncate(signals.maskedHostnames.join(', '), 70)}`);
+  if (signals.candidateTypes.length)
+    evidence.push(`Types ${signals.candidateTypes.join('/')}`);
+  const publicIps = signals.addresses.filter((address) => isIpAddress(address) && !isPrivateIp(address));
+  const localIps = signals.addresses.filter((address) => isIpAddress(address) && isPrivateIp(address));
+  let value = !signals.candidates.length ? 'No WebRTC activity (DNS leak unknown)' : 'No DNS IPs exposed via ICE';
+  let confidence = !signals.candidates.length ? 0.3 : 0.4;
+  if (signals.maskedHostnames.length && !signals.addresses.length) {
+    value = 'mDNS hostnames only (masking active)';
+    confidence = 0.55;
+  }
+  else if (publicIps.length) {
+    value = `Public IP via ICE: ${truncate(publicIps.join(', '), 60)}`;
+    confidence = 0.7;
+  }
+  else if (localIps.length) {
+    value = `Local IP via ICE: ${truncate(localIps.join(', '), 60)}`;
+    confidence = 0.6;
+  }
+  return {
+    key: 'network.dnsLeak',
+    label: 'DNS leak test',
+    value,
+    confidence,
+    evidence,
+    method: 'measurement',
+    limitations: 'Assesses DNS leakage heuristically from WebRTC ICE results; does not contact external resolvers or log data.',
   };
 }
 function buildGuaranteeFinding() {
@@ -1084,6 +1576,7 @@ async function collectNetworkSignals() {
 export async function runProfiling(ip) {
   const basic = collectBasicFromGlobal();
   const ua = await collectUaHighEntropy();
+  const parsedUa = parseUserAgentDetailed(ua);
   const renderer = typeof document !== 'undefined' ? detectGlRenderer() : null;
   const deviceSignals = collectDeviceSignals(ua);
   const languages = collectLanguages();
@@ -1102,9 +1595,11 @@ export async function runProfiling(ip) {
     findings.push(modelFinding);
   findings.push(inferOS({ ua, userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '' }));
   findings.push(inferBrowser({ ua, brands: ua?.fullVersionList ?? navigator.userAgentData?.brands }));
+  findings.push(buildUaParserFinding(parsedUa));
   const networkFinding = buildNetworkFinding(networkSignals);
   if (networkFinding)
     findings.push(networkFinding);
+  findings.push(buildTlsJa3Finding(parsedUa));
   const vpnFeatures = buildVpnFeatures(ip, networkSignals, deviceFinding, timeZone);
   findings.push(buildVpnFinding(vpnFeatures.probability, vpnFeatures.evidence));
   findings.push(buildLocationFinding(timeZone, languages, ip));
@@ -1127,9 +1622,14 @@ export async function runProfiling(ip) {
   const adblockFinding = detectAdBlocker();
   if (adblockFinding)
     findings.push(adblockFinding);
-  const webrtcFinding = await runWebRtcLeakTest();
+  findings.push(buildRequestHeadersFinding(basic));
+  const webRtcSignals = await collectWebRtcLeakSignals();
+  const webrtcFinding = buildWebRtcFinding(webRtcSignals);
   if (webrtcFinding)
     findings.push(webrtcFinding);
+  const dnsLeakFinding = buildDnsLeakFinding(webRtcSignals);
+  if (dnsLeakFinding)
+    findings.push(dnsLeakFinding);
   const uaDumpEvidence = ua?.fullVersionList?.map((item) => `${item.brand} ${item.version}`) ?? navigator.userAgentData?.brands?.map((item) => `${item.brand} ${item.version}`) ?? [];
   findings.push({
     key: 'browser.uaCh',
