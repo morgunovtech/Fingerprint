@@ -50,6 +50,8 @@
     .section-title{font-weight:700;font-size:18px;margin:0}
     .section-header{display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
     .section-actions{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .section-lead{margin:8px 0 12px;font-size:14px;line-height:1.6;color:var(--text)}
+    .section-note{margin:0 0 16px;font-size:13px;line-height:1.6;color:var(--muted)}
     .intro-content--rich{display:block}
     .intro-content--rich .fp-section{margin:0;padding:0;color:var(--text)}
     .intro-content--rich .fp-section h2{margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text)}
@@ -171,10 +173,12 @@
   <section class="block" id="advancedSection" style="display:none">
     <div class="section-header">
       <div class="section-title" id="advancedTitle"></div>
-      <div class="section-actions">
-        <button class="btn btn-strong" id="ipBtn"></button>
-      </div>
     </div>
+    <p id="advancedIntro" class="section-lead"></p>
+    <div class="row shock-actions" id="advancedActions">
+      <button class="btn btn-strong" id="ipBtn"></button>
+    </div>
+    <p id="advancedNotice" class="section-note"></p>
     <div class="danger" id="advanced" style="display:none">
       <ul id="advancedList" class="advice-list small emoji-list"></ul>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
@@ -388,33 +392,35 @@ const I18N = {
       pending:'проверяем…',
       error:'ошибка сканирования'
     },
-    advancedTitle:'Advanced',
+    advancedTitle:'Что сайт узнаёт через IP',
+    advancedIntro:'IP = сетевой «обратный адрес». Любой сайт и встраиваемые счётчики получают его автоматически. В этом разделе мы запускаем дополнительные проверки только по клику: уточняем страну и провайдера и показываем, не «светится» ли реальный IP при VPN.',
+    advancedNotice:'Мы не обращаемся к внешним IP-сервисам, пока вы не нажмёте кнопку. Любой сайт всё равно видит ваш IP при загрузке страницы — так устроен интернет. Мы показываем это открыто и проверяем утечки, чтобы вы видели полную картину.',
     advanced:{
       ipStatus:{exposed:'IP засвечен',hidden:'IP скрыт',unknown:'Статус не определён'},
-      ip:label=>`🧠 <b>Засвечен IP:</b> ${pillOr(label)}`,
-      provider:value=>`🏢 <b>Провайдер:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      ip:label=>`🧠 <b>Засвечен IP:</b> ${pillOr(label,'N/A')}`,
+      provider:value=>`🏢 <b>Провайдер:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       vpn:(status,reasons)=>{
         const parts=[status,reasons].filter(Boolean);
-        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('N/A')}`;
       },
-      connectionType:value=>`📶 <b>Тип подключения:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionBrowser:value=>`📡 <b>Браузер сообщает:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionTest:value=>`⚡ <b>Тест скорости:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionStatus:value=>`⏳ <b>Тест скорости:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionType:value=>`📶 <b>Тип подключения:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionBrowser:value=>`📡 <b>Браузер сообщает:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionTest:value=>`⚡ <b>Тест скорости (замер):</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionStatus:value=>`⏳ <b>Статус теста скорости:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       webrtc:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🛰️ <b>WebRTC leak detection (ICE-кандидаты):</b> ${parts.join(' ')}`;
       },
       dns:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🧭 <b>DNS leak test (резолверы):</b> ${parts.join(' ')}`;
       },
       tls:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🔐 <b>TLS/JA3 отпечаток клиента:</b> ${parts.join(' ')}`;
       },
       headers:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `📨 <b>HTTPS-заголовки (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
       },
       pending:'проверяем…',
@@ -701,7 +707,7 @@ const I18N = {
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
-    units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
+    units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет',na:'N/A'},
     labels:{touchPoints:'касания',pointer:'указатель',latency:'задержка',storage:{local:'Локальное хранилище',session:'Сессионное хранилище',idb:'IndexedDB (база)',cookies:'Cookie'}},
     formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% данных заполнено (${filled} из ~${total})`
   },
@@ -885,33 +891,35 @@ const I18N = {
       pending:'checking…',
       error:'scan failed'
     },
-    advancedTitle:'Advanced',
+    advancedTitle:'What a site learns via your IP',
+    advancedIntro:'IP = the network “return address”. Every site and embedded tracker receives it automatically. This section only runs extra checks when you click: we refine the country/provider and show whether your real IP leaks while using a VPN.',
+    advancedNotice:'We do not call external IP services until you press the button. Any site still sees your IP when the page loads — that is how the internet works. We surface it openly and test for leaks so you get the full picture.',
     advanced:{
       ipStatus:{exposed:'IP exposed',hidden:'IP not exposed',unknown:'Status unknown'},
-      ip:label=>`🧠 <b>IP exposure:</b> ${pillOr(label)}`,
-      provider:value=>`🏢 <b>Provider:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      ip:label=>`🧠 <b>IP exposure:</b> ${pillOr(label,'N/A')}`,
+      provider:value=>`🏢 <b>Provider:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       vpn:(status,reasons)=>{
         const parts=[status,reasons].filter(Boolean);
-        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('N/A')}`;
       },
-      connectionType:value=>`📶 <b>Connection type:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionBrowser:value=>`📡 <b>Browser API:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionTest:value=>`⚡ <b>Speed test:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionStatus:value=>`⏳ <b>Speed test:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionType:value=>`📶 <b>Connection type:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionBrowser:value=>`📡 <b>Browser API:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionTest:value=>`⚡ <b>Speed test (measurement):</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionStatus:value=>`⏳ <b>Speed test status:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       webrtc:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🛰️ <b>WebRTC leak detection (ICE):</b> ${parts.join(' ')}`;
       },
       dns:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🧭 <b>DNS leak test (resolvers):</b> ${parts.join(' ')}`;
       },
       tls:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🔐 <b>TLS / JA3 fingerprint:</b> ${parts.join(' ')}`;
       },
       headers:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `📨 <b>HTTPS headers (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
       },
       pending:'checking…',
@@ -1163,7 +1171,7 @@ const I18N = {
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • Version: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
-    units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
+    units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no',na:'N/A'},
     labels:{touchPoints:'touch points',pointer:'pointer',latency:'latency',storage:{local:'Local storage',session:'Session storage',idb:'IndexedDB',cookies:'Cookies'}},
     formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% of data filled (${filled} of ~${total})`
   },
@@ -1347,33 +1355,35 @@ const I18N = {
       pending:'tekshirilmoqda…',
       error:'skan xatosi'
     },
-    advancedTitle:'Advanced',
+    advancedTitle:'Sayt IP orqali nimalarni bilib oladi',
+    advancedIntro:'IP — tarmoqdagi “qaytish manzili”. Har bir sayt va o‘rnatilgan hisoblagichlar uni avtomatik oladi. Bu bo‘limda qo‘shimcha tekshiruvlar faqat siz tugmani bossangiz ishga tushadi: mamlakat va provayderni aniqlashtiramiz hamda VPN ishlaganda haqiqiy IP chiqib ketmayaptimi tekshiramiz.',
+    advancedNotice:'Biz tugmani bosmaguningizcha tashqi IP-servislariga murojaat qilmaymiz. Har qanday sayt sahifa yuklanganda baribir sizning IP-manzilingizni ko‘radi — internet shunday ishlaydi. Biz buni ochiq ko‘rsatamiz va siz to‘liq manzarani ko‘rishingiz uchun oqishlarni tekshiramiz.',
     advanced:{
       ipStatus:{exposed:'IP ko‘rinmoqda',hidden:'IP yashiringan',unknown:'Holat nomaʼlum'},
-      ip:label=>`🧠 <b>IP ko‘rinishi:</b> ${pillOr(label)}`,
-      provider:value=>`🏢 <b>Provayder:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      ip:label=>`🧠 <b>IP ko‘rinishi:</b> ${pillOr(label,'N/A')}`,
+      provider:value=>`🏢 <b>Provayder:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       vpn:(status,reasons)=>{
         const parts=[status,reasons].filter(Boolean);
-        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('N/A')}`;
       },
-      connectionType:value=>`📶 <b>Ulanish turi:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionBrowser:value=>`📡 <b>Brauzer ma’lumoti:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionTest:value=>`⚡ <b>Tezlik testi:</b> ${value&&value.trim()?value:pillOr('—')}`,
-      connectionStatus:value=>`⏳ <b>Tezlik testi:</b> ${value&&value.trim()?value:pillOr('—')}`,
+      connectionType:value=>`📶 <b>Ulanish turi:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionBrowser:value=>`📡 <b>Brauzer ma’lumoti:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionTest:value=>`⚡ <b>Tezlik testi (o‘lchov):</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      connectionStatus:value=>`⏳ <b>Tezlik testi holati:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       webrtc:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🛰️ <b>WebRTC oqish testi (ICE nomzodlari):</b> ${parts.join(' ')}`;
       },
       dns:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🧭 <b>DNS oqishi testi (rezolverlar):</b> ${parts.join(' ')}`;
       },
       tls:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🔐 <b>TLS/JA3 mijoz izi:</b> ${parts.join(' ')}`;
       },
       headers:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
+        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `📨 <b>HTTPS sarlavhalari (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
       },
       pending:'tekshirilmoqda…',
@@ -1650,7 +1660,7 @@ const I18N = {
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint auditi • Versiya: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
-    units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
+    units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q',na:'N/A'},
     labels:{touchPoints:'sensor nuqtalari',pointer:'ko‘rsatkich',latency:'kechikish',storage:{local:'Mahalliy saqlash',session:'Sessiya saqlashi',idb:'IndexedDB',cookies:'Cookie'}},
     formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% maʼlumot to‘ldirilган (${filled} / ~${total})`
   }
@@ -3493,6 +3503,7 @@ function renderShockBullets(basic,t){
   shockBulletCount=shockItems.length;
 
   const advanced=t.advanced||{};
+  const naLabel=t.units?.na||'N/A';
   const webrtcSummary=normalizeSummary(profiling?.webrtcSummary||null);
   const dnsSummary=normalizeSummary(profiling?.dnsSummary||null);
   const tlsSummary=normalizeSummary(profiling?.tlsSummary||null);
@@ -3511,36 +3522,35 @@ function renderShockBullets(basic,t){
     ipExposureLabel=advanced.ipStatus?.[exposureKey]||advanced.ipStatus?.unknown||unknownLabel;
   }
   const vpnStatusHtml=pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||'');
+  const ensureValue=value=>{
+    if(!value) return pillOr('',naLabel);
+    const str=String(value).trim();
+    if(!str) return pillOr('',naLabel);
+    return value;
+  };
   const advancedBullets=[];
   if(typeof advanced.ip==='function') advancedBullets.push({key:'ip',html:advanced.ip(ipExposureLabel)});
-  else advancedBullets.push({key:'ip',html:`🧠 <b>IP exposure:</b> ${pillOr(ipExposureLabel)}`});
-  if(provider){
-    const providerHtml=pillOr(provider);
-    if(typeof advanced.provider==='function') advancedBullets.push({key:'provider',html:advanced.provider(providerHtml)});
-    else advancedBullets.push({key:'provider',html:`🏢 <b>Provider:</b> ${providerHtml}`});
-  }
+  else advancedBullets.push({key:'ip',html:`🧠 <b>IP exposure:</b> ${pillOr(ipExposureLabel,'N/A')}`});
+  const providerHtml=pillOr(provider,naLabel);
+  if(typeof advanced.provider==='function') advancedBullets.push({key:'provider',html:advanced.provider(providerHtml)});
+  else advancedBullets.push({key:'provider',html:`🏢 <b>Provider:</b> ${providerHtml}`});
   if(typeof advanced.vpn==='function') advancedBullets.push({key:'vpn',html:advanced.vpn(vpnStatusHtml,vpnReasonHtml)});
   else{
     const parts=[vpnStatusHtml,vpnReasonHtml].filter(Boolean);
-    advancedBullets.push({key:'vpn',html:`🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`});
+    advancedBullets.push({key:'vpn',html:`🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('',naLabel)}`});
   }
-  if(connectionSummary.type && typeof advanced.connectionType==='function'){
-    advancedBullets.push({key:'connectionType',html:advanced.connectionType(connectionSummary.type)});
-  }else if(connectionSummary.type){
-    advancedBullets.push({key:'connectionType',html:`📶 <b>Connection type:</b> ${connectionSummary.type}`});
-  }
-  if(connectionSummary.browser){
-    if(typeof advanced.connectionBrowser==='function') advancedBullets.push({key:'connectionBrowser',html:advanced.connectionBrowser(connectionSummary.browser)});
-    else advancedBullets.push({key:'connectionBrowser',html:`📡 <b>Browser API:</b> ${connectionSummary.browser}`});
-  }
-  if(connectionSummary.test){
-    if(typeof advanced.connectionTest==='function') advancedBullets.push({key:'connectionTest',html:advanced.connectionTest(connectionSummary.test)});
-    else advancedBullets.push({key:'connectionTest',html:`⚡ <b>Speed test:</b> ${connectionSummary.test}`});
-  }
-  if(connectionSummary.status){
-    if(typeof advanced.connectionStatus==='function') advancedBullets.push({key:'connectionStatus',html:advanced.connectionStatus(connectionSummary.status)});
-    else advancedBullets.push({key:'connectionStatus',html:`⏳ <b>Speed test:</b> ${connectionSummary.status}`});
-  }
+  const connectionTypeHtml=ensureValue(connectionSummary.type);
+  if(typeof advanced.connectionType==='function') advancedBullets.push({key:'connectionType',html:advanced.connectionType(connectionTypeHtml)});
+  else advancedBullets.push({key:'connectionType',html:`📶 <b>Connection type:</b> ${connectionTypeHtml}`});
+  const connectionBrowserHtml=ensureValue(connectionSummary.browser);
+  if(typeof advanced.connectionBrowser==='function') advancedBullets.push({key:'connectionBrowser',html:advanced.connectionBrowser(connectionBrowserHtml)});
+  else advancedBullets.push({key:'connectionBrowser',html:`📡 <b>Browser API:</b> ${connectionBrowserHtml}`});
+  const connectionTestHtml=ensureValue(connectionSummary.test);
+  if(typeof advanced.connectionTest==='function') advancedBullets.push({key:'connectionTest',html:advanced.connectionTest(connectionTestHtml)});
+  else advancedBullets.push({key:'connectionTest',html:`⚡ <b>Speed test (measurement):</b> ${connectionTestHtml}`});
+  const connectionStatusHtml=ensureValue(connectionSummary.status);
+  if(typeof advanced.connectionStatus==='function') advancedBullets.push({key:'connectionStatus',html:advanced.connectionStatus(connectionStatusHtml)});
+  else advancedBullets.push({key:'connectionStatus',html:`⏳ <b>Speed test status:</b> ${connectionStatusHtml}`});
   if(typeof advanced.webrtc==='function') advancedBullets.push({key:'webrtc',html:advanced.webrtc(webrtcSummary.value,webrtcDetails)});
   if(typeof advanced.dns==='function') advancedBullets.push({key:'dns',html:advanced.dns(dnsSummary.value,dnsDetails)});
   if(typeof advanced.tls==='function') advancedBullets.push({key:'tls',html:advanced.tls(tlsSummary.value,tlsDetails)});
@@ -3904,15 +3914,16 @@ function ensureInlineIpButton(t){
       inlineIpButton=document.createElement('button');
       inlineIpButton.id='ipBtn';
       inlineIpButton.className='btn btn-strong';
-      const advancedHeader=document.querySelector('#advancedSection .section-actions');
-      if(advancedHeader) advancedHeader.appendChild(inlineIpButton);
+      const actionsWrap=getEl('advancedActions')||document.getElementById('advancedActions');
+      if(actionsWrap) actionsWrap.appendChild(inlineIpButton);
     }
-    inlineIpButton.type='button';
-    inlineIpButton.classList.add('btn','btn-strong');
-    if(!inlineIpButton.dataset.bound){
-      inlineIpButton.addEventListener('click',detectIpAndSpeed);
-      inlineIpButton.dataset.bound='1';
-    }
+  }
+  if(!inlineIpButton) return null;
+  inlineIpButton.type='button';
+  inlineIpButton.classList.add('btn','btn-strong');
+  if(!inlineIpButton.dataset.bound){
+    inlineIpButton.addEventListener('click',detectIpAndSpeed);
+    inlineIpButton.dataset.bound='1';
   }
   const label=t.ip?.button||'IP';
   const loading=t.ip?.buttonLoading||label;
@@ -3991,6 +4002,18 @@ async function render(lang){
   getEl('shockTitle').textContent=t.shockTitle;
   const advancedTitleEl=getEl('advancedTitle');
   if(advancedTitleEl) advancedTitleEl.textContent=t.advancedTitle||'';
+  const advancedIntroEl=getEl('advancedIntro');
+  if(advancedIntroEl){
+    const introText=t.advancedIntro||'';
+    advancedIntroEl.textContent=introText;
+    advancedIntroEl.style.display=introText?'block':'none';
+  }
+  const advancedNoticeEl=getEl('advancedNotice');
+  if(advancedNoticeEl){
+    const noticeText=t.advancedNotice||'';
+    advancedNoticeEl.textContent=noticeText;
+    advancedNoticeEl.style.display=noticeText?'block':'none';
+  }
   getEl('methodSummary').innerHTML=t.methodSummary;
   getEl('methodText').innerHTML=t.methodText;
   getEl('policySummary').innerHTML=t.policySummary;
