@@ -415,14 +415,6 @@ const I18N = {
         const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🧭 <b>DNS leak test (резолверы):</b> ${parts.join(' ')}`;
       },
-      tls:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🔐 <b>TLS/JA3 отпечаток клиента:</b> ${parts.join(' ')}`;
-      },
-      headers:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `📨 <b>HTTPS-заголовки (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
-      },
       pending:'проверяем…',
       error:'ошибка сканирования'
     },
@@ -673,15 +665,21 @@ const I18N = {
       unknown:'количество экранов не раскрывается'
     },
     permNames:{
-      geolocation:'геолокация',
-      notifications:'уведомления',
-      camera:'камера',
-      microphone:'микрофон',
-      'clipboard-read':'чтение буфера обмена',
-      'clipboard-write':'запись в буфер обмена',
-      'persistent-storage':'постоянное хранилище'
+      geolocation:'Геолокация',
+      notifications:'Уведомления',
+      camera:'Камера',
+      microphone:'Микрофон',
+      'clipboard-read':'Чтение буфера обмена',
+      'clipboard-write':'Запись в буфер обмена',
+      'persistent-storage':'Постоянное хранилище'
     },
-    permStates:{granted:'✅ разрешено',denied:'❌ запрещено',prompt:'по запросу',unknown:'не сообщается'},
+    permStates:{granted:'✅ Разрешено',denied:'❌ Запрещено',prompt:'❔ По запросу',unknown:'ℹ️ Не сообщает'},
+    permGroupLabels:{
+      granted:'✅ Разрешено',
+      prompt:'❔ По запросу',
+      denied:'❌ Запрещено',
+      unknown:'ℹ️ Не сообщает'
+    },
     pointerLabels:{fine:'мышь/трекпад',coarse:'тачскрин',none:'не сообщает'},
     dntStatus:{on:'включена',off:'выключена',unknown:'браузер не сообщил'},
     memoryNote:'браузер округляет цифры, реальные значения могут отличаться',
@@ -914,14 +912,6 @@ const I18N = {
         const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🧭 <b>DNS leak test (resolvers):</b> ${parts.join(' ')}`;
       },
-      tls:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🔐 <b>TLS / JA3 fingerprint:</b> ${parts.join(' ')}`;
-      },
-      headers:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `📨 <b>HTTPS headers (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
-      },
       pending:'checking…',
       error:'scan failed'
     },
@@ -1137,15 +1127,21 @@ const I18N = {
       unknown:'screen count not shared'
     },
     permNames:{
-      geolocation:'location',
-      notifications:'notifications',
-      camera:'camera',
-      microphone:'microphone',
-      'clipboard-read':'read clipboard',
-      'clipboard-write':'write clipboard',
-      'persistent-storage':'persistent storage'
+      geolocation:'Location',
+      notifications:'Notifications',
+      camera:'Camera',
+      microphone:'Microphone',
+      'clipboard-read':'Clipboard read',
+      'clipboard-write':'Clipboard write',
+      'persistent-storage':'Persistent storage'
     },
-    permStates:{granted:'✅ allowed',denied:'❌ blocked',prompt:'on request',unknown:'not reported'},
+    permStates:{granted:'✅ Allowed',denied:'❌ Blocked',prompt:'❔ On request',unknown:'ℹ️ Not reported'},
+    permGroupLabels:{
+      granted:'✅ Allowed',
+      prompt:'❔ On request',
+      denied:'❌ Blocked',
+      unknown:'ℹ️ Not reported'
+    },
     pointerLabels:{fine:'mouse/trackpad',coarse:'touchscreen',none:'not reported'},
     dntStatus:{on:'enabled',off:'disabled',unknown:'not reported'},
     memoryNote:'browser rounds numbers, actual RAM may differ',
@@ -1377,14 +1373,6 @@ const I18N = {
       dns:(status,details)=>{
         const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
         return `🧭 <b>DNS oqishi testi (rezolverlar):</b> ${parts.join(' ')}`;
-      },
-      tls:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🔐 <b>TLS/JA3 mijoz izi:</b> ${parts.join(' ')}`;
-      },
-      headers:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `📨 <b>HTTPS sarlavhalari (Accept, Referrer, CSP):</b> ${parts.join(' ')}`;
       },
       pending:'tekshirilmoqda…',
       error:'skan xatosi'
@@ -1626,15 +1614,21 @@ const I18N = {
       unknown:'ekranlar soni ko‘rsatilmagan'
     },
     permNames:{
-      geolocation:'geolokatsiya',
-      notifications:'bildirishnomalar',
-      camera:'kamera',
-      microphone:'mikrofon',
-      'clipboard-read':'buf. xotiradan o‘qish',
-      'clipboard-write':'buf. xotiraga yozish',
-      'persistent-storage':'doimiy xotira'
+      geolocation:'Geolokatsiya',
+      notifications:'Bildirishnomalar',
+      camera:'Kamera',
+      microphone:'Mikrofon',
+      'clipboard-read':'Buf. xotiradan o‘qish',
+      'clipboard-write':'Buf. xotiraga yozish',
+      'persistent-storage':'Doimiy xotira'
     },
-    permStates:{granted:'✅ ruxsat berilgan',denied:'❌ bloklangan',prompt:'so‘rov bo‘yicha',unknown:'maʼlumot yo‘q'},
+    permStates:{granted:'✅ Ruxsat berilgan',denied:'❌ Bloklangan',prompt:'❔ So‘rov bo‘yicha',unknown:'ℹ️ Maʼlumot yo‘q'},
+    permGroupLabels:{
+      granted:'✅ Ruxsat berilgan',
+      prompt:'❔ So‘rov bo‘yicha',
+      denied:'❌ Bloklangan',
+      unknown:'ℹ️ Maʼlumot yo‘q'
+    },
     pointerLabels:{fine:'sichqoncha/trekpad',coarse:'sensor ekran',none:'maʼlumot yo‘q'},
     dntStatus:{on:'yoqilgan',off:'o‘chirilgan',unknown:'brauzer maʼlumot bermadi'},
     memoryNote:'brauzer qiymatlarni taxmin qiladi, haqiqiy RAM boshqacha bo‘lishi mumkin',
@@ -2308,6 +2302,18 @@ const CARD_CONTENT = {
     use:{ru:'Тип подключения и задержка помогают системам антифрода узнать вас',en:'Connection type and latency feed anti-fraud systems',uz:'Ulanish turi va kechikish antifrod tizimlariga sizni aniqlashga yordam beradi'},
     ex:{ru:'Например, 4G и задержка 120 мс похожи на мобильную сеть',en:'For example, 4G with 120 ms latency looks like mobile data',uz:'Masalan, 4G va 120 ms kechikish mobil tarmoqni eslatadi'},
     adv:{ru:'Контролируйте VPN и прокси, чтобы характеристики не выбивались из привычных',en:'Keep VPN and proxy settings consistent so values do not look suspicious',uz:'VPN va proksi sozlamalarini mos tuting, shunda qiymatlar g‘alati ko‘rinmaydi'}
+  },
+  tls:{
+    label:{ru:'TLS / JA3',en:'TLS / JA3',uz:'TLS / JA3'},
+    use:{ru:'Комбинация шифров и расширений TLS раскрывает движок и версию браузера',en:'The TLS cipher and extension mix reveals the browser engine and version',uz:'TLS shifrlari va kengaytmalari brauzer dvigateli hamda versiyasini ko‘rsatadi'},
+    ex:{ru:'Chrome, Firefox и Safari оставляют разные JA3-подписи',en:'Chrome, Firefox, and Safari expose distinct JA3 signatures',uz:'Chrome, Firefox va Safari turli JA3 imzolarini qoldiradi'},
+    adv:{ru:'Используйте VPN и режимы маскировки отпечатка, чтобы усложнить точное сопоставление',en:'Pair VPNs with fingerprint-hiding modes to make precise matching harder',uz:'VPN va izni yashiruvchi rejimlarni qo‘llab, aniq moslashtirishni qiyinlashtiring'}
+  },
+  headers:{
+    label:{ru:'HTTPS-заголовки',en:'HTTPS headers',uz:'HTTPS sarlavhalari'},
+    use:{ru:'Заголовки Accept-Language, Referrer и Origin выдают языки и источник трафика',en:'Accept-Language, Referrer, and Origin headers expose language and traffic source',uz:'Accept-Language, Referrer va Origin sarlavhalari til hamda trafik manbasini ochib beradi'},
+    ex:{ru:'Например, Referrer и Accept-Language помогают связать сессию с рабочим профилем',en:'For example, Referrer plus Accept-Language can link the visit to a work profile',uz:'Masalan, Referrer va Accept-Language sessiyani ish profiliga bog‘lashi mumkin'},
+    adv:{ru:'Ограничьте лишние заголовки через настройки приватности и расширения',en:'Limit extra headers via privacy settings and extensions',uz:'Maxfiylik sozlamalari va kengaytmalar orqali ortiqcha sarlavhalarni kamaytiring'}
   },
   gl:{
     label:{ru:'WebGL (GPU)',en:'WebGL (GPU)',uz:'WebGL (GPU)'},
@@ -3111,12 +3117,55 @@ function formatSpeedSummary(t){
   return t.speed.idle||'';
 }
 
-function formatPermissionEntries(entries,t){
-  return entries.map(([key,value])=>{
-    const name=t.permNames?.[key]||key;
-    const state=t.permStates?.[value]||t.permStates?.unknown||value;
-    return `${name}: ${state}`;
+function fallbackPermissionName(key){
+  return key.split(/[-_]/).map(part=>{
+    if(!part) return part;
+    return part.charAt(0).toUpperCase()+part.slice(1);
+  }).join(' ');
+}
+
+function groupPermissionsByState(entries,t){
+  if(!Array.isArray(entries)||!entries.length) return [];
+  const names=t.permNames||{};
+  const lang=typeof currentLang==='string'?currentLang:'ru';
+  const locale=lang==='en'?'en-US':(lang==='uz'?'uz-UZ':'ru-RU');
+  const buckets={granted:new Set(),prompt:new Set(),denied:new Set(),unknown:new Set()};
+  entries.forEach(([rawKey,rawValue])=>{
+    const key=String(rawKey||'');
+    const state=String(rawValue||'').toLowerCase();
+    let bucket='unknown';
+    if(state==='granted') bucket='granted';
+    else if(state==='denied') bucket='denied';
+    else if(state==='prompt') bucket='prompt';
+    const label=names[key]||fallbackPermissionName(key);
+    const trimmed=String(label||'').trim();
+    if(trimmed) buckets[bucket].add(trimmed);
   });
+  const headings=t.permGroupLabels||{};
+  const fallback=t.permStates||{};
+  const formatLabel=type=>headings[type]||fallback[type]||fallbackPermissionName(type);
+  const order=['granted','prompt','denied','unknown'];
+  return order.map(type=>{
+    const items=Array.from(buckets[type]||[]).sort((a,b)=>a.localeCompare(b,locale,{sensitivity:'base'}));
+    if(!items.length) return null;
+    return {type,label:formatLabel(type),items};
+  }).filter(Boolean);
+}
+
+function formatPermissionEntries(entries,t){
+  const groups=groupPermissionsByState(entries,t);
+  return groups.map(group=>`${group.label}: ${group.items.join(', ')}`);
+}
+
+function formatProfilerSummaryForCard(summary,t){
+  if(!summary) return t.units?.na||'N/A';
+  const value=typeof summary.value==='string'?summary.value.trim():String(summary.value||'').trim();
+  const evidence=Array.isArray(summary.evidence)?summary.evidence.filter(Boolean).map(item=>String(item).trim()).filter(Boolean):[];
+  const parts=[];
+  if(value) parts.push(value);
+  if(evidence.length) parts.push(evidence.join(' • '));
+  if(parts.length) return parts.join(' • ');
+  return t.units?.na||'N/A';
 }
 
 function formatPointerLabel(pointer,t){
@@ -3253,27 +3302,7 @@ function formatGpuRenderer(renderer){
 }
 
 function summarizeKeyPermissions(entries,t){
-  if(!Array.isArray(entries)||!entries.length) return [];
-  const names=t.permNames||{};
-  const states=t.permStates||{};
-  const map=new Map(entries);
-  const order=['geolocation','notifications','camera','microphone'];
-  const out=[];
-  order.forEach(key=>{
-    if(!map.has(key)) return;
-    const value=map.get(key);
-    const label=names[key]||key;
-    const state=states[value]||value;
-    out.push(`${label}: ${state}`);
-    map.delete(key);
-  });
-  map.forEach((value,key)=>{
-    if(out.length>=7) return;
-    const label=names[key]||key;
-    const state=states[value]||value;
-    out.push(`${label}: ${state}`);
-  });
-  return out;
+  return formatPermissionEntries(entries,t);
 }
 
 function buildDeviceSpecs(basic,profiling,t,hasTouch){
@@ -3506,12 +3535,8 @@ function renderShockBullets(basic,t){
   const naLabel=t.units?.na||'N/A';
   const webrtcSummary=normalizeSummary(profiling?.webrtcSummary||null);
   const dnsSummary=normalizeSummary(profiling?.dnsSummary||null);
-  const tlsSummary=normalizeSummary(profiling?.tlsSummary||null);
-  const headerSummary=normalizeSummary(profiling?.headerSummary||null);
   const webrtcDetails=webrtcSummary.evidence&&webrtcSummary.evidence.length?pillList(webrtcSummary.evidence):'';
   const dnsDetails=dnsSummary.evidence&&dnsSummary.evidence.length?pillList(dnsSummary.evidence):'';
-  const tlsDetails=tlsSummary.evidence&&tlsSummary.evidence.length?pillList(tlsSummary.evidence):'';
-  const headerDetails=headerSummary.evidence&&headerSummary.evidence.length?pillList(headerSummary.evidence):'';
   let ipExposureLabel;
   if(profilingStatus==='running'){
     ipExposureLabel=advanced.pending||pendingLabel;
@@ -3553,8 +3578,6 @@ function renderShockBullets(basic,t){
   else advancedBullets.push({key:'connectionStatus',html:`⏳ <b>Speed test status:</b> ${connectionStatusHtml}`});
   if(typeof advanced.webrtc==='function') advancedBullets.push({key:'webrtc',html:advanced.webrtc(webrtcSummary.value,webrtcDetails)});
   if(typeof advanced.dns==='function') advancedBullets.push({key:'dns',html:advanced.dns(dnsSummary.value,dnsDetails)});
-  if(typeof advanced.tls==='function') advancedBullets.push({key:'tls',html:advanced.tls(tlsSummary.value,tlsDetails)});
-  if(typeof advanced.headers==='function') advancedBullets.push({key:'headers',html:advanced.headers(headerSummary.value,headerDetails)});
 
   const advancedItems=advancedBullets.filter(item=>item&&item.html);
   advancedUl.innerHTML='';
@@ -4191,6 +4214,9 @@ async function render(lang){
     const fontsVal=summariseList(exposure.fonts||[]);
     const trackersVal=summariseList(exposure.trackers||[]);
     const resourcesVal=summariseList(exposure.resources||[]);
+    const profilingCtx=state.profilingContext||{};
+    const tlsCardVal=formatProfilerSummaryForCard(profilingCtx.tlsSummary,t);
+    const headersCardVal=formatProfilerSummaryForCard(profilingCtx.headerSummary,t);
 
     addCard(frag,'tz',tzStr,t);
     addCard(frag,'ua',browserGuess,t);
@@ -4203,6 +4229,8 @@ async function render(lang){
     addCard(frag,'dnt',dntLabel,t);
     addCard(frag,'touch',touchVal,t);
     addCard(frag,'net',netVal,t);
+    addCard(frag,'tls',tlsCardVal,t);
+    addCard(frag,'headers',headersCardVal,t);
     addCard(frag,'gl',basic.gl&&(basic.gl.vendor||basic.gl.renderer)?`${basic.gl.vendor} / ${basic.gl.renderer}`:'—',t);
     addHashCard(frag,'canvas',basic.hashes.canvas,t);
     addHashCard(frag,'audio',basic.hashes.audio,t);
