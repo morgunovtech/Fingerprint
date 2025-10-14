@@ -888,9 +888,10 @@ const I18N = vm.runInContext('I18N', sandbox);
   let englishShock = '';
   for (let i = 0; i < 200; i += 1) {
     englishShock = collectShockText().join(' ');
-    if (/Time zone & clock/i.test(englishShock)) break;
+    if (/Country:/i.test(englishShock) && /Time zone & clock/i.test(englishShock)) break;
     await new Promise(resolve => setTimeout(resolve, 0));
   }
+  assert.ok(/Country:/i.test(englishShock));
   assert.ok(/Time zone & clock/i.test(englishShock));
   await sandbox.render('uz');
   await new Promise(resolve => setTimeout(resolve, 0));
@@ -900,10 +901,11 @@ const I18N = vm.runInContext('I18N', sandbox);
   let uzbekShock = '';
   for (let i = 0; i < 200; i += 1) {
     uzbekShock = collectShockText().join(' ');
-    if (/Vaqt mintaqasi va soat/i.test(uzbekShock)) break;
+    if (/Mamlakat:/i.test(uzbekShock) && /Vaqt zonasi va soat/i.test(uzbekShock)) break;
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  assert.ok(/Vaqt mintaqasi va soat/i.test(uzbekShock));
+  assert.ok(/Mamlakat:/i.test(uzbekShock));
+  assert.ok(/Vaqt zonasi va soat/i.test(uzbekShock));
   await sandbox.detectIpAndSpeed();
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));

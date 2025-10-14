@@ -163,6 +163,14 @@
     </div>
   </section>
 
+  <!-- Block 2b: Advanced leak checks -->
+  <section class="block" id="advancedSection" style="display:none">
+    <div class="section-title" id="advancedTitle"></div>
+    <div class="danger" id="advanced" style="display:none">
+      <ul id="advancedList" class="advice-list small emoji-list"></ul>
+    </div>
+  </section>
+
   <!-- Block 3: Uniqueness -->
   <section class="block" id="uniqBlock">
     <div id="uniqLine" class="big"></div>
@@ -343,21 +351,26 @@ const I18N = {
       statuses:{charging:'заряжается',discharging:'от батареи',unknown:'статус неизвестен'}
     },
     shock:{
-      clock:segments=>{
-        const content=Array.isArray(segments)?segments.join(' '):segments;
-        return `⏰ <b>Часовой пояс и время:</b> ${content}`;
-      },
-      clockSources:{ip:'IP-скан',system:'Системные настройки',zone:'Часовой пояс',time:'Локальное время'},
+      clockSources:{ip:'IP-скан',system:'Системные настройки',zone:'Часовой пояс',time:'Локальные часы'},
+      locationSources:{ip:'IP-скан',system:'Система',zone:'Часовой пояс'},
+      connectionSources:{browser:'Браузер API',test:'Тест скорости',latency:'Задержка'},
+      locationFallback:'источник не определён',
       clockFallback:'страна не определена',
+      country:content=>`🌍 <b>Страна:</b> ${content||pillOr('—')}`,
+      city:content=>`🏙️ <b>Город:</b> ${content||pillOr('—')}`,
+      time:segments=>{
+        const parts=Array.isArray(segments)?segments.filter(Boolean):[];
+        return `⏱️ <b>Часовой пояс и часы:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
       device:(specs,hypothesis)=>{
         const pieces=[specs];
         if(hypothesis) pieces.push(hypothesis);
         return `💻 <b>Устройство:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
       deviceHypothesis:model=>`собранные сигналы указывают на ${model}`,
-      browser:({browser,perms,uaStatus,uaDetails})=>{
-        const parts=[browser,perms,uaStatus,uaDetails].filter(Boolean);
-        return `🌐 <b>Браузер, разрешения и UA:</b> ${parts.join(' ')}`;
+      browser:({browser,perms})=>{
+        const parts=[browser,perms].filter(Boolean);
+        return `🌐 <b>Браузер:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Языки интерфейса:</b> ${pillOr('—')}`;
@@ -372,11 +385,22 @@ const I18N = {
       battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Провайдер:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${pillOr(status)}`,
+      adblock:value=>`🛡️ <b>AdBlocker:</b> ${pillOr(value)}`,
       vpn:(status,reasons,action)=>{
         const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      connection:summary=>`📶 <b>Подключение и скорость:</b> ${summary||pillOr('—')}`,
+      connection:segments=>{
+        const parts=[segments?.type,segments?.browser,segments?.test,segments?.status].filter(Boolean);
+        return `📶 <b>Подключение и скорость:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      pending:'проверяем…',
+      error:'ошибка сканирования'
+    },
+    advancedTitle:'Advanced',
+    advanced:{
+      ipStatus:{exposed:'IP засвечен',hidden:'IP скрыт',unknown:'Статус не определён'},
+      ip:label=>`🧠 <b>Засвечен IP:</b> ${pillOr(label)}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
         return `🛰️ <b>WebRTC leak detection (ICE-кандидаты):</b> ${parts.join(' ')}`;
@@ -815,22 +839,26 @@ const I18N = {
     detailTitle:'Details',
     shockTitle:'What a site already sees without IP',
     shock:{
-      region:value=>`🗺️ <b>Signals about your location:</b> ${pillOr(value)}`,
-      clock:segments=>{
-        const content=Array.isArray(segments)?segments.join(' '):segments;
-        return `⏰ <b>Time zone & clock:</b> ${content}`;
-      },
       clockSources:{ip:'IP hint',system:'System settings',zone:'Time zone ID',time:'Local time'},
+      locationSources:{ip:'IP scan',system:'System',zone:'Time zone'},
+      connectionSources:{browser:'Browser API',test:'Speed test',latency:'Latency'},
+      locationFallback:'source unknown',
       clockFallback:'country unknown',
+      country:content=>`🌍 <b>Country:</b> ${content||pillOr('—')}`,
+      city:content=>`🏙️ <b>City:</b> ${content||pillOr('—')}`,
+      time:segments=>{
+        const parts=Array.isArray(segments)?segments.filter(Boolean):[];
+        return `⏱️ <b>Time zone & clock:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
       device:(specs,hypothesis)=>{
         const pieces=[specs];
         if(hypothesis) pieces.push(hypothesis);
         return `💻 <b>Device:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
       deviceHypothesis:model=>`signals point to ${model}`,
-      browser:({browser,perms,uaStatus,uaDetails})=>{
-        const parts=[browser,perms,uaStatus,uaDetails].filter(Boolean);
-        return `🌐 <b>Browser, permissions & UA:</b> ${parts.join(' ')}`;
+      browser:({browser,perms})=>{
+        const parts=[browser,perms].filter(Boolean);
+        return `🌐 <b>Browser:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Interface languages:</b> ${pillOr('—')}`;
@@ -845,11 +873,22 @@ const I18N = {
       battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provider:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${pillOr(status)}`,
+      adblock:value=>`🛡️ <b>Ad blocker:</b> ${pillOr(value)}`,
       vpn:(status,reasons,action)=>{
         const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      connection:summary=>`📶 <b>Connection & speed:</b> ${summary||pillOr('—')}`,
+      connection:segments=>{
+        const parts=[segments?.type,segments?.browser,segments?.test,segments?.status].filter(Boolean);
+        return `📶 <b>Connection & speed:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      pending:'checking…',
+      error:'scan failed'
+    },
+    advancedTitle:'Advanced',
+    advanced:{
+      ipStatus:{exposed:'IP exposed',hidden:'IP not exposed',unknown:'Status unknown'},
+      ip:label=>`🧠 <b>IP exposure:</b> ${pillOr(label)}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
         return `🛰️ <b>WebRTC leak detection (ICE):</b> ${parts.join(' ')}`;
@@ -1253,22 +1292,26 @@ const I18N = {
     detailTitle:'Batafsil',
     shockTitle:'IP talab qilinmasdan ham ko‘rinadiganlar',
     shock:{
-      region:value=>`🗺️ <b>Joylashuv signallari:</b> ${pillOr(value)}`,
-      clock:segments=>{
-        const content=Array.isArray(segments)?segments.join(' '):segments;
-        return `⏰ <b>Vaqt mintaqasi va soat:</b> ${content}`;
-      },
       clockSources:{ip:'IP manbasi',system:'Tizim sozlamalari',zone:'Vaqt zonasi',time:'Mahalliy vaqt'},
+      locationSources:{ip:'IP manbasi',system:'Tizim',zone:'Vaqt zonasi'},
+      connectionSources:{browser:'Brauzer API',test:'Tezlik testi',latency:'Kechikish'},
+      locationFallback:'manba aniqlanmadi',
       clockFallback:'mamlakat aniqlanmadi',
+      country:content=>`🌍 <b>Mamlakat:</b> ${content||pillOr('—')}`,
+      city:content=>`🏙️ <b>Shahar:</b> ${content||pillOr('—')}`,
+      time:segments=>{
+        const parts=Array.isArray(segments)?segments.filter(Boolean):[];
+        return `⏱️ <b>Vaqt zonasi va soat:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
       device:(specs,hypothesis)=>{
         const pieces=[specs];
         if(hypothesis) pieces.push(hypothesis);
         return `💻 <b>Qurilma:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
       deviceHypothesis:model=>`ehtimol siz ${model} dan foydalanyapsiz`,
-      browser:({browser,perms,uaStatus,uaDetails})=>{
-        const parts=[browser,perms,uaStatus,uaDetails].filter(Boolean);
-        return `🌐 <b>Brauzer, ruxsatlar va UA:</b> ${parts.join(' ')}`;
+      browser:({browser,perms})=>{
+        const parts=[browser,perms].filter(Boolean);
+        return `🌐 <b>Brauzer:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Interfeys tillari:</b> ${pillOr('—')}`;
@@ -1283,18 +1326,29 @@ const I18N = {
       battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provayder:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${pillOr(status)}`,
+      adblock:value=>`🛡️ <b>Reklama bloklagichi:</b> ${pillOr(value)}`,
       vpn:(status,reasons,action)=>{
         const parts=[status,reasons,action].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      connection:summary=>`📶 <b>Aloqa va tezlik:</b> ${summary||pillOr('—')}`,
+      connection:segments=>{
+        const parts=[segments?.type,segments?.browser,segments?.test,segments?.status].filter(Boolean);
+        return `📶 <b>Aloqa va tezlik:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+      },
+      pending:'tekshirilmoqda…',
+      error:'skan xatosi'
+    },
+    advancedTitle:'Advanced',
+    advanced:{
+      ipStatus:{exposed:'IP ko‘rinmoqda',hidden:'IP yashiringan',unknown:'Holat nomaʼlum'},
+      ip:label=>`🧠 <b>IP ko‘rinishi:</b> ${pillOr(label)}`,
       webrtc:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
         return `🛰️ <b>WebRTC oqish testi (ICE nomzodlari):</b> ${parts.join(' ')}`;
       },
       dns:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧭 <b>DNS oqish testi (rezolverlar):</b> ${parts.join(' ')}`;
+        return `🧭 <b>DNS oqishi testi (rezolverlar):</b> ${parts.join(' ')}`;
       },
       tls:(status,details)=>{
         const parts=[pillOr(status||'—'),details].filter(Boolean);
@@ -2348,6 +2402,7 @@ let themePreference='auto';
 let langMenuIsOpen=false;
 let themeMenuIsOpen=false;
 let shockBulletCount=0;
+let advancedBulletCount=0;
 
 function loadThemePreference(){
   try{
@@ -3223,42 +3278,95 @@ function buildDeviceSpecs(basic,profiling,t,hasTouch){
 }
 
 function buildConnectionSummary(basic,profiling,t){
-  const parts=[];
+  const result={type:null,browser:null,test:null,status:null};
   const netSummary=formatNetworkSummary(basic.net);
   const units=t.units||{};
   const labels=t.labels||{};
+  const sources=t.shock?.connectionSources||{};
   const type=profiling?.connectionRaw||netSummary?.type||null;
-  if(type && type!=='—') parts.push(type);
+  if(type && type!=='—') result.type=pillValue(type);
+  if(netSummary){
+    const netParts=[];
+    if(netSummary.downlink!=null) netParts.push(`~${netSummary.downlink} ${units.mbps||'Mbps'}`);
+    if(netSummary.rtt!=null) netParts.push(`${sources.latency||labels.latency||'Latency'} ${netSummary.rtt} ${units.ms||'ms'}`);
+    if(netParts.length){
+      const label=sources.browser||'Browser API';
+      result.browser=pillValue(`${label}: ${netParts.join(', ')}`);
+    }
+  }
   const speedState=state.speed||{};
   if(speedState.status==='done'){
+    const measured=[];
     if(typeof speedState.mbps==='number'&&!Number.isNaN(speedState.mbps)){
-      parts.push(`${speedState.mbps.toFixed(1)} ${units.mbps||'Mbps'}`);
+      measured.push(`${speedState.mbps.toFixed(1)} ${units.mbps||'Mbps'}`);
     }
     if(typeof speedState.latency==='number'&&!Number.isNaN(speedState.latency)){
-      parts.push(`${labels.latency||'Latency'} ${speedState.latency} ${units.ms||'ms'}`);
+      measured.push(`${sources.latency||labels.latency||'Latency'} ${speedState.latency} ${units.ms||'ms'}`);
     }
-  }else{
-    if(netSummary&&netSummary.downlink!=null) parts.push(`~${netSummary.downlink} ${units.mbps||'Mbps'}`);
-    if(netSummary&&netSummary.rtt!=null) parts.push(`${labels.latency||'Latency'} ${netSummary.rtt} ${units.ms||'ms'}`);
-  }
-  const summary=[];
-  if(parts.length) summary.push(pillList(parts));
-  if(speedState.status==='running'&&t.speed?.running){
-    summary.push(`<span class="pill">${escapeHtml(t.speed.running)}</span>`);
+    if(measured.length){
+      const label=sources.test||'Speed test';
+      result.test=pillValue(`${label}: ${measured.join(', ')}`);
+    }
+  }else if(speedState.status==='running'){
+    const label=sources.test||'Speed test';
+    const running=t.speed?.running||'Running…';
+    result.status=pillValue(`${label}: ${running}`);
   }else if(speedState.status==='error'){
-    const label=t.speed?.error?escapeHtml(t.speed.error(speedState.error||'')):escapeHtml(speedState.error||'');
-    if(label) summary.push(`<span class="pill">${label}</span>`);
+    const label=sources.test||'Speed test';
+    const errorText=t.speed?.error? t.speed.error(speedState.error||'') : (speedState.error||'');
+    if(errorText) result.status=pillValue(`${label}: ${errorText}`);
   }
-  return summary.join(' ').trim();
+  return result;
+}
+
+function formatSourcePills(sources,fallback){
+  if(!Array.isArray(sources)||!sources.length) return pillOr(fallback||'—');
+  const seen=new Set();
+  const items=[];
+  sources.forEach(entry=>{
+    if(!entry) return;
+    const label=entry.label?String(entry.label).trim():'';
+    const value=entry.value==null?'':String(entry.value).trim();
+    if(!value) return;
+    const key=`${label.toLowerCase()}|${value.toLowerCase()}`;
+    if(seen.has(key)) return;
+    seen.add(key);
+    items.push(label?`${label}: ${value}`:value);
+  });
+  if(!items.length) return pillOr(fallback||'—');
+  return pillList(items);
+}
+
+function inferIpExposure(webrtcSummary,dnsSummary){
+  const values=[webrtcSummary?.value||'',dnsSummary?.value||''].map(value=>String(value||'').toLowerCase());
+  let hasData=false;
+  let hasProtected=false;
+  for(const value of values){
+    const trimmed=value.trim();
+    if(!trimmed) continue;
+    hasData=true;
+    if(trimmed.includes('potential')||trimmed.includes('exposed')||trimmed.includes('visible via')||trimmed.includes('public resolvers visible')||trimmed.includes('local network resolvers')){
+      return 'exposed';
+    }
+    if(trimmed.includes('no leak')||trimmed.includes('only masked')||trimmed.includes('relay-only')||trimmed.includes('disabled')||trimmed.includes('blocked')){
+      hasProtected=true;
+    }
+  }
+  if(hasProtected) return 'hidden';
+  if(hasData) return 'unknown';
+  return 'unknown';
 }
 
 function renderShockBullets(basic,t){
   const ul=getEl('shockList');
-  if(!ul) return;
+  const advancedUl=getEl('advancedList');
+  if(!ul||!advancedUl) return;
   if(!basic){
     clearClockIntervals();
     ul.innerHTML='';
+    advancedUl.innerHTML='';
     shockBulletCount=0;
+    advancedBulletCount=0;
     syncShockVisibility();
     state.profilingStatus='idle';
     return;
@@ -3275,7 +3383,7 @@ function renderShockBullets(basic,t){
     return fallbackSummary();
   };
   const languagesSummary=formatLanguagesList(basic.languages);
-  const dntLabel=formatDntStatus(basic.dnt,t);
+  const dntResolved=formatDntStatus(basic.dnt,t)||unknownLabel;
   const touchInfo=formatTouchSummary(basic.touch,basic.pointer,t);
   const hasTouch=Boolean(touchInfo.points>0||((touchInfo.pointer||'').toLowerCase().includes('touch')));
   const locale=currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU');
@@ -3287,32 +3395,50 @@ function renderShockBullets(basic,t){
   const ipCountry=details.country_name||serverGeo.country||serverGeo.country_name||'';
   const rawCity=details.region||details.city||serverGeo.city||'';
   const ipCity=rawCity && (!ipCountry || rawCity.toLowerCase()!==String(ipCountry).toLowerCase())?rawCity:'';
-  const ipParts=[];
-  if(ipCountry) ipParts.push(ipCountry);
-  if(ipCity) ipParts.push(ipCity);
-  const ipHtml=ipParts.length?pillList(ipParts):'';
-  const systemParts=[];
   const tzCountry=tzInfo.country||'';
-  if(tzCountry) systemParts.push(tzCountry);
-  if(tzCity && (!tzCountry || tzCity.toLowerCase()!==tzCountry.toLowerCase())) systemParts.push(tzCity);
-  const systemHtml=systemParts.length?pillList(systemParts):'';
   const tzOffsetLabel=typeof basic.tzOffsetMinutes==='number'?utcOffsetStr(-basic.tzOffsetMinutes):null;
-  const zoneParts=[];
-  if(timezone) zoneParts.push(timezone);
-  if(tzOffsetLabel) zoneParts.push(tzOffsetLabel);
-  const zoneHtml=zoneParts.length?pillList(zoneParts):'';
-  const timeHtml=`<span class="pill" data-clock-tz="${escapeHtml(timezone)}" data-clock-locale="${escapeHtml(locale)}" data-clock-seconds="1">${escapeHtml(timeInTZ(timezone,locale,true))}</span>`;
-  const formatClockSegment=(label,value,fallback)=>{
-    if(!label) return '';
-    const content=value||pillOr(fallback||t.shock.clockFallback||'—');
-    return `<span class="line"><span class="hint">${escapeHtml(label)}:</span> ${content}</span>`;
-  };
-  const clockSegments=[
-    formatClockSegment(t.shock?.clockSources?.ip||'IP hint',ipHtml,t.shock?.clockFallback||'—'),
-    formatClockSegment(t.shock?.clockSources?.system||'System clock',systemHtml,t.shock?.clockFallback||'—'),
-    formatClockSegment(t.shock?.clockSources?.zone||'Time zone',zoneHtml,timezone||'UTC'),
-    formatClockSegment(t.shock?.clockSources?.time||'Local time',timeHtml,timeHtml)
+  const ipTimezone=details.timezone||serverGeo.timezone||'';
+  const locationSources=t.shock?.locationSources||{};
+  const ipLabel=locationSources.ip||t.shock?.clockSources?.ip||'IP';
+  const systemLabel=locationSources.system||t.shock?.clockSources?.system||'System';
+  const zoneLabel=t.shock?.clockSources?.zone||'Time zone';
+  const locationFallback=t.shock?.locationFallback||t.shock?.clockFallback||'—';
+  const countrySources=[
+    ipCountry?{label:ipLabel,value:ipCountry}:null,
+    tzCountry && (!ipCountry || tzCountry.toLowerCase()!==ipCountry.toLowerCase())?{label:systemLabel||zoneLabel,value:tzCountry}:null
   ].filter(Boolean);
+  const citySources=[
+    ipCity?{label:ipLabel,value:ipCity}:null,
+    tzCity && (!ipCity || tzCity.toLowerCase()!==ipCity.toLowerCase())?{label:zoneLabel,value:tzCity}:null
+  ].filter(Boolean);
+  const countryContent=formatSourcePills(countrySources,locationFallback);
+  const cityContent=formatSourcePills(citySources,locationFallback);
+  const timeSegments=[];
+  const ipTimePieces=[];
+  const pushUnique=(list,value)=>{
+    if(value==null) return;
+    const str=String(value).trim();
+    if(!str) return;
+    if(list.some(item=>item.toLowerCase()===str.toLowerCase())) return;
+    list.push(str);
+  };
+  pushUnique(ipTimePieces,ipCountry);
+  pushUnique(ipTimePieces,ipCity);
+  pushUnique(ipTimePieces,ipTimezone);
+  if(ipTimePieces.length) timeSegments.push(pillValue(`${ipLabel}: ${ipTimePieces.join(' • ')}`));
+
+  const zonePieces=[];
+  pushUnique(zonePieces,tzCountry);
+  pushUnique(zonePieces,tzCity);
+  pushUnique(zonePieces,tzInfo.raw);
+  if(timezone){
+    const zoneText=tzOffsetLabel?`${timezone} (${tzOffsetLabel})`:timezone;
+    pushUnique(zonePieces,zoneText);
+  }
+  if(zonePieces.length) timeSegments.push(pillValue(`${zoneLabel}: ${zonePieces.join(' • ')}`));
+
+  const timeLabel=t.shock?.clockSources?.time||'Local time';
+  timeSegments.push(`<span class="pill">${escapeHtml(timeLabel)}: <span data-clock-tz="${escapeHtml(timezone)}" data-clock-locale="${escapeHtml(locale)}" data-clock-seconds="1">${escapeHtml(timeInTZ(timezone,locale,true))}</span></span>`);
   const permEntries=Object.entries(basic.perms||{});
   const keyPerms=summarizeKeyPermissions(permEntries,t);
   const permHtml=keyPerms.length?pillList(keyPerms):pillOr(t.permStates?.unknown||'—');
@@ -3325,54 +3451,79 @@ function renderShockBullets(basic,t){
   const vpnReasonHtml=vpnReasonText?pillList(vpnReasonText.split(/;\s*/).filter(Boolean)):'';
   const deviceSpecs=buildDeviceSpecs(basic,profiling,t,hasTouch);
   const connectionSummary=buildConnectionSummary(basic,profiling,t);
+  const adblockSummary=normalizeSummary(profiling?.adblockSummary||null);
+  const adblockValue=adblockSummary.value?pillOr(adblockSummary.value):pillOr(unknownLabel);
   const ipButton=ensureInlineIpButton(t);
   const vpnActionSlot='<span data-vpn-slot></span>';
-  const bullets=[];
-  bullets.push({key:'clock',html:t.shock.clock(clockSegments)});
-  bullets.push({key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)});
-  const uaSummary=normalizeSummary(profiling?.uaSummary||null);
-  const uaDetails=uaSummary.evidence&&uaSummary.evidence.length?pillList(uaSummary.evidence):'';
-  const uaStatus=uaSummary.value?pillOr(uaSummary.value):pillOr(unknownLabel);
-  bullets.push({key:'browser',html:t.shock.browser({browser:browserHtml,perms:permHtml,uaStatus,uaDetails})});
-  bullets.push({key:'languages',html:t.shock.languages(languagesSummary||'')});
-  const batterySummary=batteryText||'';
-  bullets.push({key:'battery',html:t.shock.battery(batterySummary)});
-  if(provider) bullets.push({key:'provider',html:t.shock.provider(provider)});
-  if(dntLabel) bullets.push({key:'dnt',html:t.shock.dnt(dntLabel)});
-  bullets.push({key:'connection',html:t.shock.connection(connectionSummary)});
-  const webrtcSummary=normalizeSummary(profiling?.webrtcSummary||null);
-  const webrtcDetails=webrtcSummary.evidence&&webrtcSummary.evidence.length?pillList(webrtcSummary.evidence):'';
-  bullets.push({key:'webrtc',html:t.shock.webrtc(webrtcSummary.value,webrtcDetails)});
-  const dnsSummary=normalizeSummary(profiling?.dnsSummary||null);
-  const dnsDetails=dnsSummary.evidence&&dnsSummary.evidence.length?pillList(dnsSummary.evidence):'';
-  bullets.push({key:'dns',html:t.shock.dns(dnsSummary.value,dnsDetails)});
-  const tlsSummary=normalizeSummary(profiling?.tlsSummary||null);
-  const tlsDetails=tlsSummary.evidence&&tlsSummary.evidence.length?pillList(tlsSummary.evidence):'';
-  bullets.push({key:'tls',html:t.shock.tls(tlsSummary.value,tlsDetails)});
-  const headerSummary=normalizeSummary(profiling?.headerSummary||null);
-  const headerDetails=headerSummary.evidence&&headerSummary.evidence.length?pillList(headerSummary.evidence):'';
-  bullets.push({key:'headers',html:t.shock.headers(headerSummary.value,headerDetails)});
-  bullets.push({key:'vpn',html:t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasonHtml,vpnActionSlot),button:ipButton});
+  const shockBullets=[
+    {key:'country',html:t.shock.country(countryContent)},
+    {key:'city',html:t.shock.city(cityContent)},
+    {key:'time',html:t.shock.time(timeSegments)},
+    {key:'browser',html:t.shock.browser({browser:browserHtml,perms:permHtml})},
+    {key:'dnt',html:t.shock.dnt(dntResolved)},
+    {key:'adblock',html:t.shock.adblock(adblockValue)},
+    {key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)},
+    {key:'languages',html:t.shock.languages(languagesSummary||'')},
+    {key:'battery',html:t.shock.battery(batteryText||'')},
+    {key:'connection',html:t.shock.connection(connectionSummary)}
+  ];
+  if(provider) shockBullets.push({key:'provider',html:t.shock.provider(provider)});
+  shockBullets.push({key:'vpn',html:t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasonHtml,vpnActionSlot),button:ipButton});
+
+  const shockItems=shockBullets.filter(item=>item&&item.html);
   ul.innerHTML='';
-  bullets.filter(Boolean).forEach(item=>{
+  shockItems.forEach(item=>{
     const li=document.createElement('li');
     let html=item.html||'';
     if(item.key==='vpn'&&item.button){
-      if(html.includes(vpnActionSlot)){
-        html=html.replace(vpnActionSlot,'');
-      }
+      if(html.includes(vpnActionSlot)) html=html.replace(vpnActionSlot,'');
       li.innerHTML=html;
-      if(li.innerHTML && !li.innerHTML.endsWith(' ')){
-        li.appendChild(document.createTextNode(' '));
-      }
+      if(li.innerHTML && !li.innerHTML.endsWith(' ')) li.appendChild(document.createTextNode(' '));
       li.appendChild(item.button);
     }else{
       li.innerHTML=html;
     }
     ul.appendChild(li);
   });
-  shockBulletCount=bullets.filter(Boolean).length;
+  shockBulletCount=shockItems.length;
+
+  const advanced=t.advanced||{};
+  const webrtcSummary=normalizeSummary(profiling?.webrtcSummary||null);
+  const dnsSummary=normalizeSummary(profiling?.dnsSummary||null);
+  const tlsSummary=normalizeSummary(profiling?.tlsSummary||null);
+  const headerSummary=normalizeSummary(profiling?.headerSummary||null);
+  const webrtcDetails=webrtcSummary.evidence&&webrtcSummary.evidence.length?pillList(webrtcSummary.evidence):'';
+  const dnsDetails=dnsSummary.evidence&&dnsSummary.evidence.length?pillList(dnsSummary.evidence):'';
+  const tlsDetails=tlsSummary.evidence&&tlsSummary.evidence.length?pillList(tlsSummary.evidence):'';
+  const headerDetails=headerSummary.evidence&&headerSummary.evidence.length?pillList(headerSummary.evidence):'';
+  let ipExposureLabel;
+  if(profilingStatus==='running'){
+    ipExposureLabel=advanced.pending||pendingLabel;
+  }else if(profilingStatus==='error'){
+    ipExposureLabel=advanced.error||errorLabel;
+  }else{
+    const exposureKey=inferIpExposure(webrtcSummary,dnsSummary);
+    ipExposureLabel=advanced.ipStatus?.[exposureKey]||advanced.ipStatus?.unknown||unknownLabel;
+  }
+  const advancedBullets=[];
+  if(typeof advanced.ip==='function') advancedBullets.push({key:'ip',html:advanced.ip(ipExposureLabel)});
+  else advancedBullets.push({key:'ip',html:`🧠 <b>IP exposure:</b> ${pillOr(ipExposureLabel)}`});
+  if(typeof advanced.webrtc==='function') advancedBullets.push({key:'webrtc',html:advanced.webrtc(webrtcSummary.value,webrtcDetails)});
+  if(typeof advanced.dns==='function') advancedBullets.push({key:'dns',html:advanced.dns(dnsSummary.value,dnsDetails)});
+  if(typeof advanced.tls==='function') advancedBullets.push({key:'tls',html:advanced.tls(tlsSummary.value,tlsDetails)});
+  if(typeof advanced.headers==='function') advancedBullets.push({key:'headers',html:advanced.headers(headerSummary.value,headerDetails)});
+
+  const advancedItems=advancedBullets.filter(item=>item&&item.html);
+  advancedUl.innerHTML='';
+  advancedItems.forEach(item=>{
+    const li=document.createElement('li');
+    li.innerHTML=item.html||'';
+    advancedUl.appendChild(li);
+  });
+  advancedBulletCount=advancedItems.length;
+
   initClockIntervals(ul);
+  initClockIntervals(advancedUl);
   syncShockVisibility();
 }
 
@@ -3469,6 +3620,7 @@ function buildProfilingContext(findings,basic,t){
   const tlsFinding=find('network.tlsJa3');
   const uaFinding=find('browser.uaDetailed');
   const headersFinding=find('network.requestHeaders');
+  const adblockFinding=find('privacy.adblock');
   const shockCtx=finding=>{
     if(!finding) return null;
     const value=formatProfilingValue(finding,cfg)||'';
@@ -3542,6 +3694,7 @@ function buildProfilingContext(findings,basic,t){
   ctx.tlsSummary=shockCtx(tlsFinding)||{value:'',evidence:[]};
   ctx.uaSummary=shockCtx(uaFinding)||{value:'',evidence:[]};
   ctx.headerSummary=shockCtx(headersFinding)||{value:'',evidence:[]};
+  ctx.adblockSummary=shockCtx(adblockFinding)||{value:'',evidence:[]};
   return ctx;
 }
 
@@ -3657,9 +3810,14 @@ function formatProfilingValue(finding,cfg){
 function syncShockVisibility(){
   const shock=getEl('shock');
   const section=getEl('shockSection');
-  const visible=shockBulletCount>0;
-  if(shock) shock.style.display=visible?'block':'none';
-  if(section) section.style.display=visible?'block':'none';
+  const advanced=getEl('advanced');
+  const advancedSection=getEl('advancedSection');
+  const shockVisible=shockBulletCount>0;
+  const advancedVisible=advancedBulletCount>0;
+  if(shock) shock.style.display=shockVisible?'block':'none';
+  if(section) section.style.display=shockVisible?'block':'none';
+  if(advanced) advanced.style.display=advancedVisible?'block':'none';
+  if(advancedSection) advancedSection.style.display=advancedVisible?'block':'none';
 }
 
 async function renderProfilingSection(basic,t){
@@ -3789,6 +3947,8 @@ async function render(lang){
   }
   getEl('detailTitle').textContent=t.detailTitle;
   getEl('shockTitle').textContent=t.shockTitle;
+  const advancedTitleEl=getEl('advancedTitle');
+  if(advancedTitleEl) advancedTitleEl.textContent=t.advancedTitle||'';
   getEl('methodSummary').innerHTML=t.methodSummary;
   getEl('methodText').innerHTML=t.methodText;
   getEl('policySummary').innerHTML=t.policySummary;
