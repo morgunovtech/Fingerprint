@@ -1279,14 +1279,15 @@ function buildTlsJa3Finding(info: ParsedUserAgent): Finding {
     return {
       key: 'network.tlsJa3',
       label: 'TLS JA3 fingerprint',
-      value: 'Unknown (insufficient heuristics)',
+      value: 'JA3 fingerprint could not be estimated locally.',
       confidence: 0.2,
       evidence,
       method: 'inference',
       limitations: 'Estimated locally from UA hints; actual TLS handshakes may differ when routed through VPNs or proxies.',
     };
   }
-  const summary = [estimate.hash, estimate.profile].filter(Boolean).join(' • ');
+  const profileNote = estimate.profile ? ` — typical for ${estimate.profile}` : '';
+  const summary = `Estimated JA3 ${estimate.hash}${profileNote}.`;
   return {
     key: 'network.tlsJa3',
     label: 'TLS JA3 fingerprint',
@@ -1317,11 +1318,12 @@ function extractHeadersFromBasic(basic: Record<string, unknown> | null): Record<
 
 function buildRequestHeadersFinding(basic: Record<string, unknown> | null): Finding {
   const headers = extractHeadersFromBasic(basic);
+  const serverAttached = Boolean(basic && typeof basic === 'object' && (basic as { server?: unknown }).server);
   if (!headers) {
     return {
       key: 'network.requestHeaders',
       label: 'HTTPS headers viewer',
-      value: 'Headers unavailable (run IP scan)',
+      value: serverAttached ? 'Headers probe returned no data.' : 'Headers unavailable (run IP scan)',
       confidence: 0.2,
       evidence: [],
       method: 'observation',
@@ -1492,17 +1494,18 @@ function buildWebRtcFinding(signals: WebRtcLeakSignals | null): Finding | null {
 
   const candidateCount = signals.candidates.length;
   const typeLabel = Array.from(new Set(leakTypes)).join('/') || 'relay';
-  let value = candidateCount === 0 ? 'No ICE candidates observed (WebRTC disabled?)' : `${candidateCount} ICE candidate${candidateCount === 1 ? '' : 's'} gathered`;
-  let confidence = candidateCount === 0 ? 0.3 : 0.45;
+  const candidateSuffix = candidateCount ? ` (${candidateCount} entr${candidateCount === 1 ? 'y' : 'ies'})` : '';
+  let value = candidateCount === 0 ? 'WebRTC disabled or blocked — no ICE candidates.' : `No direct leak: relay-only candidates${candidateSuffix}.`;
+  let confidence = candidateCount === 0 ? 0.3 : 0.5;
   if (leakTypes.length && exposesRealIp) {
-    value = `${candidateCount} ICE ${typeLabel} candidate(s) expose real IP`;
-    confidence = 0.7;
-  } else if (leakTypes.length) {
-    value = `${candidateCount} ICE ${typeLabel} candidate(s) masked via mDNS`;
+    value = `Potential leak: WebRTC exposed your network IP via ${typeLabel} candidates${candidateSuffix}.`;
+    confidence = 0.75;
+  } else if (signals.maskedHostnames.length && !signals.addresses.length) {
+    value = `No leak: only masked mDNS hostnames returned${candidateSuffix}.`;
     confidence = 0.6;
-  } else if (candidateCount) {
-    value = `${candidateCount} ICE candidate(s) without host details`;
-    confidence = 0.5;
+  } else if (leakTypes.length) {
+    value = `WebRTC gathered ${typeLabel} candidates but only obfuscated addresses${candidateSuffix}.`;
+    confidence = 0.55;
   }
 
   return {
@@ -1537,16 +1540,16 @@ function buildDnsLeakFinding(signals: WebRtcLeakSignals | null): Finding | null 
   const publicIps = signals.addresses.filter((address) => isIpAddress(address) && !isPrivateIp(address));
   const localIps = signals.addresses.filter((address) => isIpAddress(address) && isPrivateIp(address));
 
-  let value = !signals.candidates.length ? 'No WebRTC activity (DNS leak unknown)' : 'No DNS servers exposed via ICE';
-  let confidence = !signals.candidates.length ? 0.3 : 0.45;
+  let value = !signals.candidates.length ? 'WebRTC inactive — DNS exposure unknown.' : 'No DNS servers revealed by WebRTC candidates.';
+  let confidence = !signals.candidates.length ? 0.3 : 0.5;
   if (signals.maskedHostnames.length && !signals.addresses.length) {
-    value = 'Only mDNS hostnames returned (masking active)';
+    value = 'Only masked mDNS hostnames returned — DNS appears hidden.';
     confidence = 0.55;
   } else if (publicIps.length) {
-    value = `DNS resolvers via ICE: ${truncate(publicIps.join(', '), 60)}`;
+    value = `Potential DNS leak: public resolvers visible (${truncate(publicIps.join(', '), 60)}).`;
     confidence = 0.7;
   } else if (localIps.length) {
-    value = `Local DNS via ICE: ${truncate(localIps.join(', '), 60)}`;
+    value = `Local network resolvers visible via ICE (${truncate(localIps.join(', '), 60)}).`;
     confidence = 0.6;
   }
 

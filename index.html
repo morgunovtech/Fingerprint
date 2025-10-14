@@ -343,10 +343,11 @@ const I18N = {
       statuses:{charging:'заряжается',discharging:'от батареи',unknown:'статус неизвестен'}
     },
     shock:{
-      clock:(place,time)=>{
-        const parts=[place,time].filter(Boolean);
-        return `⏰ <b>Часовой пояс и время:</b> ${parts.join(' ')}`;
+      clock:segments=>{
+        const content=Array.isArray(segments)?segments.join(' '):segments;
+        return `⏰ <b>Часовой пояс и время:</b> ${content}`;
       },
+      clockSources:{ip:'IP-скан',system:'Системные настройки',zone:'Часовой пояс',time:'Локальное время'},
       clockFallback:'страна не определена',
       device:(specs,hypothesis)=>{
         const pieces=[specs];
@@ -354,13 +355,9 @@ const I18N = {
         return `💻 <b>Устройство:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
       deviceHypothesis:model=>`собранные сигналы указывают на ${model}`,
-      browserPerms:(browser,perms)=>{
-        const pieces=[browser,perms].filter(Boolean);
-        return `🌐 <b>Браузер и разрешения:</b> ${pieces.join(' ')}`;
-      },
-      ua:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧾 <b>User-Agent парсер (классификация):</b> ${parts.join(' ')}`;
+      browser:({browser,perms,uaStatus,uaDetails})=>{
+        const parts=[browser,perms,uaStatus,uaDetails].filter(Boolean);
+        return `🌐 <b>Браузер, разрешения и UA:</b> ${parts.join(' ')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Языки интерфейса:</b> ${pillOr('—')}`;
@@ -819,10 +816,11 @@ const I18N = {
     shockTitle:'What a site already sees without IP',
     shock:{
       region:value=>`🗺️ <b>Signals about your location:</b> ${pillOr(value)}`,
-      clock:(place,time)=>{
-        const parts=[place,time].filter(Boolean);
-        return `⏰ <b>Time zone & clock:</b> ${parts.join(' ')}`;
+      clock:segments=>{
+        const content=Array.isArray(segments)?segments.join(' '):segments;
+        return `⏰ <b>Time zone & clock:</b> ${content}`;
       },
+      clockSources:{ip:'IP hint',system:'System settings',zone:'Time zone ID',time:'Local time'},
       clockFallback:'country unknown',
       device:(specs,hypothesis)=>{
         const pieces=[specs];
@@ -830,13 +828,9 @@ const I18N = {
         return `💻 <b>Device:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
       deviceHypothesis:model=>`signals point to ${model}`,
-      browserPerms:(browser,perms)=>{
-        const pieces=[browser,perms].filter(Boolean);
-        return `🌐 <b>Browser & permissions:</b> ${pieces.join(' ')}`;
-      },
-      ua:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧾 <b>User-Agent parser (device class):</b> ${parts.join(' ')}`;
+      browser:({browser,perms,uaStatus,uaDetails})=>{
+        const parts=[browser,perms,uaStatus,uaDetails].filter(Boolean);
+        return `🌐 <b>Browser, permissions & UA:</b> ${parts.join(' ')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Interface languages:</b> ${pillOr('—')}`;
@@ -1260,10 +1254,11 @@ const I18N = {
     shockTitle:'IP talab qilinmasdan ham ko‘rinadiganlar',
     shock:{
       region:value=>`🗺️ <b>Joylashuv signallari:</b> ${pillOr(value)}`,
-      clock:(place,time)=>{
-        const parts=[place,time].filter(Boolean);
-        return `⏰ <b>Vaqt mintaqasi va soat:</b> ${parts.join(' ')}`;
+      clock:segments=>{
+        const content=Array.isArray(segments)?segments.join(' '):segments;
+        return `⏰ <b>Vaqt mintaqasi va soat:</b> ${content}`;
       },
+      clockSources:{ip:'IP manbasi',system:'Tizim sozlamalari',zone:'Vaqt zonasi',time:'Mahalliy vaqt'},
       clockFallback:'mamlakat aniqlanmadi',
       device:(specs,hypothesis)=>{
         const pieces=[specs];
@@ -1271,13 +1266,9 @@ const I18N = {
         return `💻 <b>Qurilma:</b> ${pieces.filter(Boolean).join(' ')}`;
       },
       deviceHypothesis:model=>`ehtimol siz ${model} dan foydalanyapsiz`,
-      browserPerms:(browser,perms)=>{
-        const pieces=[browser,perms].filter(Boolean);
-        return `🌐 <b>Brauzer va ruxsatlar:</b> ${pieces.join(' ')}`;
-      },
-      ua:(status,details)=>{
-        const parts=[pillOr(status||'—'),details].filter(Boolean);
-        return `🧾 <b>User-Agent tahlili (klassifikatsiya):</b> ${parts.join(' ')}`;
+      browser:({browser,perms,uaStatus,uaDetails})=>{
+        const parts=[browser,perms,uaStatus,uaDetails].filter(Boolean);
+        return `🌐 <b>Brauzer, ruxsatlar va UA:</b> ${parts.join(' ')}`;
       },
       languages:list=>{
         if(!list) return `🌍 <b>Interfeys tillari:</b> ${pillOr('—')}`;
@@ -1619,7 +1610,7 @@ function getLanguages(){
 async function getUaHints(uaData){
   if(!uaData?.getHighEntropyValues) return null;
   try{
-    return await uaData.getHighEntropyValues(['architecture','bitness','model','platformVersion','uaFullVersion']);
+    return await uaData.getHighEntropyValues(['architecture','bitness','model','platformVersion','uaFullVersion','fullVersionList']);
   }catch(_){
     return null;
   }
@@ -1705,21 +1696,85 @@ function browserVersionFromUa(ua){
   return null;
 }
 
+const BROWSER_BRAND_ALIASES={
+  'google chrome':'Chrome',
+  'chromium':'Chromium',
+  'microsoft edge':'Edge',
+  'opera gx':'Opera GX',
+  'yandex':'Yandex Browser',
+  'yandex browser':'Yandex Browser',
+  'not a brand':null,
+  'not-a-brand':null,
+  'not:a brand':null
+};
+const BROWSER_PRIORITY=['arc','chrome','brave','vivaldi','opera gx','opera','yandex browser','edge','safari','firefox','chromium'];
+
+function normaliseBrandEntry(entry){
+  if(!entry) return null;
+  const brand=String(entry.brand||'').trim();
+  if(!brand) return null;
+  const lower=brand.toLowerCase();
+  if(lower in BROWSER_BRAND_ALIASES && !BROWSER_BRAND_ALIASES[lower]) return null;
+  const clean=BROWSER_BRAND_ALIASES[lower]||brand;
+  const version=entry.version?String(entry.version):null;
+  return {name:clean,lower:clean.toLowerCase(),version};
+}
+
+function selectPrimaryBrand(basic){
+  const entries=[];
+  const full=basic?.uaHighEntropy?.fullVersionList;
+  if(Array.isArray(full)) entries.push(...full);
+  const brands=basic?.uaBrands;
+  if(Array.isArray(brands)) entries.push(...brands);
+  const normalized=entries.map(normaliseBrandEntry).filter(Boolean);
+  if(!normalized.length) return null;
+  for(const key of BROWSER_PRIORITY){
+    const match=normalized.find(item=>item.lower===key);
+    if(match) return match;
+  }
+  return normalized[0];
+}
+
 function browserDisplayName(basic){
   const ua=basic.userAgent||'';
   const versionInfo=browserVersionFromUa(ua);
   const guess=probableBrowsers(basic);
-  const main=versionInfo?.name||(guess&&guess!=='—'?guess.split(' / ')[0]:null);
-  let version=versionInfo?.version||null;
+  const probableList=(guess&&guess!=='—'?guess.split(' / ').map(item=>item.trim()).filter(Boolean):[]);
+  const primaryBrand=selectPrimaryBrand(basic);
+  let main=versionInfo?.name||primaryBrand?.name||(probableList[0]||null);
+  let version=versionInfo?.version||primaryBrand?.version||null;
   if(!version && basic.uaHighEntropy?.uaFullVersion){
     version=basic.uaHighEntropy.uaFullVersion.split('.')[0];
   }
-  if(main && version){
-    return `${main} ${version}`;
+  const distinctProbable=Array.from(new Set(probableList));
+  if(distinctProbable.length){
+    for(const candidate of BROWSER_PRIORITY){
+      const match=distinctProbable.find(name=>name.toLowerCase()===candidate);
+      if(match){
+        if(!main || /chrome/i.test(main)){main=match;break;}
+      }
+    }
+    if(main && /chrome/i.test(main) && distinctProbable.length>1){
+      const arcCandidate=distinctProbable.find(name=>name.toLowerCase()==='arc');
+      if(arcCandidate){
+        main=arcCandidate;
+      }else if(!distinctProbable.some(name=>name.toLowerCase()===main.toLowerCase())){
+        main='Chromium';
+      }
+    }
   }
-  if(main) return main;
-  if(guess && guess!=='—') return guess;
-  return '—';
+  if(!main && primaryBrand) main=primaryBrand.name;
+  if(!main && guess && guess!=='—') return guess;
+  if(!main) return '—';
+  let label=main;
+  if(version) label=`${label} ${version}`;
+  if(distinctProbable.length>1){
+    const extras=distinctProbable.filter(name=>name.toLowerCase()!==main.toLowerCase());
+    if(extras.length){
+      label=`${label} (${extras.join(' / ')})`;
+    }
+  }
+  return label;
 }
 function legacyOsFromUa(ua){ua=ua||'';const mac=ua.match(/Mac OS X ([0-9_\.]+)/i);if(mac)return'macOS '+mac[1].replace(/_/g,'.');const win=ua.match(/Windows NT ([0-9\.]+)/i);if(win){const map={'10.0':'Windows 10/11','6.3':'Windows 8.1','6.2':'Windows 8','6.1':'Windows 7'};return map[win[1]]||('Windows NT '+win[1]);}const ios=ua.match(/iPhone OS ([0-9_]+)/i)||ua.match(/CPU OS ([0-9_]+)/i);if(ios)return'iOS '+ios[1].replace(/_/g,'.');const android=ua.match(/Android ([0-9\.]+)/i);if(android)return'Android '+android[1];if(/Linux/i.test(ua))return'Linux';return'';}
 
@@ -1765,28 +1820,6 @@ function guessOSVersion(basic){
   return basic.uaPlatform||basic.platform||'OS';
 }
 function guessAppleChip(renderer){if(!renderer)return null;const m=renderer.match(/Apple\s+M(\d)(?:\s*(Pro|Max|Ultra))?/i);return m?('Apple M'+m[1]+(m[2]?' '+m[2]:'')):null;}
-function guessDevice(b){
-  const ua=(b.userAgent||'').toLowerCase();
-  const hints=b.uaHighEntropy||{};
-  if(hints.model && /android/.test(ua)){
-    return `${hints.model.trim()} (Android)`;
-  }
-  if(/iphone/.test(ua))return'iPhone';
-  if(/ipad/.test(ua))return'iPad';
-  if(/android/.test(ua)){
-    const m=ua.match(/android[^;]*;\s*([^;]+?)\s+build/);
-    return m?`${m[1].trim()} (Android)`:'Android device';
-  }
-  if(/mac os x|macintosh/.test(ua)||/macos/.test((b.uaPlatform||'').toLowerCase())){
-    const chip=guessAppleChip(b.gl?.renderer||'');
-    const hasBattery=!!(b.battery&&b.battery.level!=null);
-    const type=hasBattery?'MacBook':'Mac';
-    return chip?`${type} (${chip})`:type;
-  }
-  if(/windows nt/.test(ua)||/(^|\s)windows/.test((b.uaPlatform||'').toLowerCase()))return'Windows PC';
-  if(/linux/.test(ua)||/(^|\s)linux/.test((b.uaPlatform||'').toLowerCase()))return'Linux PC';
-  return b.uaPlatform||b.platform||'устройство';
-}
 function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
 
 const COUNTRY_NAME_TO_CODE={
@@ -2667,6 +2700,28 @@ async function fetchIpData(){
       errors.push(err.message||String(err));
     }
   }
+  if(aggregated && !aggregated.headers){
+    try{
+      const headerProbe=await fetchIpFromHeaders();
+      if(headerProbe?.headers){
+        aggregated.headers=headerProbe.headers;
+      }
+      if(headerProbe?.raw){
+        const candidate=extractCanonicalDetailsFromPayload(headerProbe.raw);
+        if(candidate){
+          if(!details) details={};
+          Object.keys(candidate).forEach(key=>{
+            if(candidate[key] && !details[key]){
+              details[key]=candidate[key];
+            }
+          });
+          if(!detailSource && headerProbe.source){
+            detailSource=headerProbe.source;
+          }
+        }
+      }
+    }catch(_){/* ignore */}
+  }
   if(aggregated){
     const completed={...aggregated};
     if(details){
@@ -3143,7 +3198,6 @@ function buildDeviceSpecs(basic,profiling,t,hasTouch){
   const hw=basic.hw||{};
   const units=t.units||{};
   if(hw.hardwareConcurrency) specs.push(`${hw.hardwareConcurrency} ${units.cores||'cores'}`);
-  if(hw.deviceMemory) specs.push(`≈${hw.deviceMemory} ${units.gb||'GB'}`);
   const screen=basic.screen||{};
   if(screen.w && screen.h && screen.pixelRatio){
     specs.push(`${screen.w}×${screen.h}@${screen.pixelRatio}`);
@@ -3156,16 +3210,16 @@ function buildDeviceSpecs(basic,profiling,t,hasTouch){
   }
   const gpuLabel=formatGpuRenderer(basic.gl?.renderer||'');
   if(gpuLabel) specs.push(gpuLabel);
+  const deviceClass=profiling?.deviceFinding?.value;
+  if(typeof deviceClass==='string' && deviceClass.trim()){
+    const label=deviceClass.trim();
+    const normalized=label.charAt(0).toUpperCase()+label.slice(1);
+    if(!specs.some(item=>item.toLowerCase()===normalized.toLowerCase())) specs.push(normalized);
+  }
   const osLabel=profiling?.osLabel||guessOSVersion(basic);
   if(osLabel) specs.push(osLabel);
   const specsHtml=specs.length?pillList(specs):pillOr('—');
-  const deviceModel=profiling?.deviceLabel||guessDevice(basic);
-  let hypothesis='';
-  if(deviceModel){
-    const modelPill=pillOr(deviceModel);
-    hypothesis=typeof t.shock?.deviceHypothesis==='function'?t.shock.deviceHypothesis(modelPill):modelPill;
-  }
-  return {specsHtml,hypothesis};
+  return {specsHtml,hypothesis:''};
 }
 
 function buildConnectionSummary(basic,profiling,t){
@@ -3229,12 +3283,36 @@ function renderShockBullets(basic,t){
   const tzInfo=describeTimeZoneLabel(timezone,locale);
   const tzCity=tzCityName(timezone);
   const details=state.serverData?.details||{};
-  const placeParts=[];
-  const countryLabel=details.country_name||tzInfo.country||t.shock.clockFallback||'';
-  if(countryLabel) placeParts.push(pillValue(countryLabel));
-  if(tzCity) placeParts.push(pillValue(tzCity));
-  const placeHtml=placeParts.length?placeParts.join(' '):pillOr(t.shock.clockFallback||'—');
+  const serverGeo=state.serverData?.geo||{};
+  const ipCountry=details.country_name||serverGeo.country||serverGeo.country_name||'';
+  const rawCity=details.region||details.city||serverGeo.city||'';
+  const ipCity=rawCity && (!ipCountry || rawCity.toLowerCase()!==String(ipCountry).toLowerCase())?rawCity:'';
+  const ipParts=[];
+  if(ipCountry) ipParts.push(ipCountry);
+  if(ipCity) ipParts.push(ipCity);
+  const ipHtml=ipParts.length?pillList(ipParts):'';
+  const systemParts=[];
+  const tzCountry=tzInfo.country||'';
+  if(tzCountry) systemParts.push(tzCountry);
+  if(tzCity && (!tzCountry || tzCity.toLowerCase()!==tzCountry.toLowerCase())) systemParts.push(tzCity);
+  const systemHtml=systemParts.length?pillList(systemParts):'';
+  const tzOffsetLabel=typeof basic.tzOffsetMinutes==='number'?utcOffsetStr(-basic.tzOffsetMinutes):null;
+  const zoneParts=[];
+  if(timezone) zoneParts.push(timezone);
+  if(tzOffsetLabel) zoneParts.push(tzOffsetLabel);
+  const zoneHtml=zoneParts.length?pillList(zoneParts):'';
   const timeHtml=`<span class="pill" data-clock-tz="${escapeHtml(timezone)}" data-clock-locale="${escapeHtml(locale)}" data-clock-seconds="1">${escapeHtml(timeInTZ(timezone,locale,true))}</span>`;
+  const formatClockSegment=(label,value,fallback)=>{
+    if(!label) return '';
+    const content=value||pillOr(fallback||t.shock.clockFallback||'—');
+    return `<span class="line"><span class="hint">${escapeHtml(label)}:</span> ${content}</span>`;
+  };
+  const clockSegments=[
+    formatClockSegment(t.shock?.clockSources?.ip||'IP hint',ipHtml,t.shock?.clockFallback||'—'),
+    formatClockSegment(t.shock?.clockSources?.system||'System clock',systemHtml,t.shock?.clockFallback||'—'),
+    formatClockSegment(t.shock?.clockSources?.zone||'Time zone',zoneHtml,timezone||'UTC'),
+    formatClockSegment(t.shock?.clockSources?.time||'Local time',timeHtml,timeHtml)
+  ].filter(Boolean);
   const permEntries=Object.entries(basic.perms||{});
   const keyPerms=summarizeKeyPermissions(permEntries,t);
   const permHtml=keyPerms.length?pillList(keyPerms):pillOr(t.permStates?.unknown||'—');
@@ -3250,12 +3328,12 @@ function renderShockBullets(basic,t){
   const ipButton=ensureInlineIpButton(t);
   const vpnActionSlot='<span data-vpn-slot></span>';
   const bullets=[];
-  bullets.push({key:'clock',html:t.shock.clock(placeHtml,timeHtml)});
+  bullets.push({key:'clock',html:t.shock.clock(clockSegments)});
   bullets.push({key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)});
-  bullets.push({key:'browser',html:t.shock.browserPerms(browserHtml,permHtml)});
   const uaSummary=normalizeSummary(profiling?.uaSummary||null);
   const uaDetails=uaSummary.evidence&&uaSummary.evidence.length?pillList(uaSummary.evidence):'';
-  bullets.push({key:'ua',html:t.shock.ua(uaSummary.value,uaDetails)});
+  const uaStatus=uaSummary.value?pillOr(uaSummary.value):pillOr(unknownLabel);
+  bullets.push({key:'browser',html:t.shock.browser({browser:browserHtml,perms:permHtml,uaStatus,uaDetails})});
   bullets.push({key:'languages',html:t.shock.languages(languagesSummary||'')});
   const batterySummary=batteryText||'';
   bullets.push({key:'battery',html:t.shock.battery(batterySummary)});
