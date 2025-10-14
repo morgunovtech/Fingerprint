@@ -147,6 +147,7 @@
           <button type="button" data-theme="dark" aria-label="Dark"><span class="menu-icon" aria-hidden="true">🌙</span></button>
         </div>
       </div>
+      <button class="btn btn-strong" id="printBtn" type="button"></button>
     </div>
   </header>
 
@@ -160,9 +161,6 @@
   <section class="block" id="shockSection" style="display:none">
     <div class="section-header">
       <div class="section-title" id="shockTitle"></div>
-      <div class="section-actions">
-        <button class="btn btn-strong" id="printBtn"></button>
-      </div>
     </div>
     <div class="danger" id="shock" style="display:none">
       <ul id="shockList" class="advice-list small emoji-list"></ul>
@@ -342,7 +340,7 @@ const I18N = {
     detailTitle:'Подробности',
     shockTitle:'Что сайт узнаёт без IP',
     battery:{
-      label:'Battery API',
+      label:'Статус батареи',
       statuses:{charging:'заряжается',discharging:'от батареи',unknown:'статус неизвестен'}
     },
     shock:{
@@ -355,7 +353,7 @@ const I18N = {
       city:content=>`🏙️ <b>Город:</b> ${content||pillOr('—')}`,
       time:segments=>{
         const parts=Array.isArray(segments)?segments.filter(Boolean):[];
-        return `⏱️ <b>Часовой пояс и часы:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+        return `⏱️ <b>Часовой пояс, время и дата:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       device:(specs,hypothesis)=>{
         const pieces=[specs];
@@ -372,12 +370,12 @@ const I18N = {
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
         return `🌍 <b>Языки интерфейса:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      deviceTouchLabel:hasTouch=>hasTouch?'сенсорный экран':'без сенсорного экрана',
+      deviceTouchLabel:hasTouch=>hasTouch?'С сенсорным экраном':'Без сенсорного экрана',
       deviceType:hasTouch=>{
         const label=hasTouch?('С сенсорным экраном'):('Без сенсорного экрана');
         return `🖐️ <b>Тип устройства:</b> ${pillOr(label)}`;
       },
-      battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Статус батареи:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Провайдер:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${pillOr(status)}`,
       adblock:value=>`🛡️ <b>AdBlocker:</b> ${pillOr(value)}`,
@@ -446,7 +444,7 @@ const I18N = {
         connection:'Подключение',
         speed:'Скорость',
         provider:'Провайдер',
-        battery:'Battery API',
+        battery:'Статус батареи',
         time:'Локальное время',
         ua:'User-Agent',
         webrtc:'WebRTC',
@@ -570,10 +568,21 @@ const I18N = {
             .replace('Supercookie surfaces blocked or unavailable','Суперкуки недоступны или заблокированы');
         },
         'privacy.adblock':finding=>{
-          const raw=String(finding.value||'');
+          const raw=String(finding.value||'').trim();
+          if(!raw) return raw;
           if(raw==='Ad blocker likely enabled') return 'Похоже, блокировщик рекламы активен';
           if(raw==='Ad blocker unlikely') return 'Блокировщик рекламы не обнаружен';
           if(raw==='Ad blocker status unknown') return 'Не удалось определить блокировщик рекламы';
+          const lower=raw.toLowerCase();
+          const vendorMatch=raw.match(/\(([^)]+)\)/);
+          const vendor=vendorMatch?vendorMatch[1].trim():'';
+          const vendorLabel=vendor?((vendor.toLowerCase()==='unknown blocker')?'неизвестный блокировщик':vendor):'';
+          if(lower.startsWith('detected')||lower.includes('custom blocker')){
+            const base='Обнаружен блокировщик';
+            return vendorLabel?`${base} (${vendorLabel})`:base;
+          }
+          if(lower.startsWith('not detected')) return 'Блокировщик рекламы не обнаружен';
+          if(lower.startsWith('status unknown')) return 'Статус блокировщика неизвестен';
           return raw;
         },
         'network.webrtcLeak':finding=>{
@@ -681,9 +690,10 @@ const I18N = {
       unknown:'ℹ️ Не сообщает'
     },
     pointerLabels:{fine:'мышь/трекпад',coarse:'тачскрин',none:'не сообщает'},
-    dntStatus:{on:'включена',off:'выключена',unknown:'браузер не сообщил'},
+    dntStatus:{on:'Включена',off:'Выключена',unknown:'Браузер не сообщил'},
+    adblockStatus:{detected:'Обнаружен',notDetected:'Не обнаружен',unknown:'Статус неизвестен',vendorUnknown:'неизвестный блокировщик'},
     memoryNote:'браузер округляет цифры, реальные значения могут отличаться',
-    saveButton:'Сохранить PDF',
+    saveButton:'Сохранить отчёт в PDF',
     shareButton:'Поделиться результатом',
     share:{
       unavailable:'Подождите расчёта…',
@@ -715,7 +725,7 @@ const I18N = {
     langLabels:{ru:'Russian',en:'English',uz:'Uzbek'},
     theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark'}},
     battery:{
-      label:'Battery API',
+      label:'Battery status',
       statuses:{charging:'plugged in',discharging:'on battery',unknown:'status unknown'}
     },
     introTitle:'“Digital fingerprint”: what it is and why it matters',
@@ -852,7 +862,7 @@ const I18N = {
       city:content=>`🏙️ <b>City:</b> ${content||pillOr('—')}`,
       time:segments=>{
         const parts=Array.isArray(segments)?segments.filter(Boolean):[];
-        return `⏱️ <b>Time zone & clock:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+        return `⏱️ <b>Time zone, time & date:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       device:(specs,hypothesis)=>{
         const pieces=[specs];
@@ -869,12 +879,12 @@ const I18N = {
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
         return `🌍 <b>Interface languages:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      deviceTouchLabel:hasTouch=>hasTouch?'touch display':'no touch display',
+      deviceTouchLabel:hasTouch=>hasTouch?'Touch display':'No touch display',
       deviceType:hasTouch=>{
         const label=hasTouch?'Touch-enabled':'No touch screen';
         return `🖐️ <b>Device type:</b> ${pillOr(label)}`;
       },
-      battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Battery status:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provider:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${pillOr(status)}`,
       adblock:value=>`🛡️ <b>Ad blocker:</b> ${pillOr(value)}`,
@@ -943,7 +953,7 @@ const I18N = {
         connection:'Connection',
         speed:'Speed',
         provider:'Provider',
-        battery:'Battery API',
+        battery:'Battery status',
         time:'Local time',
         ua:'User-Agent',
         webrtc:'WebRTC',
@@ -1143,9 +1153,10 @@ const I18N = {
       unknown:'ℹ️ Not reported'
     },
     pointerLabels:{fine:'mouse/trackpad',coarse:'touchscreen',none:'not reported'},
-    dntStatus:{on:'enabled',off:'disabled',unknown:'not reported'},
+    dntStatus:{on:'Enabled',off:'Disabled',unknown:'Not reported'},
+    adblockStatus:{detected:'Detected',notDetected:'Not detected',unknown:'Status unknown',vendorUnknown:'unknown blocker'},
     memoryNote:'browser rounds numbers, actual RAM may differ',
-    saveButton:'Save PDF',
+    saveButton:'Save report as PDF',
     shareButton:'Share result',
     share:{
       unavailable:'Wait until the calculation is ready…',
@@ -1177,7 +1188,7 @@ const I18N = {
     langLabels:{ru:'Rus tili',en:'Ingliz tili',uz:'Oʻzbek tili'},
     theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi'}},
     battery:{
-      label:'Battery API',
+      label:'Batareya holati',
       statuses:{charging:'zaryadlanmoqda',discharging:'batareyadan ishlamoqda',unknown:'holat nomaʼlum'}
     },
     introTitle:'“Raqamli barmoq izi”: bu nima va nega bilish kerak',
@@ -1314,7 +1325,7 @@ const I18N = {
       city:content=>`🏙️ <b>Shahar:</b> ${content||pillOr('—')}`,
       time:segments=>{
         const parts=Array.isArray(segments)?segments.filter(Boolean):[];
-        return `⏱️ <b>Vaqt zonasi va soat:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
+        return `⏱️ <b>Vaqt zonasi, vaqt va sana:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
       device:(specs,hypothesis)=>{
         const pieces=[specs];
@@ -1331,12 +1342,12 @@ const I18N = {
         const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
         return `🌍 <b>Interfeys tillari:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
       },
-      deviceTouchLabel:hasTouch=>hasTouch?'sensorli ekran':'sensorli ekran yo‘q',
+      deviceTouchLabel:hasTouch=>hasTouch?'Sensorli ekran':'Sensorli ekran yo‘q',
       deviceType:hasTouch=>{
         const label=hasTouch?'Sensorli ekran bor':'Sensorli ekran yo‘q';
         return `🖐️ <b>Qurilma turi:</b> ${pillOr(label)}`;
       },
-      battery:value=>`🔋 <b>Battery API:</b> ${pillOr(value)}`,
+      battery:value=>`🔋 <b>Batareya holati:</b> ${pillOr(value)}`,
       provider:value=>`🏢 <b>Provayder:</b> ${pillOr(value)}`,
       dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${pillOr(status)}`,
       adblock:value=>`🛡️ <b>Reklama bloklagichi:</b> ${pillOr(value)}`,
@@ -1405,7 +1416,7 @@ const I18N = {
         connection:'Ulanish',
         speed:'Tezlik',
         provider:'Provayder',
-        battery:'Battery API',
+        battery:'Batareya holati',
         time:'Mahalliy vaqt',
         ua:'User-Agent',
         webrtc:'WebRTC',
@@ -1526,10 +1537,21 @@ const I18N = {
             .replace('Supercookie surfaces blocked or unavailable','Supercookie xotirasi yopilgan yoki mavjud emas');
         },
         'privacy.adblock':finding=>{
-          const raw=String(finding.value||'');
+          const raw=String(finding.value||'').trim();
+          if(!raw) return raw;
           if(raw==='Ad blocker likely enabled') return 'Reklama bloklagichi ehtimol yoqilgan';
           if(raw==='Ad blocker unlikely') return 'Reklama bloklagichi aniqlanmadi';
           if(raw==='Ad blocker status unknown') return 'Reklama bloklagichi holati nomaʼlum';
+          const lower=raw.toLowerCase();
+          const vendorMatch=raw.match(/\(([^)]+)\)/);
+          const vendor=vendorMatch?vendorMatch[1].trim():'';
+          const vendorLabel=vendor?((vendor.toLowerCase()==='unknown blocker')?'nomaʼlum bloklagich':vendor):'';
+          if(lower.startsWith('detected')||lower.includes('custom blocker')){
+            const base='Reklama bloklagichi aniqlangan';
+            return vendorLabel?`${base} (${vendorLabel})`:base;
+          }
+          if(lower.startsWith('not detected')) return 'Reklama bloklagichi aniqlanmadi';
+          if(lower.startsWith('status unknown')) return 'Reklama bloklagichi holati nomaʼlum';
           return raw;
         },
         'network.webrtcLeak':finding=>{
@@ -1630,9 +1652,10 @@ const I18N = {
       unknown:'ℹ️ Maʼlumot yo‘q'
     },
     pointerLabels:{fine:'sichqoncha/trekpad',coarse:'sensor ekran',none:'maʼlumot yo‘q'},
-    dntStatus:{on:'yoqilgan',off:'o‘chirilgan',unknown:'brauzer maʼlumot bermadi'},
+    dntStatus:{on:'Yoqilgan',off:'O‘chirilgan',unknown:'Brauzer maʼlumot bermadi'},
+    adblockStatus:{detected:'Aniqlandi',notDetected:'Aniqlanmadi',unknown:'Holat nomaʼlum',vendorUnknown:'nomaʼlum bloklagich'},
     memoryNote:'brauzer qiymatlarni taxmin qiladi, haqiqiy RAM boshqacha bo‘lishi mumkin',
-    saveButton:'PDF ni saqlash',
+    saveButton:'Hisobotni PDF formatida saqlash',
     shareButton:'Natijani ulashish',
     share:{
       unavailable:'Hisob yakunlanishini kuting…',
@@ -1745,7 +1768,15 @@ function probableBrowsers(b){
   /OPR\//.test(ua)&&out.push('Opera');
   /YaBrowser\//.test(ua)&&out.push('Yandex Browser');
   /Firefox\//.test(ua)&&out.push('Firefox');
-  (/Chrome\//.test(ua)&&!/Edg\/|OPR\/|YaBrowser\//.test(ua))&&out.push('Chrome','Brave');
+  if(/Chrome\//.test(ua)&&!/Edg\/|OPR\/|YaBrowser\//.test(ua)) out.push('Chrome');
+  const braveDetected=/Brave\//i.test(ua)||brands.some(name=>name.includes('brave'));
+  if(braveDetected){
+    out.push('Brave');
+  }else{
+    try{
+      if(typeof navigator!=='undefined'&&navigator?.brave) out.push('Brave');
+    }catch(_){/* ignore */}
+  }
   (/Safari\//.test(ua)&&!/Chrome\//.test(ua))&&out.push('Safari');
   return out.length?Array.from(new Set(out)).join(' / '):'—';
 }
@@ -1814,41 +1845,125 @@ function selectPrimaryBrand(basic){
 function browserDisplayName(basic){
   const ua=basic.userAgent||'';
   const versionInfo=browserVersionFromUa(ua);
-  const guess=probableBrowsers(basic);
-  const probableList=(guess&&guess!=='—'?guess.split(' / ').map(item=>item.trim()).filter(Boolean):[]);
+  const probable=probableBrowsers(basic);
+  const probableList=(probable&&probable!=='—'?probable.split(' / ').map(item=>item.trim()).filter(Boolean):[]);
+  const candidates=new Set(probableList.map(name=>name.toLowerCase()));
   const primaryBrand=selectPrimaryBrand(basic);
-  let main=versionInfo?.name||primaryBrand?.name||(probableList[0]||null);
-  let version=versionInfo?.version||primaryBrand?.version||null;
-  if(!version && basic.uaHighEntropy?.uaFullVersion){
-    version=basic.uaHighEntropy.uaFullVersion.split('.')[0];
-  }
-  const distinctProbable=Array.from(new Set(probableList));
-  if(distinctProbable.length){
-    for(const candidate of BROWSER_PRIORITY){
-      const match=distinctProbable.find(name=>name.toLowerCase()===candidate);
-      if(match){
-        if(!main || /chrome/i.test(main)){main=match;break;}
-      }
+  if(primaryBrand?.name) candidates.add(primaryBrand.name.toLowerCase());
+  if(versionInfo?.name) candidates.add(versionInfo.name.toLowerCase());
+  const uaBrands=Array.isArray(basic.uaBrands)?basic.uaBrands:[];
+  uaBrands.forEach(entry=>{
+    const lower=String(entry?.brand||'').toLowerCase();
+    if(lower) candidates.add(lower);
+  });
+
+  const canonical=name=>{
+    const map={
+      'google chrome':'Chrome',
+      'chrome':'Chrome',
+      'chromium':'Chromium',
+      'arc':'Arc',
+      'brave':'Brave',
+      'microsoft edge':'Edge',
+      'edge':'Edge',
+      'opera gx':'Opera GX',
+      'opera':'Opera',
+      'yandex':'Yandex Browser',
+      'yandex browser':'Yandex Browser',
+      'vivaldi':'Vivaldi',
+      'safari':'Safari',
+      'firefox':'Firefox',
+      'not a brand':'',
+      'not-a-brand':'',
+      'not:a brand':'',
+      '—':'—'
+    };
+    const lower=String(name||'').toLowerCase();
+    if(map.hasOwnProperty(lower)) return map[lower]||'';
+    if(!lower) return '';
+    return lower.charAt(0).toUpperCase()+lower.slice(1);
+  };
+
+  const normalizedCandidates=Array.from(candidates).filter(Boolean);
+  const priority=['arc','brave','vivaldi','opera gx','opera','yandex browser','edge','chrome','chromium','safari','firefox'];
+  let main=null;
+  for(const key of priority){
+    if(normalizedCandidates.includes(key)){
+      main=canonical(key);
+      break;
     }
-    if(main && /chrome/i.test(main) && distinctProbable.length>1){
-      const arcCandidate=distinctProbable.find(name=>name.toLowerCase()==='arc');
-      if(arcCandidate){
-        main=arcCandidate;
-      }else if(!distinctProbable.some(name=>name.toLowerCase()===main.toLowerCase())){
-        main='Chromium';
+  }
+  if(!main && primaryBrand?.name){
+    const canon=canonical(primaryBrand.name);
+    if(canon) main=canon;
+  }
+  if(!main && probableList.length){
+    main=canonical(probableList[0]);
+  }
+  if(!main && versionInfo?.name){
+    main=canonical(versionInfo.name);
+  }
+  if(!main) main='—';
+
+  const versionMatchesName=sourceName=>{
+    const canon=canonical(sourceName);
+    return canon && canon===main;
+  };
+
+  let version=null;
+  if(versionInfo?.version && versionMatchesName(versionInfo.name)){
+    version=versionInfo.version;
+  }else if(primaryBrand?.version && versionMatchesName(primaryBrand.name)){
+    version=primaryBrand.version;
+  }else if(!version && basic.uaHighEntropy?.uaFullVersion){
+    const major=basic.uaHighEntropy.uaFullVersion.split('.')[0];
+    if(major) version=major;
+  }
+
+  const extras=[];
+  normalizedCandidates.forEach(name=>{
+    const label=canonical(name);
+    if(label && label!==main && !extras.includes(label)) extras.push(label);
+  });
+
+  if(normalizedCandidates.length>1 && main!=='—'){
+    const familyMap={
+      'arc':'chromium',
+      'brave':'chromium',
+      'vivaldi':'chromium',
+      'opera':'chromium',
+      'opera gx':'chromium',
+      'yandex browser':'chromium',
+      'chrome':'chrome',
+      'chromium':'chromium',
+      'microsoft edge':'edge',
+      'edge':'edge',
+      'safari':'safari',
+      'firefox':'firefox'
+    };
+    const families=new Set(normalizedCandidates.map(name=>familyMap[name]||name));
+    if(families.size===1){
+      const family=families.values().next().value;
+      if(family==='chromium'){
+        const chromeBrand=primaryBrand?.name&&primaryBrand.name.toLowerCase().includes('chrome');
+        main=chromeBrand?'Chrome':'Chromium';
+      }else if(family==='chrome'){
+        main='Chrome';
+      }else{
+        main=canonical(family);
       }
+      extras.length=0;
     }
   }
-  if(!main && primaryBrand) main=primaryBrand.name;
-  if(!main && guess && guess!=='—') return guess;
-  if(!main) return '—';
+
   let label=main;
-  if(version) label=`${label} ${version}`;
-  if(distinctProbable.length>1){
-    const extras=distinctProbable.filter(name=>name.toLowerCase()!==main.toLowerCase());
-    if(extras.length){
-      label=`${label} (${extras.join(' / ')})`;
-    }
+  if(main!=='—' && version){
+    const majorPart=String(version).split('.')[0];
+    const major=/^\d+$/.test(majorPart)?majorPart:String(version);
+    label=`${label} ${major}`;
+  }
+  if(extras.length){
+    label=`${label} (${extras.join(' / ')})`;
   }
   return label;
 }
@@ -1899,10 +2014,52 @@ function guessAppleChip(renderer){if(!renderer)return null;const m=renderer.matc
 function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
 
 const COUNTRY_NAME_TO_CODE={
-  'united states':'US','usa':'US','united kingdom':'GB','great britain':'GB','russia':'RU','russian federation':'RU',
+  'united states':'US','usa':'US','united kingdom':'GB','great britain':'GB',
+  'russia':'RU','russian federation':'RU','россия':'RU','российская федерация':'RU',
   'china':'CN','people\'s republic of china':'CN','india':'IN','brazil':'BR','indonesia':'ID','nigeria':'NG',
-  'japan':'JP','germany':'DE','federal republic of germany':'DE','france':'FR','uzbekistan':'UZ'
+  'japan':'JP','germany':'DE','federal republic of germany':'DE','germany (federal republic of)':'DE','france':'FR',
+  'uzbekistan':'UZ','oʻzbekiston':'UZ','nederland':'NL','netherlands':'NL','kingdom of the netherlands':'NL','нидерланды':'NL',
+  'spain':'ES','españa':'ES','italy':'IT','italia':'IT','turkey':'TR','türkiye':'TR','poland':'PL','greece':'GR','portugal':'PT'
 };
+
+const REGION_DISPLAY_CACHE=new Map();
+
+function getRegionDisplay(locale){
+  if(!locale) return null;
+  const key=locale.toLowerCase();
+  if(REGION_DISPLAY_CACHE.has(key)) return REGION_DISPLAY_CACHE.get(key);
+  try{
+    const display=new Intl.DisplayNames([locale],{type:'region'});
+    REGION_DISPLAY_CACHE.set(key,display);
+    return display;
+  }catch(_){
+    REGION_DISPLAY_CACHE.set(key,null);
+    return null;
+  }
+}
+
+function localizeCountryName(rawName,code,locale){
+  const displayLocale=locale||'ru-RU';
+  const display=getRegionDisplay(displayLocale);
+  const normalizedCode=code?String(code).trim().toUpperCase():null;
+  const raw=rawName?String(rawName).trim():'';
+  if(display){
+    if(normalizedCode){
+      const localized=display.of(normalizedCode);
+      if(localized) return localized;
+    }
+    if(raw){
+      const mapped=COUNTRY_NAME_TO_CODE[raw.toLowerCase()];
+      if(mapped){
+        const localized=display.of(mapped);
+        if(localized) return localized;
+      }
+    }
+  }
+  if(raw) return raw;
+  if(normalizedCode) return normalizedCode;
+  return '';
+}
 
 function normalizeCountryCodeValue(code){
   if(!code&&code!==0)return null;
@@ -2352,7 +2509,7 @@ const CARD_CONTENT = {
     adv:{ru:'Отключайте лишние устройства или используйте заглушки',en:'Disconnect unused devices or use hardware blockers',uz:'Keraksiz qurilmalarni uzib qo‘ying yoki himoya qopqoq ishlating'}
   },
   bat:{
-    label:{ru:'Battery API',en:'Battery API',uz:'Battery API'},
+    label:{ru:'Статус батареи',en:'Battery status',uz:'Batareya holati'},
     use:{ru:'Уровень заряда намекает на переносное устройство или работу от сети',en:'Charge level hints whether this is portable or plugged in',uz:'Zaryad darajasi bu qurilma portativmi yoki tarmoqqa ulanganini ko‘rsatadi'},
     ex:{ru:'Например, 15% без зарядки — вероятно смартфон в дороге',en:'For example, 15% with no charger likely means a phone on the go',uz:'Masalan, 15% va zaryadlanmayotgan bo‘lsa, bu yo‘lda ketayotgan telefon bo‘lishi mumkin'},
     adv:{ru:'Старайтесь держать заряд в безопасном диапазоне и не передавайте его чужим сайтам без необходимости',en:'Keep the battery in a safe range and avoid sharing it with unknown sites unnecessarily',uz:'Zaryadni xavfsiz darajada saqlang va keraksiz saytlar bilan bo‘lishmang'}
@@ -3394,6 +3551,56 @@ function formatSourcePills(sources,fallback){
   return pillList(items);
 }
 
+function extractAdblockVendor(summary){
+  if(!summary) return null;
+  const evidence=Array.isArray(summary.evidence)?summary.evidence:[];
+  const vendorEntry=evidence.find(item=>String(item||'').startsWith('vendor='));
+  if(vendorEntry){
+    const value=String(vendorEntry).slice(7).trim();
+    const custom=value.match(/Custom blocker \(([^)]+)\)/i);
+    if(custom) return custom[1].trim();
+    return value;
+  }
+  const match=String(summary.value||'').match(/\(([^)]+)\)/);
+  if(match){
+    const value=match[1].trim();
+    const custom=value.match(/Custom blocker \(([^)]+)\)/i);
+    if(custom) return custom[1].trim();
+    return value;
+  }
+  return null;
+}
+
+function localizeAdblockLabel(summary,t,unknownLabel){
+  if(!summary) return '';
+  const raw=String(summary.value||'').trim();
+  if(!raw) return '';
+  const lower=raw.toLowerCase();
+  const statuses=t.adblockStatus||{};
+  const vendorRaw=extractAdblockVendor(summary);
+  let vendorLabel=null;
+  if(vendorRaw){
+    const vendorLower=vendorRaw.toLowerCase();
+    if(vendorLower==='unknown blocker'&&statuses.vendorUnknown){
+      vendorLabel=statuses.vendorUnknown;
+    }else{
+      vendorLabel=vendorRaw;
+    }
+  }
+  const withVendor=(base)=>vendorLabel?`${base} (${vendorLabel})`:base;
+  if(lower.startsWith('detected')||lower.includes('custom blocker')){
+    const base=statuses.detected||raw;
+    return withVendor(base);
+  }
+  if(lower.startsWith('not detected')){
+    return statuses.notDetected||raw;
+  }
+  if(lower.startsWith('status unknown')){
+    return statuses.unknown||raw;
+  }
+  return raw||statuses.unknown||unknownLabel||'';
+}
+
 function inferIpExposure(webrtcSummary,dnsSummary){
   const values=[webrtcSummary?.value||'',dnsSummary?.value||''].map(value=>String(value||'').toLowerCase());
   let hasData=false;
@@ -3449,12 +3656,13 @@ function renderShockBullets(basic,t){
   const tzCity=tzCityName(timezone);
   const details=state.serverData?.details||{};
   const serverGeo=state.serverData?.geo||{};
-  const ipCountry=details.country_name||serverGeo.country||serverGeo.country_name||'';
+  const rawCountry=details.country_name||serverGeo.country||serverGeo.country_name||'';
   const rawCity=details.region||details.city||serverGeo.city||'';
-  const ipCity=rawCity && (!ipCountry || rawCity.toLowerCase()!==String(ipCountry).toLowerCase())?rawCity:'';
-  const tzCountry=tzInfo.country||'';
+  const ipCountryCode=resolveCountryCode(details,state.serverData?.raw||{},serverGeo);
+  const ipCountry=localizeCountryName(rawCountry,ipCountryCode,locale);
+  const ipCity=rawCity && (!rawCountry || rawCity.toLowerCase()!==String(rawCountry).toLowerCase())?rawCity:'';
+  const tzCountryName=localizeCountryName(tzInfo.country||'',null,locale);
   const tzOffsetLabel=typeof basic.tzOffsetMinutes==='number'?utcOffsetStr(-basic.tzOffsetMinutes):null;
-  const ipTimezone=details.timezone||serverGeo.timezone||'';
   const locationSources=t.shock?.locationSources||{};
   const ipLabel=locationSources.ip||t.shock?.clockSources?.ip||'IP';
   const systemLabel=locationSources.system||t.shock?.clockSources?.system||'System';
@@ -3462,7 +3670,7 @@ function renderShockBullets(basic,t){
   const locationFallback=t.shock?.locationFallback||t.shock?.clockFallback||'—';
   const countrySources=[
     ipCountry?{label:ipLabel,value:ipCountry}:null,
-    tzCountry && (!ipCountry || tzCountry.toLowerCase()!==ipCountry.toLowerCase())?{label:systemLabel||zoneLabel,value:tzCountry}:null
+    tzCountryName && (!ipCountry || tzCountryName.toLowerCase()!==ipCountry.toLowerCase())?{label:systemLabel||zoneLabel,value:tzCountryName}:null
   ].filter(Boolean);
   const citySources=[
     ipCity?{label:ipLabel,value:ipCity}:null,
@@ -3471,31 +3679,16 @@ function renderShockBullets(basic,t){
   const countryContent=formatSourcePills(countrySources,locationFallback);
   const cityContent=formatSourcePills(citySources,locationFallback);
   const timeSegments=[];
-  const ipTimePieces=[];
-  const pushUnique=(list,value)=>{
-    if(value==null) return;
-    const str=String(value).trim();
-    if(!str) return;
-    if(list.some(item=>item.toLowerCase()===str.toLowerCase())) return;
-    list.push(str);
-  };
-  pushUnique(ipTimePieces,ipCountry);
-  pushUnique(ipTimePieces,ipCity);
-  pushUnique(ipTimePieces,ipTimezone);
-  if(ipTimePieces.length) timeSegments.push(pillValue(`${ipLabel}: ${ipTimePieces.join(' • ')}`));
-
-  const zonePieces=[];
-  pushUnique(zonePieces,tzCountry);
-  pushUnique(zonePieces,tzCity);
-  pushUnique(zonePieces,tzInfo.raw);
   if(timezone){
-    const zoneText=tzOffsetLabel?`${timezone} (${tzOffsetLabel})`:timezone;
-    pushUnique(zonePieces,zoneText);
+    const zoneText=[timezone,tzOffsetLabel].filter(Boolean).join(' • ');
+    if(zoneText) timeSegments.push(pillValue(zoneText));
   }
-  if(zonePieces.length) timeSegments.push(pillValue(`${zoneLabel}: ${zonePieces.join(' • ')}`));
-
-  const timeLabel=t.shock?.clockSources?.time||'Local time';
-  timeSegments.push(`<span class="pill">${escapeHtml(timeLabel)}: <span data-clock-tz="${escapeHtml(timezone)}" data-clock-locale="${escapeHtml(locale)}" data-clock-seconds="1">${escapeHtml(timeInTZ(timezone,locale,true))}</span></span>`);
+  try{
+    const clockText=timeInTZ(timezone,locale,true);
+    if(clockText){
+      timeSegments.push(`<span class="pill" data-clock-tz="${escapeHtml(timezone)}" data-clock-locale="${escapeHtml(locale)}" data-clock-seconds="1">${escapeHtml(clockText)}</span>`);
+    }
+  }catch(_){/* ignore */}
   const permEntries=Object.entries(basic.perms||{});
   const keyPerms=summarizeKeyPermissions(permEntries,t);
   const permHtml=keyPerms.length?pillList(keyPerms):pillOr(t.permStates?.unknown||'—');
@@ -3509,7 +3702,8 @@ function renderShockBullets(basic,t){
   const deviceSpecs=buildDeviceSpecs(basic,profiling,t,hasTouch);
   const connectionSummary=buildConnectionSummary(basic,profiling,t);
   const adblockSummary=normalizeSummary(profiling?.adblockSummary||null);
-  const adblockValue=adblockSummary.value?pillOr(adblockSummary.value):pillOr(unknownLabel);
+  const adblockLabel=localizeAdblockLabel(adblockSummary,t,unknownLabel);
+  const adblockValue=adblockLabel?pillOr(adblockLabel):pillOr(unknownLabel);
   ensureInlineIpButton(t);
   const shockBullets=[
     {key:'country',html:t.shock.country(countryContent)},
