@@ -83,6 +83,7 @@
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
     .card{border:1px solid var(--border);border-radius:12px;padding:12px}
     .title{font-weight:700;margin-bottom:6px}
+    .title .source-note{font-weight:400;font-size:.9em;color:var(--muted);margin-left:6px}
     .val{white-space:normal;word-break:break-word}
     .line{display:block;margin-top:4px}
     .hint{color:var(--text)}
@@ -428,24 +429,21 @@ const I18N = {
     advancedNotice:'Мы не обращаемся к внешним IP-сервисам, пока вы не нажмёте кнопку. Любой сайт всё равно видит ваш IP при загрузке страницы — так устроен интернет. Мы показываем это открыто и проверяем утечки, чтобы вы видели полную картину.',
     advanced:{
       ipStatus:{exposed:'IP засвечен',hidden:'IP скрыт',unknown:'Статус не определён'},
+      mismatch:'Несовпадение',
+      sourceSuffix:src=>` (Источник: ${src})`,
       ip:label=>`🧠 <b>Засвечен IP:</b> ${pillOr(label,'N/A')}`,
-      provider:value=>`🏢 <b>Провайдер:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      provider:(value,source='')=>`🏢 <b>Провайдер${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       vpn:(status,reasons)=>{
         const parts=[status,reasons].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('N/A')}`;
       },
-      connectionType:value=>`📶 <b>Тип подключения:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionBrowser:value=>`📡 <b>Браузер сообщает:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionTest:value=>`⚡ <b>Тест скорости (замер):</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionStatus:value=>`⏳ <b>Статус теста скорости:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      webrtc:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🛰️ <b>WebRTC leak detection (ICE-кандидаты):</b> ${parts.join(' ')}`;
-      },
-      dns:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🧭 <b>DNS leak test (резолверы):</b> ${parts.join(' ')}`;
-      },
+      connection:value=>`📶 <b>Подключение и скорость:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipCountry:(value,source='')=>`🌍 <b>Страна по IP${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipCity:(value,source='')=>`🏙️ <b>Город по IP${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipRegion:(value,source='')=>`🗺️ <b>Регион по IP${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipTimezone:(value,source='')=>`⏱️ <b>Часовой пояс по IP${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      callingCode:(value,source='')=>`☎️ <b>Телефонный код страны${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      dataSource:value=>`ℹ️ <b>Источник IP-данных:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       pending:'проверяем…',
       error:'ошибка сканирования'
     },
@@ -665,8 +663,7 @@ const I18N = {
         region:'Регион',
         country_name:'Страна',
         timezone:'Часовой пояс',
-        country_calling_code:'Телефонный код',
-        org:'Организация'
+        country_calling_code:'Телефонный код'
       },
       noDetails:'Подробные сведения не пришли'
     },
@@ -690,8 +687,12 @@ const I18N = {
       reasons:{
         timezone:'часовой пояс не совпадает с системным',
         language:'язык браузера не совпадает со страной IP',
-        asn:'провайдер похож на VPN или облачный хостинг',
-        forwarded:'в заголовках есть признаки прокси'
+        providerHosting:'IP принадлежит дата-центру или хостингу',
+        providerVpn:'провайдер совпадает с известным VPN',
+        security:'IP помечен как VPN/прокси сервисом',
+        forwarded:'в заголовках есть признаки прокси',
+        country:'страна IP не совпадает с системой',
+        latency:'высокая задержка для текущей точки'
       }
     },
     monitorText:{
@@ -937,24 +938,21 @@ const I18N = {
     advancedNotice:'We do not call external IP services until you press the button. Any site still sees your IP when the page loads — that is how the internet works. We surface it openly and test for leaks so you get the full picture.',
     advanced:{
       ipStatus:{exposed:'IP exposed',hidden:'IP not exposed',unknown:'Status unknown'},
+      mismatch:'Mismatch',
+      sourceSuffix:src=>` (Source: ${src})`,
       ip:label=>`🧠 <b>IP exposure:</b> ${pillOr(label,'N/A')}`,
-      provider:value=>`🏢 <b>Provider:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      provider:(value,source='')=>`🏢 <b>Provider${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       vpn:(status,reasons)=>{
         const parts=[status,reasons].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('N/A')}`;
       },
-      connectionType:value=>`📶 <b>Connection type:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionBrowser:value=>`📡 <b>Browser API:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionTest:value=>`⚡ <b>Speed test (measurement):</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionStatus:value=>`⏳ <b>Speed test status:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      webrtc:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🛰️ <b>WebRTC leak detection (ICE):</b> ${parts.join(' ')}`;
-      },
-      dns:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🧭 <b>DNS leak test (resolvers):</b> ${parts.join(' ')}`;
-      },
+      connection:value=>`📶 <b>Connection & speed:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipCountry:(value,source='')=>`🌍 <b>IP country${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipCity:(value,source='')=>`🏙️ <b>IP city${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipRegion:(value,source='')=>`🗺️ <b>IP region${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipTimezone:(value,source='')=>`⏱️ <b>IP time zone${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      callingCode:(value,source='')=>`☎️ <b>Dialing code${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      dataSource:value=>`ℹ️ <b>IP data source:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       pending:'checking…',
       error:'scan failed'
     },
@@ -1128,14 +1126,13 @@ const I18N = {
       noData:'No data returned',
       allFailed:'No service responded with data',
       sourceLabel:'Source:',
-      fields:{
-        ip:'IP',
-        region:'Region',
-        country_name:'Country',
-        timezone:'Time zone',
-        country_calling_code:'Calling code',
-        org:'Organisation'
-      },
+        fields:{
+          ip:'IP',
+          region:'Region',
+          country_name:'Country',
+          timezone:'Time zone',
+          country_calling_code:'Calling code'
+        },
       noDetails:'No extra details received'
     },
     speed:{
@@ -1148,20 +1145,24 @@ const I18N = {
         approx:'estimated from the Network Information API'
       }
     },
-    vpn:{
-      label:'VPN usage',
-      statuses:{
-        likely:'likely in use',
-        unlikely:'likely off',
-        uncertain:'needs more data'
+      vpn:{
+        label:'VPN usage',
+        statuses:{
+          likely:'likely in use',
+          unlikely:'likely off',
+          uncertain:'needs more data'
+        },
+        reasons:{
+          timezone:'time zone differs from your device',
+          language:'browser language does not match the IP country',
+          providerHosting:'IP belongs to a data center or hosting provider',
+          providerVpn:'provider matches a known VPN brand',
+          security:'IP intelligence flags VPN or proxy usage',
+          forwarded:'proxy or VPN headers spotted',
+          country:'IP country differs from local signals',
+          latency:'unusually high latency for this location'
+        }
       },
-      reasons:{
-        timezone:'time zone differs from your device',
-        language:'browser language does not match the IP country',
-        asn:'provider looks like a VPN or cloud host',
-        forwarded:'proxy or VPN headers spotted'
-      }
-    },
     monitorText:{
       single:'1 screen',
       multi:count=>{
@@ -1400,24 +1401,21 @@ const I18N = {
     advancedNotice:'Biz tugmani bosmaguningizcha tashqi IP-servislariga murojaat qilmaymiz. Har qanday sayt sahifa yuklanganda baribir sizning IP-manzilingizni ko‘radi — internet shunday ishlaydi. Biz buni ochiq ko‘rsatamiz va siz to‘liq manzarani ko‘rishingiz uchun oqishlarni tekshiramiz.',
     advanced:{
       ipStatus:{exposed:'IP ko‘rinmoqda',hidden:'IP yashiringan',unknown:'Holat nomaʼlum'},
+      mismatch:'Mos kelmaydi',
+      sourceSuffix:src=>` (Manba: ${src})`,
       ip:label=>`🧠 <b>IP ko‘rinishi:</b> ${pillOr(label,'N/A')}`,
-      provider:value=>`🏢 <b>Provayder:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      provider:(value,source='')=>`🏢 <b>Provayder${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       vpn:(status,reasons)=>{
         const parts=[status,reasons].filter(Boolean);
         return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('N/A')}`;
       },
-      connectionType:value=>`📶 <b>Ulanish turi:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionBrowser:value=>`📡 <b>Brauzer ma’lumoti:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionTest:value=>`⚡ <b>Tezlik testi (o‘lchov):</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      connectionStatus:value=>`⏳ <b>Tezlik testi holati:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
-      webrtc:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🛰️ <b>WebRTC oqish testi (ICE nomzodlari):</b> ${parts.join(' ')}`;
-      },
-      dns:(status,details)=>{
-        const parts=[pillOr(status||'N/A','N/A'),details].filter(Boolean);
-        return `🧭 <b>DNS oqishi testi (rezolverlar):</b> ${parts.join(' ')}`;
-      },
+      connection:value=>`📶 <b>Aloqa va tezlik:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipCountry:(value,source='')=>`🌍 <b>IP bo‘yicha mamlakat${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipCity:(value,source='')=>`🏙️ <b>IP bo‘yicha shahar${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipRegion:(value,source='')=>`🗺️ <b>IP bo‘yicha hudud${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      ipTimezone:(value,source='')=>`⏱️ <b>IP bo‘yicha vaqt zonasi${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      callingCode:(value,source='')=>`☎️ <b>Telefon kodi${source}:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
+      dataSource:value=>`ℹ️ <b>IP ma’lumot manbasi:</b> ${value&&value.trim()?value:pillOr('N/A')}`,
       pending:'tekshirilmoqda…',
       error:'skan xatosi'
     },
@@ -1629,14 +1627,13 @@ const I18N = {
       noData:'Maʼlumot yo‘q',
       allFailed:'Hech bir xizmat javob bermadi',
       sourceLabel:'Manba:',
-      fields:{
-        ip:'IP',
-        region:'Hudud',
-        country_name:'Mamlakat',
-        timezone:'Vaqt mintaqasi',
-        country_calling_code:'Telefon kodi',
-        org:'Tashkilot'
-      },
+        fields:{
+          ip:'IP',
+          region:'Hudud',
+          country_name:'Mamlakat',
+          timezone:'Vaqt mintaqasi',
+          country_calling_code:'Telefon kodi'
+        },
       noDetails:'Qo‘shimcha maʼlumot kelmadi'
     },
     speed:{
@@ -1659,8 +1656,12 @@ const I18N = {
       reasons:{
         timezone:'vaqt mintaqasi qurilmadagi sozlamadan farq qiladi',
         language:'brauzer tili IP mamlakatiga to‘g‘ri kelmaydi',
-        asn:'provayder VPN yoki bulut xizmati o‘xshash',
-        forwarded:'sarlavhalarda proksi yoki VPN izi bor'
+        providerHosting:'IP maʼlum bir xosting yoki maʼlumot markaziga tegishli',
+        providerVpn:'provayder mashhur VPN brendiga mos keladi',
+        security:'xizmat IP manzilni VPN yoki proksi sifatida belgilagan',
+        forwarded:'sarlavhalarda proksi yoki VPN izi bor',
+        country:'IP mamlakati lokal signallarga mos kelmaydi',
+        latency:'bu joylashuv uchun kechikish juda yuqori'
       }
     },
     monitorText:{
@@ -1845,7 +1846,9 @@ const BROWSER_BRAND_ALIASES={
   'yandex browser':'Yandex Browser',
   'not a brand':null,
   'not-a-brand':null,
-  'not:a brand':null
+  'not:a brand':null,
+  'not_a_brand':null,
+  'not a brand':null
 };
 const BROWSER_PRIORITY=['arc','chrome','brave','vivaldi','opera gx','opera','yandex browser','edge','safari','firefox','chromium'];
 
@@ -1909,6 +1912,8 @@ function browserDisplayName(basic){
       'not a brand':'',
       'not-a-brand':'',
       'not:a brand':'',
+      'not_a_brand':'',
+      'not\u00a0a brand':'',
       '—':'—'
     };
     const lower=String(name||'').toLowerCase();
@@ -2689,7 +2694,7 @@ async function getSnapshot(){
   snapshotPromise=computeSnapshot().then(result=>{snapshotCache=result;snapshotPromise=null;return result;}).catch(err=>{snapshotPromise=null;throw err;});
   return snapshotPromise;
 }
-const DETAIL_FIELDS=['region','country_name','timezone','country_calling_code','org'];
+const DETAIL_FIELDS=['region','country_name','timezone','country_calling_code'];
 const timeoutMessages={ru:'Превышено время ожидания',en:'Request timed out',uz:'Soʻrov vaqti tugadi'};
 const speedFetchMessages={ru:'Не удалось подключиться к серверу теста',en:'Could not reach the test server',uz:'Test serveriga ulanish imkonsiz'};
 const COUNTRY_LANG_MAP={
@@ -2759,7 +2764,8 @@ const COUNTRY_LANG_MAP={
 };
 const TRACKER_PATTERNS=['analytics','googletagmanager','doubleclick','facebook','pixel','metrics','metrika','hotjar','mixpanel','segment','amplitude','sentry','datadog','newrelic','bugsnag','smartlook','fullstory','clarity','telemetry','tracking','yandex','googleads','statcounter','plausible'];
 
-const VPN_KEYWORDS=['vpn','virtual private network','hosting','datacenter','data center','cloud','aws','amazon','google','azure','ovh','digitalocean','linode','leaseweb','m247','hetzner','contabo','colo','server','fastly','akamai'];
+const VPN_BRAND_KEYWORDS=['vpn','virtual private network','nord','expressvpn','surfshark','mullvad','protonvpn','pia','private internet access','windscribe','cyberghost','hidemyass','hide my ass','ivacy','vyprvpn','torguard','purevpn','hola vpn','betternet','strongvpn','ivpn','tunnelbear','fastestvpn','seed4.me','airvpn','zenmate','hide.me','atlas vpn','vpn unlimited','vpncity','vpnsecure','f-secure','freedome','hotspot shield','ultravpn'];
+const HOSTING_PROVIDER_KEYWORDS=['hosting','datacenter','data center','cloud','aws','amazon','google','azure','ovh','digitalocean','linode','leaseweb','m247','hetzner','contabo','colo','server','fastly','akamai','cloudflare','oracle','vultr','scaleway','upcloud','hivelocity','packet','wasabi','cdn','compute','static ip'];
 
 async function fetchWithTimeout(url,{timeout=6000,...options}={}){
   const controller=new AbortController();
@@ -2792,9 +2798,9 @@ function normalizeTimeZoneValue(tz){
   return String(tz||'').trim().toLowerCase();
 }
 
-function providerLooksLikeVpn(details,raw){
+function extractProviderSignals(details,raw){
   const lower=str=>String(str||'').toLowerCase();
-  const candidates=[
+  const names=[
     details?.org,
     raw?.org,
     raw?.isp,
@@ -2805,12 +2811,19 @@ function providerLooksLikeVpn(details,raw){
     raw?.asn?.org,
     raw?.asn?.name
   ].map(lower).filter(Boolean);
-  if(candidates.some(org=>VPN_KEYWORDS.some(key=>org.includes(key)))) return true;
+  const vpnBrand=names.some(org=>VPN_BRAND_KEYWORDS.some(key=>org.includes(key)));
+  const hostingByName=names.some(org=>HOSTING_PROVIDER_KEYWORDS.some(key=>org.includes(key)));
   const security=raw?.security||raw?.threat||{};
-  if([security.vpn,security.proxy,security.relay,security.tor,raw?.proxy,raw?.vpn,raw?.tor].some(val=>val===true)) return true;
+  const flagged=[security.vpn,security.proxy,security.relay,security.tor,raw?.proxy,raw?.vpn,raw?.tor].some(val=>val===true);
   const type=lower(raw?.connection?.type||raw?.type);
-  if(type&&(type.includes('hosting')||type.includes('datacenter')||type.includes('data center'))) return true;
-  return false;
+  const asType=lower(raw?.asn?.type);
+  const hostingByType=Boolean(type&&(type.includes('hosting')||type.includes('datacenter')||type.includes('data center')));
+  const hostingByAsn=Boolean(asType&&(asType.includes('hosting')||asType.includes('datacenter')||asType.includes('data center')));
+  return {vpnBrand,hosting:hostingByName||hostingByType||hostingByAsn,flagged,names};
+}
+function providerLooksLikeVpn(details,raw){
+  const signals=extractProviderSignals(details,raw);
+  return signals.vpnBrand||signals.hosting||signals.flagged;
 }
 
 function primaryLanguageCode(){
@@ -2829,6 +2842,37 @@ function languageMismatch(langCode,countryCode){
   const allowed=COUNTRY_LANG_MAP[countryCode.toLowerCase()];
   if(!allowed) return false;
   return !allowed.includes(lang);
+}
+
+function guessLocalCountryCode(){
+  if(typeof navigator==='undefined') return null;
+  const tags=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language]).filter(Boolean);
+  for(const tag of tags){
+    try{
+      if(typeof Intl!=='undefined'&&typeof Intl.Locale==='function'){
+        const locale=new Intl.Locale(tag);
+        if(locale.region) return locale.region.toUpperCase();
+        if(typeof locale.maximize==='function'){
+          const maximized=locale.maximize();
+          if(maximized?.region) return maximized.region.toUpperCase();
+        }
+      }
+    }catch(_){/* ignore */}
+    const parts=String(tag||'').split(/[-_]/);
+    if(parts[1]) return parts[1].toUpperCase();
+  }
+  return null;
+}
+
+function normalizeCityName(name){
+  return String(name||'').trim().replace(/\s+/g,' ').toLowerCase();
+}
+
+function countryNameToCode(name){
+  if(!name) return null;
+  const key=String(name).trim().toLowerCase();
+  if(!key) return null;
+  return COUNTRY_NAME_TO_CODE[key]||null;
 }
 
 function extractCanonicalDetailsFromPayload(payload){
@@ -3020,49 +3064,76 @@ function evaluateVpnState(serverData){
   if(!details) return {status:'uncertain',reasons:[],checked:false};
   const raw=serverData.raw||{};
   const headers=serverData.headers||{};
-  const reasons=[];
+  const reasonSet=new Set();
   const ipTz=details.timezone||null;
   const localTz=LOCAL_TZ||null;
   if(ipTz && localTz && normalizeTimeZoneValue(ipTz)!==normalizeTimeZoneValue(localTz)){
-    reasons.push('timezone');
+    reasonSet.add('timezone');
   }
   const langCode=primaryLanguageCode();
-  const countryCandidate=normalizeCountryCodeValue(details.country_code||raw.country_code||raw.countryCode||raw.cc);
-  if(langCode && countryCandidate && languageMismatch(langCode,countryCandidate)){
-    reasons.push('language');
+  const ipCountryCode=resolveCountryCode(details,raw,serverData.geo||{});
+  if(langCode && ipCountryCode && languageMismatch(langCode,ipCountryCode)){
+    reasonSet.add('language');
   }
-  if(providerLooksLikeVpn(details,raw)){
-    reasons.push('asn');
-  }
+  const providerSignals=extractProviderSignals(details,raw);
+  if(providerSignals.vpnBrand) reasonSet.add('providerVpn');
+  if(providerSignals.hosting) reasonSet.add('providerHosting');
+  if(providerSignals.flagged) reasonSet.add('security');
   const forwardedHeaders=['via','forwarded','x-forwarded-for','x-forwarded-host','x-forwarded-proto'];
   for(const name of forwardedHeaders){
-    const value=headers?.[name]||headers?.[name?.toLowerCase?.()||name]||headers?.[name?.toUpperCase?.()||name];
+    const keyLower=name.toLowerCase();
+    const value=headers?.[name]||headers?.[keyLower]||headers?.[name.toUpperCase()];
     if(value){
-      reasons.push('forwarded');
+      reasonSet.add('forwarded');
       break;
     }
   }
   if(raw.proxy===true||raw.vpn===true||raw.tor===true){
-    reasons.push('forwarded');
+    reasonSet.add('forwarded');
   }
-  const uniqueReasons=Array.from(new Set(reasons));
-  let score=0;
-  uniqueReasons.forEach(reason=>{
-    if(reason==='asn'||reason==='forwarded') score+=3;
-    else if(reason==='timezone') score+=1.5;
-    else if(reason==='language') score+=1;
-  });
+  const baselineCodes=new Set();
+  const localCountry=guessLocalCountryCode();
+  if(localCountry) baselineCodes.add(localCountry);
+  if(localTz){
+    const tzCountry=describeTimeZoneLabel(localTz,'en-US').country;
+    const tzCode=countryNameToCode(tzCountry);
+    if(tzCode) baselineCodes.add(tzCode);
+  }
+  if(ipCountryCode && baselineCodes.size && !baselineCodes.has(ipCountryCode)){
+    reasonSet.add('country');
+  }
   const connectionType=String(raw?.connection?.type||'').toLowerCase();
   const asType=String(raw?.asn?.type||'').toLowerCase();
   const looksResidential=[connectionType,asType].some(val=>val.includes('residential')||val.includes('consumer')||val.includes('isp')||val.includes('mobile')||val.includes('cellular'));
+  const speedState=state.speed||{};
+  if(speedState.status==='done'&&typeof speedState.latency==='number'){
+    const latency=speedState.latency;
+    if(latency>=180||((reasonSet.has('country')||reasonSet.has('timezone')||reasonSet.has('providerHosting')||reasonSet.has('providerVpn')||reasonSet.has('security'))&&latency>=120)){
+      reasonSet.add('latency');
+    }
+  }
+  const uniqueReasons=Array.from(reasonSet);
+  const weights={
+    providerVpn:3.5,
+    security:3.5,
+    forwarded:3,
+    providerHosting:2.5,
+    country:2.5,
+    timezone:2,
+    language:1.5,
+    latency:1
+  };
+  let score=0;
+  uniqueReasons.forEach(reason=>{score+=weights[reason]||0;});
+  const baselineMatch=!ipCountryCode||!baselineCodes.size||baselineCodes.has(ipCountryCode);
   let status='uncertain';
-  if(score>=3){
+  if(score>=4){
     status='likely';
-  }else if(score>=2.5){
+  }else if(score>=3&&(reasonSet.has('providerVpn')||reasonSet.has('security')||reasonSet.has('forwarded'))){
     status='likely';
-  }else if(score===0 && (details.timezone||details.country_name)){
+  }else if(uniqueReasons.length===0&&baselineMatch&&(looksResidential||Boolean(details.timezone))){
     status='unlikely';
-  }else if(looksResidential && score<2){
+  }else if(score<=1&&looksResidential&&!reasonSet.has('providerHosting')&&!reasonSet.has('providerVpn')&&!reasonSet.has('security')){
     status='unlikely';
   }
   return {status,reasons:uniqueReasons,checked:true};
@@ -3128,13 +3199,21 @@ async function detectIpAndSpeed(){
   state.ipError=null;
   state.speed={status:'running',mbps:null,latency:null,error:null,note:null};
   state.vpn={status:'uncertain',reasons:[],checked:false};
-  render(currentLang);
+  const rerender=async()=>{
+    let scrollPos=null;
+    if(typeof window!=='undefined') scrollPos={x:window.scrollX,y:window.scrollY};
+    await render(currentLang);
+    if(scrollPos && typeof window!=='undefined' && typeof window.scrollTo==='function'){
+      window.scrollTo(scrollPos.x,scrollPos.y);
+    }
+  };
+  await rerender();
   try{
     const data=await fetchIpData();
     if(!data || typeof data!=='object') throw new Error('empty');
     state.serverData=data;
     state.vpn=evaluateVpnState(data);
-    render(currentLang);
+    await rerender();
   }catch(e){
     const noDataMsg=(I18N[currentLang]?.ip?.noData)||'No data';
     let msg;
@@ -3154,7 +3233,7 @@ async function detectIpAndSpeed(){
     state.vpn={status:'uncertain',reasons:[],checked:false};
     state.fetchingIp=false;
     invalidateSnapshot();
-    render(currentLang);
+    await rerender();
     return;
   }
   try{
@@ -3178,7 +3257,7 @@ async function detectIpAndSpeed(){
   }
   state.fetchingIp=false;
   invalidateSnapshot();
-  render(currentLang);
+  await rerender();
 }
 
 function resolveLocaleText(map,lang,fallback=''){
@@ -3272,7 +3351,12 @@ function updateIpSection(t){
   }
   const {ip,details,detailSource,source}=state.serverData;
   const fields=t.ip.fields||{};
-  const rows=[`<div class="title">${t.ip.title}</div>`];
+  const baseTitle=t.ip.title||'';
+  const src=detailSource||source||null;
+  const sourceLabel=t.ip.sourceLabel||'';
+  const sourceText=src?`${sourceLabel.replace(/:?$/, '')}: ${src}`:'';
+  const sourceNote=sourceText?` <span class="source-note">(${escapeHtml(sourceText)})</span>`:'';
+  const rows=[`<div class="title">${escapeHtml(baseTitle)}${sourceNote}</div>`];
   const ipLabel=fields.ip||'IP';
   const ipValue=ip?String(ip):'—';
   rows.push(`<div><b>${escapeHtml(ipLabel)}:</b> ${escapeHtml(ipValue)}</div>`);
@@ -3284,11 +3368,7 @@ function updateIpSection(t){
       rows.push(`<div><b>${escapeHtml(label)}:</b> ${escapeHtml(value)}</div>`);
     });
   }else{
-    rows.push(`<div>${escapeHtml(t.ip.noDetails||'—')}</div>`);
-  }
-  const src=detailSource||source||null;
-  if(src){
-    rows.push(`<div class="small" style="margin-top:4px;color:var(--muted)">${t.ip.sourceLabel} ${escapeHtml(src)}</div>`);
+      rows.push(`<div>${escapeHtml(t.ip.noDetails||'—')}</div>`);
   }
   el.innerHTML=rows.join('');
 }
@@ -3525,7 +3605,7 @@ function buildDeviceSpecs(basic,profiling,t,hasTouch){
 }
 
 function buildConnectionSummary(basic,profiling,t){
-  const result={type:null,browser:null,test:null,status:null};
+  const result={type:null,browser:null,test:null,status:null,preferred:null};
   const netSummary=formatNetworkSummary(basic.net);
   const units=t.units||{};
   const labels=t.labels||{};
@@ -3563,6 +3643,13 @@ function buildConnectionSummary(basic,profiling,t){
     const errorText=t.speed?.error? t.speed.error(speedState.error||'') : (speedState.error||'');
     if(errorText) result.status=pillValue(`${label}: ${errorText}`);
   }
+  const preferredParts=[];
+  if(result.test) preferredParts.push(result.test);
+  else if(speedState.status==='running'&&result.status) preferredParts.push(result.status);
+  if(!preferredParts.length && result.browser) preferredParts.push(result.browser);
+  if(!preferredParts.length && result.type) preferredParts.push(result.type);
+  if(!preferredParts.length && result.status) preferredParts.push(result.status);
+  result.preferred=preferredParts.filter(Boolean).join(' ');
   return result;
 }
 
@@ -3762,8 +3849,6 @@ function renderShockBullets(basic,t){
   const naLabel=t.units?.na||'N/A';
   const webrtcSummary=normalizeSummary(profiling?.webrtcSummary||null);
   const dnsSummary=normalizeSummary(profiling?.dnsSummary||null);
-  const webrtcDetails=webrtcSummary.evidence&&webrtcSummary.evidence.length?pillList(webrtcSummary.evidence):'';
-  const dnsDetails=dnsSummary.evidence&&dnsSummary.evidence.length?pillList(dnsSummary.evidence):'';
   let ipExposureLabel;
   if(profilingStatus==='running'){
     ipExposureLabel=advanced.pending||pendingLabel;
@@ -3781,30 +3866,58 @@ function renderShockBullets(basic,t){
     return value;
   };
   const advancedBullets=[];
+  const ipSource=state.serverData?.detailSource||state.serverData?.source||null;
+  const sourceSuffix=ipSource? (typeof advanced.sourceSuffix==='function'?advanced.sourceSuffix(ipSource):` (${(t.ip?.sourceLabel||'Source:').replace(/:$/, '')}: ${ipSource})`):'';
+  const mismatchLabel=advanced.mismatch||'Mismatch';
+  const applyMismatch=(valueHtml,flag)=>flag?[valueHtml,pillValue(`⚠️ ${mismatchLabel}`)].filter(Boolean).join(' '):valueHtml;
+  const connectionPreferred=ensureValue(connectionSummary.preferred);
+  const providerHtml=pillOr(provider,naLabel);
+  const localCountryCode=guessLocalCountryCode();
+  const tzCountryCode=tzCountryName?countryNameToCode(tzCountryName):null;
+  const baselineCountryCodes=[tzCountryCode,localCountryCode].filter(Boolean);
+  const ipCountryMismatch=Boolean(ipCountryCode && baselineCountryCodes.length && !baselineCountryCodes.includes(ipCountryCode));
+  const ipCityMismatch=Boolean(normalizeCityName(ipCity) && normalizeCityName(tzCity) && normalizeCityName(ipCity)!==normalizeCityName(tzCity));
+  const ipTimezoneRaw=(details?.timezone||state.serverData?.raw?.timezone||state.serverData?.raw?.time_zone||'');
+  const ipTimezoneMismatch=Boolean(ipTimezoneRaw && timezone && normalizeTimeZoneValue(ipTimezoneRaw)!==normalizeTimeZoneValue(timezone));
+  const ipCountryValue=applyMismatch(pillOr(ipCountry||'',naLabel),ipCountryMismatch);
+  const ipCityValue=applyMismatch(pillOr(ipCity||'',naLabel),ipCityMismatch);
+  const ipRegionValue=pillOr(details?.region||'',naLabel);
+  const ipTimezoneValue=applyMismatch(pillOr(ipTimezoneRaw||'',naLabel),ipTimezoneMismatch);
+  const callingCodeValue=pillOr(details?.country_calling_code||'',naLabel);
+  const dataSourceValue=pillOr(ipSource||'',naLabel);
+
   if(typeof advanced.ip==='function') advancedBullets.push({key:'ip',html:advanced.ip(ipExposureLabel)});
   else advancedBullets.push({key:'ip',html:`🧠 <b>IP exposure:</b> ${pillOr(ipExposureLabel,'N/A')}`});
-  const providerHtml=pillOr(provider,naLabel);
-  if(typeof advanced.provider==='function') advancedBullets.push({key:'provider',html:advanced.provider(providerHtml)});
-  else advancedBullets.push({key:'provider',html:`🏢 <b>Provider:</b> ${providerHtml}`});
+
+  if(typeof advanced.provider==='function') advancedBullets.push({key:'provider',html:advanced.provider(providerHtml,sourceSuffix)});
+  else advancedBullets.push({key:'provider',html:`🏢 <b>Provider${sourceSuffix}:</b> ${providerHtml}`});
+
   if(typeof advanced.vpn==='function') advancedBullets.push({key:'vpn',html:advanced.vpn(vpnStatusHtml,vpnReasonHtml)});
   else{
     const parts=[vpnStatusHtml,vpnReasonHtml].filter(Boolean);
     advancedBullets.push({key:'vpn',html:`🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('',naLabel)}`});
   }
-  const connectionTypeHtml=ensureValue(connectionSummary.type);
-  if(typeof advanced.connectionType==='function') advancedBullets.push({key:'connectionType',html:advanced.connectionType(connectionTypeHtml)});
-  else advancedBullets.push({key:'connectionType',html:`📶 <b>Connection type:</b> ${connectionTypeHtml}`});
-  const connectionBrowserHtml=ensureValue(connectionSummary.browser);
-  if(typeof advanced.connectionBrowser==='function') advancedBullets.push({key:'connectionBrowser',html:advanced.connectionBrowser(connectionBrowserHtml)});
-  else advancedBullets.push({key:'connectionBrowser',html:`📡 <b>Browser API:</b> ${connectionBrowserHtml}`});
-  const connectionTestHtml=ensureValue(connectionSummary.test);
-  if(typeof advanced.connectionTest==='function') advancedBullets.push({key:'connectionTest',html:advanced.connectionTest(connectionTestHtml)});
-  else advancedBullets.push({key:'connectionTest',html:`⚡ <b>Speed test (measurement):</b> ${connectionTestHtml}`});
-  const connectionStatusHtml=ensureValue(connectionSummary.status);
-  if(typeof advanced.connectionStatus==='function') advancedBullets.push({key:'connectionStatus',html:advanced.connectionStatus(connectionStatusHtml)});
-  else advancedBullets.push({key:'connectionStatus',html:`⏳ <b>Speed test status:</b> ${connectionStatusHtml}`});
-  if(typeof advanced.webrtc==='function') advancedBullets.push({key:'webrtc',html:advanced.webrtc(webrtcSummary.value,webrtcDetails)});
-  if(typeof advanced.dns==='function') advancedBullets.push({key:'dns',html:advanced.dns(dnsSummary.value,dnsDetails)});
+
+  if(typeof advanced.connection==='function') advancedBullets.push({key:'connection',html:advanced.connection(connectionPreferred)});
+  else advancedBullets.push({key:'connection',html:`📶 <b>Connection & speed:</b> ${connectionPreferred}`});
+
+  if(typeof advanced.ipCountry==='function') advancedBullets.push({key:'ipCountry',html:advanced.ipCountry(ipCountryValue,sourceSuffix)});
+  else advancedBullets.push({key:'ipCountry',html:`🌍 <b>IP country${sourceSuffix}:</b> ${ipCountryValue}`});
+
+  if(typeof advanced.ipCity==='function') advancedBullets.push({key:'ipCity',html:advanced.ipCity(ipCityValue,sourceSuffix)});
+  else advancedBullets.push({key:'ipCity',html:`🏙️ <b>IP city${sourceSuffix}:</b> ${ipCityValue}`});
+
+  if(typeof advanced.ipRegion==='function') advancedBullets.push({key:'ipRegion',html:advanced.ipRegion(ipRegionValue,sourceSuffix)});
+  else advancedBullets.push({key:'ipRegion',html:`🗺️ <b>IP region${sourceSuffix}:</b> ${ipRegionValue}`});
+
+  if(typeof advanced.ipTimezone==='function') advancedBullets.push({key:'ipTimezone',html:advanced.ipTimezone(ipTimezoneValue,sourceSuffix)});
+  else advancedBullets.push({key:'ipTimezone',html:`⏱️ <b>IP time zone${sourceSuffix}:</b> ${ipTimezoneValue}`});
+
+  if(typeof advanced.callingCode==='function') advancedBullets.push({key:'callingCode',html:advanced.callingCode(callingCodeValue,sourceSuffix)});
+  else advancedBullets.push({key:'callingCode',html:`☎️ <b>Dialing code${sourceSuffix}:</b> ${callingCodeValue}`});
+
+  if(typeof advanced.dataSource==='function') advancedBullets.push({key:'dataSource',html:advanced.dataSource(dataSourceValue)});
+  else advancedBullets.push({key:'dataSource',html:`ℹ️ <b>IP data source:</b> ${dataSourceValue}`});
 
   const advancedItems=advancedBullets.filter(item=>item&&item.html);
   advancedUl.innerHTML='';
@@ -4040,8 +4153,7 @@ function formatMonitorText(info,t){
 
 function updateSpeedSection(t){
   const el=getEl('speedResult');
-  const summary=formatSpeedSummary(t);
-  el.textContent=summary?`⚡ ${summary}`:'';
+  if(el) el.textContent='';
 }
 
 let profilerModulePromise=null;

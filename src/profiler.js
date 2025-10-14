@@ -311,12 +311,21 @@ function inferBrowser(signals) {
   let value = 'Unknown browser';
   let confidence = 0.3;
   if (brands && brands.length) {
-    evidence.push(`brands=${brands.map((b) => `${b.brand} ${b.version}`).join(', ')}`);
-    const primary = brands.find((b) => /Chrome|Chromium|Firefox|Safari|Edg/i.test(b.brand)) ?? brands[0];
-    const engine = brands.some((b) => /Chrom/i.test(b.brand)) ? 'Chromium' : brands.some((b) => /Firefox|Gecko/i.test(b.brand)) ? 'Gecko' : 'WebKit';
-    const version = primary?.version ? primary.version.split('.')[0] : 'unknown';
-    value = `${engine} • ${primary?.brand ?? 'Unknown'} ${version}`;
-    confidence = Math.max(confidence, 0.6);
+    const cleaned = brands
+      .map((entry) => ({ brand: typeof entry.brand === 'string' ? entry.brand.trim() : '', version: typeof entry.version === 'string' ? entry.version : '' }))
+      .filter((entry) => entry.brand && !/^not[\s_:-]?a[\s_-]?brand$/i.test(entry.brand));
+    if (cleaned.length) {
+      evidence.push(`brands=${cleaned.map((b) => `${b.brand}${b.version ? ` ${b.version}` : ''}`).join(', ')}`);
+      const primary = cleaned.find((b) => /Chrome|Chromium|Firefox|Safari|Edg|Arc|Brave|Opera|Vivaldi|Ya?Browser/i.test(b.brand)) ?? cleaned[0];
+      const hasFirefox = cleaned.some((b) => /Firefox|Gecko/i.test(b.brand));
+      const hasSafari = cleaned.some((b) => /Safari/i.test(b.brand));
+      const hasChromium = cleaned.some((b) => /Chrome|Chromium|Edg|Arc|Brave|Opera|Vivaldi|Ya?Browser/i.test(b.brand));
+      const engine = hasFirefox ? 'Gecko' : hasSafari && !hasChromium ? 'WebKit' : 'Chromium';
+      const version = primary?.version ? primary.version.split('.')[0] : '';
+      const versionPart = version && version !== 'unknown' ? ` ${version}` : '';
+      value = `${engine} • ${primary?.brand ?? 'Unknown'}${versionPart}`;
+      confidence = Math.max(confidence, 0.6);
+    }
   }
   let arcEvidence = false;
   if (typeof document !== 'undefined') {
