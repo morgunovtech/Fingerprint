@@ -1,15 +1,27 @@
 /* eslint-disable no-console */
 const FONT_CANDIDATES = [
-  'Arial',
-  'Helvetica',
-  'Times New Roman',
-  'Courier New',
-  'Georgia',
-  'Roboto',
-  'Open Sans',
-  'SF Pro Text',
-  'Segoe UI',
-  'Noto Sans',
+  { name: 'Arial', category: 'native' },
+  { name: 'Helvetica', category: 'native' },
+  { name: 'Times New Roman', category: 'native' },
+  { name: 'Courier New', category: 'native' },
+  { name: 'Georgia', category: 'native' },
+  { name: 'Verdana', category: 'native' },
+  { name: 'Trebuchet MS', category: 'native' },
+  { name: 'SF Pro Text', category: 'native' },
+  { name: 'Segoe UI', category: 'native' },
+  { name: 'Noto Sans', category: 'native' },
+  { name: 'Roboto', category: 'native' },
+  { name: 'Open Sans', category: 'external' },
+  { name: 'Inter', category: 'external' },
+  { name: 'Source Sans Pro', category: 'external' },
+  { name: 'Source Code Pro', category: 'external' },
+  { name: 'Fira Code', category: 'external' },
+  { name: 'JetBrains Mono', category: 'external' },
+  { name: 'Lato', category: 'external' },
+  { name: 'Montserrat', category: 'external' },
+  { name: 'PT Sans', category: 'external' },
+  { name: 'Ubuntu', category: 'external' },
+  { name: 'Avenir Next', category: 'external' },
 ];
 const MAC_DISPLAY_MAP = [
   { width: 3456, height: 2234, label: 'Apple MacBook Pro 16″' },
@@ -27,6 +39,11 @@ const IOS_DISPLAY_MAP = [
   { width: 1133, height: 2360, label: 'Apple iPad Air 10.9″' },
   { width: 1488, height: 2266, label: 'Apple iPad mini 8.3″' },
 ];
+const truncate = (value, maxLength = 80) => {
+  if (value.length <= maxLength)
+    return value;
+  return `${value.slice(0, Math.max(0, maxLength - 1))}…`;
+};
 const ANDROID_MODEL_PREFIX = [
   { pattern: /^SM-S92/i, label: 'Samsung Galaxy S24 Ultra / S24+' },
   { pattern: /^SM-S91/i, label: 'Samsung Galaxy S23 series' },
@@ -294,12 +311,21 @@ function inferBrowser(signals) {
   let value = 'Unknown browser';
   let confidence = 0.3;
   if (brands && brands.length) {
-    evidence.push(`brands=${brands.map((b) => `${b.brand} ${b.version}`).join(', ')}`);
-    const primary = brands.find((b) => /Chrome|Chromium|Firefox|Safari|Edg/i.test(b.brand)) ?? brands[0];
-    const engine = brands.some((b) => /Chrom/i.test(b.brand)) ? 'Chromium' : brands.some((b) => /Firefox|Gecko/i.test(b.brand)) ? 'Gecko' : 'WebKit';
-    const version = primary?.version ? primary.version.split('.')[0] : 'unknown';
-    value = `${engine} • ${primary?.brand ?? 'Unknown'} ${version}`;
-    confidence = Math.max(confidence, 0.6);
+    const cleaned = brands
+      .map((entry) => ({ brand: typeof entry.brand === 'string' ? entry.brand.trim() : '', version: typeof entry.version === 'string' ? entry.version : '' }))
+      .filter((entry) => entry.brand && !/^not[\s_:-]?a[\s_-]?brand$/i.test(entry.brand));
+    if (cleaned.length) {
+      evidence.push(`brands=${cleaned.map((b) => `${b.brand}${b.version ? ` ${b.version}` : ''}`).join(', ')}`);
+      const primary = cleaned.find((b) => /Chrome|Chromium|Firefox|Safari|Edg|Arc|Brave|Opera|Vivaldi|Ya?Browser/i.test(b.brand)) ?? cleaned[0];
+      const hasFirefox = cleaned.some((b) => /Firefox|Gecko/i.test(b.brand));
+      const hasSafari = cleaned.some((b) => /Safari/i.test(b.brand));
+      const hasChromium = cleaned.some((b) => /Chrome|Chromium|Edg|Arc|Brave|Opera|Vivaldi|Ya?Browser/i.test(b.brand));
+      const engine = hasFirefox ? 'Gecko' : hasSafari && !hasChromium ? 'WebKit' : 'Chromium';
+      const version = primary?.version ? primary.version.split('.')[0] : '';
+      const versionPart = version && version !== 'unknown' ? ` ${version}` : '';
+      value = `${engine} • ${primary?.brand ?? 'Unknown'}${versionPart}`;
+      confidence = Math.max(confidence, 0.6);
+    }
   }
   let arcEvidence = false;
   if (typeof document !== 'undefined') {
@@ -641,26 +667,38 @@ function detectSystemFonts() {
       ctx.font = `${size} ${fallback}`;
       baselines.set(fallback, ctx.measureText(sample).width);
     });
-    const detected = [];
+    const nativeFonts = [];
+    const externalFonts = [];
     const evidence = [];
-    FONT_CANDIDATES.forEach((font) => {
+    FONT_CANDIDATES.forEach(({ name, category }) => {
       const matched = ['monospace', 'serif', 'sans-serif'].some((fallback) => {
-        ctx.font = `${size} '${font}', ${fallback}`;
+        ctx.font = `${size} '${name}', ${fallback}`;
         const width = ctx.measureText(sample).width;
         const baseline = baselines.get(fallback) ?? width;
         return Math.abs(width - baseline) > 0.1;
       });
       if (matched) {
-        detected.push(font);
-        evidence.push(`${font}=present`);
+        if (category === 'external')
+          externalFonts.push(name);
+        else
+          nativeFonts.push(name);
+        evidence.push(`${name}=${category}`);
       }
     });
-    const value = detected.length ? `Detected fonts: ${detected.join(', ')}` : 'System fonts not observable';
+    const parts = [];
+    if (externalFonts.length)
+      parts.push(`External: ${externalFonts.join(', ')}`);
+    if (nativeFonts.length)
+      parts.push(`Native: ${nativeFonts.join(', ')}`);
+    const value = parts.length ? parts.join(' • ') : 'System fonts not observable';
+    const totalDetected = nativeFonts.length + externalFonts.length;
+    const confidenceBase = totalDetected ? 0.45 : 0.3;
+    const confidence = CLAMP(confidenceBase + externalFonts.length * 0.07 + nativeFonts.length * 0.03, 0, 0.85);
     return {
       key: 'fingerprint.fonts',
       label: 'System fonts',
       value,
-      confidence: detected.length ? CLAMP(0.4 + detected.length * 0.05, 0, 0.75) : 0.3,
+      confidence,
       evidence,
       method: 'measurement',
       limitations: 'Font detection is approximate; browsers can mask or reduce this signal to limit fingerprinting.',
@@ -784,6 +822,46 @@ async function runSupercookieProbe() {
     limitations: 'Checks only first-party storage APIs; cross-site partitioning or purging policies may differ.',
   };
 }
+function identifyAdBlockVendor() {
+  if (typeof window === 'undefined')
+    return null;
+  const win = window;
+  const nav = typeof navigator !== 'undefined' ? navigator : undefined;
+  if (nav?.brave && typeof nav.brave.isBrave === 'function')
+    return 'Brave Shields';
+  const signatureChecks = [
+    {
+      name: 'uBlock Origin',
+      match: () => ['uBO', 'ublock', 'ublock0', '_uBlock', 'ublockOrigin'].some((key) => key in win),
+    },
+    {
+      name: 'AdGuard',
+      match: () => ['adguard', 'AdGuard', 'adguardProductName'].some((key) => key in win),
+    },
+    {
+      name: 'Ghostery',
+      match: () => ['ghostery', '__ghostery'].some((key) => key in win),
+    },
+    {
+      name: 'Privacy Badger',
+      match: () => 'pbjs' in win,
+    },
+  ];
+  for (const entry of signatureChecks) {
+    try {
+      if (entry.match())
+        return entry.name;
+    } catch (error) {
+      console.debug('Adblock signature check failed', error);
+    }
+  }
+  if (typeof document !== 'undefined') {
+    const attr = document.documentElement?.getAttribute('data-adblocker');
+    if (attr)
+      return `Custom blocker (${attr})`;
+  }
+  return null;
+}
 function detectAdBlocker() {
   if (typeof document === 'undefined')
     return null;
@@ -816,8 +894,11 @@ function detectAdBlocker() {
   }
   if (blocked != null)
     evidence.push(`hidden=${blocked}`);
-  const value = blocked == null ? 'Ad blocker status unknown' : blocked ? 'Ad blocker likely enabled' : 'Ad blocker unlikely';
-  const confidence = blocked == null ? 0.3 : blocked ? 0.6 : 0.5;
+  const vendor = blocked ? identifyAdBlockVendor() : null;
+  if (vendor)
+    evidence.push(`vendor=${vendor}`);
+  const value = blocked == null ? 'Status unknown' : blocked ? `Detected (${vendor ?? 'unknown blocker'})` : 'Not detected';
+  const confidence = blocked == null ? 0.3 : blocked ? (vendor ? 0.7 : 0.6) : 0.5;
   return {
     key: 'privacy.adblock',
     label: 'Ad blocker usage',
@@ -825,10 +906,377 @@ function detectAdBlocker() {
     confidence,
     evidence,
     method: 'observation',
-    limitations: 'Some blockers hide their presence and some privacy browsers block only remote trackers.',
+    limitations: 'Detection relies on DOM side effects and public APIs. Some blockers intentionally obfuscate their presence or operate per-site.',
   };
 }
-async function runWebRtcLeakTest() {
+const normalizeDeviceClass = (value) => {
+  switch (value) {
+    case 'desktop':
+      return 'Desktop';
+    case 'mobile':
+      return 'Mobile';
+    case 'tablet':
+      return 'Tablet';
+    default:
+      return 'Unknown device';
+  }
+};
+const canonicalPlatformName = (value) => {
+  if (!value)
+    return null;
+  const lower = value.toLowerCase();
+  if (lower.includes('mac'))
+    return 'macOS';
+  if (lower.includes('win'))
+    return 'Windows';
+  if (lower === 'ios' || lower.includes('iphone'))
+    return 'iOS';
+  if (lower.includes('ipad'))
+    return 'iPadOS';
+  if (lower.includes('android'))
+    return 'Android';
+  if (lower.includes('linux'))
+    return 'Linux';
+  if (lower.includes('cros') || lower.includes('chrome os'))
+    return 'ChromeOS';
+  return value;
+};
+const parseUserAgentDetailed = (uaHints) => {
+  const nav = typeof navigator === 'undefined' ? undefined : navigator;
+  const uaString = nav?.userAgent ?? '';
+  const lower = uaString.toLowerCase();
+  const getVersion = (regex) => {
+    const match = regex.exec(uaString);
+    return match ? match[1] : null;
+  };
+  const browserPatterns = [
+    { name: 'Edge', regex: /Edg\/(\d+[\.\d]*)/i },
+    { name: 'Opera', regex: /OPR\/(\d+[\.\d]*)/i },
+    { name: 'Vivaldi', regex: /Vivaldi\/(\d+[\.\d]*)/i },
+    { name: 'Samsung Browser', regex: /SamsungBrowser\/(\d+[\.\d]*)/i },
+    { name: 'Yandex Browser', regex: /YaBrowser\/(\d+[\.\d]*)/i },
+    { name: 'DuckDuckGo', regex: /DuckDuckGo\/(\d+[\.\d]*)/i },
+    { name: 'Whale', regex: /Whale\/(\d+[\.\d]*)/i },
+    { name: 'Brave', regex: /Brave\/(\d+[\.\d]*)/i },
+    { name: 'Chrome', regex: /CriOS\/(\d+[\.\d]*)/i },
+  ];
+  let browserName = 'Unknown';
+  let browserVersion = null;
+  for (const entry of browserPatterns) {
+    const match = entry.regex.exec(uaString);
+    if (match) {
+      browserName = entry.name;
+      browserVersion = match[1];
+      break;
+    }
+  }
+  if (browserName === 'Unknown') {
+    if (/chrome\//i.test(uaString) && /safari/i.test(uaString)) {
+      browserName = 'Chrome';
+      browserVersion = getVersion(/Chrome\/(\d+[\.\d]*)/i);
+    }
+    else if (/firefox\//i.test(uaString)) {
+      browserName = 'Firefox';
+      browserVersion = getVersion(/Firefox\/(\d+[\.\d]*)/i);
+    }
+    else if (/safari/i.test(uaString) && /version\//i.test(uaString)) {
+      browserVersion = getVersion(/Version\/(\d+[\.\d]*)/i);
+      browserName = /iphone|ipad|ipod/.test(lower) ? 'Mobile Safari' : 'Safari';
+    }
+    else if (/safari\//i.test(uaString)) {
+      browserName = 'Safari';
+      browserVersion = getVersion(/Safari\/(\d+[\.\d]*)/i);
+    }
+    else if (/msie |trident\//i.test(uaString)) {
+      browserName = 'Internet Explorer';
+      browserVersion = getVersion(/(?:MSIE |rv:)([\d.]+)/i);
+    }
+  }
+  if (browserName === 'Chrome' && nav?.brave)
+    browserName = 'Brave';
+  const browserMajorRaw = browserVersion ? Number.parseInt(browserVersion.split('.')[0], 10) : null;
+  const browserMajor = Number.isFinite(browserMajorRaw ?? NaN) ? browserMajorRaw : null;
+  let osName = canonicalPlatformName(uaHints?.platform ?? null) ?? null;
+  let osVersion = uaHints?.platformVersion ?? null;
+  const winMatch = /windows nt ([\d.]+)/i.exec(uaString);
+  if (winMatch) {
+    osName = 'Windows';
+    const versionMap = {
+      '10.0': '10/11',
+      '6.3': '8.1',
+      '6.2': '8',
+      '6.1': '7',
+      '6.0': 'Vista',
+      '5.1': 'XP',
+    };
+    osVersion = versionMap[winMatch[1]] ?? osVersion;
+    if (!osVersion && uaHints?.platformVersion) {
+      const parsed = Number.parseInt((uaHints.platformVersion.split('.')[0] ?? ''), 10);
+      if (Number.isFinite(parsed)) {
+        if (parsed >= 15)
+          osVersion = '11';
+        else if (parsed === 14)
+          osVersion = '10';
+      }
+    }
+  }
+  const macMatch = /mac os x (\d+[_.\d]*)/i.exec(uaString);
+  if (macMatch) {
+    osName = 'macOS';
+    osVersion = macMatch[1].replace(/_/g, '.');
+  }
+  const ipadMatch = /ipad(?:;|).*?os (\d+[_.\d]*)/i.exec(uaString);
+  if (ipadMatch) {
+    osName = 'iPadOS';
+    osVersion = ipadMatch[1].replace(/_/g, '.');
+  }
+  const iphoneMatch = /iphone(?: os)? (\d+[_.\d]*)/i.exec(uaString);
+  if (iphoneMatch) {
+    osName = 'iOS';
+    osVersion = iphoneMatch[1].replace(/_/g, '.');
+  }
+  const androidMatch = /android (\d+[\.\d]*)/i.exec(uaString);
+  if (androidMatch) {
+    osName = 'Android';
+    osVersion = androidMatch[1];
+  }
+  if (/cros/i.test(uaString)) {
+    osName = 'ChromeOS';
+    osVersion = uaHints?.platformVersion ?? null;
+  }
+  if (/linux/i.test(uaString) && !osName)
+    osName = 'Linux';
+  let deviceClass = 'unknown';
+  if (/ipad|tablet/.test(lower))
+    deviceClass = 'tablet';
+  else if (/android/.test(lower) && !/mobile/.test(lower))
+    deviceClass = 'tablet';
+  else if (/mobi|iphone|ipod|android/.test(lower))
+    deviceClass = 'mobile';
+  else if (osName && ['windows', 'macos', 'linux', 'chromeos'].includes(osName.toLowerCase()))
+    deviceClass = 'desktop';
+  else if ((nav?.maxTouchPoints ?? 0) > 0 && deviceClass === 'unknown')
+    deviceClass = 'mobile';
+  return {
+    browserName,
+    browserVersion,
+    browserMajor,
+    osName,
+    osVersion,
+    deviceClass,
+    model: uaHints?.model ?? null,
+  };
+};
+const JA3_PROFILES = [
+  {
+    label: 'Chromium TLS 1.3',
+    browsers: ['chrome', 'edge', 'opera', 'vivaldi', 'brave', 'yandex browser', 'duckduckgo', 'samsung browser', 'arc', 'whale'],
+    minVersion: 110,
+    signature: '771,4865-4866-4867-49196-49200-49195-49199-52393-52392-49188-49192-49187-49191-49162-49172-156-157-47-53,0-11-10-35-16-23-65281-13-45-43-51-57-0-27-17513-2570-17516-18,29-23-24,0',
+    hash: 'e7d705a3286e19ea42f587b344ee6865',
+  },
+  {
+    label: 'Firefox TLS 1.3',
+    browsers: ['firefox'],
+    minVersion: 100,
+    signature: '771,4865-4866-4867-49196-49200-49195-49199-49188-49192-49162-49172-156-157-47-53,0-11-10-35-16-5-18-51-45-13-65281-43-23-17513-27,29-23-24,0',
+    hash: 'a66f8fd9dfb9e870bdb64a0e7a26b00a',
+  },
+  {
+    label: 'Safari 17+ (macOS)',
+    browsers: ['safari'],
+    minVersion: 17,
+    platformMatches: (info) => info.osName?.toLowerCase() === 'macos',
+    signature: '771,4865-4866-4867-49195-49199-49196-49200-49188-49192-49162-49172-49187-49191-156-157-47-53,0-11-10-35-16-5-18-13-51-45-65281-27-17513,29-23-24,0',
+    hash: '769f5f1f2b8ab51f5c0ee3c05f9d3ad0',
+  },
+  {
+    label: 'Safari 17+ (iOS/iPadOS)',
+    browsers: ['mobile safari', 'safari'],
+    minVersion: 17,
+    platformMatches: (info) => {
+      const os = info.osName?.toLowerCase();
+      return os === 'ios' || os === 'ipados';
+    },
+    signature: '771,4865-4866-4867-49195-49199-49196-49200-49188-49192-49162-49172-49187-49191-156-157-47-53,0-11-10-35-16-5-18-13-45-51-27-17513,29-23-24,0',
+    hash: '0a4a7e03659bc0cb6a75d6a5b51a35a4',
+  },
+];
+const estimateJa3Fingerprint = (info) => {
+  const browser = info.browserName.toLowerCase();
+  for (const profile of JA3_PROFILES) {
+    if (!profile.browsers.includes(browser))
+      continue;
+    if (profile.minVersion && (info.browserMajor ?? -Infinity) < profile.minVersion)
+      continue;
+    if (profile.maxVersion && (info.browserMajor ?? Infinity) > profile.maxVersion)
+      continue;
+    if (profile.platformMatches && !profile.platformMatches(info))
+      continue;
+    return { hash: profile.hash, signature: profile.signature, profile: profile.label };
+  }
+  return { hash: null, signature: null, profile: null };
+};
+function buildUaParserFinding(info) {
+  const browserLabel = [info.browserName, info.browserVersion].filter(Boolean).join(' ').trim() || 'Browser unknown';
+  const osLabel = [info.osName, info.osVersion].filter(Boolean).join(' ').trim() || 'OS unknown';
+  const deviceLabel = normalizeDeviceClass(info.deviceClass);
+  let value = `${browserLabel} on ${osLabel}`;
+  if (deviceLabel && deviceLabel !== 'Unknown device')
+    value = `${value} (${deviceLabel})`;
+  if (info.model)
+    value = `${value}, model ${info.model}`;
+  const evidence = [`browser=${browserLabel}`, `os=${osLabel}`, `device=${deviceLabel}`];
+  if (info.model)
+    evidence.push(`model=${info.model}`);
+  return {
+    key: 'browser.uaDetailed',
+    label: 'User-Agent parser',
+    value,
+    confidence: value.includes('unknown') ? 0.3 : 0.6,
+    evidence,
+    method: 'observation',
+    limitations: 'Derived from UA string and high-entropy hints; spoofing or privacy protections may change the reported values.',
+  };
+}
+function buildTlsJa3Finding(info) {
+  const estimate = estimateJa3Fingerprint(info);
+  const browserLabel = [info.browserName, info.browserVersion].filter(Boolean).join(' ').trim() || 'browser unknown';
+  const osLabel = [info.osName, info.osVersion].filter(Boolean).join(' ').trim() || 'os unknown';
+  const evidence = [`browser=${browserLabel}`, `os=${osLabel}`];
+  if (info.deviceClass && info.deviceClass !== 'unknown')
+    evidence.push(`device=${info.deviceClass}`);
+  if (estimate.profile)
+    evidence.push(`profile=${estimate.profile}`);
+  if (estimate.signature)
+    evidence.push(`sig=${truncate(estimate.signature, 90)}`);
+  if (estimate.hash)
+    evidence.push(`ja3=${estimate.hash}`);
+  if (!estimate.hash) {
+    return {
+      key: 'network.tlsJa3',
+      label: 'TLS JA3 fingerprint',
+      value: 'JA3 fingerprint could not be estimated locally.',
+      confidence: 0.2,
+      evidence,
+      method: 'inference',
+      limitations: 'Estimated locally from UA hints; actual TLS handshakes may differ when routed through VPNs or proxies.',
+    };
+  }
+  const profileNote = estimate.profile ? ` — typical for ${estimate.profile}` : '';
+  const summary = `Estimated JA3 ${estimate.hash}${profileNote}.`;
+  return {
+    key: 'network.tlsJa3',
+    label: 'TLS JA3 fingerprint',
+    value: summary || estimate.hash,
+    confidence: 0.55,
+    evidence,
+    method: 'inference',
+    limitations: 'Signature derived from common TLS client profiles; anti-fingerprinting layers or intermediaries may override it.',
+  };
+}
+const extractHeadersFromBasic = (basic) => {
+  if (!basic || typeof basic !== 'object')
+    return null;
+  const server = basic.server;
+  if (!server || typeof server !== 'object')
+    return null;
+  const headersRaw = server.headers;
+  if (!headersRaw || typeof headersRaw !== 'object')
+    return null;
+  const entries = Object.entries(headersRaw);
+  if (!entries.length)
+    return null;
+  const normalized = {};
+  for (const [key, value] of entries) {
+    if (value == null)
+      continue;
+    const str = Array.isArray(value) ? value.map((item) => String(item)).join(', ') : String(value);
+    normalized[key.toLowerCase()] = str;
+  }
+  return normalized;
+};
+function buildRequestHeadersFinding(basic) {
+  const headers = extractHeadersFromBasic(basic);
+  const serverAttached = Boolean(basic && typeof basic === 'object' && basic && basic.server);
+  if (!headers) {
+    return {
+      key: 'network.requestHeaders',
+      label: 'HTTPS headers viewer',
+      value: serverAttached ? 'Headers probe returned no data.' : 'Headers unavailable (run IP scan)',
+      confidence: 0.2,
+      evidence: [],
+      method: 'observation',
+      limitations: 'Requires the optional /headers probe; no header data leaves your browser during this check.',
+    };
+  }
+  const interesting = [
+    ['accept', 'Accept'],
+    ['accept-language', 'Accept-Language'],
+    ['referer', 'Referer'],
+    ['origin', 'Origin'],
+    ['content-security-policy', 'CSP'],
+    ['sec-fetch-site', 'Sec-Fetch-Site'],
+    ['sec-fetch-mode', 'Sec-Fetch-Mode'],
+    ['sec-fetch-dest', 'Sec-Fetch-Dest'],
+    ['sec-ch-ua', 'Sec-CH-UA'],
+    ['sec-ch-ua-platform', 'Sec-CH-UA-Platform'],
+    ['sec-ch-ua-mobile', 'Sec-CH-UA-Mobile'],
+  ];
+  const evidence = [];
+  const summaryPieces = [];
+  for (const [key, label] of interesting) {
+    const value = headers[key];
+    if (!value)
+      continue;
+    const clean = truncate(value, 90);
+    evidence.push(`${label}: ${clean}`);
+    if (['accept', 'referer', 'origin', 'content-security-policy'].includes(key))
+      summaryPieces.push(`${label}: ${truncate(value, 60)}`);
+  }
+  if (!summaryPieces.length)
+    summaryPieces.push('Headers captured');
+  return {
+    key: 'network.requestHeaders',
+    label: 'HTTPS headers viewer',
+    value: summaryPieces.join(' • '),
+    confidence: 0.45,
+    evidence,
+    method: 'observation',
+    limitations: 'Headers shown reflect the latest local /headers fetch; proxies or privacy filters may rewrite them en route.',
+  };
+}
+const ICE_GATHER_TIMEOUT_MS = 1500;
+const parseIceCandidate = (candidate) => {
+  const parts = candidate.trim().split(' ');
+  const details = {};
+  if (parts.length > 4)
+    details.address = parts[4];
+  const typeIndex = parts.indexOf('typ');
+  if (typeIndex >= 0 && parts[typeIndex + 1])
+    details.type = parts[typeIndex + 1];
+  return details;
+};
+const isIpAddress = (address) => /^(?:\d{1,3}\.){3}\d{1,3}$/.test(address) || address.includes('::') || /^[0-9a-f:]+$/i.test(address);
+const isPrivateIp = (address) => {
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(address)) {
+    const parts = address.split('.').map((item) => Number.parseInt(item, 10));
+    if (parts.length !== 4 || parts.some((item) => Number.isNaN(item)))
+      return false;
+    if (parts[0] === 10)
+      return true;
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31)
+      return true;
+    if (parts[0] === 192 && parts[1] === 168)
+      return true;
+    if (parts[0] === 169 && parts[1] === 254)
+      return true;
+    return false;
+  }
+  const lower = address.toLowerCase();
+  return lower.startsWith('fc') || lower.startsWith('fd') || lower.startsWith('fe80');
+};
+async function collectWebRtcLeakSignals() {
   if (typeof window === 'undefined')
     return null;
   const RTCPeer = window.RTCPeerConnection;
@@ -837,38 +1285,37 @@ async function runWebRtcLeakTest() {
   let pc = null;
   const candidates = new Set();
   try {
-    pc = new RTCPeer({ iceServers: [] });
+    pc = new RTCPeer({ iceServers: [], iceCandidatePoolSize: 1 });
     if (pc.createDataChannel) {
       try {
-        pc.createDataChannel('probe');
+        pc.createDataChannel('probe', { negotiated: true, id: 0 });
       }
       catch (error) {
         console.debug('RTC data channel failed', error);
       }
     }
     const gatherPromise = new Promise((resolve) => {
-      let resolved = false;
-      const finish = () => {
-        if (!resolved) {
-          resolved = true;
-          resolve(candidates);
+      let finished = false;
+      const settle = () => {
+        if (!finished) {
+          finished = true;
+          resolve();
         }
       };
-      const timer = setTimeout(finish, 1500);
+      const timer = setTimeout(settle, ICE_GATHER_TIMEOUT_MS);
       const handleCandidate = (event) => {
         if (event.candidate && event.candidate.candidate) {
           candidates.add(event.candidate.candidate);
         }
         else {
           clearTimeout(timer);
-          finish();
+          settle();
         }
       };
       if (pc) {
         pc.onicecandidate = handleCandidate;
-        if (typeof pc.addEventListener === 'function') {
+        if (typeof pc.addEventListener === 'function')
           pc.addEventListener('icecandidate', handleCandidate);
-        }
       }
     });
     const offer = await pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false });
@@ -885,37 +1332,123 @@ async function runWebRtcLeakTest() {
       console.debug('WebRTC close failed', error);
     }
   }
-  const ips = new Set();
+  if (!candidates.size)
+    return { candidates: [], addresses: [], maskedHostnames: [], candidateTypes: [] };
+  const addresses = new Set();
+  const masked = new Set();
   const types = new Set();
   candidates.forEach((candidate) => {
-    const parts = candidate.split(' ');
-    if (parts.length > 4) {
-      ips.add(parts[4]);
-      const typeIndex = parts.indexOf('typ');
-      if (typeIndex >= 0 && parts[typeIndex + 1])
-        types.add(parts[typeIndex + 1]);
+    const details = parseIceCandidate(candidate);
+    if (details.type)
+      types.add(details.type);
+    if (details.address) {
+      if (details.address.toLowerCase().includes('local'))
+        masked.add(details.address);
+      else
+        addresses.add(details.address);
     }
   });
+  return {
+    candidates: Array.from(candidates),
+    addresses: Array.from(addresses),
+    maskedHostnames: Array.from(masked),
+    candidateTypes: Array.from(types),
+  };
+}
+function buildWebRtcFinding(signals) {
+  if (!signals) {
+    return {
+      key: 'network.webrtcLeak',
+      label: 'WebRTC leak test',
+      value: 'Unavailable (RTCPeerConnection not supported)',
+      confidence: 0.2,
+      evidence: [],
+      method: 'observation',
+      limitations: 'WebRTC APIs disabled or unsupported; leak status cannot be measured locally.',
+    };
+  }
   const evidence = [];
-  evidence.push(`candidates=${candidates.size}`);
-  if (types.size)
-    evidence.push(`types=${Array.from(types).join('/')}`);
-  if (ips.size)
-    evidence.push(`ips=${Array.from(ips).join(',')}`);
-  let value = 'No local WebRTC addresses observed';
-  let confidence = 0.5;
-  if (Array.from(types).some((type) => type === 'host' || type === 'srflx')) {
-    value = 'Local/WebRTC IP exposure detected (hypothesis)';
+  evidence.push(`ICE candidates=${signals.candidates.length}`);
+  if (signals.candidateTypes.length)
+    evidence.push(`Types ${signals.candidateTypes.join('/')}`);
+  if (signals.addresses.length)
+    evidence.push(`IPs ${truncate(signals.addresses.join(', '), 70)}`);
+  if (signals.maskedHostnames.length)
+    evidence.push(`mDNS ${truncate(signals.maskedHostnames.join(', '), 70)}`);
+  const leakTypes = signals.candidateTypes.filter((type) => type === 'host' || type === 'srflx');
+  const exposesRealIp = signals.addresses.some((address) => isIpAddress(address) && !address.toLowerCase().includes('local'));
+  const candidateCount = signals.candidates.length;
+  const typeLabel = Array.from(new Set(leakTypes)).join('/') || 'relay';
+  const candidateSuffix = candidateCount ? ` (${candidateCount} entr${candidateCount === 1 ? 'y' : 'ies'})` : '';
+  let value = candidateCount === 0 ? 'WebRTC disabled or blocked — no ICE candidates.' : `No direct leak: relay-only candidates${candidateSuffix}.`;
+  let confidence = candidateCount === 0 ? 0.3 : 0.5;
+  if (leakTypes.length && exposesRealIp) {
+    value = `Potential leak: WebRTC exposed your network IP via ${typeLabel} candidates${candidateSuffix}.`;
+    confidence = 0.75;
+  }
+  else if (signals.maskedHostnames.length && !signals.addresses.length) {
+    value = `No leak: only masked mDNS hostnames returned${candidateSuffix}.`;
     confidence = 0.6;
+  }
+  else if (leakTypes.length) {
+    value = `WebRTC gathered ${typeLabel} candidates but only obfuscated addresses${candidateSuffix}.`;
+    confidence = 0.55;
   }
   return {
     key: 'network.webrtcLeak',
-    label: 'WebRTC / DNS leak test',
+    label: 'WebRTC leak test',
     value,
     confidence,
     evidence,
     method: 'measurement',
-    limitations: 'Modern browsers restrict ICE details; this probe checks only local candidates without sending data to servers.',
+    limitations: 'Modern browsers limit ICE details; the probe inspects only locally gathered candidates with no external servers.',
+  };
+}
+function buildDnsLeakFinding(signals) {
+  if (!signals) {
+    return {
+      key: 'network.dnsLeak',
+      label: 'DNS leak test',
+      value: 'Unavailable (WebRTC not supported)',
+      confidence: 0.2,
+      evidence: [],
+      method: 'observation',
+      limitations: 'DNS leak heuristic relies on WebRTC ICE candidates and cannot run without WebRTC support.',
+    };
+  }
+  const evidence = [];
+  if (signals.candidates.length)
+    evidence.push(`ICE candidates=${signals.candidates.length}`);
+  if (signals.addresses.length)
+    evidence.push(`IPs ${truncate(signals.addresses.join(', '), 70)}`);
+  if (signals.maskedHostnames.length)
+    evidence.push(`mDNS ${truncate(signals.maskedHostnames.join(', '), 70)}`);
+  if (signals.candidateTypes.length)
+    evidence.push(`Types ${signals.candidateTypes.join('/')}`);
+  const publicIps = signals.addresses.filter((address) => isIpAddress(address) && !isPrivateIp(address));
+  const localIps = signals.addresses.filter((address) => isIpAddress(address) && isPrivateIp(address));
+  let value = !signals.candidates.length ? 'WebRTC inactive — DNS exposure unknown.' : 'No DNS servers revealed by WebRTC candidates.';
+  let confidence = !signals.candidates.length ? 0.3 : 0.5;
+  if (signals.maskedHostnames.length && !signals.addresses.length) {
+    value = 'Only masked mDNS hostnames returned — DNS appears hidden.';
+    confidence = 0.55;
+  }
+  else if (publicIps.length) {
+    value = `Potential DNS leak: public resolvers visible (${truncate(publicIps.join(', '), 60)}).`;
+    confidence = 0.7;
+  }
+  else if (localIps.length) {
+    value = `Local network resolvers visible via ICE (${truncate(localIps.join(', '), 60)}).`;
+    confidence = 0.6;
+  }
+  return {
+    key: 'network.dnsLeak',
+    label: 'DNS leak test',
+    value,
+    confidence,
+    evidence,
+    method: 'measurement',
+    limitations: 'Assesses DNS leakage heuristically from WebRTC ICE results; does not contact external resolvers or log data.',
   };
 }
 function buildGuaranteeFinding() {
@@ -1084,6 +1617,7 @@ async function collectNetworkSignals() {
 export async function runProfiling(ip) {
   const basic = collectBasicFromGlobal();
   const ua = await collectUaHighEntropy();
+  const parsedUa = parseUserAgentDetailed(ua);
   const renderer = typeof document !== 'undefined' ? detectGlRenderer() : null;
   const deviceSignals = collectDeviceSignals(ua);
   const languages = collectLanguages();
@@ -1102,9 +1636,11 @@ export async function runProfiling(ip) {
     findings.push(modelFinding);
   findings.push(inferOS({ ua, userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '' }));
   findings.push(inferBrowser({ ua, brands: ua?.fullVersionList ?? navigator.userAgentData?.brands }));
+  findings.push(buildUaParserFinding(parsedUa));
   const networkFinding = buildNetworkFinding(networkSignals);
   if (networkFinding)
     findings.push(networkFinding);
+  findings.push(buildTlsJa3Finding(parsedUa));
   const vpnFeatures = buildVpnFeatures(ip, networkSignals, deviceFinding, timeZone);
   findings.push(buildVpnFinding(vpnFeatures.probability, vpnFeatures.evidence));
   findings.push(buildLocationFinding(timeZone, languages, ip));
@@ -1127,9 +1663,14 @@ export async function runProfiling(ip) {
   const adblockFinding = detectAdBlocker();
   if (adblockFinding)
     findings.push(adblockFinding);
-  const webrtcFinding = await runWebRtcLeakTest();
+  findings.push(buildRequestHeadersFinding(basic));
+  const webRtcSignals = await collectWebRtcLeakSignals();
+  const webrtcFinding = buildWebRtcFinding(webRtcSignals);
   if (webrtcFinding)
     findings.push(webrtcFinding);
+  const dnsLeakFinding = buildDnsLeakFinding(webRtcSignals);
+  if (dnsLeakFinding)
+    findings.push(dnsLeakFinding);
   const uaDumpEvidence = ua?.fullVersionList?.map((item) => `${item.brand} ${item.version}`) ?? navigator.userAgentData?.brands?.map((item) => `${item.brand} ${item.version}`) ?? [];
   findings.push({
     key: 'browser.uaCh',

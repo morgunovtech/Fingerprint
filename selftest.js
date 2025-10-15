@@ -275,7 +275,7 @@ const availableFonts = new Set(['Arial', 'Roboto', 'Times New Roman']);
 
 const elements = new Map();
 const elementIds = [
-  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqPracticeTitle','uniqPracticeList','uniqRisksTitle','uniqRisksList','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
+  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
 ];
 
 for (const id of elementIds) {
@@ -293,9 +293,7 @@ elements.get('themeBtn').tagName = 'BUTTON';
 elements.get('langMenu').tagName = 'DIV';
 elements.get('themeMenu').tagName = 'DIV';
 elements.get('shockSection').tagName = 'SECTION';
-elements.get('uniqPracticeList').tagName = 'UL';
-elements.get('uniqRisksList').tagName = 'UL';
-elements.get('uniqAdvice').tagName = 'UL';
+elements.get('uniqAdvice').tagName = 'OL';
 elements.get('shockList').tagName = 'UL';
 elements.get('profilingSummary').tagName = 'DIV';
 
@@ -888,10 +886,11 @@ const I18N = vm.runInContext('I18N', sandbox);
   let englishShock = '';
   for (let i = 0; i < 200; i += 1) {
     englishShock = collectShockText().join(' ');
-    if (/Time zone & clock/i.test(englishShock)) break;
+    if (/Country:/i.test(englishShock) && /Time zone, time & date/i.test(englishShock)) break;
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  assert.ok(/Time zone & clock/i.test(englishShock));
+  assert.ok(/Country:/i.test(englishShock));
+  assert.ok(/Time zone, time & date/i.test(englishShock));
   await sandbox.render('uz');
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(documentElement.lang, 'uz');
@@ -900,10 +899,11 @@ const I18N = vm.runInContext('I18N', sandbox);
   let uzbekShock = '';
   for (let i = 0; i < 200; i += 1) {
     uzbekShock = collectShockText().join(' ');
-    if (/Vaqt mintaqasi va soat/i.test(uzbekShock)) break;
+    if (/Mamlakat:/i.test(uzbekShock) && /Vaqt zonasi, vaqt va sana/i.test(uzbekShock)) break;
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  assert.ok(/Vaqt mintaqasi va soat/i.test(uzbekShock));
+  assert.ok(/Mamlakat:/i.test(uzbekShock));
+  assert.ok(/Vaqt zonasi, vaqt va sana/i.test(uzbekShock));
   await sandbox.detectIpAndSpeed();
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));
