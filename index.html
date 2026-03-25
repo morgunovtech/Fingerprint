@@ -129,7 +129,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Fingerprint</h1><span class="sub">by <a href="https://start.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a></span>
+    <h1>Fingerprint</h1><span class="sub">by <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a></span>
     <div class="toolbar">
       <div class="lang-switcher menu">
         <button class="btn" id="langBtn" aria-haspopup="true" aria-expanded="false">Язык</button>
@@ -157,25 +157,25 @@
     <div id="introText" class="small"></div>
   </section>
 
-  <!-- Block 2: Shock findings -->
+  <!-- Block 2: Shock findings + uniqueness verdict -->
   <section class="block danger-block" id="shockSection" style="display:none">
     <div class="section-title" id="shockTitle"></div>
     <div id="shock" style="display:none">
       <ul id="shockList" class="shock-insights"></ul>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
-      <div class="shock-footer">
+      <!-- Uniqueness verdict inside shock block -->
+      <div id="uniqLine" class="big" style="margin-top:16px"></div>
+      <div id="uniqVerdict" class="small" style="margin:6px 0 10px;padding:8px 12px;border-radius:8px"></div>
+      <div id="uniqOutcome" class="small"></div>
+      <div class="shock-footer" style="gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn" id="printBtn"></button>
       </div>
     </div>
   </section>
 
-  <!-- Block 3: Uniqueness -->
+  <!-- Block 3: Uniqueness details (practice, risks, advice) -->
   <section class="block" id="uniqBlock">
-    <div id="uniqLine" class="big"></div>
-    <div id="uniqOutcome" class="small"></div>
-    <div class="row shock-actions" id="uniqActions">
-      <button class="btn btn-primary" id="shareBtn"></button>
-    </div>
     <p id="uniqWarning" class="uniq-note"></p>
     <div id="uniqPracticeTitle" class="section-subtitle small"></div>
     <ul id="uniqPracticeList" class="advice-list small"></ul>
@@ -204,7 +204,7 @@
   </section>
 
   <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
-    © <a href="https://start.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: 2025-10-07 • <a href="https://t.me/raschet7" target="_blank" rel="noopener">Telegram</a> • <a href="https://start.morgunov.tech" target="_blank" rel="noopener">start.morgunov.tech</a>
+    © <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: 2025-10-07 • <a href="https://t.me/raschet7" target="_blank" rel="noopener">Telegram</a> • <a href="https://s.morgunov.tech" target="_blank" rel="noopener">start.morgunov.tech</a>
   </footer>
 </div>
 
@@ -219,7 +219,7 @@
 </div>
 
 <script>
-const PERSONAL_URL='https://start.morgunov.tech';
+const PERSONAL_URL='https://s.morgunov.tech';
 const TELEGRAM_URL='https://t.me/raschet7';
 
 /* ================= I18N ================= */
@@ -360,8 +360,8 @@ const I18N = {
       browser:(name,perms)=>`\uD83C\uDF10 \u0411\u0440\u0430\u0443\u0437\u0435\u0440: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 \u0412\u0430\u0448\u0435 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435: <code>${parts}</code>`,
       adblock:'\uD83D\uDEE1\uFE0F \u0412\u044b \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0435 \u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0449\u0438\u043a \u0440\u0435\u043a\u043b\u0430\u043c\u044b',
-      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC-утечка</b>: ваш локальный IP <code>${localIp}</code> виден — VPN его не скрывает`,
-      webrtcSafe:'\uD83D\uDD12 WebRTC-утечка не обнаружена',
+      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC-утечка</b>: ваш локальный IP <code>${localIp}</code> виден — VPN его не скрывает<br><small style="opacity:.7">WebRTC — технология для звонков в браузере; она может раскрыть ваш настоящий IP в обход VPN</small>`,
+      webrtcSafe:'\uD83D\uDD12 WebRTC-утечка не обнаружена <small style="opacity:.7">— технология звонков в браузере не раскрывает ваш IP</small>',
       webrtcUnavailable:'\u2753 WebRTC: не удалось проверить',
       canvas:(hash)=>`\uD83C\uDFA8 \u0423 \u0432\u0430\u0448\u0435\u0433\u043e \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430 \u0435\u0441\u0442\u044c \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0433\u0440\u0430\u0444\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043e\u043a <code>${hash}</code> \u2014 \u043f\u043e \u043d\u0435\u043c\u0443 \u0432\u0430\u0441 \u043c\u043e\u0436\u043d\u043e \u0443\u0437\u043d\u0430\u0442\u044c \u043d\u0430 \u043b\u044e\u0431\u043e\u043c \u0441\u0430\u0439\u0442\u0435 \u0431\u0435\u0437 cookies`,
       languages:(flags,inference)=>`\uD83C\uDF10 \u042f\u0437\u044b\u043a\u0438: ${flags}${inference?' \u2014 '+inference:''}`,
@@ -786,8 +786,8 @@ const I18N = {
       browser:(name,perms)=>`\uD83C\uDF10 Browser: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 Your connection: <code>${parts}</code>`,
       adblock:"\uD83D\uDEE1\uFE0F You\u2019re using an ad blocker",
-      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC leak</b>: your local IP <code>${localIp}</code> is visible \u2014 your VPN doesn\u2019t hide it`,
-      webrtcSafe:'\uD83D\uDD12 No WebRTC leak detected',
+      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC leak</b>: your local IP <code>${localIp}</code> is visible \u2014 your VPN doesn\u2019t hide it<br><small style="opacity:.7">WebRTC is a browser calling technology that can reveal your real IP even behind a VPN</small>`,
+      webrtcSafe:'\uD83D\uDD12 No WebRTC leak detected <small style="opacity:.7">\u2014 browser calling tech is not exposing your IP</small>',
       webrtcUnavailable:'\u2753 WebRTC: could not check',
       canvas:(hash)=>`\uD83C\uDFA8 Your browser has a unique graphic fingerprint <code>${hash}</code> \u2014 it can identify you on any site without cookies`,
       languages:(flags,inference)=>`\uD83C\uDF10 Languages: ${flags}${inference?' \u2014 '+inference:''}`,
@@ -1179,8 +1179,8 @@ const I18N = {
       browser:(name,perms)=>`\uD83C\uDF10 Brauzer: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 Aloqangiz: <code>${parts}</code>`,
       adblock:"\uD83D\uDEE1\uFE0F Siz reklama bloklagichidan foydalanasiz",
-      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC oqishi</b>: lokal IP <code>${localIp}</code> ko\u02BBrinmoqda \u2014 VPN uni yashirmaydi`,
-      webrtcSafe:'\uD83D\uDD12 WebRTC oqishi aniqlanmadi',
+      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC oqishi</b>: lokal IP <code>${localIp}</code> ko\u02BBrinmoqda \u2014 VPN uni yashirmaydi<br><small style="opacity:.7">WebRTC \u2014 brauzerda qo\u02BBng\u02BBiroq qilish texnologiyasi; u VPN orqasida ham haqiqiy IP ni ochishi mumkin</small>`,
+      webrtcSafe:'\uD83D\uDD12 WebRTC oqishi aniqlanmadi <small style="opacity:.7">\u2014 brauzer qo\u02BBng\u02BBiroq texnologiyasi IP ni ochmaydi</small>',
       webrtcUnavailable:'\u2753 WebRTC: tekshirib bo\u02BBlmadi',
       canvas:(hash)=>`\uD83C\uDFA8 Brauzeringizda noyob grafik barmoq izi bor <code>${hash}</code> \u2014 u orqali sizni istalgan saytda cookie\u2019siz tanib olishadi`,
       languages:(flags,inference)=>`\uD83C\uDF10 Tillar: ${flags}${inference?' \u2014 '+inference:''}`,
@@ -3612,7 +3612,8 @@ async function render(lang){
   }
   const langBtn=getEl('langBtn');
   if(langBtn){
-    langBtn.textContent=t.langButton||'Language';
+    const langFlags={ru:'\uD83C\uDDF7\uD83C\uDDFA',en:'\uD83C\uDDEC\uD83C\uDDE7',uz:'\uD83C\uDDFA\uD83C\uDDFF'};
+    langBtn.textContent=(langFlags[currentLang]||'')+' '+(t.langButton||'Language');
     langBtn.setAttribute('aria-label',t.langButton||'Language');
   }
   const langMenu=getEl('langMenu');
@@ -3699,6 +3700,33 @@ async function render(lang){
     codeSpan.textContent=uniqCopy.headline;
     headSpan.appendChild(codeSpan);
     uniqLineEl.appendChild(headSpan);
+
+    const verdictEl=getEl('uniqVerdict');
+    if(verdictEl){
+      const verdictTexts={
+        high:{
+          ru:'Ваш отпечаток очень уникален. Сайты могут легко узнать вас без cookies и регистрации — достаточно пары совпадающих сигналов.',
+          en:'Your fingerprint is highly unique. Websites can easily recognise you without cookies or sign-up \u2014 just a few matching signals are enough.',
+          uz:'Barmoq izingiz juda noyob. Saytlar sizni cookie va ro\u02BByxatdan o\u02BBtishsiz ham osongina tanishi mumkin.'
+        },
+        med:{
+          ru:'Ваш отпечаток умеренно уникален. Вас сложнее отследить, но при добавлении IP или cookies — риск растёт.',
+          en:'Your fingerprint is moderately unique. Harder to track, but adding IP or cookies increases the risk.',
+          uz:'Barmoq izingiz o\u02BBrtacha noyob. Kuzatish qiyinroq, lekin IP yoki cookie qo\u02BBshilsa xavf oshadi.'
+        },
+        low:{
+          ru:'Ваш отпечаток мало отличим. Вы неплохо защищены, но редкие плагины или шрифты могут вас выдать.',
+          en:'Your fingerprint blends in well. You are fairly protected, but rare plugins or fonts could still single you out.',
+          uz:'Barmoq izingiz kam ajralib turadi. Yaxshi himoyalangansiz, lekin noodatiy kengaytmalar sizni ajratishi mumkin.'
+        }
+      };
+      const colors={high:'rgba(220,38,38,.12)',med:'rgba(234,179,8,.12)',low:'rgba(34,197,94,.12)'};
+      const borders={high:'1px solid rgba(220,38,38,.3)',med:'1px solid rgba(234,179,8,.3)',low:'1px solid rgba(34,197,94,.3)'};
+      verdictEl.textContent=verdictTexts[level]?.[currentLang]||verdictTexts[level]?.ru||'';
+      verdictEl.style.background=colors[level]||'';
+      verdictEl.style.border=borders[level]||'';
+      verdictEl.style.display=verdictEl.textContent?'block':'none';
+    }
 
     const warningEl=getEl('uniqWarning');
     if(uniqCopy.warning){
