@@ -233,6 +233,13 @@
       details>summary{list-style:none;font-weight:700}
       .rec-card{break-inside:avoid}
     }
+    .tracker-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle,var(--border));font-size:14px}
+    .tracker-row:last-child{border-bottom:none}
+    .tracker-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;flex-shrink:0}
+    .tracker-badge--blocked{background:var(--success-bg,rgba(34,197,94,.1));color:var(--success,#22c55e)}
+    .tracker-badge--open{background:var(--danger-bg,rgba(239,68,68,.1));color:var(--danger,#ef4444)}
+    .tracker-name{flex:1;color:var(--text)}
+    .tracker-verdict{margin-top:12px;padding:12px 16px;border-radius:var(--radius-md,10px);background:var(--bg-raised,#F3F4F6);font-size:14px;line-height:1.5}
   </style>
 </head>
 <body>
@@ -295,6 +302,13 @@
       </div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
+  </section>
+
+  <!-- Tracker protection tests -->
+  <section class="block" id="trackerSection" style="display:none">
+    <h2 class="section-heading" id="trackerTitle"></h2>
+    <div id="trackerResults"></div>
+    <div id="trackerVerdict" class="tracker-verdict"></div>
   </section>
 
   <section class="block implications-block" id="implicationsBlock">
@@ -482,6 +496,19 @@ const I18N = {
       fallback6:'Регулярно проверяйте настройки контент-блокеров и разрешений, чтобы они не включались сами собой.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    trackers:{
+      title:'Защита от трекеров',
+      pixel:{name:'Рекламный пиксель',blocked:'Заблокирован',open:'Не заблокирован'},
+      analytics:{name:'Скрипт аналитики',blocked:'Заблокирован',open:'Не заблокирован'},
+      iframe:{name:'Рекламный фрейм',blocked:'Заблокирован',open:'Не заблокирован'},
+      dnt:{name:'Do Not Track',blocked:'Включён',open:'Выключен'},
+      gpc:{name:'Global Privacy Control',blocked:'Включён',open:'Выключен'},
+      verdict:function(blocked,total){
+        if(blocked>=4) return 'Отличная защита: '+blocked+' из '+total+' трекеров заблокированы. Ваш браузер хорошо настроен.';
+        if(blocked>=2) return 'Частичная защита: '+blocked+' из '+total+' трекеров заблокированы. Установите uBlock Origin для полной защиты.';
+        return 'Слабая защита: только '+blocked+' из '+total+' трекеров заблокированы. Настоятельно рекомендуем установить uBlock Origin.';
+      }
+    },
     implications:{
       problemTitle:'Что происходит с вашими данными',
       problemText:'<p>Каждый раз, когда вы открываете сайт, браузер автоматически передаёт десятки характеристик — без вашего разрешения и без всплывающих окон. Сайты не хранят этот отпечаток у себя — они передают его рекламным сетям.</p><p>Рекламная сеть может присутствовать сразу на миллионах сайтов. Это значит, что один невидимый трекер молча следит за вами везде, где вы бываете в интернете — и собирает полную историю ваших интересов, покупок, маршрутов и привычек.</p><p>Этот профиль не удаляется, когда вы чистите cookies. Он не исчезает в режиме инкогнито. Он существует, пока существует ваш браузер и устройство.</p>',
@@ -1088,6 +1115,19 @@ const I18N = {
       fallback6:'Review blocker settings and permissions regularly so they do not silently re-enable themselves.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    trackers:{
+      title:'Tracker protection',
+      pixel:{name:'Ad tracking pixel',blocked:'Blocked',open:'Not blocked'},
+      analytics:{name:'Analytics script',blocked:'Blocked',open:'Not blocked'},
+      iframe:{name:'Ad frame',blocked:'Blocked',open:'Not blocked'},
+      dnt:{name:'Do Not Track',blocked:'Enabled',open:'Disabled'},
+      gpc:{name:'Global Privacy Control',blocked:'Enabled',open:'Disabled'},
+      verdict:function(blocked,total){
+        if(blocked>=4) return 'Excellent protection: '+blocked+' of '+total+' trackers blocked. Your browser is well configured.';
+        if(blocked>=2) return 'Partial protection: '+blocked+' of '+total+' trackers blocked. Install uBlock Origin for full protection.';
+        return 'Weak protection: only '+blocked+' of '+total+' trackers blocked. We strongly recommend installing uBlock Origin.';
+      }
+    },
     implications:{
       problemTitle:'What happens to your data',
       problemText:'<p>Every time you open a website, your browser automatically sends dozens of characteristics \u2014 without your permission and without any pop-ups. Sites do not store this fingerprint themselves \u2014 they pass it to ad networks.</p><p>An ad network can be present on millions of sites at once. That means a single invisible tracker silently follows you everywhere you go online \u2014 collecting a complete history of your interests, purchases, routes, and habits.</p><p>This profile is not deleted when you clear cookies. It does not disappear in incognito mode. It exists as long as your browser and device exist.</p>',
@@ -1661,6 +1701,19 @@ const I18N = {
       fallback6:'Bloklagich va ruxsat sozlamalarini vaqti-vaqti bilan tekshirib turing — ular o‘z-o‘zidan yoqilib ketmasin.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    trackers:{
+      title:"Trekerlardan himoya",
+      pixel:{name:"Reklama pikseli",blocked:"Bloklangan",open:"Bloklanmagan"},
+      analytics:{name:"Analitika skripti",blocked:"Bloklangan",open:"Bloklanmagan"},
+      iframe:{name:"Reklama freyimi",blocked:"Bloklangan",open:"Bloklanmagan"},
+      dnt:{name:"Do Not Track",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
+      gpc:{name:"Global Privacy Control",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
+      verdict:function(blocked,total){
+        if(blocked>=4) return "Ajoyib himoya: "+blocked+" dan "+total+" ta treker bloklangan. Brauzeringiz yaxshi sozlangan.";
+        if(blocked>=2) return "Qisman himoya: "+blocked+" dan "+total+" ta treker bloklangan. To\u02BBliq himoya uchun uBlock Origin o\u02BBrnating.";
+        return "Zaif himoya: faqat "+blocked+" dan "+total+" ta treker bloklangan. uBlock Origin o\u02BBrnatishni tavsiya qilamiz.";
+      }
+    },
     implications:{
       problemTitle:'Ma\u02BBlumotlaringizga nima bo\u02BBlmoqda',
       problemText:'<p>Har safar saytni ochganingizda, brauzer avtomatik ravishda o\u02BBnlab xususiyatlarni uzatadi \u2014 sizning ruxsatingizsiz va hech qanday oynalarsiz. Saytlar bu barmoq izini o\u02BBzlarida saqlamaydi \u2014 ular uni reklama tarmoqlariga uzatadi.</p><p>Reklama tarmog\u02BBi bir vaqtning o\u02BBzida millionlab saytlarda bo\u02BBlishi mumkin. Bu shuni anglatadiki, bitta ko\u02BBrinmas treker siz internetda qayerda bo\u02BBlsangiz, jimgina kuzatadi \u2014 va qiziqishlaringiz, xaridlaringiz, yo\u02BBllaringiz va odatlaringiz to\u02BBliq tarixini yig\u02BBadi.</p><p>Bu profil cookie fayllarini tozalaganingizda o\u02BBchirilmaydi. Inkognito rejimida yo\u02BBqolmaydi. Brauzeringiz va qurilmangiz mavjud ekan, u ham mavjud.</p>',
@@ -2937,6 +2990,111 @@ function percentileFromH(H){
   }
   const percentile=lo/H_DISTRIBUTION.length;
   return Math.min(100,Math.max(0,Math.round(percentile*100)));
+}
+
+/* ============== Tracker Tests ============== */
+let _trackerTestResults=null;
+
+async function runTrackerTests(){
+  if(typeof Image==='undefined') return [];
+  const results=[];
+
+  // Test 1: Tracking pixel (ad-like bait element)
+  results.push(await new Promise(resolve=>{
+    const img=new Image();
+    let done=false;
+    img.onload=()=>{if(!done){done=true;resolve({id:'pixel',blocked:false});}};
+    img.onerror=()=>{if(!done){done=true;resolve({id:'pixel',blocked:true});}};
+    const bait=document.createElement('div');
+    bait.className='ad_banner ad-banner adsbygoogle';
+    bait.style.cssText='width:1px;height:1px;position:absolute;left:-9999px;top:-9999px';
+    document.body.appendChild(bait);
+    setTimeout(()=>{
+      const blocked=bait.offsetHeight===0||bait.clientHeight===0||window.getComputedStyle(bait).display==='none'||window.getComputedStyle(bait).visibility==='hidden';
+      document.body.removeChild(bait);
+      if(!done){done=true;resolve({id:'pixel',blocked:blocked});}
+    },500);
+  }));
+
+  // Test 2: Analytics-like script element
+  results.push(await new Promise(resolve=>{
+    let done=false;
+    const el=document.createElement('div');
+    el.id='google_ads_frame';
+    el.className='adsbox';
+    el.style.cssText='width:1px;height:1px;position:absolute;left:-9999px;top:-9999px';
+    el.innerHTML='&nbsp;';
+    document.body.appendChild(el);
+    setTimeout(()=>{
+      const blocked=el.offsetHeight===0||el.clientHeight===0||window.getComputedStyle(el).display==='none';
+      document.body.removeChild(el);
+      if(!done){done=true;resolve({id:'analytics',blocked:blocked});}
+    },500);
+  }));
+
+  // Test 3: Third-party iframe bait
+  results.push(await new Promise(resolve=>{
+    const el=document.createElement('div');
+    el.className='ad-placement sponsored-banner';
+    el.style.cssText='width:1px;height:1px;position:absolute;left:-9999px;top:-9999px';
+    el.innerHTML='<span>ad</span>';
+    document.body.appendChild(el);
+    setTimeout(()=>{
+      const blocked=el.offsetHeight===0||window.getComputedStyle(el).display==='none';
+      document.body.removeChild(el);
+      resolve({id:'iframe',blocked:blocked});
+    },500);
+  }));
+
+  // Test 4: Do Not Track header
+  const dnt=navigator.doNotTrack==='1'||window.doNotTrack==='1';
+  results.push({id:'dnt',blocked:dnt});
+
+  // Test 5: Global Privacy Control
+  const gpc=navigator.globalPrivacyControl===true;
+  results.push({id:'gpc',blocked:gpc});
+
+  return results;
+}
+
+function renderTrackerTests(results,t){
+  const section=getEl('trackerSection');
+  const titleEl=getEl('trackerTitle');
+  const container=getEl('trackerResults');
+  const verdictEl=getEl('trackerVerdict');
+  if(!section||!container) return;
+
+  const tt=t.trackers;
+  if(!tt) return;
+
+  titleEl.textContent=tt.title;
+  container.innerHTML='';
+
+  let blockedCount=0;
+  const testKeys=['pixel','analytics','iframe','dnt','gpc'];
+
+  results.forEach(r=>{
+    const meta=tt[r.id];
+    if(!meta) return;
+    if(r.blocked) blockedCount++;
+    const row=document.createElement('div');
+    row.className='tracker-row';
+    const badge=document.createElement('span');
+    badge.className='tracker-badge '+(r.blocked?'tracker-badge--blocked':'tracker-badge--open');
+    badge.textContent=r.blocked?(meta.blocked):(meta.open);
+    const name=document.createElement('span');
+    name.className='tracker-name';
+    name.textContent=meta.name;
+    row.appendChild(badge);
+    row.appendChild(name);
+    container.appendChild(row);
+  });
+
+  if(verdictEl&&typeof tt.verdict==='function'){
+    verdictEl.textContent=tt.verdict(blockedCount,results.length);
+  }
+
+  section.style.display='';
 }
 
 /* ============== Collect ============== */
@@ -4877,6 +5035,7 @@ async function render(lang){
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
   renderProfilingSection(snapshotCache?.basic||null,t);
+  if(_trackerTestResults) renderTrackerTests(_trackerTestResults,t);
 
   try{
     const {basic,fp,H,pct}=await getSnapshot();
@@ -4981,6 +5140,16 @@ async function render(lang){
 
     renderShockBullets(basic,t,{fp,H,pct});
     renderImplications(basic,t);
+    // Run tracker tests in parallel with other profiling
+    if(!_trackerTestResults){
+      runTrackerTests().then(results=>{
+        _trackerTestResults=results;
+        const tNow=I18N[currentLang]||I18N.ru;
+        renderTrackerTests(results,tNow);
+      });
+    }else{
+      renderTrackerTests(_trackerTestResults,t);
+    }
     if(!state.serverData&&!state.ipFetchDone){
       autoFetchIp().then(()=>{
         state.ipFetchDone=true;
