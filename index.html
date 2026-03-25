@@ -124,6 +124,30 @@
       .big{gap:6px}
       .btn{width:100%;justify-content:center}
     }
+    .implications-block .section{margin-bottom:24px}
+    .implications-block .section-title{font-size:18px;font-weight:700;margin-bottom:12px}
+    .implications-block .body-text{line-height:1.7;color:var(--text)}
+    .implications-block .body-text p{margin:0 0 12px}
+    .risk-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:640px){.risk-cards-grid{grid-template-columns:1fr}}
+    .risk-card{padding:16px;border-radius:10px;border:1px solid var(--border);background:var(--card)}
+    .risk-card .risk-icon{font-size:24px;margin-bottom:6px}
+    .risk-card .risk-title{font-weight:700;margin-bottom:6px}
+    .risk-card .risk-body{font-size:14px;line-height:1.6;color:var(--muted)}
+    .rec-section-title{font-size:16px;font-weight:600;margin:16px 0 10px}
+    .rec-card{padding:14px 14px 14px 17px;border-radius:10px;border:1px solid var(--border);background:var(--card);margin-bottom:12px;border-left:3px solid var(--border)}
+    .rec-card--green{border-left-color:#22c55e}
+    .rec-card--yellow{border-left-color:#eab308}
+    .rec-card--red{border-left-color:#ef4444}
+    .rec-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .rec-icon{font-size:20px}
+    .rec-title{font-weight:700}
+    .rec-level{font-size:11px;padding:2px 6px;border-radius:4px;margin-left:auto;white-space:nowrap}
+    .rec-problem{font-size:14px;color:var(--muted);margin-bottom:8px}
+    .rec-steps{margin:0;padding:0;list-style:none}
+    .rec-step{margin:4px 0;font-size:14px}
+    .rec-step a{color:var(--accent)}
+    .step-how{display:block;font-size:13px;color:var(--muted);margin-top:2px}
   </style>
 </head>
 <body>
@@ -174,15 +198,23 @@
     </div>
   </section>
 
-  <!-- Block 3: Uniqueness details (practice, risks, advice) -->
-  <section class="block" id="uniqBlock">
-    <p id="uniqWarning" class="uniq-note"></p>
-    <div id="uniqPracticeTitle" class="section-subtitle small"></div>
-    <ul id="uniqPracticeList" class="advice-list small"></ul>
-    <div id="uniqRisksTitle" class="section-subtitle small"></div>
-    <ul id="uniqRisksList" class="advice-list small"></ul>
-    <div id="uniqAdviceTitle" class="section-subtitle small"></div>
-    <ul id="uniqAdvice" class="advice-list small"></ul>
+  <section class="block implications-block" id="implicationsBlock">
+    <!-- Section A: Problem -->
+    <div class="section section--problem">
+      <h2 class="section-title" id="implProblemTitle"></h2>
+      <div id="implProblemText" class="body-text"></div>
+    </div>
+    <!-- Section B: Risks -->
+    <div class="section section--risks">
+      <h2 class="section-title" id="implRisksTitle"></h2>
+      <div class="risk-cards-grid" id="implRisksGrid"></div>
+    </div>
+    <!-- Section C: Steps -->
+    <div class="section section--steps">
+      <h2 class="section-title" id="implStepsTitle"></h2>
+      <div id="personalRecs"></div>
+      <div id="generalRecs"></div>
+    </div>
   </section>
 
   <!-- Block 4: Detailed cards -->
@@ -346,6 +378,39 @@ const I18N = {
       fallback6:'Регулярно проверяйте настройки контент-блокеров и разрешений, чтобы они не включались сами собой.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    implications:{
+      problemTitle:'Что происходит с вашими данными',
+      problemText:'<p>Каждый раз, когда вы открываете сайт, браузер автоматически передаёт десятки характеристик — без вашего разрешения и без всплывающих окон. Сайты не хранят этот отпечаток у себя — они передают его рекламным сетям.</p><p>Рекламная сеть может присутствовать сразу на миллионах сайтов. Это значит, что один невидимый трекер молча следит за вами везде, где вы бываете в интернете — и собирает полную историю ваших интересов, покупок, маршрутов и привычек.</p><p>Этот профиль не удаляется, когда вы чистите cookies. Он не исчезает в режиме инкогнито. Он существует, пока существует ваш браузер и устройство.</p>',
+      risksTitle:'Чем это опасно лично для вас',
+      risks:[
+        {icon:'\uD83D\uDCB8',title:'Вы платите больше, чем другие',body:'Интернет-магазины и сервисы бронирования видят вашу модель устройства, браузер и поведение. Пользователям MacBook нередко показывают более высокие цены на авиабилеты и отели, чем пользователям бюджетных Android-устройств — это ценовая дискриминация, и она законна в большинстве стран.'},
+        {icon:'\uD83C\uDFAF',title:'Реклама знает о вас больше, чем ваши друзья',body:'На основе отпечатка рекламные системы знают, какие сайты вы посещали, что искали, когда не спали ночью и какие темы вас беспокоят. Эти данные используются не только для рекламы — страховые компании и работодатели покупают профили у брокеров данных.'},
+        {icon:'\uD83C\uDFA3',title:'Фишинг становится точнее',body:'Мошенники, купившие базу с вашим профилем, знают ваш город, провайдера, устройство и язык. Письмо, в котором упоминается ваш MacBook или аккаунт вашего провайдера, выглядит убедительно — именно так работают целевые фишинговые атаки.'},
+        {icon:'\uD83D\uDD13',title:'Режим инкогнито вас не защищает',body:'Большинство пользователей верят, что инкогнито = анонимность. Это не так. Режим инкогнито скрывает историю только от других людей на вашем устройстве. Ваш отпечаток, IP и все сигналы при этом остаются прежними — сайты видят вас точно так же.'},
+        {icon:'\uD83D\uDDC2\uFE0F',title:'Ваш профиль существует без вашего ведома',body:'Прямо сейчас в базах данных брокеров данных (Acxiom, Oracle Data Cloud, Nielsen и др.) существует файл с вашими интересами, маршрутами, покупками и предполагаемым доходом. Вы не давали на это согласие. Вы не можете его удалить.'},
+        {icon:'\u26A0\uFE0F',title:'После утечки — навсегда',body:'В 2023–2024 годах произошли тысячи утечек данных из рекламных платформ. Если профиль с вашим отпечатком утёк — его не отозвать. Мошенники годами используют старые базы для целевых атак.'}
+      ],
+      stepsTitle:'Что сделать прямо сейчас',
+      personalTitle:'На основе вашего отпечатка',
+      generalTitle:'Полезно всем — независимо от результатов',
+      levelLabels:{easy:'\uD83D\uDFE2 легко',medium:'\uD83D\uDFE1 средне',hard:'\uD83D\uDD34 сложно'},
+      personal:{
+        canvas:{title:'Защитите графический отпечаток',problem:'Ваш браузер рисует картинки уникально — по этому хэшу вас узнают на любом сайте даже без cookies.',steps:[{text:'Firefox: включите privacy.resistFingerprinting',how:'Откройте about:config в адресной строке \u2192 найдите privacy.resistFingerprinting \u2192 установите true',level:'medium'},{text:'Chrome/Edge: установите расширение CanvasBlocker',link:'https://chromewebstore.google.com/search/canvas%20blocker',level:'easy'},{text:'Brave: уже защищён — откройте Shields и убедитесь, что Fingerprinting = Strict',level:'easy'}]},
+        plugins:{title:'Сократите количество расширений',problem:n=>`У вас ${n} расширений — нестандартный набор делает ваш профиль легко узнаваемым.`,steps:[{text:'Откройте менеджер расширений и отключите всё, чем не пользуетесь каждый день',how:'Chrome: chrome://extensions \u00B7 Firefox: about:addons',level:'easy'},{text:'Создайте отдельный профиль браузера с минимальным набором для анонимных задач',how:'Chrome: три точки \u2192 Люди \u2192 Добавить \u00B7 Firefox: about:profiles',level:'easy'}]},
+        permissions:{title:'Отзовите ненужные разрешения',problem:'Камера или микрофон разрешены — сайт может активировать их без повторного запроса.',steps:[{text:'Проверьте и отзовите разрешения у всех сайтов, которым они не нужны постоянно',how:'Chrome: chrome://settings/content \u00B7 Firefox: about:preferences#privacy \u2192 Разрешения',level:'easy'}]},
+        vpn:{title:'Синхронизируйте VPN и системное время',problem:'VPN меняет IP, но системный часовой пояс остаётся — это противоречие сразу заметно.',steps:[{text:'Выбирайте сервер VPN в той же стране, что и ваш системный часовой пояс',level:'easy'},{text:'Mullvad VPN автоматически согласовывает timezone',link:'https://mullvad.net',level:'easy'}]},
+        webrtc:{title:'Устраните утечку WebRTC — это срочно',problem:'WebRTC раскрывает ваш локальный IP даже при включённом VPN.',steps:[{text:'Firefox: about:config \u2192 media.peerconnection.enabled = false',level:'easy'},{text:'Chrome: установите расширение WebRTC Leak Prevent',link:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent',level:'easy'},{text:'Проверьте после изменений: browserleaks.com/webrtc',link:'https://browserleaks.com/webrtc',level:'easy'}]},
+        languages:{title:'Упростите список языков',problem:n=>`${n} языка в настройках — нестандартная комбинация сужает круг до небольшой группы.`,steps:[{text:'Оставьте 1-2 языка для браузера',how:'Chrome: Настройки \u2192 Языки \u00B7 Firefox: about:preferences \u2192 Язык',level:'easy'}]}
+      },
+      general:[
+        {icon:'\uD83D\uDFE2',title:'Установите uBlock Origin — займёт 2 минуты',body:'Блокирует рекламные трекеры, пиксели и скрипты слежки. Работает в Chrome, Firefox, Edge и Safari.',steps:[{text:'Chrome Web Store',link:'https://chromewebstore.google.com/search/ublock%20origin'},{text:'Firefox Add-ons',link:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}],level:'easy'},
+        {icon:'\uD83D\uDFE2',title:'Используйте отдельные профили браузера',body:'Работа, покупки, личное — в разных профилях. Сигналы не смешиваются, история не пересекается.',steps:[{text:'Chrome: три точки \u2192 Люди \u2192 Добавить профиль'},{text:'Firefox: about:profiles \u2192 Create a New Profile'}],level:'easy'},
+        {icon:'\uD83D\uDFE2',title:'Периодически чистите данные браузера',body:'Cookies, localStorage и кэш — три разных хранилища. Чистите все три, а не только cookies.',steps:[{text:'Chrome/Firefox: Ctrl+Shift+Delete \u2192 выбрать всё \u2192 очистить'},{text:'Делайте это раз в неделю или после важных сессий'}],level:'easy'},
+        {icon:'\uD83D\uDFE1',title:'Переключитесь на Firefox с базовой защитой',body:'Firefox + три настройки дают серьёзную защиту без потери удобства.',steps:[{text:'about:config \u2192 privacy.resistFingerprinting = true'},{text:'Установить uBlock Origin'},{text:'Установить CanvasBlocker'}],level:'medium'},
+        {icon:'\uD83D\uDFE1',title:'Используйте VPN с хорошей репутацией',body:'Скрывает IP и провайдера. Выбирайте сервис без логов.',steps:[{text:'Mullvad (анонимная оплата)',link:'https://mullvad.net'},{text:'ProtonVPN (бесплатный тариф)',link:'https://protonvpn.com'}],level:'medium'},
+        {icon:'\uD83D\uDD34',title:'Для максимальной анонимности — Tor Browser',body:'Все пользователи Tor Browser выглядят одинаково. Медленнее, но полностью нормализует отпечаток.',steps:[{text:'Скачать Tor Browser',link:'https://www.torproject.org'}],level:'hard'}
+      ]
+    },
     detailTitle:'Подробности',
     shockTitle:'\u0427\u0442\u043e \u0441\u0430\u0439\u0442 \u0437\u043d\u0430\u0435\u0442 \u043e \u0432\u0430\u0441',
     shock:{
@@ -772,6 +837,39 @@ const I18N = {
       fallback6:'Review blocker settings and permissions regularly so they do not silently re-enable themselves.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    implications:{
+      problemTitle:'What happens to your data',
+      problemText:'<p>Every time you open a website, your browser automatically sends dozens of characteristics \u2014 without your permission and without any pop-ups. Sites do not store this fingerprint themselves \u2014 they pass it to ad networks.</p><p>An ad network can be present on millions of sites at once. That means a single invisible tracker silently follows you everywhere you go online \u2014 collecting a complete history of your interests, purchases, routes, and habits.</p><p>This profile is not deleted when you clear cookies. It does not disappear in incognito mode. It exists as long as your browser and device exist.</p>',
+      risksTitle:'Why this is dangerous for you personally',
+      risks:[
+        {icon:'\uD83D\uDCB8',title:'You pay more than others',body:'Online stores and booking services see your device model, browser, and behaviour. MacBook users are often shown higher prices for flights and hotels than users of budget Android devices \u2014 this is price discrimination, and it is legal in most countries.'},
+        {icon:'\uD83C\uDFAF',title:'Ads know more about you than your friends',body:'Based on your fingerprint, ad systems know which sites you visited, what you searched for, when you were awake at night, and which topics concern you. This data is used not only for ads \u2014 insurance companies and employers buy profiles from data brokers.'},
+        {icon:'\uD83C\uDFA3',title:'Phishing becomes more precise',body:'Scammers who bought a database with your profile know your city, ISP, device, and language. An email that mentions your MacBook or your ISP account looks convincing \u2014 this is exactly how targeted phishing attacks work.'},
+        {icon:'\uD83D\uDD13',title:'Incognito mode does not protect you',body:'Most users believe that incognito = anonymity. It is not. Incognito mode only hides history from other people on your device. Your fingerprint, IP, and all signals remain the same \u2014 sites see you just as before.'},
+        {icon:'\uD83D\uDDC2\uFE0F',title:'Your profile exists without your knowledge',body:'Right now, in the databases of data brokers (Acxiom, Oracle Data Cloud, Nielsen, etc.) there is a file with your interests, routes, purchases, and estimated income. You did not consent to this. You cannot delete it.'},
+        {icon:'\u26A0\uFE0F',title:'After a leak \u2014 forever',body:'In 2023\u20132024, thousands of data leaks occurred from advertising platforms. If a profile with your fingerprint leaked \u2014 it cannot be recalled. Scammers use old databases for targeted attacks for years.'}
+      ],
+      stepsTitle:'What to do right now',
+      personalTitle:'Based on your fingerprint',
+      generalTitle:'Useful for everyone \u2014 regardless of results',
+      levelLabels:{easy:'\uD83D\uDFE2 easy',medium:'\uD83D\uDFE1 medium',hard:'\uD83D\uDD34 hard'},
+      personal:{
+        canvas:{title:'Protect your graphics fingerprint',problem:'Your browser renders images uniquely \u2014 this hash identifies you on any site even without cookies.',steps:[{text:'Firefox: enable privacy.resistFingerprinting',how:'Open about:config in the address bar \u2192 find privacy.resistFingerprinting \u2192 set to true',level:'medium'},{text:'Chrome/Edge: install the CanvasBlocker extension',link:'https://chromewebstore.google.com/search/canvas%20blocker',level:'easy'},{text:'Brave: already protected \u2014 open Shields and ensure Fingerprinting = Strict',level:'easy'}]},
+        plugins:{title:'Reduce the number of extensions',problem:n=>`You have ${n} extensions \u2014 a non-standard set makes your profile easily recognisable.`,steps:[{text:'Open the extension manager and disable everything you do not use daily',how:'Chrome: chrome://extensions \u00B7 Firefox: about:addons',level:'easy'},{text:'Create a separate browser profile with a minimal set for anonymous tasks',how:'Chrome: three dots \u2192 People \u2192 Add \u00B7 Firefox: about:profiles',level:'easy'}]},
+        permissions:{title:'Revoke unnecessary permissions',problem:'Camera or microphone is allowed \u2014 a site can activate them without asking again.',steps:[{text:'Review and revoke permissions for all sites that do not need them permanently',how:'Chrome: chrome://settings/content \u00B7 Firefox: about:preferences#privacy \u2192 Permissions',level:'easy'}]},
+        vpn:{title:'Sync your VPN and system time',problem:'VPN changes your IP, but the system timezone stays \u2014 this mismatch is immediately noticeable.',steps:[{text:'Choose a VPN server in the same country as your system timezone',level:'easy'},{text:'Mullvad VPN automatically synchronises timezone',link:'https://mullvad.net',level:'easy'}]},
+        webrtc:{title:'Fix the WebRTC leak \u2014 this is urgent',problem:'WebRTC reveals your local IP even with VPN enabled.',steps:[{text:'Firefox: about:config \u2192 media.peerconnection.enabled = false',level:'easy'},{text:'Chrome: install the WebRTC Leak Prevent extension',link:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent',level:'easy'},{text:'Verify after changes: browserleaks.com/webrtc',link:'https://browserleaks.com/webrtc',level:'easy'}]},
+        languages:{title:'Simplify your language list',problem:n=>`${n} languages in settings \u2014 a non-standard combination narrows you down to a small group.`,steps:[{text:'Keep 1\u20132 languages for the browser',how:'Chrome: Settings \u2192 Languages \u00B7 Firefox: about:preferences \u2192 Language',level:'easy'}]}
+      },
+      general:[
+        {icon:'\uD83D\uDFE2',title:'Install uBlock Origin \u2014 takes 2 minutes',body:'Blocks ad trackers, pixels, and tracking scripts. Works in Chrome, Firefox, Edge, and Safari.',steps:[{text:'Chrome Web Store',link:'https://chromewebstore.google.com/search/ublock%20origin'},{text:'Firefox Add-ons',link:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}],level:'easy'},
+        {icon:'\uD83D\uDFE2',title:'Use separate browser profiles',body:'Work, shopping, personal \u2014 in different profiles. Signals do not mix, history does not overlap.',steps:[{text:'Chrome: three dots \u2192 People \u2192 Add profile'},{text:'Firefox: about:profiles \u2192 Create a New Profile'}],level:'easy'},
+        {icon:'\uD83D\uDFE2',title:'Periodically clear browser data',body:'Cookies, localStorage, and cache \u2014 three different stores. Clear all three, not just cookies.',steps:[{text:'Chrome/Firefox: Ctrl+Shift+Delete \u2192 select all \u2192 clear'},{text:'Do this once a week or after important sessions'}],level:'easy'},
+        {icon:'\uD83D\uDFE1',title:'Switch to Firefox with basic protection',body:'Firefox + three settings provide serious protection without losing convenience.',steps:[{text:'about:config \u2192 privacy.resistFingerprinting = true'},{text:'Install uBlock Origin'},{text:'Install CanvasBlocker'}],level:'medium'},
+        {icon:'\uD83D\uDFE1',title:'Use a reputable VPN',body:'Hides IP and ISP. Choose a no-logs service.',steps:[{text:'Mullvad (anonymous payment)',link:'https://mullvad.net'},{text:'ProtonVPN (free tier)',link:'https://protonvpn.com'}],level:'medium'},
+        {icon:'\uD83D\uDD34',title:'For maximum anonymity \u2014 Tor Browser',body:'All Tor Browser users look identical. Slower, but fully normalises the fingerprint.',steps:[{text:'Download Tor Browser',link:'https://www.torproject.org'}],level:'hard'}
+      ]
+    },
     detailTitle:'Details',
     shockTitle:'What the site knows about you',
     shock:{
@@ -1165,6 +1263,39 @@ const I18N = {
       fallback6:'Bloklagich va ruxsat sozlamalarini vaqti-vaqti bilan tekshirib turing — ular o‘z-o‘zidan yoqilib ketmasin.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    implications:{
+      problemTitle:'Ma\u02BBlumotlaringizga nima bo\u02BBlmoqda',
+      problemText:'<p>Har safar saytni ochganingizda, brauzer avtomatik ravishda o\u02BBnlab xususiyatlarni uzatadi \u2014 sizning ruxsatingizsiz va hech qanday oynalarsiz. Saytlar bu barmoq izini o\u02BBzlarida saqlamaydi \u2014 ular uni reklama tarmoqlariga uzatadi.</p><p>Reklama tarmog\u02BBi bir vaqtning o\u02BBzida millionlab saytlarda bo\u02BBlishi mumkin. Bu shuni anglatadiki, bitta ko\u02BBrinmas treker siz internetda qayerda bo\u02BBlsangiz, jimgina kuzatadi \u2014 va qiziqishlaringiz, xaridlaringiz, yo\u02BBllaringiz va odatlaringiz to\u02BBliq tarixini yig\u02BBadi.</p><p>Bu profil cookie fayllarini tozalaganingizda o\u02BBchirilmaydi. Inkognito rejimida yo\u02BBqolmaydi. Brauzeringiz va qurilmangiz mavjud ekan, u ham mavjud.</p>',
+      risksTitle:'Bu siz uchun shaxsan nima uchun xavfli',
+      risks:[
+        {icon:'\uD83D\uDCB8',title:'Siz boshqalardan ko\u02BBproq to\u02BBlaysiz',body:'Internet-do\u02BBkonlar va bron qilish xizmatlari qurilma modelingiz, brauzeringiz va xatti-harakatlaringizni ko\u02BBradi. MacBook foydalanuvchilariga ko\u02BBpincha aviabilet va mehmonxonalar uchun byudjetli Android qurilmalar foydalanuvchilariga qaraganda yuqoriroq narxlar ko\u02BBrsatiladi \u2014 bu narx kamsitishi bo\u02BBlib, aksariyat mamlakatlarda qonuniy.'},
+        {icon:'\uD83C\uDFAF',title:'Reklama siz haqingizda do\u02BBstlaringizdan ko\u02BBproq biladi',body:'Barmoq izingiz asosida reklama tizimlari qaysi saytlarga kirgansiz, nimani qidirganingiz, kechasi qachon uxlamaganingiz va qaysi mavzular sizni tashvishlantirishini biladi. Bu ma\u02BBlumotlar faqat reklama uchun emas \u2014 sug\u02BBurta kompaniyalari va ish beruvchilar ma\u02BBlumot brokerlaridan profillar sotib oladi.'},
+        {icon:'\uD83C\uDFA3',title:'Fishing aniqroq bo\u02BBladi',body:'Profilingiz bilan bazani sotib olgan firibgarlar shahringiz, provayderingiz, qurilmangiz va tilingizni biladi. MacBook yoki provayder akkountingizni eslatuvchi xat ishonchli ko\u02BBrinadi \u2014 nishonlangan fishing hujumlari aynan shunday ishlaydi.'},
+        {icon:'\uD83D\uDD13',title:'Inkognito rejimi sizni himoya qilmaydi',body:'Ko\u02BBpchilik foydalanuvchilar inkognito = anonimlik deb hisoblaydi. Bu noto\u02BBg\u02BBri. Inkognito rejimi tarixni faqat qurilmangizdagi boshqa odamlardan yashiradi. Barmoq izingiz, IP va barcha signallar avvalgidek qoladi \u2014 saytlar sizni xuddi shunday ko\u02BBradi.'},
+        {icon:'\uD83D\uDDC2\uFE0F',title:'Profilingiz sizning xabaringizsiz mavjud',body:'Hozir ma\u02BBlumot brokerlari (Acxiom, Oracle Data Cloud, Nielsen va boshqalar) ma\u02BBlumotlar bazasida sizning qiziqishlaringiz, yo\u02BBllaringiz, xaridlaringiz va taxminiy daromadingiz bilan fayl mavjud. Siz bunga rozilik bermadingiz. Uni o\u02BBchira olmaysiz.'},
+        {icon:'\u26A0\uFE0F',title:'Sizib chiqqandan keyin \u2014 abadiy',body:'2023\u20132024 yillarda reklama platformalaridan minglab ma\u02BBlumot sizishlari ro\u02BBy berdi. Agar barmoq izingiz bilan profil sizib chiqqan bo\u02BBlsa \u2014 uni qaytarib bo\u02BBlmaydi. Firibgarlar eski bazalardan yillab nishonlangan hujumlar uchun foydalanadi.'}
+      ],
+      stepsTitle:'Hozir nima qilish kerak',
+      personalTitle:'Barmoq izingiz asosida',
+      generalTitle:'Hammaga foydali \u2014 natijalardan qat\u02BBiy nazar',
+      levelLabels:{easy:'\uD83D\uDFE2 oson',medium:'\uD83D\uDFE1 o\u02BBrtacha',hard:'\uD83D\uDD34 qiyin'},
+      personal:{
+        canvas:{title:'Grafik barmoq izini himoya qiling',problem:'Brauzeringiz rasmlarni noyob tarzda chizadi \u2014 bu xesh bo\u02BByicha sizni har qanday saytda cookie\u02BBlarsiz ham tanishadi.',steps:[{text:'Firefox: privacy.resistFingerprinting ni yoqing',how:'Manzil satrida about:config oching \u2192 privacy.resistFingerprinting toping \u2192 true qilib o\u02BBrnating',level:'medium'},{text:'Chrome/Edge: CanvasBlocker kengaytmasini o\u02BBrnating',link:'https://chromewebstore.google.com/search/canvas%20blocker',level:'easy'},{text:'Brave: allaqachon himoyalangan \u2014 Shields oching va Fingerprinting = Strict ekanligiga ishonch hosil qiling',level:'easy'}]},
+        plugins:{title:'Kengaytmalar sonini kamaytiring',problem:n=>`Sizda ${n} ta kengaytma bor \u2014 nostandart to\u02BBplam profilingizni oson tanib olinadigan qiladi.`,steps:[{text:'Kengaytmalar menejerini oching va har kuni ishlatilmaydigan hammasini o\u02BBchiring',how:'Chrome: chrome://extensions \u00B7 Firefox: about:addons',level:'easy'},{text:'Anonim vazifalar uchun minimal to\u02BBplamli alohida brauzer profili yarating',how:'Chrome: uch nuqta \u2192 Odamlar \u2192 Qo\u02BBshish \u00B7 Firefox: about:profiles',level:'easy'}]},
+        permissions:{title:'Keraksiz ruxsatlarni bekor qiling',problem:'Kamera yoki mikrofon ruxsat berilgan \u2014 sayt ularni qayta so\u02BBramasdan faollashtirishi mumkin.',steps:[{text:'Doimiy kerak bo\u02BBlmagan barcha saytlardagi ruxsatlarni tekshiring va bekor qiling',how:'Chrome: chrome://settings/content \u00B7 Firefox: about:preferences#privacy \u2192 Ruxsatlar',level:'easy'}]},
+        vpn:{title:'VPN va tizim vaqtini sinxronlashtiring',problem:'VPN IP ni o\u02BBzgartiradi, lekin tizim vaqt zonasi qoladi \u2014 bu nomuvofiqlik darhol seziladi.',steps:[{text:'Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang',level:'easy'},{text:'Mullvad VPN vaqt zonasini avtomatik sinxronlaydi',link:'https://mullvad.net',level:'easy'}]},
+        webrtc:{title:'WebRTC oqishini bartaraf eting \u2014 bu shoshilinch',problem:'WebRTC VPN yoqilgan bo\u02BBlsa ham lokal IP ni ochib beradi.',steps:[{text:'Firefox: about:config \u2192 media.peerconnection.enabled = false',level:'easy'},{text:'Chrome: WebRTC Leak Prevent kengaytmasini o\u02BBrnating',link:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent',level:'easy'},{text:'O\u02BBzgarishlardan keyin tekshiring: browserleaks.com/webrtc',link:'https://browserleaks.com/webrtc',level:'easy'}]},
+        languages:{title:'Tillar ro\u02BByxatini soddalashtiring',problem:n=>`Sozlamalarda ${n} ta til \u2014 nostandart kombinatsiya sizni kichik guruhga qisqartiradi.`,steps:[{text:'Brauzer uchun 1-2 ta tilni qoldiring',how:'Chrome: Sozlamalar \u2192 Tillar \u00B7 Firefox: about:preferences \u2192 Til',level:'easy'}]}
+      },
+      general:[
+        {icon:'\uD83D\uDFE2',title:'uBlock Origin o\u02BBrnating \u2014 2 daqiqa vaqt oladi',body:'Reklama trekerlarini, piksellarni va kuzatuv skriptlarini bloklaydi. Chrome, Firefox, Edge va Safari da ishlaydi.',steps:[{text:'Chrome Web Store',link:'https://chromewebstore.google.com/search/ublock%20origin'},{text:'Firefox Add-ons',link:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}],level:'easy'},
+        {icon:'\uD83D\uDFE2',title:'Alohida brauzer profillaridan foydalaning',body:'Ish, xaridlar, shaxsiy \u2014 turli profillarda. Signallar aralashmaydi, tarix kesishmaydi.',steps:[{text:'Chrome: uch nuqta \u2192 Odamlar \u2192 Profil qo\u02BBshish'},{text:'Firefox: about:profiles \u2192 Create a New Profile'}],level:'easy'},
+        {icon:'\uD83D\uDFE2',title:'Brauzer ma\u02BBlumotlarini vaqti-vaqti bilan tozalang',body:'Cookie, localStorage va kesh \u2014 uchta turli xotira. Faqat cookie emas, uchtasini ham tozalang.',steps:[{text:'Chrome/Firefox: Ctrl+Shift+Delete \u2192 hammasini tanlang \u2192 tozalang'},{text:'Haftada bir marta yoki muhim seanslardan keyin bajarng'}],level:'easy'},
+        {icon:'\uD83D\uDFE1',title:'Asosiy himoya bilan Firefox ga o\u02BBting',body:'Firefox + uchta sozlama qulaylikni yo\u02BBqotmasdan jiddiy himoyani ta\u02BBminlaydi.',steps:[{text:'about:config \u2192 privacy.resistFingerprinting = true'},{text:'uBlock Origin o\u02BBrnating'},{text:'CanvasBlocker o\u02BBrnating'}],level:'medium'},
+        {icon:'\uD83D\uDFE1',title:'Ishonchli VPN dan foydalaning',body:'IP va provayderni yashiradi. Loglarsiz xizmatni tanlang.',steps:[{text:'Mullvad (anonim to\u02BBlov)',link:'https://mullvad.net'},{text:'ProtonVPN (bepul tarif)',link:'https://protonvpn.com'}],level:'medium'},
+        {icon:'\uD83D\uDD34',title:'Maksimal anonimlik uchun \u2014 Tor Browser',body:'Barcha Tor Browser foydalanuvchilari bir xil ko\u02BBrinadi. Sekinroq, lekin barmoq izini to\u02BBliq normallaydi.',steps:[{text:'Tor Browser ni yuklab oling',link:'https://www.torproject.org'}],level:'hard'}
+      ]
+    },
     detailTitle:'Batafsil',
     shockTitle:"Sayt siz haqingizda nimalarni biladi",
     shock:{
@@ -3328,6 +3459,104 @@ function summariseList(items,limit=3){
   return `${head.join(', ')}${more}`;
 }
 
+function createRecCard(rec,levelLabels){
+  const levelClass=rec.level==='easy'?'rec-card--green':rec.level==='medium'?'rec-card--yellow':'rec-card--red';
+  const card=document.createElement('div');
+  card.className='rec-card '+levelClass;
+  const problem=typeof rec.problem==='function'?rec.problem():(rec.problem||rec.body||'');
+  let stepsHtml='';
+  if(rec.steps&&rec.steps.length){
+    stepsHtml='<ul class="rec-steps">'+rec.steps.map(s=>{
+      let html='<li class="rec-step">';
+      if(s.link) html+=`<a href="${s.link}" target="_blank" rel="noopener">${s.text}</a>`;
+      else html+=s.text;
+      if(s.how) html+=`<span class="step-how">${s.how}</span>`;
+      html+='</li>';
+      return html;
+    }).join('')+'</ul>';
+  }
+  card.innerHTML=`<div class="rec-header"><span class="rec-icon">${rec.icon||''}</span><span class="rec-title">${rec.title}</span><span class="rec-level">${levelLabels[rec.level]||''}</span></div><div class="rec-problem">${problem}</div>${stepsHtml}`;
+  return card;
+}
+
+function renderImplications(basic,t){
+  const impl=t.implications;
+  if(!impl) return;
+  const titleEl=getEl('implProblemTitle');
+  if(titleEl) titleEl.textContent=impl.problemTitle||'';
+  const textEl=getEl('implProblemText');
+  if(textEl) textEl.innerHTML=impl.problemText||'';
+  const risksTitleEl=getEl('implRisksTitle');
+  if(risksTitleEl) risksTitleEl.textContent=impl.risksTitle||'';
+  const grid=getEl('implRisksGrid');
+  if(grid){
+    grid.innerHTML='';
+    (impl.risks||[]).forEach(r=>{
+      const card=document.createElement('div');
+      card.className='risk-card';
+      card.innerHTML=`<div class="risk-icon">${r.icon}</div><div class="risk-title">${r.title}</div><div class="risk-body">${r.body}</div>`;
+      grid.appendChild(card);
+    });
+  }
+  const stepsTitleEl=getEl('implStepsTitle');
+  if(stepsTitleEl) stepsTitleEl.textContent=impl.stepsTitle||'';
+  const personalEl=getEl('personalRecs');
+  if(personalEl){
+    personalEl.innerHTML='';
+    if(basic&&impl.personal){
+      const picks=[];
+      if(basic.hashes&&basic.hashes.canvas){
+        picks.push(impl.personal.canvas);
+      }
+      if((basic.plugins||[]).length>3){
+        const rec=Object.assign({},impl.personal.plugins);
+        const n=(basic.plugins||[]).length;
+        if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=()=>fn(n);}
+        picks.push(rec);
+      }
+      const perms=basic.perms||{};
+      if(Object.values(perms).some(v=>String(v).toLowerCase()==='granted')){
+        picks.push(impl.personal.permissions);
+      }
+      const vpnState=state.vpn||{};
+      if(vpnState.status==='likely'){
+        picks.push(impl.personal.vpn);
+      }
+      if(state.profilingContext&&state.profilingContext.webrtcLocalIp){
+        picks.push(impl.personal.webrtc);
+      }
+      if(basic.languages&&basic.languages.length>2){
+        const rec=Object.assign({},impl.personal.languages);
+        const n=basic.languages.length;
+        if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=()=>fn(n);}
+        picks.push(rec);
+      }
+      if(picks.length){
+        const heading=document.createElement('div');
+        heading.className='rec-section-title';
+        heading.textContent=impl.personalTitle||'';
+        personalEl.appendChild(heading);
+        picks.forEach(rec=>{
+          if(rec) personalEl.appendChild(createRecCard(rec,impl.levelLabels||{}));
+        });
+      }
+    }
+  }
+  const generalEl=getEl('generalRecs');
+  if(generalEl){
+    generalEl.innerHTML='';
+    if(impl.general&&impl.general.length){
+      const heading=document.createElement('div');
+      heading.className='rec-section-title';
+      heading.textContent=impl.generalTitle||'';
+      generalEl.appendChild(heading);
+      impl.general.forEach(rec=>{
+        generalEl.appendChild(createRecCard(rec,impl.levelLabels||{}));
+      });
+    }
+  }
+}
+
 function buildPersonalizedAdvice({basic,state,pct,level},t){
   const adv=t.uniqAdvice||{};
   const fallback=t.uniqAdviceFallback||[];
@@ -3566,6 +3795,7 @@ async function renderProfilingSection(basic,t){
   state.profilingContext=null;
   if(!basic){
     renderShockBullets(null,t);
+    renderImplications(null,t);
     syncShockVisibility();
     return;
   }
@@ -3585,12 +3815,14 @@ async function renderProfilingSection(basic,t){
     const context=buildProfilingContext(findings,basic,t);
     state.profilingContext=context;
     renderShockBullets(basic,t,snapshotCache);
+    renderImplications(basic,t);
     syncShockVisibility();
   }catch(err){
     if(runId!==profilingSequence) return;
     state.profilingContext=null;
     console.error('Profiling error',err);
     renderShockBullets(basic,t,snapshotCache);
+    renderImplications(basic,t);
     syncShockVisibility();
   }
 }
@@ -3728,70 +3960,6 @@ async function render(lang){
       verdictEl.style.display=verdictEl.textContent?'block':'none';
     }
 
-    const warningEl=getEl('uniqWarning');
-    if(uniqCopy.warning){
-      warningEl.textContent=uniqCopy.warning;
-      warningEl.style.display='block';
-    }else{
-      warningEl.textContent='';
-      warningEl.style.display='none';
-    }
-
-    const practiceTitleEl=getEl('uniqPracticeTitle');
-    const practiceListEl=getEl('uniqPracticeList');
-    practiceListEl.innerHTML='';
-    if(uniqCopy.practice&&Array.isArray(uniqCopy.practice.points)&&uniqCopy.practice.points.length){
-      practiceTitleEl.textContent=uniqCopy.practice.title||'';
-      practiceTitleEl.style.display='block';
-      practiceListEl.style.display='block';
-      uniqCopy.practice.points.forEach(item=>{
-        const li=document.createElement('li');
-        li.textContent=item;
-        practiceListEl.appendChild(li);
-      });
-    }else{
-      practiceTitleEl.textContent='';
-      practiceTitleEl.style.display='none';
-      practiceListEl.style.display='none';
-    }
-
-    const risksTitleEl=getEl('uniqRisksTitle');
-    const risksListEl=getEl('uniqRisksList');
-    risksListEl.innerHTML='';
-    if(uniqCopy.risks&&Array.isArray(uniqCopy.risks.points)&&uniqCopy.risks.points.length){
-      risksTitleEl.textContent=uniqCopy.risks.title||'';
-      risksTitleEl.style.display='block';
-      risksListEl.style.display='block';
-      uniqCopy.risks.points.forEach(item=>{
-        const li=document.createElement('li');
-        li.textContent=item;
-        risksListEl.appendChild(li);
-      });
-    }else{
-      risksTitleEl.textContent='';
-      risksTitleEl.style.display='none';
-      risksListEl.style.display='none';
-    }
-
-    const adviceTitleEl=getEl('uniqAdviceTitle');
-    const adviceListEl=getEl('uniqAdvice');
-    adviceListEl.innerHTML='';
-    const personalizedAdvice=buildPersonalizedAdvice({basic,state,pct,level},t);
-    if(personalizedAdvice.length){
-      adviceTitleEl.textContent=t.uniqAdviceLead||'';
-      adviceTitleEl.style.display='block';
-      adviceListEl.style.display='block';
-      personalizedAdvice.forEach(action=>{
-        const li=document.createElement('li');
-        li.textContent=action;
-        adviceListEl.appendChild(li);
-      });
-    }else{
-      adviceTitleEl.textContent='';
-      adviceTitleEl.style.display='none';
-      adviceListEl.style.display='none';
-    }
-
     const outcomeEl=getEl('uniqOutcome');
     if(uniqCopy.outcome&&(uniqCopy.outcome.title||uniqCopy.outcome.detail)){
       outcomeEl.textContent='';
@@ -3830,6 +3998,7 @@ async function render(lang){
     const networkInfo=formatNetworkSummary(basic.net);
 
     renderShockBullets(basic,t,{fp,H,pct});
+    renderImplications(basic,t);
     if(!state.serverData&&!state.ipFetchDone){
       autoFetchIp().then(()=>{
         state.ipFetchDone=true;
@@ -3837,6 +4006,7 @@ async function render(lang){
         const t2=I18N[currentLang];
         getSnapshot().then(snap=>{
           renderShockBullets(snap.basic,t2,snap);
+          renderImplications(snap.basic,t2);
           renderProfilingSection(snap.basic,t2);
         });
         // Auto speed test
@@ -3845,6 +4015,7 @@ async function render(lang){
           const t3=I18N[currentLang];
           getSnapshot().then(snap=>{
             renderShockBullets(snap.basic,t3,snap);
+            renderImplications(snap.basic,t3);
           });
         }).catch(()=>{});
       });
