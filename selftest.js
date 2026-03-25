@@ -900,19 +900,19 @@ const I18N = vm.runInContext('I18N', sandbox);
   let uzbekShock = '';
   for (let i = 0; i < 200; i += 1) {
     uzbekShock = collectShockText().join(' ');
-    if (/Ehtimol sizda|Joylashuvingiz aniqlanmoqda/i.test(uzbekShock)) break;
+    if (/Ehtimol siz|Joylashuvingiz aniqlanmoqda/i.test(uzbekShock)) break;
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  assert.ok(/Ehtimol sizda|Joylashuvingiz aniqlanmoqda/i.test(uzbekShock), 'Uzbek shock should contain new-style insights');
+  assert.ok(/Ehtimol siz|Joylashuvingiz aniqlanmoqda/i.test(uzbekShock), 'Uzbek shock should contain new-style insights');
   await sandbox.autoFetchIp();
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));
-  for (let i = 0; i < 20 && !/Tashkent/i.test(collectShockText().join(' ')); i += 1) {
+  for (let i = 0; i < 20 && !/Tashkent|\u0422\u0430\u0448\u043a\u0435\u043d\u0442/i.test(collectShockText().join(' ')); i += 1) {
     await new Promise(resolve => setTimeout(resolve, 0));
   }
   assert.ok(stateRef.serverData);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
-  assert.ok(/Tashkent|Uzbekistan/i.test(collectShockText().join(' ')), 'exposure list should mention updated region');
+  assert.ok(/Tashkent|\u0422\u0430\u0448\u043a\u0435\u043d\u0442|Uzbekistan|\u0423\u0437\u0431\u0435\u043a\u0438\u0441\u0442\u0430\u043d/i.test(collectShockText().join(' ')), 'exposure list should mention updated region');
   assert.ok(stateRef.sharePayload);
 
   console.log('Self-test completed successfully');
