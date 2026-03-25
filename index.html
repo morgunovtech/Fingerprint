@@ -181,7 +181,7 @@
     .risk-card .risk-body{font-size:14px;line-height:1.6;color:var(--muted)}
     .rec-section-title{font-size:16px;font-weight:600;margin:16px 0 10px}
     .rec-card{padding:0;border-radius:var(--radius-md,10px);border:1px solid var(--border);background:var(--card);margin-bottom:12px;border-left:3px solid var(--border);overflow:hidden}
-    @media(max-width:640px){.rec-card:nth-child(n+4):not(.rec-card--always){display:none}.rec-cards-overflow .rec-card:nth-child(n+4){display:block}}
+    .rec-overflow-wrap{margin-top:4px}
     .rec-card--green{border-left-color:#22c55e}
     .rec-card--yellow{border-left-color:#eab308}
     .rec-card--red{border-left-color:#ef4444}
@@ -198,6 +198,8 @@
     .rec-title{font-weight:700;font-size:16px}
     .rec-level{font-size:11px;padding:2px 6px;border-radius:4px;margin-left:auto;white-space:nowrap}
     .hero-verdict{text-align:left;padding:32px 24px;margin-bottom:24px}
+    .hero-top-row{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+    .hero-top-row .btn-link{font-size:14px;white-space:nowrap;margin-bottom:8px}
     .hero-number{font-size:56px;font-weight:800;line-height:1;margin-bottom:8px;letter-spacing:-2px}
     .hero-number[data-level="high"]{color:var(--danger)}
     .hero-number[data-level="med"]{color:var(--warning)}
@@ -217,15 +219,17 @@
     .data-row{display:flex;align-items:baseline;gap:8px;padding:6px 0;font-size:14px;border-bottom:1px solid var(--border-subtle)}
     .data-row:last-child{border-bottom:none}
     .data-row .data-icon{flex-shrink:0;color:var(--muted);width:18px;height:18px}
-    .data-row .data-label{color:var(--text-secondary);min-width:fit-content}
-    .data-row .data-value{font-weight:500;color:var(--text);margin-left:auto;text-align:right}
+    .data-row .data-label{color:var(--text-secondary);white-space:nowrap;flex-shrink:0}
+    .data-row .data-value{font-weight:500;color:var(--text);margin-left:auto;text-align:right;word-break:break-word;min-width:0}
     .data-row code{font-family:var(--font-mono);font-size:13px;background:var(--code-bg);padding:1px 6px;border-radius:4px}
     .status-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500}
     .status-badge--safe{background:var(--success-bg);color:var(--success)}
     .status-badge--danger{background:var(--danger-bg);color:var(--danger)}
     .status-badge--warning{background:var(--warning-bg);color:var(--warning)}
     #detailsAccordion[open] summary svg{transform:rotate(180deg)}
-    #detailsAccordion summary{display:flex;align-items:center}
+    #detailsAccordion summary{display:flex;align-items:center;padding:8px 0;font-size:18px;font-weight:700}
+    #detailsAccordion summary::-webkit-details-marker{display:none}
+    #detailsAccordion summary::marker{display:none;content:''}
     @media print{
       body{background:#fff!important;color:#111!important;font-size:13px}
       .wrap{max-width:100%;padding:0;margin:0}
@@ -237,15 +241,17 @@
       details[open]>summary~*{display:block}
       details>summary{list-style:none;font-weight:700}
       .rec-card{break-inside:avoid;margin-bottom:8px}
-      .rec-card:nth-child(n+4){display:block!important}
+      .rec-overflow-wrap{display:block}
+      .rec-overflow-wrap>summary{display:none}
+      .rec-overflow-wrap .rec-card{display:block}
       .risk-cards-grid{grid-template-columns:1fr 1fr}
       .tracker-row{padding:4px 0}
       .methodology-modal{display:none!important}
       #changelogModal{display:none!important}
     }
-    .tracker-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle,var(--border));font-size:14px}
+    .tracker-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-subtle,var(--border));font-size:14px}
     .tracker-row:last-child{border-bottom:none}
-    .tracker-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;flex-shrink:0}
+    .tracker-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;flex-shrink:0;min-width:120px;text-align:center;margin-top:2px}
     .tracker-badge--blocked{background:var(--success-bg,rgba(34,197,94,.1));color:var(--success,#22c55e)}
     .tracker-badge--open{background:var(--danger-bg,rgba(239,68,68,.1));color:var(--danger,#ef4444)}
     .tracker-name{flex:1;color:var(--text)}
@@ -257,6 +263,9 @@
     .methodology-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted);line-height:1}
     .methodology-content h3{margin:0 0 12px;font-size:18px}
     .methodology-content .small{font-size:14px;line-height:1.7;color:var(--text)}
+    .methodology-content .small p{margin:0 0 10px}
+    .methodology-content .small p:last-child{margin-bottom:0}
+    .methodology-content .small b{display:inline-block;margin-top:4px}
   </style>
 </head>
 <body>
@@ -295,10 +304,12 @@
     <!-- Hero verdict (moved to top) -->
     <div id="heroVerdict" class="hero-verdict" style="display:none">
       <div id="heroSkeleton"><div class="skeleton skeleton-hero"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line" style="width:60%"></div></div>
-      <div class="hero-number" id="heroNumber">0</div>
+      <div class="hero-top-row">
+        <div class="hero-number" id="heroNumber">0</div>
+        <button class="btn btn-link" id="methodologyBtn" style="display:none"></button>
+      </div>
       <div class="hero-subtitle" id="heroSubtitle"></div>
       <div id="heroConclusion" class="hero-conclusion"></div>
-      <button class="btn btn-link" id="methodologyBtn" style="display:none"></button>
       <div class="hero-actions">
         <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn" id="printBtn"></button>
@@ -1032,7 +1043,7 @@ const I18N = {
     advicePrefix:'💡 Совет:',
     methodologyButton:'Как рассчитывается процент?',
     methodSummary:'<b>Как считаем результат</b>',
-    methodText:'Для каждого из 21 сигнала (браузер, ОС, разрешение экрана, GPU, число ядер, объём памяти, языки, расширения, Canvas/Audio-хэш, WebGL-рендерер, аудио-отпечаток, набор шрифтов и др.) рассчитывается информационная энтропия: -log\u2082(вероятность). Вероятности берутся из встроенных частотных таблиц, составленных на основе данных EFF Panopticlick и исследований FingerprintJS. Сигналы, которые встречаются редко (нестандартный GPU, редкий браузер, необычное разрешение), дают больший вклад в итоговый балл. Алгоритм учитывает зависимости между сигналами (например, Safari + Apple GPU корректируются). Итоговый процент — это перцентиль вашей энтропии среди 25 000 смоделированных отпечатков. Подсчёт выполняется локально и никуда не отправляется.',
+    methodText:'<p><b>Что мы измеряем</b></p><p>Ваш браузер передаёт сайтам 21\u00A0параметр: тип браузера, ОС, разрешение экрана, видеокарту, число ядер процессора, объём памяти, языки, расширения, графический и аудио\u2011отпечатки, шрифты и другие.</p><p><b>Как считаем</b></p><p>Для каждого параметра мы смотрим, насколько он редкий. Например, Chrome на Windows\u00A0\u2014 массовая комбинация. А старый Firefox с необычным GPU\u00A0\u2014 редкость, которая выделяет вас из толпы.</p><p>Чем больше редких параметров совпало\u00A0\u2014 тем выше итоговый балл.</p><p><b>Откуда берутся данные</b></p><p>Вероятности основаны на открытых исследованиях EFF\u00A0Panopticlick и FingerprintJS. Мы также учитываем зависимости между параметрами (Safari всегда работает с Apple\u00A0GPU, поэтому эта пара не удваивает счёт).</p><p><b>Что означает процент</b></p><p>Мы моделируем 25\u00A0000\u00A0виртуальных браузеров и сравниваем ваш результат с ними. Если вы набрали 85%\u00A0\u2014 значит ваш отпечаток уникальнее, чем у 85% смоделированных пользователей.</p><p style="opacity:.7;font-size:13px">Все вычисления происходят в вашем браузере и никуда не отправляются.</p>',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — ipwho.is, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     batteryUnavailable:'Недоступно в этом браузере',
@@ -1655,7 +1666,7 @@ const I18N = {
     advicePrefix:'💡 Tip:',
     methodologyButton:'How is the percentage calculated?',
     methodSummary:'<b>How we calculate it</b>',
-    methodText:'For each of 21 signals (browser, OS, screen resolution, GPU, core count, memory, languages, extensions, Canvas/Audio hash, WebGL renderer, audio fingerprint, font set, etc.) we compute information entropy: -log\u2082(probability). Probabilities come from built-in frequency tables based on EFF Panopticlick data and FingerprintJS research. Rare signals (unusual GPU, uncommon browser, atypical resolution) contribute more to the final score. The algorithm accounts for signal dependencies (e.g. Safari + Apple GPU are correlated). The final percentage is your entropy\u2019s percentile among 25,000 simulated fingerprints. All calculations run locally and nothing is uploaded.',
+    methodText:'<p><b>What we measure</b></p><p>Your browser reveals 21\u00A0parameters to every website: browser type, OS, screen resolution, GPU, CPU cores, memory, languages, extensions, graphics and audio fingerprints, fonts, and more.</p><p><b>How we score</b></p><p>For each parameter we check how common it is. Chrome on Windows is extremely common. An older Firefox with an unusual GPU is rare\u00A0\u2014 and that rarity makes you stand out.</p><p>The more rare parameters match\u00A0\u2014 the higher your score.</p><p><b>Where the data comes from</b></p><p>Probabilities are based on public research by EFF\u00A0Panopticlick and FingerprintJS. We also account for correlations between signals (Safari always runs on Apple\u00A0GPU, so that pair doesn\u2019t double-count).</p><p><b>What the percentage means</b></p><p>We simulate 25,000\u00A0virtual browsers and compare your result against them. If you scored 85%\u00A0\u2014 your fingerprint is more unique than 85% of simulated users.</p><p style="opacity:.7;font-size:13px">All calculations happen in your browser and nothing is uploaded.</p>',
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. On page load, the browser queries your IP data via ipapi.co (with fallbacks to ipwho.is, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
     batteryUnavailable:'Not available in this browser',
@@ -2301,7 +2312,7 @@ const I18N = {
     advicePrefix:'💡 Maslahat:',
     methodologyButton:"Foiz qanday hisoblanadi?",
     methodSummary:'<b>Natija qanday olinadi</b>',
-    methodText:"21 ta signal (brauzer, OT, ekran o\u02BBlchami, GPU, yadrolar soni, xotira, tillar, kengaytmalar, Canvas/Audio xesh, WebGL renderer, audio barmoq izi, shriftlar to\u02BBplami va boshq.) uchun axborot entropiyasi hisoblanadi: -log\u2082(ehtimollik). Ehtimolliklar EFF Panopticlick va FingerprintJS tadqiqotlari asosida tuzilgan ichki chastota jadvallaridan olinadi. Kam uchraydigan signallar (noodatiy GPU, kam tarqalgan brauzer, nostandart o\u02BBlcham) yakuniy ballga ko\u02BBproq hissa qo\u02BBshadi. Algoritm signallar orasidagi bog\u02BBliqlikni hisobga oladi. Yakuniy foiz \u2014 25 000 ta modellashtirilgan barmoq izi orasida sizning entropiyangiz percentili. Hisoblash brauzeringizni tark etmaydi.",
+    methodText:'<p><b>Nimani o\u02BBlchaymiz</b></p><p>Brauzeringiz har bir saytga 21\u00A0ta parametrni uzatadi: brauzer turi, OT, ekran o\u02BBlchami, videokarta, protsessor yadrolari, xotira, tillar, kengaytmalar, grafik va audio izlar, shriftlar va boshqalar.</p><p><b>Qanday baholaymiz</b></p><p>Har bir parametr uchun uning qanchalik kam uchraydigani tekshiriladi. Windows\u2019da Chrome\u00A0\u2014 juda keng tarqalgan. Noodatiy GPU bilan eski Firefox\u00A0\u2014 noyoblik, siz ajralib turasiz.</p><p>Noyob parametrlar qancha ko\u02BBp bo\u02BBlsa\u00A0\u2014 ball shuncha yuqori.</p><p><b>Ma\u02BClumot qayerdan</b></p><p>Ehtimolliklar EFF\u00A0Panopticlick va FingerprintJS ochiq tadqiqotlariga asoslangan. Signallar orasidagi bog\u02BBliqliklar ham hisobga olinadi.</p><p><b>Foiz nimani anglatadi</b></p><p>25\u00A0000\u00A0ta virtual brauzer modellashtiriladi va sizning natijangiz ular bilan taqqoslanadi. Agar 85% bo\u02BBlsa\u00A0\u2014 sizning izingiz modellashtirilgan foydalanuvchilarning 85% dan noyobroq.</p><p style="opacity:.7;font-size:13px">Barcha hisob-kitoblar brauzeringizda amalga oshiriladi va hech qayerga yuborilmaydi.</p>',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa ipwho.is, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
     batteryUnavailable:'Bu brauzerda mavjud emas',
@@ -4962,21 +4973,30 @@ function renderImplications(basic,t){
       heading.className='rec-section-title';
       heading.textContent=impl.generalTitle||'';
       generalEl.appendChild(heading);
-      impl.general.forEach(function(rec){
-        generalEl.appendChild(createRecCard(rec,impl.levelLabels||{},false,altPrefix));
+      // Sort by weight: easy first (highest impact/effort ratio), then medium, then hard
+      const sorted=[...impl.general].sort((a,b)=>{
+        const order={easy:0,medium:1,hard:2};
+        return (order[a.level]??1)-(order[b.level]??1);
       });
-      // Mobile: add "show all" button if there are many cards
-      const totalCards=generalEl.querySelectorAll('.rec-card').length;
-      if(totalCards>3){
-        const showAllBtn=document.createElement('button');
-        showAllBtn.className='btn btn-inline';
-        showAllBtn.style.cssText='margin-top:8px;display:none';
-        const showLabels={ru:'Показать все рекомендации',en:'Show all recommendations',uz:'Barcha tavsiyalarni koʻrsatish'};
-        showAllBtn.textContent=showLabels[currentLang]||showLabels.en;
-        showAllBtn.addEventListener('click',()=>{generalEl.classList.add('rec-cards-overflow');showAllBtn.style.display='none';});
-        generalEl.appendChild(showAllBtn);
-        // Only show button on mobile
-        if(window.innerWidth<=640) showAllBtn.style.display='';
+      const VISIBLE_COUNT=3;
+      sorted.forEach(function(rec,i){
+        if(i<VISIBLE_COUNT){
+          generalEl.appendChild(createRecCard(rec,impl.levelLabels||{},false,altPrefix));
+        }
+      });
+      if(sorted.length>VISIBLE_COUNT){
+        const details=document.createElement('details');
+        details.className='rec-overflow-wrap';
+        const summary=document.createElement('summary');
+        summary.className='btn btn-inline';
+        summary.style.cssText='margin-top:8px;cursor:pointer;list-style:none;display:inline-flex';
+        const showLabels={ru:'Ещё рекомендации',en:'More recommendations',uz:'Boshqa tavsiyalar'};
+        summary.textContent=showLabels[currentLang]||showLabels.en;
+        details.appendChild(summary);
+        for(let i=VISIBLE_COUNT;i<sorted.length;i++){
+          details.appendChild(createRecCard(sorted[i],impl.levelLabels||{},false,altPrefix));
+        }
+        generalEl.appendChild(details);
       }
     }
   }
@@ -5917,7 +5937,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       const t=I18N[currentLang]||I18N.ru;
       // Safe: methodSummary and methodText come from our own I18N dictionary, not user input
       if(methodTitle) methodTitle.innerHTML=t.methodSummary||'';
-      if(methodBodyEl) methodBodyEl.textContent=t.methodText||'';
+      // methodText is now HTML from our own I18N dictionary (safe, not user input)
+      if(methodBodyEl) methodBodyEl.innerHTML=t.methodText||'';
       if(methodModal) methodModal.style.display='flex';
     });
   }
