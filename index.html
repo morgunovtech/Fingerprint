@@ -618,6 +618,36 @@ const I18N = {
             brave:{action:'Brave ограничивает видимость шрифтов',note:'Shields \u2192 Fingerprinting \u2192 Strict'},
             safari:{action:'Safari ограничивает доступ к списку шрифтов',note:'Встроенная защита'}
           }
+        },
+        spoofing:{
+          title:'Обнаружены несоответствия в данных браузера',
+          problem:'Некоторые данные вашего браузера не совпадают друг с другом. Это может быть VPN, расширение для приватности или подмена User-Agent. Несоответствия иногда делают вас более заметным, а не менее.',
+          instructions:{
+            chrome:{action:'Проверьте расширения, которые подменяют User-Agent',detail:'chrome://extensions \u2192 отключите User-Agent Switcher и подобные'},
+            firefox:{action:'Проверьте расширения и настройки приватности',detail:'about:addons \u2192 отключите подмену UA, если не нужна'},
+            brave:{action:'Brave может вызывать мелкие несоответствия \u2014 это нормально',note:'Встроенная защита Brave иногда создаёт контролируемые аномалии'},
+            safari:{action:'Проверьте расширения Safari',detail:'Safari \u2192 Настройки \u2192 Расширения'}
+          }
+        },
+        canvasRandomized:{
+          title:'Обнаружена рандомизация canvas',
+          problem:'Ваше расширение рандомизирует canvas-отпечаток. Это хорошо для приватности, но может сделать вас уникальным среди пользователей без такой защиты.',
+          instructions:{
+            chrome:{action:'Рассмотрите переход на Brave',detail:'В Brave рандомизация canvas работает на уровне браузера, что менее заметно'},
+            firefox:{action:'privacy.resistFingerprinting работает аналогично',detail:'Это стандартный механизм Firefox \u2014 менее заметен, чем расширения'},
+            brave:{action:'Brave рандомизирует canvas на уровне браузера',note:'Это штатное поведение \u2014 не стоит менять'},
+            safari:{action:'Safari имеет встроенную защиту canvas',note:'Дополнительных действий не требуется'}
+          }
+        },
+        tzMismatch:{
+          title:'Часовой пояс не совпадает с IP',
+          problem:'Ваш часовой пояс не совпадает с вашим IP-адресом. Если вы используете VPN, синхронизируйте время с локацией VPN-сервера.',
+          instructions:{
+            chrome:{action:'Синхронизируйте часовой пояс с VPN',detail:'Выберите VPN-сервер в той же стране, что и ваш системный часовой пояс'},
+            firefox:{action:'Синхронизируйте часовой пояс с VPN',detail:'Выберите VPN-сервер в той же стране, что и ваш системный часовой пояс'},
+            brave:{action:'Синхронизируйте часовой пояс с VPN',detail:'Выберите VPN-сервер в той же стране, что и ваш системный часовой пояс'},
+            safari:{action:'Синхронизируйте часовой пояс с VPN',detail:'Выберите VPN-сервер в той же стране, что и ваш системный часовой пояс'}
+          }
         }
       },
       general:[
@@ -1237,6 +1267,36 @@ const I18N = {
             brave:{action:'Brave limits font visibility',note:'Shields \u2192 Fingerprinting \u2192 Strict'},
             safari:{action:'Safari limits access to the font list',note:'Built-in protection'}
           }
+        },
+        spoofing:{
+          title:'Browser data inconsistencies detected',
+          problem:'Some of your browser data does not match. This could be a VPN, a privacy extension, or User-Agent spoofing. Inconsistencies sometimes make you more visible, not less.',
+          instructions:{
+            chrome:{action:'Check extensions that spoof your User-Agent',detail:'chrome://extensions \u2192 disable User-Agent Switcher and similar'},
+            firefox:{action:'Check extensions and privacy settings',detail:'about:addons \u2192 disable UA spoofing if not needed'},
+            brave:{action:'Brave may cause minor inconsistencies \u2014 this is normal',note:'Brave built-in protection sometimes creates controlled anomalies'},
+            safari:{action:'Check your Safari extensions',detail:'Safari \u2192 Settings \u2192 Extensions'}
+          }
+        },
+        canvasRandomized:{
+          title:'Canvas randomisation detected',
+          problem:'Your extension randomises the canvas fingerprint. This is good for privacy, but may make you unique among users without such protection.',
+          instructions:{
+            chrome:{action:'Consider switching to Brave',detail:'Brave randomises canvas at the browser level, which is less detectable'},
+            firefox:{action:'privacy.resistFingerprinting works similarly',detail:'This is a standard Firefox mechanism \u2014 less detectable than extensions'},
+            brave:{action:'Brave randomises canvas at the browser level',note:'This is standard behaviour \u2014 no need to change'},
+            safari:{action:'Safari has built-in canvas protection',note:'No additional action required'}
+          }
+        },
+        tzMismatch:{
+          title:'Timezone does not match IP',
+          problem:'Your timezone does not match your IP address. If you use a VPN, synchronise the time with the VPN server location.',
+          instructions:{
+            chrome:{action:'Synchronise your timezone with VPN',detail:'Choose a VPN server in the same country as your system timezone'},
+            firefox:{action:'Synchronise your timezone with VPN',detail:'Choose a VPN server in the same country as your system timezone'},
+            brave:{action:'Synchronise your timezone with VPN',detail:'Choose a VPN server in the same country as your system timezone'},
+            safari:{action:'Synchronise your timezone with VPN',detail:'Choose a VPN server in the same country as your system timezone'}
+          }
         }
       },
       general:[
@@ -1822,6 +1882,36 @@ const I18N = {
             firefox:{action:"Ekzotik shriftlarni o\u02BBchiring + resistFingerprinting ni yoqing",detail:"about:config \u2192 privacy.resistFingerprinting \u2192 true"},
             brave:{action:"Brave shriftlar ko\u02BBrinishini cheklaydi",note:"Shields \u2192 Fingerprinting \u2192 Strict"},
             safari:{action:"Safari shriftlar ro\u02BByxatiga kirishni cheklaydi",note:"Ichki himoya"}
+          }
+        },
+        spoofing:{
+          title:"Brauzer ma\u02BBlumotlarida nomuvofiqliklar aniqlandi",
+          problem:"Brauzeringizning ba\u02BBzi ma\u02BBlumotlari bir-biriga mos kelmaydi. Bu VPN, maxfiylik kengaytmasi yoki User-Agent almashtirilishi bo\u02BBlishi mumkin. Nomuvofiqliklar ba\u02BBzan sizni kamroq emas, balki ko\u02BBproq ko\u02BBzga ko\u02BBrinadigan qiladi.",
+          instructions:{
+            chrome:{action:"User-Agent ni almashtiruvchi kengaytmalarni tekshiring",detail:"chrome://extensions \u2192 User-Agent Switcher va shunga o\u02BBxshashlarni o\u02BBchiring"},
+            firefox:{action:"Kengaytmalar va maxfiylik sozlamalarini tekshiring",detail:"about:addons \u2192 kerak bo\u02BBlmasa UA almashtirishni o\u02BBchiring"},
+            brave:{action:"Brave kichik nomuvofiqliklar keltirib chiqarishi mumkin \u2014 bu normal",note:"Brave ichki himoyasi ba\u02BBzan boshqariladigan anomaliyalar yaratadi"},
+            safari:{action:"Safari kengaytmalarini tekshiring",detail:"Safari \u2192 Sozlamalar \u2192 Kengaytmalar"}
+          }
+        },
+        canvasRandomized:{
+          title:"Canvas tasodiflashtirish aniqlandi",
+          problem:"Kengaytmangiz canvas barmoq izini tasodiflashtirmoqda. Bu maxfiylik uchun yaxshi, lekin bunday himoyasiz foydalanuvchilar orasida sizni noyob qilishi mumkin.",
+          instructions:{
+            chrome:{action:"Brave ga o\u02BBtishni ko\u02BBrib chiqing",detail:"Brave brauzer darajasida canvas ni tasodiflashtiradi, bu kamroq seziladi"},
+            firefox:{action:"privacy.resistFingerprinting xuddi shunday ishlaydi",detail:"Bu Firefox ning standart mexanizmi \u2014 kengaytmalarga qaraganda kamroq seziladi"},
+            brave:{action:"Brave brauzer darajasida canvas ni tasodiflashtiradi",note:"Bu standart xatti-harakat \u2014 o\u02BBzgartirish shart emas"},
+            safari:{action:"Safari ichki canvas himoyasiga ega",note:"Qo\u02BBshimcha amallar talab qilinmaydi"}
+          }
+        },
+        tzMismatch:{
+          title:"Vaqt zonasi IP bilan mos kelmaydi",
+          problem:"Vaqt zonangiz IP manzilingiz bilan mos kelmaydi. Agar VPN ishlatayotgan bo\u02BBlsangiz, vaqtni VPN server joylashuvi bilan sinxronlashtiring.",
+          instructions:{
+            chrome:{action:"Vaqt zonasini VPN bilan sinxronlashtiring",detail:"Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            firefox:{action:"Vaqt zonasini VPN bilan sinxronlashtiring",detail:"Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            brave:{action:"Vaqt zonasini VPN bilan sinxronlashtiring",detail:"Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            safari:{action:"Vaqt zonasini VPN bilan sinxronlashtiring",detail:"Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"}
           }
         }
       },
@@ -3377,7 +3467,8 @@ const state={
   vpn:{status:'uncertain',reasons:[],checked:false},
   sharePayload:null,
   profilingContext:null,
-  speedResult:null
+  speedResult:null,
+  spoofingResult:null
 };
 let snapshotCache=null;
 let snapshotPromise=null;
@@ -4141,6 +4232,70 @@ function summarizeKeyPermissions(entries,t){
 }
 
 
+function checkSpoofing(basic){
+  var issues=[];
+  var ua=(typeof navigator!=='undefined'&&navigator.userAgent)||'';
+  var platform=(typeof navigator!=='undefined'&&navigator.platform)||'';
+
+  // 1. UA vs platform consistency
+  var uaWin=/Windows/i.test(ua);
+  var uaMac=/Macintosh|Mac OS/i.test(ua);
+  var uaLinux=/Linux/i.test(ua)&&!/Android/i.test(ua);
+  var uaAndroid=/Android/i.test(ua);
+  var platWin=/Win/i.test(platform);
+  var platMac=/Mac/i.test(platform);
+  var platLinux=/Linux/i.test(platform);
+
+  if(uaWin&&!platWin) issues.push('ua_platform');
+  if(uaMac&&!platMac) issues.push('ua_platform');
+  if(uaLinux&&!platLinux&&!uaAndroid) issues.push('ua_platform');
+
+  // 2. Canvas randomization (run canvas twice, compare)
+  if(typeof document!=='undefined'){
+    try{
+      var c1=document.createElement('canvas');c1.width=200;c1.height=50;
+      var ctx1=c1.getContext('2d');
+      ctx1.fillStyle='#f60';ctx1.fillRect(10,10,100,30);
+      ctx1.fillStyle='#069';ctx1.font='14px Arial';
+      ctx1.fillText('Fingerprint test',2,15);
+      var d1=c1.toDataURL();
+
+      var c2=document.createElement('canvas');c2.width=200;c2.height=50;
+      var ctx2=c2.getContext('2d');
+      ctx2.fillStyle='#f60';ctx2.fillRect(10,10,100,30);
+      ctx2.fillStyle='#069';ctx2.font='14px Arial';
+      ctx2.fillText('Fingerprint test',2,15);
+      var d2=c2.toDataURL();
+
+      if(d1!==d2) issues.push('canvas_randomized');
+    }catch(_){}
+  }
+
+  // 3. Timezone vs IP geolocation
+  if(basic&&state.serverData){
+    var ipTz=state.serverData?.details?.timezone||'';
+    var browserTz=(typeof Intl!=='undefined'&&Intl.DateTimeFormat().resolvedOptions().timeZone)||'';
+    if(ipTz&&browserTz){
+      var ipRegion=ipTz.split('/')[0]||'';
+      var brRegion=browserTz.split('/')[0]||'';
+      if(ipRegion&&brRegion&&ipRegion!==brRegion) issues.push('tz_mismatch');
+    }
+  }
+
+  // 4. Screen resolution vs DPR anomaly
+  if(typeof screen!=='undefined'){
+    var dpr=(typeof window!=='undefined'&&window.devicePixelRatio)||1;
+    var sw=screen.width||0;
+    var sh=screen.height||0;
+    if(dpr>=2&&sw<1000&&sh<700) issues.push('screen_dpr');
+  }
+
+  // 5. navigator.webdriver
+  if(typeof navigator!=='undefined'&&navigator.webdriver===true) issues.push('webdriver');
+
+  return{consistent:issues.length===0,issues:issues};
+}
+
 function renderShockBullets(basic,t,snapshot){
   const ul=getEl('shockList');
   const groups={
@@ -4411,6 +4566,21 @@ function renderShockBullets(basic,t,snapshot){
       lines.push(t.shock.webrtcSafe);
     }
     totalRows++;
+
+    // Spoofing/consistency check
+    const spoofing=checkSpoofing(basic);
+    state.spoofingResult=spoofing;
+    if(spoofing){
+      const spoofLabel={ru:'\u0414\u0430\u043d\u043d\u044b\u0435 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430',en:'Browser data',uz:"Brauzer ma\u02BBlumotlari"}[currentLang];
+      if(spoofing.consistent){
+        const naturalText={ru:'\u0412\u044b\u0433\u043b\u044f\u0434\u0438\u0442 \u0435\u0441\u0442\u0435\u0441\u0442\u0432\u0435\u043d\u043d\u043e',en:'Looks natural',uz:"Tabiiy ko\u02BBrinadi"}[currentLang];
+        groups.network.appendChild(mkRow(spoofLabel,naturalText,{badge:'safe'}));
+      }else{
+        const issuesText={ru:'\u041e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d\u044b \u043d\u0435\u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0438\u044f',en:'Inconsistencies found',uz:"Nomuvofiqliklar aniqlandi"}[currentLang];
+        groups.network.appendChild(mkRow(spoofLabel,issuesText,{badge:'warning'}));
+      }
+      totalRows++;
+    }
   }
 
   // === FINGERPRINT GROUP ===
@@ -4646,6 +4816,19 @@ function renderImplications(basic,t){
         const n=basic.fontsFp.count;
         if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=function(){return fn(n);};}
         picks.push(rec);
+      }
+      // Spoofing recs
+      const spoofing=state.spoofingResult;
+      if(spoofing&&!spoofing.consistent){
+        if(spoofing.issues.includes('ua_platform')&&impl.personal.spoofing){
+          picks.push(impl.personal.spoofing);
+        }
+        if(spoofing.issues.includes('canvas_randomized')&&impl.personal.canvasRandomized){
+          picks.push(impl.personal.canvasRandomized);
+        }
+        if(spoofing.issues.includes('tz_mismatch')&&impl.personal.tzMismatch){
+          picks.push(impl.personal.tzMismatch);
+        }
       }
       if(picks.length){
         const heading=document.createElement('div');
