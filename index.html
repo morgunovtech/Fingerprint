@@ -359,13 +359,14 @@ const I18N = {
       location:(city,country)=>`\uD83D\uDCCD \u0412\u044b \u0432 <code>${city}, ${country}</code> \u2014 \u044d\u0442\u043e \u0432\u0438\u0434\u043d\u043e \u0431\u0435\u0437 GPS`,
       locationLoading:'\uD83D\uDCCD \u041e\u043f\u0440\u0435\u0434\u0435\u043b\u044f\u0435\u043c \u043c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435\u2026',
       datetime:(date,time,tz)=>`\uD83D\uDD50 \u0421\u0435\u0439\u0447\u0430\u0441 \u0443 \u0432\u0430\u0441 <code>${time}</code>, <code>${date}</code> \u2014 \u0447\u0430\u0441\u043e\u0432\u043e\u0439 \u043f\u043e\u044f\u0441 <code>${tz}</code>`,
-      tzMismatch:(ipCountry,tzCountry)=>`\u26A0\uFE0F \u0412\u0430\u0448 IP \u0438\u0437 ${ipCountry}, \u043d\u043e \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043e \u043d\u0430 ${tzCountry} \u2014 \u044d\u0442\u043e \u0437\u0430\u043c\u0435\u0442\u043d\u043e`,
+      vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN или прокси обнаружен</b>: IP в <code>${ipLoc}</code>, но устройство настроено на <code>${devLoc}</code>. Это вызовет капчи, а некоторые сервисы могут заблокировать доступ`,
+      vpnSuspected:`\uD83D\uDFE1 <b>Признаки VPN/прокси</b>: IP принадлежит дата-центру. Сайты могут запрашивать дополнительную верификацию`,
+      vpnNotDetected:'\uD83D\uDFE2 VPN или прокси не обнаружен — ваш IP выглядит как обычное подключение',
       device:(guess,price)=>`\uD83D\uDCBB \u041f\u043e\u0445\u043e\u0436\u0435, \u0432\u044b \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0435 <code>${guess}</code>${price?' \u2014 \u043e\u0442 <code>'+price+'</code> \u0432 \u0440\u0438\u0442\u0435\u0439\u043b\u0435':''}`,
       browser:(name,perms)=>`\uD83C\uDF10 \u0411\u0440\u0430\u0443\u0437\u0435\u0440: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 \u0412\u0430\u0448\u0435 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435: <code>${parts}</code>`,
       adblock:'\uD83D\uDEE1\uFE0F \u0412\u044b \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0435 \u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0449\u0438\u043a \u0440\u0435\u043a\u043b\u0430\u043c\u044b',
       webrtcLeak:localIp=>`\uD83D\uDD13 WebRTC \u0440\u0430\u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442 \u0432\u0430\u0448 \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 IP: ${localIp} \u2014 VPN \u0435\u0433\u043e \u043d\u0435 \u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442`,
-      vpnLikely:'\uD83D\uDFE1 \u041f\u043e\u0445\u043e\u0436\u0435, \u0443 \u0432\u0430\u0441 VPN \u0438\u043b\u0438 \u043f\u0440\u043e\u043a\u0441\u0438',
       canvas:(hash)=>`\uD83C\uDFA8 \u0423 \u0432\u0430\u0448\u0435\u0433\u043e \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430 \u0435\u0441\u0442\u044c \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0433\u0440\u0430\u0444\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043e\u043a <code>${hash}</code> \u2014 \u043f\u043e \u043d\u0435\u043c\u0443 \u0432\u0430\u0441 \u043c\u043e\u0436\u043d\u043e \u0443\u0437\u043d\u0430\u0442\u044c \u043d\u0430 \u043b\u044e\u0431\u043e\u043c \u0441\u0430\u0439\u0442\u0435 \u0431\u0435\u0437 cookies`,
       languages:(flags,inference)=>`\uD83C\uDF10 \u042f\u0437\u044b\u043a\u0438: ${flags}${inference?' \u2014 '+inference:''}`,
       battery:level=>`\uD83D\uDD0B \u0417\u0430\u0440\u044f\u0434 ${level}% \u2014 \u0432\u044b, \u0432\u0435\u0440\u043e\u044f\u0442\u043d\u043e, \u0432 \u0434\u043e\u0440\u043e\u0433\u0435`,
@@ -787,13 +788,14 @@ const I18N = {
       location:(city,country)=>`\uD83D\uDCCD You\u2019re in <code>${city}, ${country}</code> \u2014 visible without GPS`,
       locationLoading:'\uD83D\uDCCD Detecting your location\u2026',
       datetime:(date,time,tz)=>`\uD83D\uDD50 Your time is <code>${time}</code>, <code>${date}</code> \u2014 timezone <code>${tz}</code>`,
-      tzMismatch:(ipCountry,tzCountry)=>`\u26A0\uFE0F Your IP says ${ipCountry}, but your device is set to ${tzCountry} \u2014 that\u2019s noticeable`,
+      vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN or proxy detected</b>: IP is in <code>${ipLoc}</code>, but your device is set to <code>${devLoc}</code>. This will trigger CAPTCHAs and some services may block access`,
+      vpnSuspected:`\uD83D\uDFE1 <b>VPN/proxy signs detected</b>: your IP belongs to a data center. Sites may require extra verification`,
+      vpnNotDetected:'\uD83D\uDFE2 No VPN or proxy detected \u2014 your IP looks like a regular connection',
       device:(guess,price)=>`\uD83D\uDCBB Looks like you\u2019re using <code>${guess}</code>${price?' \u2014 from <code>'+price+'</code> retail':''}`,
       browser:(name,perms)=>`\uD83C\uDF10 Browser: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 Your connection: <code>${parts}</code>`,
       adblock:"\uD83D\uDEE1\uFE0F You\u2019re using an ad blocker",
       webrtcLeak:localIp=>`\uD83D\uDD13 WebRTC reveals your local IP: ${localIp} \u2014 your VPN doesn\u2019t hide it`,
-      vpnLikely:"\uD83D\uDFE1 Looks like you\u2019re using a VPN or proxy",
       canvas:(hash)=>`\uD83C\uDFA8 Your browser has a unique graphic fingerprint <code>${hash}</code> \u2014 it can identify you on any site without cookies`,
       languages:(flags,inference)=>`\uD83C\uDF10 Languages: ${flags}${inference?' \u2014 '+inference:''}`,
       battery:level=>`\uD83D\uDD0B Battery at ${level}% \u2014 you\u2019re probably on the go`,
@@ -1182,13 +1184,14 @@ const I18N = {
       location:(city,country)=>`\uD83D\uDCCD Siz <code>${city}, ${country}</code>dasiz \u2014 GPSsiz ham ko\u02BBrinadi`,
       locationLoading:"\uD83D\uDCCD Joylashuvingiz aniqlanmoqda\u2026",
       datetime:(date,time,tz)=>`\uD83D\uDD50 Sizda hozir <code>${time}</code>, <code>${date}</code> \u2014 vaqt zonasi <code>${tz}</code>`,
-      tzMismatch:(ipCountry,tzCountry)=>`\u26A0\uFE0F IP manzilingiz ${ipCountry} dan, lekin qurilmangiz ${tzCountry} ga sozlangan \u2014 bu seziladi`,
+      vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN yoki proksi aniqlandi</b>: IP <code>${ipLoc}</code> da, lekin qurilmangiz <code>${devLoc}</code> ga sozlangan. Bu kapchalarni chaqiradi va ba'zi xizmatlar kirishni bloklashi mumkin`,
+      vpnSuspected:`\uD83D\uDFE1 <b>VPN/proksi belgilari</b>: IP data-markazga tegishli. Saytlar qo\u02BBshimcha tekshiruv so\u02BBreshi mumkin`,
+      vpnNotDetected:'\uD83D\uDFE2 VPN yoki proksi aniqlanmadi \u2014 IP oddiy ulanish ko\u02BBrinishida',
       device:(guess,price)=>`\uD83D\uDCBB Ehtimol siz <code>${guess}</code> ishlatyapsiz${price?' \u2014 chakana narxi <code>'+price+'</code> dan':''}`,
       browser:(name,perms)=>`\uD83C\uDF10 Brauzer: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 Aloqangiz: <code>${parts}</code>`,
       adblock:"\uD83D\uDEE1\uFE0F Siz reklama bloklagichidan foydalanasiz",
       webrtcLeak:localIp=>`\uD83D\uDD13 WebRTC lokal IP manzilingizni ochib beradi: ${localIp} \u2014 VPN uni yashirmaydi`,
-      vpnLikely:"\uD83D\uDFE1 Ehtimol siz VPN yoki proksi ishlatyapsiz",
       canvas:(hash)=>`\uD83C\uDFA8 Brauzeringizda noyob grafik barmoq izi bor <code>${hash}</code> \u2014 u orqali sizni istalgan saytda cookie\u2019siz tanib olishadi`,
       languages:(flags,inference)=>`\uD83C\uDF10 Tillar: ${flags}${inference?' \u2014 '+inference:''}`,
       battery:level=>`\uD83D\uDD0B Quvvat ${level}% \u2014 ehtimol yo\u02BBldasiz`,
@@ -3203,20 +3206,21 @@ function renderShockBullets(basic,t,snapshot){
     }
   }
 
-  // VPN (IP-dependent)
-  const vpnState=state.vpn||{};
-  if(hasIp&&vpnState.status==='likely'){
-    lines.push(t.shock.vpnLikely);
-  }
-
-  // TIMEZONE MISMATCH (IP-dependent)
-  if(hasIp&&details.timezone&&basic.timezone){
-    const ipTzCountry=details.timezone.split('/')[0]||'';
-    const browserTzCountry=basic.timezone.split('/')[0]||'';
-    if(ipTzCountry&&browserTzCountry&&ipTzCountry!==browserTzCountry){
-      const ipCountry=details.country_name||ipTzCountry;
-      const tzCountry=browserTzCountry;
-      lines.push(t.shock.tzMismatch(ipCountry,tzCountry));
+  // VPN STATUS (always show when IP data available)
+  if(hasIp){
+    const vpnState=state.vpn||{};
+    const hasTzMismatch=details.timezone&&basic.timezone&&(details.timezone.split('/')[0]||'')!==(basic.timezone.split('/')[0]||'');
+    if(hasTzMismatch){
+      // Timezone mismatch = strong VPN signal
+      const ipCountryCode=resolveCountryCode(details,state.serverData?.raw,state.serverData?.geo)||'';
+      const ipLoc=COUNTRY_NAMES[ipCountryCode.toUpperCase()]?.[currentLang]||details.country_name||details.timezone.split('/')[0]||'';
+      const browserTz=basic.timezone||'';
+      const browserRegion=browserTz.split('/')[1]?.replace(/_/g,' ')||browserTz.split('/')[0]||'';
+      lines.push(t.shock.vpnDetected(esc(ipLoc),esc(browserRegion)));
+    }else if(vpnState.status==='likely'){
+      lines.push(t.shock.vpnSuspected);
+    }else{
+      lines.push(t.shock.vpnNotDetected);
     }
   }
 
@@ -3244,12 +3248,27 @@ function renderShockBullets(basic,t,snapshot){
     let inference='';
     const sysLangs=basic.languages.map(l=>l.split('-')[0].toLowerCase());
     const siteLocale=currentLang;
-    if(sysLangs.includes('ru')||siteLocale==='ru'){
-      inference={ru:'\u0441\u043a\u043e\u0440\u0435\u0435 \u0432\u0441\u0435\u0433\u043e, \u0440\u0443\u0441\u0441\u043a\u043e\u0433\u043e\u0432\u043e\u0440\u044f\u0449\u0438\u0439',en:'likely Russian-speaking',uz:'ehtimol ruscha gaplashadi'}[currentLang]||'';
-    }else if(sysLangs.includes('uz')||siteLocale==='uz'){
-      inference={ru:'\u0441\u043a\u043e\u0440\u0435\u0435 \u0432\u0441\u0435\u0433\u043e, \u0443\u0437\u0431\u0435\u043a\u043e\u044f\u0437\u044b\u0447\u043d\u044b\u0439',en:'likely Uzbek-speaking',uz:'ehtimol o\u02BBzbekcha gaplashadi'}[currentLang]||'';
+    // Build evidence for inference
+    const evidence=[];
+    const hasRu=sysLangs.includes('ru');
+    const hasUz=sysLangs.includes('uz');
+    if(hasRu){
+      if(siteLocale==='ru'){
+        evidence.push({ru:'ru в системе + сайт на русском',en:'ru in system + site in Russian',uz:'tizimda ru + sayt ruscha'}[currentLang]);
+        inference={ru:'скорее всего, русскоговорящий',en:'likely Russian-speaking',uz:'ehtimol ruscha gaplashadi'}[currentLang]||'';
+      }else{
+        evidence.push({ru:'ru среди системных языков',en:'ru among system languages',uz:'tizim tillarida ru bor'}[currentLang]);
+        inference={ru:'вероятно, владеет русским',en:'probably speaks Russian',uz:'ehtimol ruscha biladi'}[currentLang]||'';
+      }
+    }else if(siteLocale==='ru'){
+      evidence.push({ru:'сайт открыт на русском',en:'site opened in Russian',uz:'sayt ruscha ochilgan'}[currentLang]);
+      inference={ru:'выбрал русский интерфейс',en:'chose Russian interface',uz:'rus interfeysini tanlagan'}[currentLang]||'';
     }
-    lines.push(t.shock.languages(flags,inference));
+    if(hasUz){
+      inference={ru:'скорее всего, узбекоязычный',en:'likely Uzbek-speaking',uz:'ehtimol o\u02BBzbekcha gaplashadi'}[currentLang]||'';
+    }
+    const fullInference=inference+(evidence.length>0?' ('+evidence.join(', ')+')':'');
+    lines.push(t.shock.languages(flags,fullInference));
   }
 
   // BATTERY (if low)
