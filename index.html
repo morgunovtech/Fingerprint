@@ -190,24 +190,24 @@
     .rec-step{margin:4px 0;font-size:14px}
     .rec-step a{color:var(--accent)}
     .step-how{display:block;font-size:13px;color:var(--muted);margin-top:2px}
-    .hero-verdict{text-align:center;padding:32px 24px;margin-bottom:24px}
+    .hero-verdict{text-align:left;padding:32px 24px;margin-bottom:24px}
     .hero-number{font-size:56px;font-weight:800;line-height:1;margin-bottom:8px;letter-spacing:-2px}
     .hero-number[data-level="high"]{color:var(--danger)}
     .hero-number[data-level="med"]{color:var(--warning)}
     .hero-number[data-level="low"]{color:var(--success)}
     .hero-subtitle{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)}
-    .hero-explanation{font-size:14px;color:var(--muted);margin-bottom:16px;max-width:480px;margin-left:auto;margin-right:auto}
-    .hero-actions{display:flex;gap:12px;justify-content:center;margin-bottom:16px}
-    .hero-summary{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+    .hero-explanation{font-size:14px;color:var(--muted);margin-bottom:16px;max-width:480px}
+    .hero-actions{display:flex;gap:12px;justify-content:flex-start;margin-bottom:16px}
+    .hero-summary{display:flex;gap:16px;justify-content:flex-start;flex-wrap:wrap;font-size:13px;color:var(--muted)}
     .hero-summary span{display:flex;align-items:center;gap:4px}
     .hero-summary code{font-family:var(--font-mono);font-size:12px;background:var(--code-bg);padding:1px 6px;border-radius:4px}
     @media(max-width:640px){
       .hero-number{font-size:40px}
       .hero-subtitle{font-size:16px}
       .hero-actions{flex-direction:column;align-items:stretch}
-      .hero-summary{flex-direction:column;align-items:center;gap:8px}
+      .hero-summary{flex-direction:column;align-items:flex-start;gap:8px}
     }
-    .data-groups{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+    .data-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
     @media(max-width:640px){.data-groups{grid-template-columns:1fr}}
     .data-group{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
     .data-group h3{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
@@ -221,6 +221,20 @@
     .status-badge--safe{background:var(--success-bg);color:var(--success)}
     .status-badge--danger{background:var(--danger-bg);color:var(--danger)}
     .status-badge--warning{background:var(--warning-bg);color:var(--warning)}
+    #detailsAccordion[open] summary svg{transform:rotate(180deg)}
+    #detailsAccordion summary{display:flex;align-items:center}
+    @media print{
+      body{background:#fff!important;color:#111!important;font-size:13px}
+      .wrap{max-width:100%;padding:0;margin:0}
+      .block{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
+      .btn,.menu,.hero-actions,.shock-footer,.toolbar,.implications-block .rec-steps a{display:none!important}
+      .hero-verdict{padding:16px 0}
+      .hero-number{font-size:36px}
+      .data-groups{grid-template-columns:1fr 1fr}
+      details[open]>summary~*{display:block}
+      details>summary{list-style:none;font-weight:700}
+      .rec-card{break-inside:avoid}
+    }
   </style>
 </head>
 <body>
@@ -281,7 +295,7 @@
         <div class="data-group" id="groupIdentity"></div>
         <div class="data-group" id="groupDevice"></div>
         <div class="data-group" id="groupNetwork"></div>
-        <div class="data-group" id="groupFingerprint"></div>
+        <div class="data-group" id="groupFingerprint" style="display:none"></div>
       </div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
@@ -308,8 +322,13 @@
 
   <!-- Block 4: Detailed cards -->
   <section class="block">
-    <div id="detailTitle" class="section-title"></div>
-    <div class="cards" id="cards"></div>
+    <details id="detailsAccordion">
+      <summary class="section-heading" style="cursor:pointer;user-select:none">
+        <span id="detailTitle"></span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+      </summary>
+      <div class="cards" id="cards"></div>
+    </details>
   </section>
 
   <!-- Block 5: Methodology & Policy -->
@@ -2149,6 +2168,14 @@ const FREQ_META = Object.fromEntries(Object.entries(FREQ).map(([name,table])=>{
   const total=entries.reduce((sum,[,v])=>sum+v,0);
   return [name,{table:Object.fromEntries(entries),total,size:entries.length}];
 }));
+// Normalize frequency tables to sum to 1.0
+Object.values(FREQ_META).forEach(meta=>{
+  const {table,total}=meta;
+  if(Math.abs(total-1)>0.001){
+    Object.keys(table).forEach(k=>{table[k]=table[k]/total;});
+    meta.total=1;
+  }
+});
 const FREQ_SAMPLERS = Object.fromEntries(Object.entries(FREQ_META).map(([name,meta])=>{
   let acc=0;
   const cdf=Object.entries(meta.table).map(([key,val])=>{
