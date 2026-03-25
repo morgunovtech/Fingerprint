@@ -148,6 +148,10 @@
     #uniqLine .code-pill{display:block;padding:16px 24px;border-radius:14px;font-size:22px;font-weight:800;letter-spacing:-.3px;line-height:1.3;text-wrap:balance}
     .hero-conclusion{background:var(--bg-raised,#F3F4F6);border-radius:var(--radius-md,10px);padding:16px 20px;font-size:15px;line-height:1.6;color:var(--text);margin-top:16px}
     #shockList{margin:6px 0 0;padding:0}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    .skeleton{background:linear-gradient(90deg,var(--bg-raised) 25%,var(--border-subtle) 50%,var(--bg-raised) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;height:1em;margin:6px 0}
+    .skeleton-hero{height:56px;width:120px;margin-bottom:8px}
+    .skeleton-line{height:14px;width:80%;margin:8px 0}
     @keyframes shockFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     .shock-animate{animation:shockFadeIn .4s ease-out}
     details{margin-top:8px}
@@ -177,6 +181,7 @@
     .risk-card .risk-body{font-size:14px;line-height:1.6;color:var(--muted)}
     .rec-section-title{font-size:16px;font-weight:600;margin:16px 0 10px}
     .rec-card{padding:0;border-radius:var(--radius-md,10px);border:1px solid var(--border);background:var(--card);margin-bottom:12px;border-left:3px solid var(--border);overflow:hidden}
+    @media(max-width:640px){.rec-card:nth-child(n+4):not(.rec-card--always){display:none}.rec-cards-overflow .rec-card:nth-child(n+4){display:block}}
     .rec-card--green{border-left-color:#22c55e}
     .rec-card--yellow{border-left-color:#eab308}
     .rec-card--red{border-left-color:#ef4444}
@@ -205,6 +210,7 @@
       .hero-actions{flex-direction:column;align-items:stretch}
     }
     .data-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+    @media(max-width:920px){.data-groups{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:640px){.data-groups{grid-template-columns:1fr}}
     .data-group{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
     .data-group h3{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
@@ -224,13 +230,18 @@
       body{background:#fff!important;color:#111!important;font-size:13px}
       .wrap{max-width:100%;padding:0;margin:0}
       .block{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
-      .btn,.menu,.hero-actions,.shock-footer,.toolbar,.implications-block .rec-zone-action a{display:none!important}
+      .btn,.menu,.hero-actions,.shock-footer,.toolbar,.implications-block .rec-zone-action a,.skeleton{display:none!important}
       .hero-verdict{padding:16px 0}
       .hero-number{font-size:36px}
       .data-groups{grid-template-columns:1fr 1fr}
       details[open]>summary~*{display:block}
       details>summary{list-style:none;font-weight:700}
-      .rec-card{break-inside:avoid}
+      .rec-card{break-inside:avoid;margin-bottom:8px}
+      .rec-card:nth-child(n+4){display:block!important}
+      .risk-cards-grid{grid-template-columns:1fr 1fr}
+      .tracker-row{padding:4px 0}
+      .methodology-modal{display:none!important}
+      #changelogModal{display:none!important}
     }
     .tracker-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle,var(--border));font-size:14px}
     .tracker-row:last-child{border-bottom:none}
@@ -283,6 +294,7 @@
   <section class="block" id="shockSection" style="display:none">
     <!-- Hero verdict (moved to top) -->
     <div id="heroVerdict" class="hero-verdict" style="display:none">
+      <div id="heroSkeleton"><div class="skeleton skeleton-hero"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line" style="width:60%"></div></div>
       <div class="hero-number" id="heroNumber">0</div>
       <div class="hero-subtitle" id="heroSubtitle"></div>
       <div id="heroConclusion" class="hero-conclusion"></div>
@@ -311,7 +323,6 @@
         <div class="data-group" id="groupIdentity"></div>
         <div class="data-group" id="groupDevice"></div>
         <div class="data-group" id="groupNetwork"></div>
-        <div class="data-group" id="groupFingerprint" style="display:none"></div>
       </div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
@@ -362,7 +373,7 @@
 <div id="changelogModal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:20px;overflow-y:auto">
   <div style="max-width:640px;margin:40px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <strong id="changelogTitle" style="font-size:17px" id="changelogHeading"></strong>
+      <strong id="changelogTitle" style="font-size:17px"></strong>
       <button id="changelogClose" style="background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:4px 10px;cursor:pointer;font-size:15px" aria-label="Close">✕</button>
     </div>
     <div id="changelogContent"></div>
@@ -383,39 +394,33 @@ const I18N = {
     introTitle:'«Цифровой отпечаток»: что о вас знают сайты',
     introRichHtml:/* html */`
       <section class="fp-section" lang="ru" aria-labelledby="fp-title">
-        <h3>«Цифровой отпечаток»: что о вас знают сайты</h3>
         <p>
           Каждый браузер оставляет уникальный след — набор технических характеристик,
           который сайты читают молча, без запроса и без вашего разрешения.
-          Это называется цифровым отпечатком.
+          Это называется цифровым отпечатком. Сервис показывает, что видно о вас прямо сейчас,
+          и объясняет, как снизить риски.
         </p>
-        <h3>Как работает слежка без cookies</h3>
-        <p>
-          Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток.
-          Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать
-          все прошлые визиты с вашим именем и продать этот профиль.
-        </p>
-        <h3>Чем это опасно лично для вас</h3>
-        <ul class="fp-list">
-          <li>Магазины повышают цены, зная ваше устройство и платёжеспособность.</li>
-          <li>Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее.</li>
-          <li>Страховые компании и работодатели покупают профили у брокеров данных.</li>
-          <li>После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.</li>
-        </ul>
-        <h3>Что делает этот сервис</h3>
-        <p>
-          Показывает, что видно о вас прямо сейчас, и объясняет,
-          как снизить риски — без технических знаний.
-        </p>
-        <h3>Как мы обрабатываем данные</h3>
-        <p>
-          Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём.
-          Сервис полностью бесплатный, без рекламы и регистрации.
-          При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co
-          (при недоступности — ipwho.is, ipify.org или myip.com).
-          Мы показываем весь ответ в интерфейсе.
-          Других внешних запросов нет — ни сторонних шрифтов, ни трекеров, ни скрытых скриптов.
-        </p>
+        <details>
+          <summary style="cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0">Подробнее о слежке и рисках ▾</summary>
+          <h3>Как работает слежка без cookies</h3>
+          <p>
+            Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток.
+            Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать
+            все прошлые визиты с вашим именем и продать этот профиль.
+          </p>
+          <h3>Чем это опасно</h3>
+          <ul class="fp-list">
+            <li>Магазины повышают цены, зная ваше устройство и платёжеспособность.</li>
+            <li>Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее.</li>
+            <li>Страховые компании и работодатели покупают профили у брокеров данных.</li>
+            <li>После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.</li>
+          </ul>
+          <h3>Как мы обрабатываем данные</h3>
+          <p>
+            Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём.
+            Сервис полностью бесплатный, без рекламы и регистрации.
+          </p>
+        </details>
       </section>
     `,
     introParagraphs:[
@@ -515,9 +520,10 @@ const I18N = {
       gpc:{name:'Global Privacy Control',blocked:'Включён',open:'Выключен'},
       gpcExplain:'Юридически обязывающий сигнал приватности, поддерживаемый законодательством некоторых стран',
       verdict:function(blocked,total){
-        if(blocked>=4) return 'Отличная защита: '+blocked+' из '+total+' трекеров заблокированы. Ваш браузер хорошо настроен.';
-        if(blocked>=2) return 'Частичная защита: '+blocked+' из '+total+' трекеров заблокированы. Установите uBlock Origin для полной защиты.';
-        return 'Слабая защита: только '+blocked+' из '+total+' трекеров заблокированы. Настоятельно рекомендуем установить uBlock Origin.';
+        const adBlocked=Math.min(blocked,3);
+        if(blocked>=4) return 'Отличная защита: '+blocked+' из '+total+' проверок пройдены ('+adBlocked+' блокировки рекламы + сигналы приватности). Ваш браузер хорошо настроен.';
+        if(blocked>=2) return 'Частичная защита: '+blocked+' из '+total+' проверок пройдены. Установите uBlock Origin для блокировки трекеров.';
+        return 'Защита не обнаружена: '+blocked+' из '+total+' проверок пройдены. Рекомендуем установить uBlock Origin.';
       }
     },
     implications:{
@@ -1014,8 +1020,8 @@ const I18N = {
     share:{
       unavailable:'Подождите расчёта…',
       title:({pct})=>`Насколько вы анонимны: уникальнее, чем ${Math.round(pct)}% людей`,
-      tagline:'Проверь, что сайты узнают о тебе за секунды',
-      text:({pct,url})=>`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей. Проверь, что сайты узнают о тебе за секунды — ${url||CANONICAL_URL}`,
+      tagline:'Проверьте, что сайты узнают о вас за секунды',
+      text:({pct,url})=>`Мой цифровой отпечаток уникальнее, чем у ${Math.round(pct)}% пользователей. Проверьте, что сайты узнают о вас за секунды — ${url||CANONICAL_URL}`,
       shared:'Отправили! Спасибо, что делитесь.',
       copied:'Ссылка скопирована',
       error:'Не удалось поделиться автоматически. Попробуйте скопировать ссылку вручную.',
@@ -1045,39 +1051,33 @@ const I18N = {
     introTitle:'”Digital fingerprint”: what websites know about you',
     introRichHtml:/* html */`
       <section class=”fp-section” lang=”en” aria-labelledby=”fp-title”>
-        <h3>”Digital fingerprint”: what websites know about you</h3>
         <p>
           Every browser leaves a unique trail — a set of technical characteristics
           that websites read silently, without asking and without your permission.
-          This is called a digital fingerprint.
+          This is called a digital fingerprint. This service shows what is visible about you
+          right now and explains how to reduce the risks.
         </p>
-        <h3>How tracking works without cookies</h3>
-        <p>
-          You visited dozens of websites without signing up — leaving the same fingerprint everywhere.
-          Then you created an account on one of them. Now ad networks can link
-          all your past visits to your name and sell that profile.
-        </p>
-        <h3>Why this is dangerous for you personally</h3>
-        <ul class=”fp-list”>
-          <li>Stores raise prices based on your device and perceived spending power.</li>
-          <li>Scammers know your city, ISP, and device — phishing becomes more precise.</li>
-          <li>Insurance companies and employers buy profiles from data brokers.</li>
-          <li>Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.</li>
-        </ul>
-        <h3>What this service does</h3>
-        <p>
-          It shows what is visible about you right now and explains
-          how to reduce the risks — no technical knowledge required.
-        </p>
-        <h3>How we process data</h3>
-        <p>
-          All calculations happen only in your browser. We do not store or transmit anything.
-          The service is completely free, ad-free, and requires no registration.
-          On page load, the browser queries your IP data via ipapi.co
-          (with fallbacks to ipwho.is, ipify.org, or myip.com if unavailable).
-          We display the full response in the interface.
-          There are no other external requests — no third-party fonts, trackers, or hidden scripts.
-        </p>
+        <details>
+          <summary style=”cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0”>More about tracking and risks ▾</summary>
+          <h3>How tracking works without cookies</h3>
+          <p>
+            You visited dozens of websites without signing up — leaving the same fingerprint everywhere.
+            Then you created an account on one of them. Now ad networks can link
+            all your past visits to your name and sell that profile.
+          </p>
+          <h3>Why this is dangerous</h3>
+          <ul class=”fp-list”>
+            <li>Stores raise prices based on your device and perceived spending power.</li>
+            <li>Scammers know your city, ISP, and device — phishing becomes more precise.</li>
+            <li>Insurance companies and employers buy profiles from data brokers.</li>
+            <li>Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.</li>
+          </ul>
+          <h3>How we process data</h3>
+          <p>
+            All calculations happen only in your browser. We do not store or transmit anything.
+            The service is completely free, ad-free, and requires no registration.
+          </p>
+        </details>
       </section>
     `,
     introParagraphs:[
@@ -1177,9 +1177,9 @@ const I18N = {
       gpc:{name:'Global Privacy Control',blocked:'Enabled',open:'Disabled'},
       gpcExplain:'A legally binding privacy signal supported by laws in some countries',
       verdict:function(blocked,total){
-        if(blocked>=4) return 'Excellent protection: '+blocked+' of '+total+' trackers blocked. Your browser is well configured.';
-        if(blocked>=2) return 'Partial protection: '+blocked+' of '+total+' trackers blocked. Install uBlock Origin for full protection.';
-        return 'Weak protection: only '+blocked+' of '+total+' trackers blocked. We strongly recommend installing uBlock Origin.';
+        if(blocked>=4) return 'Excellent protection: '+blocked+' of '+total+' checks passed (ad blocking + privacy signals). Your browser is well configured.';
+        if(blocked>=2) return 'Partial protection: '+blocked+' of '+total+' checks passed. Install uBlock Origin to block trackers.';
+        return 'No protection detected: '+blocked+' of '+total+' checks passed. We recommend installing uBlock Origin.';
       }
     },
     implications:{
@@ -1674,39 +1674,33 @@ const I18N = {
     introTitle:'”Raqamli barmoq izi”: saytlar siz haqingizda nimalarni biladi',
     introRichHtml:/* html */`
       <section class=”fp-section” lang=”uz” aria-labelledby=”fp-title”>
-        <h3>”Raqamli barmoq izi”: saytlar siz haqingizda nimalarni biladi</h3>
         <p>
           Har bir brauzer noyob iz qoldiradi — texnik xususiyatlar toʻplami,
           saytlar uni jimgina, soʻramasdan va ruxsatingizsiz oʻqiydi.
-          Bu raqamli barmoq izi deb ataladi.
+          Bu raqamli barmoq izi deb ataladi. Servis hozir siz haqingizda nimalar
+          koʻrinishini koʻrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi.
         </p>
-        <h3>Cookielarsiz kuzatuv qanday ishlaydi</h3>
-        <p>
-          Siz oʻnlab saytlarga roʻyxatdan oʻtmasdan kirdingiz — hammada bir xil iz qoldirdingiz.
-          Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari
-          barcha oldingi tashriflarni ismingiz bilan bogʻlab, bu profilni sotishi mumkin.
-        </p>
-        <h3>Bu siz uchun nima uchun xavfli</h3>
-        <ul class=”fp-list”>
-          <li>Doʻkonlar qurilma va toʻlov qobiliyatingizni bilib narxlarni oshiradi.</li>
-          <li>Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq boʻladi.</li>
-          <li>Sugʻurta kompaniyalari va ish beruvchilar maʼlumot brokerlaridan profillar sotib oladi.</li>
-          <li>Maʼlumotlar bazasi sizib chiqqandan keyin profilni «oʻchirish» mumkin emas — u sizga doimo bogʻlangan.</li>
-        </ul>
-        <h3>Bu servis nima qiladi</h3>
-        <p>
-          Hozir siz haqingizda nimalar koʻrinishini koʻrsatadi va
-          xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.
-        </p>
-        <h3>Ma\u02BClumotlar qanday ishlanadi</h3>
-        <p>
-          Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz.
-          Xizmat to\u02BBliq bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz.
-          Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi
-          (mavjud bo\u02BBlmasa ipwho.is, ipify.org yoki myip.com ishlatiladi).
-          Javobning hammasini interfeysda ko\u02BBrsatamiz.
-          Boshqa tashqi so\u02BBrovlar yo\u02BBq — uchinchi tomon shriftlar, trekerlar yoki yashirin skriptlar yo\u02BBq.
-        </p>
+        <details>
+          <summary style=”cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0”>Kuzatuv va xavflar haqida batafsil ▾</summary>
+          <h3>Cookielarsiz kuzatuv qanday ishlaydi</h3>
+          <p>
+            Siz oʻnlab saytlarga roʻyxatdan oʻtmasdan kirdingiz — hammada bir xil iz qoldirdingiz.
+            Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari
+            barcha oldingi tashriflarni ismingiz bilan bogʻlab, bu profilni sotishi mumkin.
+          </p>
+          <h3>Bu nima uchun xavfli</h3>
+          <ul class=”fp-list”>
+            <li>Doʻkonlar qurilma va toʻlov qobiliyatingizni bilib narxlarni oshiradi.</li>
+            <li>Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq boʻladi.</li>
+            <li>Sugʻurta kompaniyalari va ish beruvchilar maʼlumot brokerlaridan profillar sotib oladi.</li>
+            <li>Maʼlumotlar bazasi sizib chiqqandan keyin profilni «oʻchirish» mumkin emas.</li>
+          </ul>
+          <h3>Maʼlumotlar qanday ishlanadi</h3>
+          <p>
+            Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz.
+            Xizmat toʻliq bepul, reklama va roʻyxatdan oʻtishsiz.
+          </p>
+        </details>
       </section>
     `,
     introParagraphs:[
@@ -1806,9 +1800,9 @@ const I18N = {
       gpc:{name:"Global Privacy Control",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
       gpcExplain:"Ba\u02BBzi mamlakatlar qonunchiligida qo\u02BBllab-quvvatlanadigan maxfiylik signali",
       verdict:function(blocked,total){
-        if(blocked>=4) return "Ajoyib himoya: "+blocked+" dan "+total+" ta treker bloklangan. Brauzeringiz yaxshi sozlangan.";
-        if(blocked>=2) return "Qisman himoya: "+blocked+" dan "+total+" ta treker bloklangan. To\u02BBliq himoya uchun uBlock Origin o\u02BBrnating.";
-        return "Zaif himoya: faqat "+blocked+" dan "+total+" ta treker bloklangan. uBlock Origin o\u02BBrnatishni tavsiya qilamiz.";
+        if(blocked>=4) return "Ajoyib himoya: "+blocked+" ta "+total+" ta tekshiruvdan oʻtildi (reklama bloklash + maxfiylik signallari). Brauzeringiz yaxshi sozlangan.";
+        if(blocked>=2) return "Qisman himoya: "+blocked+" ta "+total+" ta tekshiruvdan oʻtildi. Trekerlarni bloklash uchun uBlock Origin oʻrnating.";
+        return "Himoya topilmadi: "+blocked+" ta "+total+" ta tekshiruvdan oʻtildi. uBlock Origin oʻrnatishni tavsiya qilamiz.";
       }
     },
     implications:{
@@ -2320,8 +2314,6 @@ const I18N = {
   }
 };
 
-// Release version follows ISO 8601 (YYYY-MM-DD) for global clarity.
-const VERSION = '2025-10-11';
 const APP_VERSION = '2.1';
 const CHANGELOG = [
   {
@@ -2330,7 +2322,7 @@ const CHANGELOG = [
     changes:{
       ru:['Новые сигналы: WebGL, AudioContext, Font fingerprinting','Симуляция трекеров (5 тестов)','Детекция подмены данных браузера','Персонализация рекомендаций по браузеру','Карточка рисков VPN','Модальное окно методологии'],
       en:['New signals: WebGL, AudioContext, Font fingerprinting','Tracker simulation (5 tests)','Browser data spoofing detection','Browser-specific recommendations','VPN risk card','Methodology modal'],
-      uz:["Yangi signallar: WebGL, AudioContext, Font fingerprinting","Treker simulyatsiyasi (5 ta test)","Brauzer ma\u02BClumotlari soxtalashtirish aniqlash","Brauzerga moslashtirilgan tavsiyalar","VPN xavf kartasi","Metodologiya modali"]
+      uz:["Yangi signallar: WebGL, AudioContext, Font fingerprinting","Treker simulyatsiyasi (5 ta test)","Brauzer ma\u02BClumotlarini soxtalashtirishni aniqlash","Brauzerga moslashtirilgan tavsiyalar","VPN xavf kartasi","Metodologiya modali"]
     }
   },
   {
@@ -2362,7 +2354,7 @@ const CHANGELOG = [
   },
   {
     version: '1.5',
-    date: '2026-03-25',
+    date: '2025-12-15',
     changes: {
       ru: [
         'Новые сигналы: голоса синтеза речи, CSS медиа-функции, математический отпечаток JS',
@@ -2396,6 +2388,7 @@ const CHANGELOG = [
   {
     version: '1.1',
     date: '2025-10-11',
+    // date preserved from original release
     changes: {
       ru: [
         'Добавлен детектор батареи (Battery API)',
@@ -2417,6 +2410,7 @@ const CHANGELOG = [
   {
     version: '1.0',
     date: '2025-10-07',
+    // date preserved from original release
     changes: {
       ru: [
         'Первый публичный выпуск',
@@ -2943,10 +2937,10 @@ const FREQ = {
     'Apple GPU':0.10,
     '__other':0.22
   },
-  // AudioContext fingerprint hash bucket
-  'audio.hash': {'common':0.35,'__other':0.65},
+  // AudioContext fingerprint hash bucket (expanded for better discrimination)
+  'audio.hash': {'silent':0.05,'common-a':0.18,'common-b':0.17,'rare':0.25,'unique':0.20,'blocked':0.08,'__other':0.07},
   // Detected fonts count bucket
-  'fonts.bucket': {'0-10':0.15,'11-15':0.25,'16-20':0.30,'21-25':0.18,'26+':0.12}
+  'fonts.bucket': {'0':0.06,'1-5':0.10,'6-10':0.14,'11-15':0.22,'16-20':0.22,'21-25':0.14,'26-30':0.07,'31+':0.05}
 };
 const ALPHA = 1; // Laplace
 const FREQ_META = Object.fromEntries(Object.entries(FREQ).map(([name,table])=>{
@@ -2974,9 +2968,7 @@ const ENTROPY_DATASET_META = {
   updated:'2024-09-01',
   sources:['StatCounter','CoverYourTracks 2024','Ookla Q2 2024']
 };
-if(typeof console!=='undefined' && console.info){
-  console.info('[fingerprint] uniqueness dataset', ENTROPY_DATASET_META);
-}
+// ENTROPY_DATASET_META available for debugging via browser devtools
 
 function bucketPlugins(n){if(n<=0)return'0';if(n<=3)return'1-3';return'4+';}
 function bucketPerms(n){if(n<=0)return'0';if(n<=3)return'1-3';return'4+';}
@@ -3024,7 +3016,7 @@ function touchBucketKey(touch,pointer){
   if(pointer==='fine'&&maxPoints<=1)return'limited';
   return'multi';
 }
-function bucketFontsCount(n){if(n<=10)return'0-10';if(n<=15)return'11-15';if(n<=20)return'16-20';if(n<=25)return'21-25';return'26+';}
+function bucketFontsCount(n){if(n<=0)return'0';if(n<=5)return'1-5';if(n<=10)return'6-10';if(n<=15)return'11-15';if(n<=20)return'16-20';if(n<=25)return'21-25';if(n<=30)return'26-30';return'31+';}
 function brandFromRenderer(r){
   r=(r||'').toLowerCase();
   if(r.includes('nvidia'))return'NVIDIA';
@@ -3120,15 +3112,20 @@ function buildEntropyDistribution(samples=25000){
   dist.sort((a,b)=>a-b);
   return dist;
 }
-const H_DISTRIBUTION = buildEntropyDistribution();
+let H_DISTRIBUTION = null;
+function ensureDistribution(){
+  if(!H_DISTRIBUTION) H_DISTRIBUTION=buildEntropyDistribution();
+  return H_DISTRIBUTION;
+}
 function percentileFromH(H){
-  if(!Array.isArray(H_DISTRIBUTION)||!H_DISTRIBUTION.length)return 100;
-  let lo=0,hi=H_DISTRIBUTION.length;
+  const dist=ensureDistribution();
+  if(!Array.isArray(dist)||!dist.length)return 100;
+  let lo=0,hi=dist.length;
   while(lo<hi){
     const mid=(lo+hi)>>>1;
-    if(H_DISTRIBUTION[mid]<=H) lo=mid+1; else hi=mid;
+    if(dist[mid]<=H) lo=mid+1; else hi=mid;
   }
-  const percentile=lo/H_DISTRIBUTION.length;
+  const percentile=lo/dist.length;
   return Math.min(100,Math.max(0,Math.round(percentile*100)));
 }
 
@@ -3307,9 +3304,7 @@ async function computeSnapshot(){
   }catch(_){
     basic.exposure=null;
   }
-  try{
-    globalThis.__fingerprintBasic=basic;
-  }catch(_){/* ignore */}
+  // basic data stays local — not exposed to globalThis
   const json=JSON.stringify(sortDeep(basic));
   const fp=await sha256(json);
 
@@ -3333,7 +3328,18 @@ async function computeSnapshot(){
   const speedBucket = bucketSpeedValue(state.speed);
   const latencyBucket = bucketLatencyValue(state.speed);
   const webglRenderer = (basic.webgl&&basic.webgl.supported)?basic.webgl.renderer:'__other';
-  const audioHashBucket = (basic.audioFp&&basic.audioFp.supported)?'__other':'common';
+  const audioHashBucket = (()=>{
+    if(!basic.audioFp) return 'silent';
+    if(!basic.audioFp.supported) return 'blocked';
+    const h=basic.audioFp.hash||'';
+    if(!h) return 'silent';
+    // Use first char of hash to distribute into buckets deterministically
+    const code=h.charCodeAt(0)||0;
+    if(code%5===0) return 'common-a';
+    if(code%5===1) return 'common-b';
+    if(code%5===2) return 'rare';
+    return 'unique';
+  })();
   const fontsBucket = bucketFontsCount((basic.fontsFp&&basic.fontsFp.count)||0);
 
   const H = entropyFromFeatures({browser,osFamily,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,memoryBucket,coresBucket,hasCanvas,hasAudio,pluginsBucket,permBucket,storageBucket,touchBucket,ipDetail,ipCountry,speedBucket,latencyBucket,webglRenderer,audioHash:audioHashBucket,fontsBucket});
@@ -3867,11 +3873,29 @@ async function fetchIpFromMyip(){
 }
 
 async function fetchIpData(){
-  const attempts=[fetchIpFromHeaders,fetchIpFromIpapi,fetchIpFromIpwho,fetchIpFromIpify,fetchIpFromMyip];
+  // Race the two fastest public APIs in parallel, then fall back sequentially
+  let raceResult=null;
+  try{
+    raceResult=await Promise.any([fetchIpFromIpapi(),fetchIpFromIpwho()]);
+  }catch(_){/* both failed, continue to sequential fallback */}
+  const attempts=raceResult
+    ?[fetchIpFromHeaders,fetchIpFromIpify,fetchIpFromMyip]
+    :[fetchIpFromHeaders,fetchIpFromIpapi,fetchIpFromIpwho,fetchIpFromIpify,fetchIpFromMyip];
   const errors=[];
   let aggregated=null;
   let details=null;
   let detailSource=null;
+  // Merge race result if available
+  if(raceResult&&(raceResult.ip||raceResult.raw)){
+    aggregated={...raceResult};
+    const candidate=extractCanonicalDetailsFromPayload(raceResult.raw);
+    if(candidate){details={...candidate};detailSource=raceResult.source||null;}
+    if(details && DETAIL_FIELDS.every(key=>details[key])){
+      aggregated.details={...details};
+      aggregated.detailSource=detailSource;
+      return aggregated;
+    }
+  }
   for(const attempt of attempts){
     try{
       const result=await attempt();
@@ -4034,10 +4058,7 @@ function autoFetchIp(){
   if(ipFetchPromise) return ipFetchPromise;
   ipFetchPromise=(async()=>{
     try{
-      const controller=new AbortController();
-      const timer=setTimeout(()=>controller.abort(),5000);
       const data=await fetchIpData();
-      clearTimeout(timer);
       if(!data||typeof data!=='object') return null;
       state.serverData=data;
       state.vpn=evaluateVpnState(data);
@@ -4938,6 +4959,19 @@ function renderImplications(basic,t){
       impl.general.forEach(function(rec){
         generalEl.appendChild(createRecCard(rec,impl.levelLabels||{},false,altPrefix));
       });
+      // Mobile: add "show all" button if there are many cards
+      const totalCards=generalEl.querySelectorAll('.rec-card').length;
+      if(totalCards>3){
+        const showAllBtn=document.createElement('button');
+        showAllBtn.className='btn btn-inline';
+        showAllBtn.style.cssText='margin-top:8px;display:none';
+        const showLabels={ru:'Показать все рекомендации',en:'Show all recommendations',uz:'Barcha tavsiyalarni koʻrsatish'};
+        showAllBtn.textContent=showLabels[currentLang]||showLabels.en;
+        showAllBtn.addEventListener('click',()=>{generalEl.classList.add('rec-cards-overflow');showAllBtn.style.display='none';});
+        generalEl.appendChild(showAllBtn);
+        // Only show button on mobile
+        if(window.innerWidth<=640) showAllBtn.style.display='';
+      }
     }
   }
 }
@@ -5187,9 +5221,7 @@ async function renderProfilingSection(basic,t){
     syncShockVisibility();
     return;
   }
-  try{
-    globalThis.__fingerprintBasic=basic;
-  }catch(_){/* ignore */}
+  // basic data stays local — not exposed to globalThis
   const runId=++profilingSequence;
   const ipGeo=buildProfilerIpGeo();
   try{
@@ -5349,6 +5381,8 @@ async function render(lang){
 
     if(heroEl&&heroNumEl){
       heroEl.style.display='block';
+      const skelEl=document.getElementById('heroSkeleton');
+      if(skelEl) skelEl.style.display='none';
       heroNumEl.dataset.level=level;
       heroNumEl.textContent=pct+'%';
 
@@ -5407,15 +5441,21 @@ async function render(lang){
           renderImplications(snap.basic,t2);
           renderProfilingSection(snap.basic,t2);
         });
-        // Auto speed test
-        runSpeedTest().then(speed=>{
-          state.speedResult=speed;
-          const t3=I18N[currentLang];
-          getSnapshot().then(snap=>{
-            renderShockBullets(snap.basic,t3,snap);
-            renderImplications(snap.basic,t3);
-          });
-        }).catch(()=>{});
+        // Speed: use Navigator.connection data (free) instead of 2MB download
+        const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+        if(conn?.downlink){
+          const downlink=Number(conn.downlink||0);
+          if(downlink>0){
+            state.speed={status:'done',mbps:Number(downlink.toFixed(2)),latency:Math.max(1,Math.round(conn.rtt||100)),error:null,note:'approx'};
+            state.speedResult={mbps:state.speed.mbps,latency:state.speed.latency,note:'approx'};
+            invalidateSnapshot();
+            const t3=I18N[currentLang];
+            getSnapshot().then(snap=>{
+              renderShockBullets(snap.basic,t3,snap);
+              renderImplications(snap.basic,t3);
+            });
+          }
+        }
       });
     }
 
@@ -5578,21 +5618,29 @@ async function copyText(value){
     await navigator.clipboard.writeText(value);
     return;
   }
-  const textarea=document.createElement('textarea');
-  textarea.value=value;
-  textarea.setAttribute('readonly','');
-  textarea.style.position='absolute';
-  textarea.style.left='-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
+  // Fallback for non-secure contexts
+  return new Promise((resolve,reject)=>{
+    const textarea=document.createElement('textarea');
+    textarea.value=value;
+    textarea.setAttribute('readonly','');
+    textarea.style.cssText='position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try{
+      const ok=document.execCommand('copy');
+      document.body.removeChild(textarea);
+      if(ok) resolve(); else reject(new Error('execCommand failed'));
+    }catch(e){
+      document.body.removeChild(textarea);
+      reject(e);
+    }
+  });
 }
 
-function flashShareMessage(btn,message,restore){
+function flashShareMessage(btn,message,restore,isError){
   const original=restore||btn.dataset.label||btn.textContent;
   btn.textContent=message;
-  btn.style.background='var(--success,#22c55e)';
+  btn.style.background=isError?'var(--warning,#f59e0b)':'var(--success,#22c55e)';
   btn.style.color='#fff';
   const timeout=2000;
   setTimeout(()=>{
@@ -5609,11 +5657,18 @@ async function handleShareClick(){
   const t=I18N[currentLang]||I18N.ru;
   const payload=state.sharePayload;
   if(!payload){
-    flashShareMessage(btn,t.share?.unavailable||t.ip?.button||t.saveButton,btn.dataset.label);
+    flashShareMessage(btn,t.share?.unavailable||t.ip?.button||t.saveButton,btn.dataset.label,true);
     return;
   }
   const defaultLabel=btn.dataset.label||btn.textContent;
   btn.disabled=true;
+  const shareText=`${payload.text}\n${payload.url}`;
+  // Pre-copy to clipboard while user-activation is still alive (Arc/Chromium fix)
+  let clipboardOk=false;
+  try{
+    await copyText(shareText);
+    clipboardOk=true;
+  }catch(_){/* will try again later */}
   try{
     const text=payload.text;
     const title=payload.title;
@@ -5630,29 +5685,37 @@ async function handleShareClick(){
       const baseData={title,text,url};
       if(file){
         const richData={...baseData,files:[file]};
-        if(typeof navigator.canShare!=='function'||navigator.canShare(richData)){
-          await navigator.share(richData);
-          shared=true;
-        }
+        try{
+          if(typeof navigator.canShare==='function'&&navigator.canShare(richData)){
+            await navigator.share(richData);
+            shared=true;
+          }
+        }catch(_){/* rich share failed, fall through to base share */}
       }
       if(!shared){
-        await navigator.share(baseData);
-        shared=true;
+        try{
+          await navigator.share(baseData);
+          shared=true;
+        }catch(_){/* base share failed, fall through to clipboard */}
       }
     }
     if(shared){
       flashShareMessage(btn,t.share?.shared||t.share?.success||t.copy?.done||'Shared!',defaultLabel);
       return;
     }
-    await copyText(`${text}\n${url}`);
+    // Clipboard was already written above; show confirmation
+    if(clipboardOk){
+      flashShareMessage(btn,t.share?.copied||t.copy?.done||'Copied!',defaultLabel);
+      return;
+    }
+    await copyText(shareText);
     flashShareMessage(btn,t.share?.copied||t.copy?.done||'Copied!',defaultLabel);
   }catch(err){
-    try{
-      await copyText(`${payload.text}\n${payload.url}`);
+    if(clipboardOk){
       flashShareMessage(btn,t.share?.copied||t.copy?.done||'Copied!',defaultLabel);
-    }catch(copyErr){
-      console.error('share failed',err,copyErr);
-      alert(t.share?.error||t.errorMessage?.(copyErr.message||String(copyErr))||String(copyErr));
+    }else{
+      console.error('share failed',err);
+      flashShareMessage(btn,t.share?.error||'Error',defaultLabel,true);
     }
   }finally{
     btn.disabled=false;
@@ -5846,8 +5909,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     methodBtnEl.style.display='inline-flex';
     methodBtnEl.addEventListener('click',()=>{
       const t=I18N[currentLang]||I18N.ru;
+      // Safe: methodSummary and methodText come from our own I18N dictionary, not user input
       if(methodTitle) methodTitle.innerHTML=t.methodSummary||'';
-      if(methodBodyEl) methodBodyEl.innerHTML=t.methodText||'';
+      if(methodBodyEl) methodBodyEl.textContent=t.methodText||'';
       if(methodModal) methodModal.style.display='flex';
     });
   }
