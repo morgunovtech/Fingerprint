@@ -75,14 +75,15 @@
     .advice-list li{margin:4px 0;padding-left:4px}
     .advice-list.emoji-list{list-style:none;margin-left:0;padding-left:0}
     .shock-insights{list-style:none;margin:0;padding:0}
-    .shock-insights li{padding:6px 0;font-size:15px;line-height:1.55;border-bottom:1px solid var(--border)}
+    .shock-insights li{padding:10px 0;font-size:15px;line-height:1.55;border-bottom:1px solid rgba(148,163,184,.1);display:flex;align-items:baseline;gap:8px}
     .shock-insights li:last-child{border-bottom:none}
-    .shock-insights code{display:inline;padding:1px 6px;border-radius:4px;background:rgba(148,163,184,.16);font-family:inherit;font-size:inherit}
-    .danger-block{border:1.5px solid rgba(239,68,68,.45);background:rgba(239,68,68,.04)}
+    .shock-insights code{display:inline;padding:2px 8px;border-radius:6px;background:rgba(148,163,184,.12);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;letter-spacing:.3px}
+    .danger-block{border:none;background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;position:relative}
+    .danger-block::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ef4444,#f97316,#ef4444)}
     .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
-    .shock-footer{display:flex;justify-content:flex-end;margin-top:12px}
+    .shock-footer{display:flex;justify-content:center;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(148,163,184,.1)}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
     .card{border:1px solid var(--border);border-radius:12px;padding:12px}
     .title{font-weight:700;margin-bottom:6px}
@@ -103,13 +104,17 @@
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     .btn:disabled{opacity:.55;cursor:not-allowed}
     .btn[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
-    .btn-primary{background:linear-gradient(135deg,#6366f1,#ec4899);color:#fff;border:none;font-weight:600;box-shadow:0 12px 32px rgba(99,102,241,.25)}
-    .btn-primary:hover{filter:brightness(.95);color:#fff}
+    .btn-primary{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border:none;font-weight:600;padding:12px 24px;border-radius:12px;font-size:15px;box-shadow:0 8px 24px rgba(239,68,68,.25);min-height:44px}
+    .btn-primary:hover{filter:brightness(.92);color:#fff;box-shadow:0 12px 32px rgba(239,68,68,.35)}
     .btn-primary:disabled{box-shadow:none;filter:none}
     .btn-primary[aria-disabled="true"]{box-shadow:none;filter:none}
-    .shock-actions{margin:16px 0 12px}
+    #uniqLine{text-align:center;margin:24px 0 8px;font-size:24px;font-weight:800;letter-spacing:-.5px}
+    #uniqLine .code-pill{display:block;padding:16px 24px;border-radius:14px;font-size:22px;font-weight:800;letter-spacing:-.3px;line-height:1.3;text-wrap:balance}
+    #uniqVerdict{margin:8px auto 12px;max-width:600px;padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.6;border-left:3px solid}
+    #uniqOutcome{text-align:center;max-width:600px;margin:0 auto 16px;font-size:14px;line-height:1.55}
     #shockList{margin:6px 0 0;padding:0}
-    #shockList li{margin:4px 0}
+    @keyframes shockFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .shock-animate{animation:shockFadeIn .4s ease-out}
     details{margin-top:8px}
     @media (max-width:720px){
       h1{font-size:20px}
@@ -123,6 +128,7 @@
       body{font-size:14px}
       .big{gap:6px}
       .btn{width:100%;justify-content:center}
+      .shock-footer{flex-direction:column}
     }
     .implications-block .section{margin-bottom:24px}
     .implications-block .section-title{font-size:18px;font-weight:700;margin-bottom:12px}
@@ -188,10 +194,10 @@
       <ul id="shockList" class="shock-insights"></ul>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
       <!-- Uniqueness verdict inside shock block -->
-      <div id="uniqLine" class="big" style="margin-top:16px"></div>
-      <div id="uniqVerdict" class="small" style="margin:6px 0 10px;padding:8px 12px;border-radius:8px"></div>
+      <div id="uniqLine" class="big"></div>
+      <div id="uniqVerdict" class="small"></div>
       <div id="uniqOutcome" class="small"></div>
-      <div class="shock-footer" style="gap:8px;flex-wrap:wrap">
+      <div class="shock-footer">
         <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn" id="printBtn"></button>
       </div>
@@ -3788,7 +3794,10 @@ function syncShockVisibility(){
   const section=getEl('shockSection');
   const visible=shockBulletCount>0;
   if(shock) shock.style.display=visible?'block':'none';
-  if(section) section.style.display=visible?'block':'none';
+  if(section){
+    section.style.display=visible?'block':'none';
+    if(visible) section.classList.add('shock-animate');
+  }
 }
 
 async function renderProfilingSection(basic,t){
