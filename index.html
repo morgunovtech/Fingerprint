@@ -144,10 +144,9 @@
     .btn-primary:hover{background:var(--accent);filter:brightness(.9);color:#fff;box-shadow:0 12px 32px rgba(239,68,68,.3)}
     .btn-primary:disabled{box-shadow:none;filter:none}
     .btn-primary[aria-disabled="true"]{box-shadow:none;filter:none}
-    #uniqLine{text-align:center;margin:24px 0 8px;font-size:24px;font-weight:800;letter-spacing:-.5px}
+    #uniqLine{text-align:left;margin:24px 0 8px;font-size:24px;font-weight:800;letter-spacing:-.5px}
     #uniqLine .code-pill{display:block;padding:16px 24px;border-radius:14px;font-size:22px;font-weight:800;letter-spacing:-.3px;line-height:1.3;text-wrap:balance}
-    #uniqVerdict{margin:8px auto 12px;max-width:600px;padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.6;border-left:3px solid}
-    #uniqOutcome{text-align:center;max-width:600px;margin:0 auto 16px;font-size:14px;line-height:1.55}
+    .hero-conclusion{background:var(--bg-raised,#F3F4F6);border-radius:var(--radius-md,10px);padding:16px 20px;font-size:15px;line-height:1.6;color:var(--text);margin-top:16px}
     #shockList{margin:6px 0 0;padding:0}
     @keyframes shockFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
     .shock-animate{animation:shockFadeIn .4s ease-out}
@@ -198,14 +197,10 @@
     .hero-subtitle{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)}
     .hero-explanation{font-size:14px;color:var(--muted);margin-bottom:16px;max-width:480px}
     .hero-actions{display:flex;gap:12px;justify-content:flex-start;margin-bottom:16px}
-    .hero-summary{display:flex;gap:16px;justify-content:flex-start;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-    .hero-summary span{display:flex;align-items:center;gap:4px}
-    .hero-summary code{font-family:var(--font-mono);font-size:12px;background:var(--code-bg);padding:1px 6px;border-radius:4px}
     @media(max-width:640px){
       .hero-number{font-size:40px}
       .hero-subtitle{font-size:16px}
       .hero-actions{flex-direction:column;align-items:stretch}
-      .hero-summary{flex-direction:column;align-items:flex-start;gap:8px}
     }
     .data-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
     @media(max-width:640px){.data-groups{grid-template-columns:1fr}}
@@ -279,13 +274,11 @@
         <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn btn-secondary" id="printBtn"></button>
       </div>
-      <div class="hero-summary" id="heroSummary"></div>
+      <div id="heroConclusion" class="hero-conclusion"></div>
     </div>
 
     <!-- Keep old elements hidden for backward compat with selftest -->
     <div id="uniqLine" class="big" style="display:none"></div>
-    <div id="uniqVerdict" class="small" style="display:none"></div>
-    <div id="uniqOutcome" class="small" style="display:none"></div>
 
     <!-- Grouped data -->
     <h2 class="section-heading" id="shockTitle"></h2>
@@ -447,7 +440,7 @@ const I18N = {
     uniqOutcomeTail:'Примените шаги выше — и ваш цифровой след станет слабее без ощутимой потери удобства.',
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
-      const headline=`Ваш отпечаток уникальнее, чем ${pct}% пользователей`;
+      const headline=lvl==='high'?'Ваш отпечаток уникальнее, чем у большинства пользователей':lvl==='med'?'Ваш отпечаток заметнее среднего':'Ваш отпечаток близок к среднему';
       const risks=this.uniqRisks?.[lvl]||[];
       const practicePoints=this.uniqPracticePoints||[];
       const levelLabel=this.uniqLevelLabels?.[lvl]||lvl;
@@ -529,7 +522,7 @@ const I18N = {
       vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN или прокси обнаружен</b>: IP в <code>${ipLoc}</code>, но устройство настроено на <code>${devLoc}</code>. Это вызовет капчи, а некоторые сервисы могут заблокировать доступ`,
       vpnSuspected:`\uD83D\uDFE1 <b>Признаки VPN/прокси</b>: IP принадлежит дата-центру. Сайты могут запрашивать дополнительную верификацию`,
       vpnNotDetected:'\uD83D\uDFE2 VPN или прокси не обнаружен — ваш IP выглядит как обычное подключение',
-      device:(guess,price)=>`\uD83D\uDCBB \u041f\u043e\u0445\u043e\u0436\u0435, \u0432\u044b \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0435 <code>${guess}</code>${price?' \u2014 \u043e\u0442 <code>'+price+'</code> \u0432 \u0440\u0438\u0442\u0435\u0439\u043b\u0435':''}`,
+      device:(guess)=>`\uD83D\uDCBB \u041f\u043e\u0445\u043e\u0436\u0435, \u0432\u044b \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0435 <code>${guess}</code>`,
       browser:(name,perms)=>`\uD83C\uDF10 \u0411\u0440\u0430\u0443\u0437\u0435\u0440: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 \u0412\u0430\u0448\u0435 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435: <code>${parts}</code>`,
       adblock:'\uD83D\uDEE1\uFE0F \u0412\u044b \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0435 \u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0449\u0438\u043a \u0440\u0435\u043a\u043b\u0430\u043c\u044b',
@@ -906,7 +899,7 @@ const I18N = {
     uniqOutcomeTail:'Follow the steps above to shrink your digital footprint without losing everyday comfort.',
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
-      const headline=`Your fingerprint is more unique than ${pct}% of users`;
+      const headline=lvl==='high'?'Your fingerprint stands out more than most users':lvl==='med'?'Your fingerprint is moderately distinctive':'Your fingerprint blends in with the crowd';
       const risks=this.uniqRisks?.[lvl]||[];
       const practicePoints=this.uniqPracticePoints||[];
       const levelLabel=this.uniqLevelLabels?.[lvl]||lvl;
@@ -988,7 +981,7 @@ const I18N = {
       vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN or proxy detected</b>: IP is in <code>${ipLoc}</code>, but your device is set to <code>${devLoc}</code>. This will trigger CAPTCHAs and some services may block access`,
       vpnSuspected:`\uD83D\uDFE1 <b>VPN/proxy signs detected</b>: your IP belongs to a data center. Sites may require extra verification`,
       vpnNotDetected:'\uD83D\uDFE2 No VPN or proxy detected \u2014 your IP looks like a regular connection',
-      device:(guess,price)=>`\uD83D\uDCBB Looks like you\u2019re using <code>${guess}</code>${price?' \u2014 from <code>'+price+'</code> retail':''}`,
+      device:(guess)=>`\uD83D\uDCBB Looks like you\u2019re using <code>${guess}</code>`,
       browser:(name,perms)=>`\uD83C\uDF10 Browser: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 Your connection: <code>${parts}</code>`,
       adblock:"\uD83D\uDEE1\uFE0F You\u2019re using an ad blocker",
@@ -1332,7 +1325,7 @@ const I18N = {
     uniqOutcomeTail:'Yuqoridagi qadamlarni bajarsangiz, kundalik qulaylikni yo‘qotmasdan raqamli izingizni kamaytirasiz.',
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
-      const headline=`Brauzeringiz ${pct}% foydalanuvchidan ko‘ra noyobroq`;
+      const headline=lvl==='high'?'Barmoq izingiz ko\u02BBpchilikdan ko\u02BBra noyobroq':lvl==='med'?'Barmoq izingiz o\u02BBrtacha darajada ajralib turadi':'Barmoq izingiz ko\u02BBpchilikka o\u02BBxshaydi';
       const risks=this.uniqRisks?.[lvl]||[];
       const practicePoints=this.uniqPracticePoints||[];
       const levelLabel=this.uniqLevelLabels?.[lvl]||lvl;
@@ -1414,7 +1407,7 @@ const I18N = {
       vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN yoki proksi aniqlandi</b>: IP <code>${ipLoc}</code> da, lekin qurilmangiz <code>${devLoc}</code> ga sozlangan. Bu kapchalarni chaqiradi va ba'zi xizmatlar kirishni bloklashi mumkin`,
       vpnSuspected:`\uD83D\uDFE1 <b>VPN/proksi belgilari</b>: IP data-markazga tegishli. Saytlar qo\u02BBshimcha tekshiruv so\u02BBreshi mumkin`,
       vpnNotDetected:'\uD83D\uDFE2 VPN yoki proksi aniqlanmadi \u2014 IP oddiy ulanish ko\u02BBrinishida',
-      device:(guess,price)=>`\uD83D\uDCBB Ehtimol siz <code>${guess}</code> ishlatyapsiz${price?' \u2014 chakana narxi <code>'+price+'</code> dan':''}`,
+      device:(guess)=>`\uD83D\uDCBB Ehtimol siz <code>${guess}</code> ishlatyapsiz`,
       browser:(name,perms)=>`\uD83C\uDF10 Brauzer: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 Aloqangiz: <code>${parts}</code>`,
       adblock:"\uD83D\uDEE1\uFE0F Siz reklama bloklagichidan foydalanasiz",
@@ -2036,58 +2029,58 @@ function guessDevice(b){
 
   if(isIOS){
     if(/ipad/.test(ua)||w>=768){
-      if(w>=1024&&dpr>=2) return {name:'iPad Pro',price:'$799'};
-      return {name:'iPad',price:'$329'};
+      if(w>=1024&&dpr>=2) return {name:'iPad Pro'};
+      return {name:'iPad'};
     }
-    if(w>=430||h>=932) return {name:'iPhone 15 Pro Max',price:'$1199'};
-    if(w>=393||h>=852) return {name:'iPhone 15 Pro',price:'$999'};
-    return {name:'iPhone',price:'$699'};
+    if(w>=430||h>=932) return {name:'iPhone 15 Pro Max'};
+    if(w>=393||h>=852) return {name:'iPhone 15 Pro'};
+    return {name:'iPhone'};
   }
   if(isAndroid){
     if(touch>0&&w<768){
-      if(mem>=8) return {name:'Android-\u0441\u043c\u0430\u0440\u0442\u0444\u043e\u043d (\u0444\u043b\u0430\u0433\u043c\u0430\u043d)',price:null};
-      return {name:'Android-\u0441\u043c\u0430\u0440\u0442\u0444\u043e\u043d',price:null};
+      if(mem>=8) return {name:'Android-\u0441\u043c\u0430\u0440\u0442\u0444\u043e\u043d (\u0444\u043b\u0430\u0433\u043c\u0430\u043d)'};
+      return {name:'Android-\u0441\u043c\u0430\u0440\u0442\u0444\u043e\u043d'};
     }
-    if(touch>0) return {name:'Android-\u043f\u043b\u0430\u043d\u0448\u0435\u0442',price:null};
-    return {name:'Android-\u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e',price:null};
+    if(touch>0) return {name:'Android-\u043f\u043b\u0430\u043d\u0448\u0435\u0442'};
+    return {name:'Android-\u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e'};
   }
   if(isMac){
     const chipName=chip||'';
     const isMax=/max/i.test(chipName);
     const isPro=/pro/i.test(chipName);
     const isUltra=/ultra/i.test(chipName);
-    if(isUltra) return {name:`Mac Studio (${chipName})`,price:'$3999'};
+    if(isUltra) return {name:`Mac Studio (${chipName})`};
     if(isMax){
-      if(cores>=14) return {name:`MacBook Pro 16\u2033 (${chipName})`,price:'$3499'};
-      return {name:`MacBook Pro 14\u2033 (${chipName})`,price:'$2999'};
+      if(cores>=14) return {name:`MacBook Pro 16\u2033 (${chipName})`};
+      return {name:`MacBook Pro 14\u2033 (${chipName})`};
     }
     if(isPro){
-      if(cores>=12) return {name:`MacBook Pro 16\u2033 (${chipName})`,price:'$2499'};
-      return {name:`MacBook Pro 14\u2033 (${chipName})`,price:'$1999'};
+      if(cores>=12) return {name:`MacBook Pro 16\u2033 (${chipName})`};
+      return {name:`MacBook Pro 14\u2033 (${chipName})`};
     }
     if(hasBattery){
-      if(cores>=8&&mem>=16) return {name:`MacBook Air (${chipName||'Apple Silicon'})`,price:'$1099'};
-      if(chipName) return {name:`MacBook Air (${chipName})`,price:'$1099'};
-      return {name:'MacBook Air',price:'$1099'};
+      if(cores>=8&&mem>=16) return {name:`MacBook Air (${chipName||'Apple Silicon'})`};
+      if(chipName) return {name:`MacBook Air (${chipName})`};
+      return {name:'MacBook Air'};
     }
-    if(cores>=8&&chipName) return {name:`iMac (${chipName})`,price:'$1299'};
-    if(cores>=20) return {name:'Mac Pro',price:'$6999'};
-    if(chipName) return {name:`Mac (${chipName})`,price:null};
-    return {name:'Mac',price:null};
+    if(cores>=8&&chipName) return {name:`iMac (${chipName})`};
+    if(cores>=20) return {name:'Mac Pro'};
+    if(chipName) return {name:`Mac (${chipName})`};
+    return {name:'Mac'};
   }
   if(isWin){
-    if(cores>=16&&mem>=32) return {name:'\u043c\u043e\u0449\u043d\u0430\u044f Windows-\u0440\u0430\u0431\u043e\u0447\u0430\u044f \u0441\u0442\u0430\u043d\u0446\u0438\u044f',price:null};
-    if(cores>=16&&mem>=16) return {name:'\u043c\u043e\u0449\u043d\u044b\u0439 Windows-\u041f\u041a',price:null};
-    if(cores>=8&&mem>=16) return {name:'Windows-\u041f\u041a',price:null};
-    if(cores>=8) return {name:'Windows-\u041f\u041a',price:null};
+    if(cores>=16&&mem>=32) return {name:'\u043c\u043e\u0449\u043d\u0430\u044f Windows-\u0440\u0430\u0431\u043e\u0447\u0430\u044f \u0441\u0442\u0430\u043d\u0446\u0438\u044f'};
+    if(cores>=16&&mem>=16) return {name:'\u043c\u043e\u0449\u043d\u044b\u0439 Windows-\u041f\u041a'};
+    if(cores>=8&&mem>=16) return {name:'Windows-\u041f\u041a'};
+    if(cores>=8) return {name:'Windows-\u041f\u041a'};
     if(mem<=4||cores<=4){
-      if(hasBattery) return {name:'Windows-\u043d\u043e\u0443\u0442\u0431\u0443\u043a',price:null};
-      return {name:'\u0431\u044e\u0434\u0436\u0435\u0442\u043d\u044b\u0439 Windows-\u041f\u041a',price:null};
+      if(hasBattery) return {name:'Windows-\u043d\u043e\u0443\u0442\u0431\u0443\u043a'};
+      return {name:'\u0431\u044e\u0434\u0436\u0435\u0442\u043d\u044b\u0439 Windows-\u041f\u041a'};
     }
-    if(hasBattery) return {name:'Windows-\u043d\u043e\u0443\u0442\u0431\u0443\u043a',price:null};
-    return {name:'Windows-\u041f\u041a',price:null};
+    if(hasBattery) return {name:'Windows-\u043d\u043e\u0443\u0442\u0431\u0443\u043a'};
+    return {name:'Windows-\u041f\u041a'};
   }
-  if(isLinux) return {name:'Linux-\u0441\u0438\u0441\u0442\u0435\u043c\u0430',price:null};
+  if(isLinux) return {name:'Linux-\u0441\u0438\u0441\u0442\u0435\u043c\u0430'};
   return null;
 }
 function localizeDeviceName(deviceObj,lang){
@@ -2109,7 +2102,7 @@ function localizeDeviceName(deviceObj,lang){
   };
   const entry=MAP[raw];
   const localName=entry?(entry[lang]||entry.en||raw):raw;
-  return {name:localName,price:deviceObj.price};
+  return {name:localName};
 }
 function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
 
@@ -3544,10 +3537,9 @@ function renderShockBullets(basic,t,snapshot){
     if(localDevice){
       const devLabel={ru:'\u0423\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e',en:'Device',uz:'Qurilma'}[currentLang];
       let devValue=esc(localDevice.name);
-      if(localDevice.price) devValue+=' <span style="color:var(--text-muted);font-size:13px">\u2014 '+esc(localDevice.price)+'</span>';
       groups.device.appendChild(mkRow(devLabel,devValue));
       totalRows++;
-      lines.push(t.shock.device(esc(localDevice.name),localDevice.price?esc(localDevice.price):''));
+      lines.push(t.shock.device(esc(localDevice.name)));
     }
 
     const browserStr=browserDisplayName(basic);
@@ -4236,55 +4228,26 @@ async function render(lang){
     headSpan.appendChild(codeSpan);
     uniqLineEl.appendChild(headSpan);
 
-    const verdictEl=getEl('uniqVerdict');
-    if(verdictEl){
-      const verdictTexts={
+    const conclusionEl=getEl('heroConclusion');
+    if(conclusionEl){
+      const conclusionTexts={
         high:{
-          ru:'Ваш отпечаток очень уникален. Сайты могут легко узнать вас без cookies и регистрации — достаточно пары совпадающих сигналов.',
-          en:'Your fingerprint is highly unique. Websites can easily recognise you without cookies or sign-up \u2014 just a few matching signals are enough.',
-          uz:'Barmoq izingiz juda noyob. Saytlar sizni cookie va ro\u02BByxatdan o\u02BBtishsiz ham osongina tanishi mumkin.'
+          ru:'Вас легко узнать. Сайты, на которые вы заходите, могут понять, что это именно вы — даже без регистрации и cookies. Ниже — простые шаги, которые это изменят.',
+          en:'You are easy to identify. Websites you visit can tell it is you \u2014 even without signing in or using cookies. Below are simple steps that will change this.',
+          uz:'Sizni oson tanish mumkin. Siz kirgan saytlar ro\u02BByxatdan o\u02BBtmasdan ham sizni aniqlashi mumkin. Pastda buni o\u02BBzgartiradigan oddiy qadamlar bor.'
         },
         med:{
-          ru:'Ваш отпечаток умеренно уникален. Вас сложнее отследить, но при добавлении IP или cookies — риск растёт.',
-          en:'Your fingerprint is moderately unique. Harder to track, but adding IP or cookies increases the risk.',
-          uz:'Barmoq izingiz o\u02BBrtacha noyob. Kuzatish qiyinroq, lekin IP yoki cookie qo\u02BBshilsa xavf oshadi.'
+          ru:'Вас можно узнать, но не сразу. Ваш браузер выделяется среди других, хотя и не уникален. Несколько простых шагов помогут стать незаметнее.',
+          en:'You can be identified, but not immediately. Your browser stands out, though it is not unique. A few simple steps will help you blend in.',
+          uz:'Sizni aniqlash mumkin, lekin darhol emas. Brauzeringiz ajralib turadi, lekin noyob emas. Bir necha oddiy qadam ko\u02BBrinmasroq bo\u02BBlishga yordam beradi.'
         },
         low:{
-          ru:'Ваш отпечаток мало отличим. Вы неплохо защищены, но редкие плагины или шрифты могут вас выдать.',
-          en:'Your fingerprint blends in well. You are fairly protected, but rare plugins or fonts could still single you out.',
-          uz:'Barmoq izingiz kam ajralib turadi. Yaxshi himoyalangansiz, lekin noodatiy kengaytmalar sizni ajratishi mumkin.'
+          ru:'Вас сложно узнать. Ваш браузер похож на многие другие — сайтам трудно выделить именно вас. Хороший результат.',
+          en:'You are hard to identify. Your browser looks like many others \u2014 websites have difficulty singling you out. Good result.',
+          uz:'Sizni tanish qiyin. Brauzeringiz boshqalarga o\u02BBxshaydi \u2014 saytlar sizni ajrata olmaydi. Yaxshi natija.'
         }
       };
-      const colors={high:'rgba(220,38,38,.12)',med:'rgba(234,179,8,.12)',low:'rgba(34,197,94,.12)'};
-      const borders={high:'1px solid rgba(220,38,38,.3)',med:'1px solid rgba(234,179,8,.3)',low:'1px solid rgba(34,197,94,.3)'};
-      verdictEl.textContent=verdictTexts[level]?.[currentLang]||verdictTexts[level]?.ru||'';
-      verdictEl.style.background=colors[level]||'';
-      verdictEl.style.border=borders[level]||'';
-      verdictEl.style.display=verdictEl.textContent?'block':'none';
-    }
-
-    const outcomeEl=getEl('uniqOutcome');
-    if(uniqCopy.outcome&&(uniqCopy.outcome.title||uniqCopy.outcome.detail)){
-      outcomeEl.textContent='';
-      let hasContent=false;
-      if(uniqCopy.outcome.title){
-        const strong=document.createElement('strong');
-        strong.textContent=uniqCopy.outcome.title;
-        outcomeEl.appendChild(strong);
-        hasContent=true;
-      }
-      if(uniqCopy.outcome.detail){
-        if(hasContent) outcomeEl.appendChild(document.createTextNode(' '));
-        outcomeEl.appendChild(document.createTextNode(uniqCopy.outcome.detail));
-        hasContent=true;
-      }
-      outcomeEl.style.display=hasContent?'block':'none';
-      if(!hasContent){
-        outcomeEl.textContent='';
-      }
-    }else{
-      outcomeEl.textContent='';
-      outcomeEl.style.display='none';
+      conclusionEl.textContent=conclusionTexts[level]?.[currentLang]||conclusionTexts[level]?.ru||'';
     }
 
     // === HERO VERDICT (new redesign) ===
@@ -4336,26 +4299,6 @@ async function render(lang){
     }
 
     // Hero summary
-    const heroSummaryEl=getEl('heroSummary');
-    if(heroSummaryEl){
-      const summaryParts=[];
-      const details2=state.serverData?.details||{};
-      if(state.serverData){
-        const rawCity=details2.city||'';
-        const countryCode2=resolveCountryCode(details2,state.serverData?.raw,state.serverData?.geo)||'';
-        const localCity2=CITY_NAMES[rawCity]?.[currentLang]||rawCity;
-        const localCountry2=COUNTRY_NAMES[countryCode2.toUpperCase()]?.[currentLang]||'';
-        const flag2=countryCode2?countryCodeToFlag(countryCode2):'';
-        if(localCity2) summaryParts.push('<span>'+flag2+' '+esc(localCity2)+(localCountry2?', '+esc(localCountry2):'')+'</span>');
-      }
-      const deviceObj2=guessDevice(basic);
-      const localDevice2=localizeDeviceName(deviceObj2,currentLang);
-      if(localDevice2) summaryParts.push('<span>'+esc(localDevice2.name)+'</span>');
-      const browserStr2=browserDisplayName(basic);
-      if(browserStr2&&browserStr2!=='\u2014') summaryParts.push('<span>'+esc(browserStr2)+'</span>');
-      if(basic.hashes?.canvas) summaryParts.push('<span><code>'+esc(basic.hashes.canvas.substring(0,8))+'</code></span>');
-      heroSummaryEl.innerHTML=summaryParts.join('<span style="color:var(--border)">|</span>');
-    }
 
     const s=basic.screen;
     const screenStr=`${s.w}×${s.h}@${s.pixelRatio}`;
