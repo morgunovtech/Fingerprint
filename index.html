@@ -74,6 +74,9 @@
     .advice-list{list-style:disc;margin:6px 0 0 18px;padding:0}
     .advice-list li{margin:4px 0;padding-left:4px}
     .advice-list.emoji-list{list-style:none;margin-left:0;padding-left:0}
+    .shock-insights{list-style:none;margin:0;padding:0}
+    .shock-insights li{padding:6px 0;font-size:15px;line-height:1.55;border-bottom:1px solid var(--border)}
+    .shock-insights li:last-child{border-bottom:none}
     .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
@@ -155,9 +158,8 @@
   <!-- Block 2: Shock findings -->
   <section class="block" id="shockSection" style="display:none">
     <div class="section-title" id="shockTitle"></div>
-    <div class="danger" id="shock" style="display:none">
-      <ul id="shockList" class="advice-list small emoji-list"></ul>
-      <div id="ipInfo" class="small" style="margin-top:10px"></div>
+    <div id="shock" style="display:none">
+      <ul id="shockList" class="shock-insights"></ul>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
       <div class="shock-footer">
         <button class="btn" id="printBtn"></button>
@@ -349,41 +351,27 @@ const I18N = {
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Подробности',
-    shockTitle:'Что о вас знает сайт даже без IP',
+    shockTitle:'Что сайт уже знает о вас',
     shock:{
-      clock:(place,time)=>{
-        const parts=[place,time].filter(Boolean);
-        return `⏰ <b>Часовой пояс и время:</b> ${parts.join(' ')}`;
-      },
-      clockFallback:'страна не определена',
-      device:(specs,hypothesis)=>{
-        const pieces=[specs];
-        if(hypothesis) pieces.push(hypothesis);
-        return `💻 <b>Устройство:</b> ${pieces.filter(Boolean).join(' ')}`;
-      },
-      deviceHypothesis:model=>`собранные сигналы указывают на ${model}`,
-      browserPerms:(browser,perms)=>{
-        const pieces=[browser,perms].filter(Boolean);
-        return `🌐 <b>Браузер и разрешения:</b> ${pieces.join(' ')}`;
-      },
-      languages:list=>{
-        if(!list) return `🌍 <b>Языки интерфейса:</b> ${pillOr('—')}`;
-        const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
-        return `🌍 <b>Языки интерфейса:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
-      },
-      deviceTouchLabel:hasTouch=>hasTouch?'сенсорный экран':'без сенсорного экрана',
-      deviceType:hasTouch=>{
-        const label=hasTouch?('С сенсорным экраном'):('Без сенсорного экрана');
-        return `🖐️ <b>Тип устройства:</b> ${pillOr(label)}`;
-      },
-      battery:value=>`🔋 <b>Батарея:</b> ${pillOr(value)}`,
-      provider:value=>`🏢 <b>Провайдер:</b> ${pillOr(value)}`,
-      dnt:status=>`🚫 <b>Настройка «Не отслеживать»:</b> ${pillOr(status)}`,
-      vpn:(status,reasons,action)=>{
-        const parts=[status,reasons,action].filter(Boolean);
-        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
-      },
-      connection:summary=>`📶 <b>Подключение и скорость:</b> ${summary||pillOr('—')}`
+      title:'Что сайт уже знает о вас',
+      location:(city,region)=>`📍 Вы в ${city}${region?', '+region:''} — это видно без GPS`,
+      locationLoading:'📍 Определяем местоположение…',
+      tzMismatch:(ipCountry,tzCountry)=>`⚠️ Ваш IP из ${ipCountry}, но устройство настроено на ${tzCountry} — это заметно`,
+      device:guess=>`💻 Похоже, у вас ${guess}`,
+      screen:desc=>`🖥️ У вас экран высокого разрешения ${desc}`,
+      isp:org=>`📡 Ваш провайдер: ${org}`,
+      adblock:'🛡️ Вы используете блокировщик рекламы',
+      webrtcLeak:localIp=>`🔓 WebRTC раскрывает ваш локальный IP: ${localIp} — VPN его не скрывает`,
+      vpnLikely:'🟡 Похоже, у вас VPN или прокси',
+      canvas:'🎨 Ваш браузер рисует картинки уникально — по этому хэшу вас узнают на любом сайте',
+      plugins:count=>`🧩 ${count} расширений в браузере — каждое делает ваш профиль уникальнее`,
+      micGranted:'🎙️ Камера или микрофон уже разрешены — сайт может включить их без предупреждения',
+      languages:langs=>`🌐 Ваши языки: ${langs} — по ним видна культурная среда`,
+      battery:level=>`🔋 Заряд ${level}% — вы, вероятно, в дороге`,
+      mediaDevices:count=>`🎬 ${count} медиа-устройств подключено`,
+      slowConnection:type=>`📶 У вас медленное соединение (${type})`,
+      mobileConnection:'📶 Вы на мобильном интернете',
+      fingerprintId:(hash,pct)=>`🔑 Ваш цифровой ID: ${hash}… — уникальнее ${pct}% пользователей`
     },
     profiling:{
       title:'Профайлинг',
@@ -794,42 +782,27 @@ const I18N = {
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Details',
-    shockTitle:'What a site already sees without IP',
+    shockTitle:'What the site already knows about you',
     shock:{
-      region:value=>`🗺️ <b>Signals about your location:</b> ${pillOr(value)}`,
-      clock:(place,time)=>{
-        const parts=[place,time].filter(Boolean);
-        return `⏰ <b>Time zone & clock:</b> ${parts.join(' ')}`;
-      },
-      clockFallback:'country unknown',
-      device:(specs,hypothesis)=>{
-        const pieces=[specs];
-        if(hypothesis) pieces.push(hypothesis);
-        return `💻 <b>Device:</b> ${pieces.filter(Boolean).join(' ')}`;
-      },
-      deviceHypothesis:model=>`signals point to ${model}`,
-      browserPerms:(browser,perms)=>{
-        const pieces=[browser,perms].filter(Boolean);
-        return `🌐 <b>Browser & permissions:</b> ${pieces.join(' ')}`;
-      },
-      languages:list=>{
-        if(!list) return `🌍 <b>Interface languages:</b> ${pillOr('—')}`;
-        const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
-        return `🌍 <b>Interface languages:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
-      },
-      deviceTouchLabel:hasTouch=>hasTouch?'touch display':'no touch display',
-      deviceType:hasTouch=>{
-        const label=hasTouch?'Touch-enabled':'No touch screen';
-        return `🖐️ <b>Device type:</b> ${pillOr(label)}`;
-      },
-      battery:value=>`🔋 <b>Battery:</b> ${pillOr(value)}`,
-      provider:value=>`🏢 <b>Provider:</b> ${pillOr(value)}`,
-      dnt:status=>`🚫 <b>“Do Not Track” setting:</b> ${pillOr(status)}`,
-      vpn:(status,reasons,action)=>{
-        const parts=[status,reasons,action].filter(Boolean);
-        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
-      },
-      connection:summary=>`📶 <b>Connection & speed:</b> ${summary||pillOr('—')}`
+      title:'What the site already knows about you',
+      location:(city,region)=>`📍 You're in ${city}${region?', '+region:''} — visible without GPS`,
+      locationLoading:'📍 Detecting your location…',
+      tzMismatch:(ipCountry,tzCountry)=>`⚠️ Your IP says ${ipCountry}, but your device is set to ${tzCountry} — that's noticeable`,
+      device:guess=>`💻 Looks like you're on a ${guess}`,
+      screen:desc=>`🖥️ You have a high-resolution display ${desc}`,
+      isp:org=>`📡 Your ISP: ${org}`,
+      adblock:"🛡️ You're using an ad blocker",
+      webrtcLeak:localIp=>`🔓 WebRTC reveals your local IP: ${localIp} — your VPN doesn't hide it`,
+      vpnLikely:"🟡 Looks like you're using a VPN or proxy",
+      canvas:'🎨 Your browser renders images uniquely — this hash identifies you across any site',
+      plugins:count=>`🧩 ${count} browser extensions — each makes your profile more unique`,
+      micGranted:'🎙️ Camera or microphone already granted — a site can activate them without asking',
+      languages:langs=>`🌐 Your languages: ${langs} — they reveal your cultural background`,
+      battery:level=>`🔋 Battery at ${level}% — you're probably on the go`,
+      mediaDevices:count=>`🎬 ${count} media devices connected`,
+      slowConnection:type=>`📶 You have a slow connection (${type})`,
+      mobileConnection:"📶 You're on mobile data",
+      fingerprintId:(hash,pct)=>`🔑 Your digital ID: ${hash}… — more unique than ${pct}% of users`
     },
     profiling:{
       title:'Profiling',
@@ -1207,42 +1180,27 @@ const I18N = {
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     detailTitle:'Batafsil',
-    shockTitle:'IP talab qilinmasdan ham ko‘rinadiganlar',
+    shockTitle:"Sayt siz haqingizda nimalarni biladi",
     shock:{
-      region:value=>`🗺️ <b>Joylashuv signallari:</b> ${pillOr(value)}`,
-      clock:(place,time)=>{
-        const parts=[place,time].filter(Boolean);
-        return `⏰ <b>Vaqt mintaqasi va soat:</b> ${parts.join(' ')}`;
-      },
-      clockFallback:'mamlakat aniqlanmadi',
-      device:(specs,hypothesis)=>{
-        const pieces=[specs];
-        if(hypothesis) pieces.push(hypothesis);
-        return `💻 <b>Qurilma:</b> ${pieces.filter(Boolean).join(' ')}`;
-      },
-      deviceHypothesis:model=>`ehtimol siz ${model} dan foydalanyapsiz`,
-      browserPerms:(browser,perms)=>{
-        const pieces=[browser,perms].filter(Boolean);
-        return `🌐 <b>Brauzer va ruxsatlar:</b> ${pieces.join(' ')}`;
-      },
-      languages:list=>{
-        if(!list) return `🌍 <b>Interfeys tillari:</b> ${pillOr('—')}`;
-        const parts=list.split(/,\s*/).map(pillValue).filter(Boolean);
-        return `🌍 <b>Interfeys tillari:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
-      },
-      deviceTouchLabel:hasTouch=>hasTouch?'sensorli ekran':'sensorli ekran yo‘q',
-      deviceType:hasTouch=>{
-        const label=hasTouch?'Sensorli ekran bor':'Sensorli ekran yo‘q';
-        return `🖐️ <b>Qurilma turi:</b> ${pillOr(label)}`;
-      },
-      battery:value=>`🔋 <b>Batareya:</b> ${pillOr(value)}`,
-      provider:value=>`🏢 <b>Provayder:</b> ${pillOr(value)}`,
-      dnt:status=>`🚫 <b>“Izlamang” sozlamasi:</b> ${pillOr(status)}`,
-      vpn:(status,reasons,action)=>{
-        const parts=[status,reasons,action].filter(Boolean);
-        return `🕵️ <b>VPN:</b> ${parts.length?parts.join(' '):pillOr('—')}`;
-      },
-      connection:summary=>`📶 <b>Aloqa va tezlik:</b> ${summary||pillOr('—')}`
+      title:"Sayt siz haqingizda nimalarni biladi",
+      location:(city,region)=>`📍 Siz ${city}${region?", "+region:""} dasiz — GPSsiz ham ko\u02BBrinadi`,
+      locationLoading:"📍 Joylashuvingiz aniqlanmoqda…",
+      tzMismatch:(ipCountry,tzCountry)=>`⚠️ IP manzilingiz ${ipCountry} dan, lekin qurilmangiz ${tzCountry} ga sozlangan — bu seziladi`,
+      device:guess=>`💻 Ehtimol sizda ${guess}`,
+      screen:desc=>`🖥️ Sizda yuqori sifatli ekran ${desc}`,
+      isp:org=>`📡 Provayderingiz: ${org}`,
+      adblock:"🛡️ Siz reklama bloklagichidan foydalanasiz",
+      webrtcLeak:localIp=>`🔓 WebRTC lokal IP manzilingizni ochib beradi: ${localIp} — VPN uni yashirmaydi`,
+      vpnLikely:"🟡 Ehtimol siz VPN yoki proksi ishlatyapsiz",
+      canvas:"🎨 Brauzeringiz rasmlarni noyob tarzda chizadi — bu xesh orqali sizni istalgan saytda tanib olishadi",
+      plugins:count=>`🧩 Brauzerda ${count} ta kengaytma — har biri profilingizni noyobroq qiladi`,
+      micGranted:"🎙️ Kamera yoki mikrofon allaqachon ruxsat berilgan — sayt ularni so\u02BBramasdan yoqishi mumkin",
+      languages:langs=>`🌐 Tillaringiz: ${langs} — ulardan madaniy muhit ko\u02BBrinadi`,
+      battery:level=>`🔋 Quvvat ${level}% — ehtimol yo\u02BBldasiz`,
+      mediaDevices:count=>`🎬 ${count} ta media qurilma ulangan`,
+      slowConnection:type=>`📶 Sizda sekin aloqa (${type})`,
+      mobileConnection:"📶 Siz mobil internetdasiz",
+      fingerprintId:(hash,pct)=>`🔑 Raqamli ID: ${hash}… — foydalanuvchilarning ${pct}% dan noyobroq`
     },
     profiling:{
       title:'Profiling',
@@ -1758,24 +1716,58 @@ function guessAppleChip(renderer){if(!renderer)return null;const m=renderer.matc
 function guessDevice(b){
   const ua=(b.userAgent||'').toLowerCase();
   const hints=b.uaHighEntropy||{};
-  if(hints.model && /android/.test(ua)){
-    return `${hints.model.trim()} (Android)`;
+  const cores=b.hw?.hardwareConcurrency||0;
+  const mem=b.hw?.deviceMemory||0;
+  const touch=b.touch?.maxTouchPoints||0;
+  const w=b.screen?.w||0;
+  const isMac=/mac os x|macintosh/.test(ua)||/macos/i.test(b.uaPlatform||'');
+  const isWin=/windows nt/.test(ua)||/windows/i.test(b.uaPlatform||'');
+  const isLinux=/linux/.test(ua)&&!/android/.test(ua);
+  const isIOS=/iphone|ipad/.test(ua);
+  const isAndroid=/android/.test(ua);
+  if(isIOS){
+    if(/ipad/.test(ua)||w>=768) return 'iPad';
+    return 'iPhone';
   }
-  if(/iphone/.test(ua))return'iPhone';
-  if(/ipad/.test(ua))return'iPad';
-  if(/android/.test(ua)){
-    const m=ua.match(/android[^;]*;\s*([^;]+?)\s+build/);
-    return m?`${m[1].trim()} (Android)`:'Android device';
+  if(isAndroid){
+    if(touch>0&&w<768) return 'Android-smartphone';
+    if(touch>0) return 'Android-tablet';
+    return 'Android';
   }
-  if(/mac os x|macintosh/.test(ua)||/macos/.test((b.uaPlatform||'').toLowerCase())){
+  if(isMac){
     const chip=guessAppleChip(b.gl?.renderer||'');
-    const hasBattery=!!(b.battery&&b.battery.level!=null);
-    const type=hasBattery?'MacBook':'Mac';
-    return chip?`${type} (${chip})`:type;
+    const hasBattery=!!(b.battery&&b.battery.level!=null&&!b.battery.unavailable);
+    if(cores>=12) return chip?`MacBook Pro (${chip})`:'MacBook Pro';
+    if(hasBattery) return chip?`MacBook (${chip})`:'MacBook';
+    return chip?`Mac (${chip})`:'Mac';
   }
-  if(/windows nt/.test(ua)||/(^|\s)windows/.test((b.uaPlatform||'').toLowerCase()))return'Windows PC';
-  if(/linux/.test(ua)||/(^|\s)linux/.test((b.uaPlatform||'').toLowerCase()))return'Linux PC';
-  return b.uaPlatform||b.platform||'устройство';
+  if(isWin){
+    if(cores>=16&&mem>=16) return 'Windows-workstation';
+    if(cores>=8) return 'Windows-PC';
+    if(cores<=4||mem<=4) return 'Windows-laptop';
+    return 'Windows-PC';
+  }
+  if(isLinux) return 'Linux-PC';
+  return null;
+}
+function localizeDeviceName(raw,lang){
+  if(!raw) return null;
+  const MAP={
+    'Android-smartphone':{ru:'Android-смартфон',en:'Android smartphone',uz:'Android-smartfon'},
+    'Android-tablet':{ru:'Android-планшет',en:'Android tablet',uz:'Android-planshet'},
+    'Android':{ru:'Android-устройство',en:'Android device',uz:'Android-qurilma'},
+    'iPhone':{ru:'iPhone',en:'iPhone',uz:'iPhone'},
+    'iPad':{ru:'iPad',en:'iPad',uz:'iPad'},
+    'Windows-workstation':{ru:'мощный Windows-ПК',en:'powerful Windows PC',uz:'kuchli Windows-kompyuter'},
+    'Windows-PC':{ru:'Windows-ПК',en:'Windows PC',uz:'Windows-kompyuter'},
+    'Windows-laptop':{ru:'Windows-ноутбук',en:'Windows laptop',uz:'Windows-noutbuk'},
+    'Linux-PC':{ru:'Linux-система',en:'Linux system',uz:'Linux-tizim'},
+  };
+  if(raw.startsWith('MacBook Pro')) return raw;
+  if(raw.startsWith('MacBook')) return raw;
+  if(raw.startsWith('Mac')) return raw;
+  const entry=MAP[raw];
+  return entry?entry[lang]||entry.en||raw:raw;
 }
 function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
 
@@ -2296,6 +2288,7 @@ const state={
   serverData:null,
   ipError:null,
   fetchingIp:false,
+  ipFetchDone:false,
   speed:{status:'idle',mbps:null,latency:null,error:null,note:null},
   vpn:{status:'uncertain',reasons:[],checked:false},
   sharePayload:null,
@@ -2788,64 +2781,30 @@ async function runSpeedTest(){
   throw e;
 }
 
-async function detectIpAndSpeed(){
-  if(state.fetchingIp) return;
-  state.fetchingIp=true;
-  state.ipError=null;
-  state.speed={status:'running',mbps:null,latency:null,error:null,note:null};
-  state.vpn={status:'uncertain',reasons:[],checked:false};
-  render(currentLang);
-  try{
-    const data=await fetchIpData();
-    if(!data || typeof data!=='object') throw new Error('empty');
-    state.serverData=data;
-    state.vpn=evaluateVpnState(data);
-    render(currentLang);
-  }catch(e){
-    const noDataMsg=(I18N[currentLang]?.ip?.noData)||'No data';
-    let msg;
-    if(e.message==='timeout'){
-      msg=timeoutMessages[currentLang]||timeoutMessages.ru;
-    }else if(e.message==='empty'){
-      msg=noDataMsg;
-    }else if(e.attempts){
-      const base=(I18N[currentLang]?.ip?.allFailed)||'All services failed';
-      msg=`${base}. ${e.attempts.filter(Boolean).join(' • ')}`;
-    }else{
-      msg=e.message||String(e);
+let ipFetchPromise=null;
+function autoFetchIp(){
+  if(state.serverData) return Promise.resolve(state.serverData);
+  if(ipFetchPromise) return ipFetchPromise;
+  ipFetchPromise=(async()=>{
+    try{
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),5000);
+      const data=await fetchIpData();
+      clearTimeout(timer);
+      if(!data||typeof data!=='object') return null;
+      state.serverData=data;
+      state.vpn=evaluateVpnState(data);
+      return data;
+    }catch(e){
+      console.warn('Auto IP fetch failed:',e.message);
+      return null;
+    }finally{
+      ipFetchPromise=null;
     }
-    state.ipError=msg;
-    state.serverData=null;
-    state.speed={status:'idle',mbps:null,latency:null,error:null,note:null};
-    state.vpn={status:'uncertain',reasons:[],checked:false};
-    state.fetchingIp=false;
-    invalidateSnapshot();
-    render(currentLang);
-    return;
-  }
-  try{
-    const speed=await runSpeedTest();
-    state.speed={status:'done',mbps:speed.mbps,latency:speed.latency,error:null,note:speed.note||null};
-    state.vpn=evaluateVpnState(state.serverData);
-  }catch(e){
-    const message=(e.message||String(e));
-    const lowered=message.toLowerCase();
-    let friendly=message;
-    if(e.attempts?.length){
-      const base=(I18N[currentLang]?.speed?.allFailed)||(I18N.en?.speed?.allFailed)||message;
-      friendly=`${base}. ${e.attempts.filter(Boolean).join(' • ')}`;
-    }else if(lowered.includes('timeout')){
-      friendly=timeoutMessages[currentLang]||timeoutMessages.ru;
-    }else if(lowered.includes('failed to fetch')){
-      friendly=speedFetchMessages[currentLang]||speedFetchMessages.en;
-    }
-    state.speed={status:'error',mbps:null,latency:null,error:friendly,note:null};
-    state.vpn=evaluateVpnState(state.serverData);
-  }
-  state.fetchingIp=false;
-  invalidateSnapshot();
-  render(currentLang);
+  })();
+  return ipFetchPromise;
 }
+
 
 function resolveLocaleText(map,lang,fallback=''){
   if(!map) return fallback;
@@ -2922,42 +2881,6 @@ function addHashCard(frag,key,value,t){
   frag.appendChild(card);
 }
 
-function updateIpSection(t){
-  const el=getEl('ipInfo');
-  if(state.fetchingIp && !state.serverData){
-    el.textContent=t.ip.buttonLoading;
-    return;
-  }
-  if(state.ipError){
-    el.textContent=t.ip.error(state.ipError);
-    return;
-  }
-  if(!state.serverData){
-    el.textContent=t.ip.none;
-    return;
-  }
-  const {ip,details,detailSource,source}=state.serverData;
-  const fields=t.ip.fields||{};
-  const rows=[`<div class="title">${t.ip.title}</div>`];
-  const ipLabel=fields.ip||'IP';
-  const ipValue=ip?String(ip):'—';
-  rows.push(`<div><b>${escapeHtml(ipLabel)}:</b> ${escapeHtml(ipValue)}</div>`);
-  if(details){
-    DETAIL_FIELDS.forEach(key=>{
-      const label=fields[key]||key;
-      const rawValue=details[key];
-      const value=(rawValue!=null && String(rawValue).trim())?String(rawValue):'—';
-      rows.push(`<div><b>${escapeHtml(label)}:</b> ${escapeHtml(value)}</div>`);
-    });
-  }else{
-    rows.push(`<div>${escapeHtml(t.ip.noDetails||'—')}</div>`);
-  }
-  const src=detailSource||source||null;
-  if(src){
-    rows.push(`<div class="small" style="margin-top:4px;color:var(--muted)">${t.ip.sourceLabel} ${escapeHtml(src)}</div>`);
-  }
-  el.innerHTML=rows.join('');
-}
 
 function formatSpeedSummary(t){
   const status=state.speed.status;
@@ -3132,67 +3055,8 @@ function summarizeKeyPermissions(entries,t){
   return out;
 }
 
-function buildDeviceSpecs(basic,profiling,t,hasTouch){
-  const specs=[];
-  const hw=basic.hw||{};
-  const units=t.units||{};
-  if(hw.hardwareConcurrency) specs.push(`${hw.hardwareConcurrency} ${units.cores||'cores'}`);
-  if(hw.deviceMemory) specs.push(`≈${hw.deviceMemory} ${units.gb||'GB'}`);
-  const screen=basic.screen||{};
-  if(screen.w && screen.h && screen.pixelRatio){
-    specs.push(`${screen.w}×${screen.h}@${screen.pixelRatio}`);
-  }
-  const monitors=formatMonitorText(screen.monitors,t);
-  if(monitors) specs.push(monitors);
-  if(typeof t.shock?.deviceTouchLabel==='function'){
-    const touchLabel=t.shock.deviceTouchLabel(hasTouch);
-    if(touchLabel) specs.push(touchLabel);
-  }
-  const gpuLabel=formatGpuRenderer(basic.gl?.renderer||'');
-  if(gpuLabel) specs.push(gpuLabel);
-  const osLabel=profiling?.osLabel||guessOSVersion(basic);
-  if(osLabel) specs.push(osLabel);
-  const specsHtml=specs.length?pillList(specs):pillOr('—');
-  const deviceModel=profiling?.deviceLabel||guessDevice(basic);
-  let hypothesis='';
-  if(deviceModel){
-    const modelPill=pillOr(deviceModel);
-    hypothesis=typeof t.shock?.deviceHypothesis==='function'?t.shock.deviceHypothesis(modelPill):modelPill;
-  }
-  return {specsHtml,hypothesis};
-}
 
-function buildConnectionSummary(basic,profiling,t){
-  const parts=[];
-  const netSummary=formatNetworkSummary(basic.net);
-  const units=t.units||{};
-  const labels=t.labels||{};
-  const type=profiling?.connectionRaw||netSummary?.type||null;
-  if(type && type!=='—') parts.push(type);
-  const speedState=state.speed||{};
-  if(speedState.status==='done'){
-    if(typeof speedState.mbps==='number'&&!Number.isNaN(speedState.mbps)){
-      parts.push(`${speedState.mbps.toFixed(1)} ${units.mbps||'Mbps'}`);
-    }
-    if(typeof speedState.latency==='number'&&!Number.isNaN(speedState.latency)){
-      parts.push(`${labels.latency||'Latency'} ${speedState.latency} ${units.ms||'ms'}`);
-    }
-  }else{
-    if(netSummary&&netSummary.downlink!=null) parts.push(`~${netSummary.downlink} ${units.mbps||'Mbps'}`);
-    if(netSummary&&netSummary.rtt!=null) parts.push(`${labels.latency||'Latency'} ${netSummary.rtt} ${units.ms||'ms'}`);
-  }
-  const summary=[];
-  if(parts.length) summary.push(pillList(parts));
-  if(speedState.status==='running'&&t.speed?.running){
-    summary.push(`<span class="pill">${escapeHtml(t.speed.running)}</span>`);
-  }else if(speedState.status==='error'){
-    const label=t.speed?.error?escapeHtml(t.speed.error(speedState.error||'')):escapeHtml(speedState.error||'');
-    if(label) summary.push(`<span class="pill">${label}</span>`);
-  }
-  return summary.join(' ').trim();
-}
-
-function renderShockBullets(basic,t){
+function renderShockBullets(basic,t,snapshot){
   const ul=getEl('shockList');
   if(!ul) return;
   if(!basic){
@@ -3203,67 +3067,126 @@ function renderShockBullets(basic,t){
     return;
   }
   clearClockIntervals();
-  const profiling=state.profilingContext;
-  const languagesSummary=formatLanguagesList(basic.languages);
-  const dntLabel=formatDntStatus(basic.dnt,t);
-  const touchInfo=formatTouchSummary(basic.touch,basic.pointer,t);
-  const hasTouch=Boolean(touchInfo.points>0||((touchInfo.pointer||'').toLowerCase().includes('touch')));
-  const locale=currentLang==='en'?'en-US':(currentLang==='uz'?'uz-UZ':'ru-RU');
-  const timezone=basic.timezone||LOCAL_TZ||'UTC';
-  const tzInfo=describeTimeZoneLabel(timezone,locale);
-  const tzCity=tzCityName(timezone);
+  const lines=[];
   const details=state.serverData?.details||{};
-  const placeParts=[];
-  const countryLabel=details.country_name||tzInfo.country||t.shock.clockFallback||'';
-  if(countryLabel) placeParts.push(pillValue(countryLabel));
-  if(tzCity) placeParts.push(pillValue(tzCity));
-  const placeHtml=placeParts.length?placeParts.join(' '):pillOr(t.shock.clockFallback||'—');
-  const timeHtml=`<span class="pill" data-clock-tz="${escapeHtml(timezone)}" data-clock-locale="${escapeHtml(locale)}" data-clock-seconds="1">${escapeHtml(timeInTZ(timezone,locale,true))}</span>`;
-  const permEntries=Object.entries(basic.perms||{});
-  const keyPerms=summarizeKeyPermissions(permEntries,t);
-  const permHtml=keyPerms.length?pillList(keyPerms):pillOr(t.permStates?.unknown||'—');
-  const browserHtml=pillOr(browserDisplayName(basic));
-  const batteryText=profiling?.batteryText||formatBatteryStatus(basic.battery);
-  const provider=profiling?.provider||details.org||state.serverData?.detailSource||null;
-  const vpnState=state.vpn||{status:'uncertain',reasons:[],checked:false};
-  const vpnStatusLabel=(t.vpn?.statuses?.[vpnState.status])||(t.vpn?.statuses?.uncertain)||'';
-  const vpnReasonText=(vpnState.reasons||[]).map(reason=>t.vpn?.reasons?.[reason]).filter(Boolean).join('; ');
-  const vpnReasonHtml=vpnReasonText?pillList(vpnReasonText.split(/;\s*/).filter(Boolean)):'';
-  const deviceSpecs=buildDeviceSpecs(basic,profiling,t,hasTouch);
-  const connectionSummary=buildConnectionSummary(basic,profiling,t);
-  const ipButton=ensureInlineIpButton(t);
-  const vpnActionSlot='<span data-vpn-slot></span>';
-  const bullets=[
-    {key:'clock',html:t.shock.clock(placeHtml,timeHtml)},
-    {key:'device',html:t.shock.device(deviceSpecs.specsHtml,deviceSpecs.hypothesis)},
-    {key:'browser',html:t.shock.browserPerms(browserHtml,permHtml)},
-    {key:'languages',html:t.shock.languages(languagesSummary||'')}
-  ];
-  if(batteryText) bullets.push({key:'battery',html:t.shock.battery(batteryText)});
-  if(provider) bullets.push({key:'provider',html:t.shock.provider(provider)});
-  if(dntLabel) bullets.push({key:'dnt',html:t.shock.dnt(dntLabel)});
-  bullets.push({key:'connection',html:t.shock.connection(connectionSummary)});
-  bullets.push({key:'vpn',html:t.shock.vpn(pillOr(vpnStatusLabel||t.vpn?.statuses?.uncertain||''),vpnReasonHtml,vpnActionSlot),button:ipButton});
-  ul.innerHTML='';
-  bullets.filter(Boolean).forEach(item=>{
-    const li=document.createElement('li');
-    let html=item.html||'';
-    if(item.key==='vpn'&&item.button){
-      if(html.includes(vpnActionSlot)){
-        html=html.replace(vpnActionSlot,'');
-      }
-      li.innerHTML=html;
-      if(li.innerHTML && !li.innerHTML.endsWith(' ')){
-        li.appendChild(document.createTextNode(' '));
-      }
-      li.appendChild(item.button);
-    }else{
-      li.innerHTML=html;
+  const hasIp=!!state.serverData;
+
+  // LOCATION (IP-dependent)
+  if(hasIp){
+    const city=details.city||state.serverData?.geo?.city||'';
+    const region=details.region||details.country_name||state.serverData?.geo?.country||'';
+    if(city||region){
+      lines.push(t.shock.location(city||region,city?region:''));
     }
+  }else if(!state.ipFetchDone){
+    lines.push(t.shock.locationLoading);
+  }
+
+  // DEVICE
+  const deviceRaw=guessDevice(basic);
+  const deviceName=localizeDeviceName(deviceRaw,currentLang);
+  if(deviceName){
+    lines.push(t.shock.device(deviceName));
+  }
+
+  // SCREEN (only if HiDPI / Retina)
+  if(basic.screen?.pixelRatio>=2){
+    const desc=`${basic.screen.w}\u00D7${basic.screen.h}`;
+    lines.push(t.shock.screen(desc));
+  }
+
+  // ISP (IP-dependent)
+  if(hasIp&&details.org){
+    lines.push(t.shock.isp(details.org));
+  }
+
+  // VPN (IP-dependent)
+  const vpnState=state.vpn||{};
+  if(hasIp&&vpnState.status==='likely'){
+    lines.push(t.shock.vpnLikely);
+  }
+
+  // TIMEZONE MISMATCH (IP-dependent)
+  if(hasIp&&details.timezone&&basic.timezone){
+    const ipTzCountry=details.timezone.split('/')[0]||'';
+    const browserTzCountry=basic.timezone.split('/')[0]||'';
+    if(ipTzCountry&&browserTzCountry&&ipTzCountry!==browserTzCountry){
+      const ipCountry=details.country_name||ipTzCountry;
+      const tzCountry=browserTzCountry;
+      lines.push(t.shock.tzMismatch(ipCountry,tzCountry));
+    }
+  }
+
+  // WEBRTC LEAK
+  const profiling=state.profilingContext;
+  const webrtcIp=profiling?.webrtcLocalIp||null;
+  if(webrtcIp&&state.serverData?.ip&&webrtcIp!==state.serverData.ip){
+    lines.push(t.shock.webrtcLeak(webrtcIp));
+  }
+
+  // CANVAS
+  if(basic.hashes?.canvas){
+    lines.push(t.shock.canvas);
+  }
+
+  // AD BLOCKER
+  if(basic.exposure?.adblock){
+    lines.push(t.shock.adblock);
+  }
+
+  // PLUGINS
+  const pluginCount=(basic.plugins||[]).length;
+  if(pluginCount>3){
+    lines.push(t.shock.plugins(pluginCount));
+  }
+
+  // CAMERA/MIC GRANTED
+  const perms=basic.perms||{};
+  if(perms.camera==='granted'||perms.microphone==='granted'){
+    lines.push(t.shock.micGranted);
+  }
+
+  // LANGUAGES (if more than 2)
+  if(basic.languages&&basic.languages.length>2){
+    const langs=basic.languages.slice(0,5).join(', ');
+    lines.push(t.shock.languages(langs));
+  }
+
+  // BATTERY (if low)
+  if(basic.battery&&basic.battery.level!=null&&!basic.battery.unavailable&&basic.battery.level<0.3){
+    const pct=Math.round(basic.battery.level*100);
+    lines.push(t.shock.battery(pct));
+  }
+
+  // MEDIA DEVICES (if many)
+  const mediaCount=(basic.media?.audioInput||0)+(basic.media?.videoInput||0);
+  if(mediaCount>2){
+    lines.push(t.shock.mediaDevices(mediaCount));
+  }
+
+  // SLOW/MOBILE CONNECTION
+  const net=basic.net||{};
+  if(net.effectiveType==='slow-2g'||net.effectiveType==='2g'||net.effectiveType==='3g'){
+    lines.push(t.shock.slowConnection(net.effectiveType));
+  }else if(net.effectiveType==='4g'&&net.downlink&&net.downlink<5){
+    lines.push(t.shock.mobileConnection);
+  }
+
+  // FINGERPRINT ID (always last)
+  if(snapshot?.fp){
+    const shortHash=snapshot.fp.substring(0,8);
+    const pct=snapshot.pct||0;
+    lines.push(t.shock.fingerprintId(shortHash,Math.round(pct)));
+  }
+
+  // Render
+  ul.innerHTML='';
+  lines.filter(Boolean).forEach(text=>{
+    const li=document.createElement('li');
+    li.textContent=text;
     ul.appendChild(li);
   });
-  shockBulletCount=bullets.filter(Boolean).length;
-  initClockIntervals(ul);
+  shockBulletCount=lines.filter(Boolean).length;
   syncShockVisibility();
 }
 
@@ -3471,11 +3394,6 @@ function formatMonitorText(info,t){
   return t.monitorText?.unknown||'';
 }
 
-function updateSpeedSection(t){
-  const el=getEl('speedResult');
-  const summary=formatSpeedSummary(t);
-  el.textContent=summary?`⚡ ${summary}`:'';
-}
 
 let profilerModulePromise=null;
 let profilerLoadError=null;
@@ -3563,13 +3481,13 @@ async function renderProfilingSection(basic,t){
     if(runId!==profilingSequence) return;
     const context=buildProfilingContext(findings,basic,t);
     state.profilingContext=context;
-    renderShockBullets(basic,t);
+    renderShockBullets(basic,t,snapshotCache);
     syncShockVisibility();
   }catch(err){
     if(runId!==profilingSequence) return;
     state.profilingContext=null;
     console.error('Profiling error',err);
-    renderShockBullets(basic,t);
+    renderShockBullets(basic,t,snapshotCache);
     syncShockVisibility();
   }
 }
@@ -3578,24 +3496,6 @@ let currentLang='ru';
 const cacheEls={};
 const getEl=id=>cacheEls[id]||(cacheEls[id]=document.getElementById(id));
 let renderToken=0;
-let inlineIpButton=null;
-
-function ensureInlineIpButton(t){
-  if(!inlineIpButton){
-    inlineIpButton=document.createElement('button');
-    inlineIpButton.type='button';
-    inlineIpButton.id='ipBtn';
-    inlineIpButton.className='btn btn-inline';
-    inlineIpButton.addEventListener('click',detectIpAndSpeed);
-  }
-  const label=t.ip?.button||'IP';
-  const loading=t.ip?.buttonLoading||label;
-  inlineIpButton.textContent=state.fetchingIp?loading:label;
-  inlineIpButton.dataset.label=label;
-  inlineIpButton.setAttribute('aria-label',label);
-  inlineIpButton.disabled=Boolean(state.fetchingIp);
-  return inlineIpButton;
-}
 
 async function render(lang){
   const token=++renderToken;
@@ -3662,7 +3562,7 @@ async function render(lang){
     });
   }
   getEl('detailTitle').textContent=t.detailTitle;
-  getEl('shockTitle').textContent=t.shockTitle;
+  getEl('shockTitle').textContent=t.shock.title;
   getEl('methodSummary').innerHTML=t.methodSummary;
   getEl('methodText').innerHTML=t.methodText;
   getEl('policySummary').innerHTML=t.policySummary;
@@ -3679,9 +3579,6 @@ async function render(lang){
   }
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
-  ensureInlineIpButton(t);
-  updateIpSection(t);
-  updateSpeedSection(t);
   renderProfilingSection(snapshotCache?.basic||null,t);
 
   try{
@@ -3801,7 +3698,18 @@ async function render(lang){
     const touchInfo=formatTouchSummary(basic.touch,basic.pointer,t);
     const networkInfo=formatNetworkSummary(basic.net);
 
-    renderShockBullets(basic,t);
+    renderShockBullets(basic,t,{fp,H,pct});
+    if(!state.serverData&&!state.ipFetchDone){
+      autoFetchIp().then(()=>{
+        state.ipFetchDone=true;
+        invalidateSnapshot();
+        const t2=I18N[currentLang];
+        getSnapshot().then(snap=>{
+          renderShockBullets(snap.basic,t2,snap);
+          renderProfilingSection(snap.basic,t2);
+        });
+      });
+    }
 
     const shareConfig=t.share||{};
     const shareUrl=resolveShareUrl();

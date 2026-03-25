@@ -888,10 +888,10 @@ const I18N = vm.runInContext('I18N', sandbox);
   let englishShock = '';
   for (let i = 0; i < 200; i += 1) {
     englishShock = collectShockText().join(' ');
-    if (/Time zone & clock/i.test(englishShock)) break;
+    if (/Looks like you|Detecting your location/i.test(englishShock)) break;
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  assert.ok(/Time zone & clock/i.test(englishShock));
+  assert.ok(/Looks like you|Detecting your location/i.test(englishShock), 'English shock should contain new-style insights');
   await sandbox.render('uz');
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(documentElement.lang, 'uz');
@@ -900,11 +900,11 @@ const I18N = vm.runInContext('I18N', sandbox);
   let uzbekShock = '';
   for (let i = 0; i < 200; i += 1) {
     uzbekShock = collectShockText().join(' ');
-    if (/Vaqt mintaqasi va soat/i.test(uzbekShock)) break;
+    if (/Ehtimol sizda|Joylashuvingiz aniqlanmoqda/i.test(uzbekShock)) break;
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  assert.ok(/Vaqt mintaqasi va soat/i.test(uzbekShock));
-  await sandbox.detectIpAndSpeed();
+  assert.ok(/Ehtimol sizda|Joylashuvingiz aniqlanmoqda/i.test(uzbekShock), 'Uzbek shock should contain new-style insights');
+  await sandbox.autoFetchIp();
   await sandbox.render('ru');
   await new Promise(resolve => setTimeout(resolve, 0));
   for (let i = 0; i < 20 && !/Tashkent/i.test(collectShockText().join(' ')); i += 1) {
@@ -912,7 +912,6 @@ const I18N = vm.runInContext('I18N', sandbox);
   }
   assert.ok(stateRef.serverData);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
-  assert.equal(stateRef.speed.status, 'done');
   assert.ok(/Tashkent|Uzbekistan/i.test(collectShockText().join(' ')), 'exposure list should mention updated region');
   assert.ok(stateRef.sharePayload);
 
