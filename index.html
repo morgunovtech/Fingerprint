@@ -205,7 +205,7 @@
       .hero-subtitle{font-size:16px}
       .hero-actions{flex-direction:column;align-items:stretch}
     }
-    .data-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+    .data-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
     @media(max-width:640px){.data-groups{grid-template-columns:1fr}}
     .data-group{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
     .data-group h3{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
@@ -233,6 +233,13 @@
       details>summary{list-style:none;font-weight:700}
       .rec-card{break-inside:avoid}
     }
+    .tracker-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-subtle,var(--border));font-size:14px}
+    .tracker-row:last-child{border-bottom:none}
+    .tracker-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;flex-shrink:0}
+    .tracker-badge--blocked{background:var(--success-bg,rgba(34,197,94,.1));color:var(--success,#22c55e)}
+    .tracker-badge--open{background:var(--danger-bg,rgba(239,68,68,.1));color:var(--danger,#ef4444)}
+    .tracker-name{flex:1;color:var(--text)}
+    .tracker-verdict{margin-top:12px;padding:12px 16px;border-radius:var(--radius-md,10px);background:var(--bg-raised,#F3F4F6);font-size:14px;line-height:1.5}
   </style>
 </head>
 <body>
@@ -291,10 +298,17 @@
         <div class="data-group" id="groupIdentity"></div>
         <div class="data-group" id="groupDevice"></div>
         <div class="data-group" id="groupNetwork"></div>
-        <div class="data-group" id="groupFingerprint" style="display:none"></div>
+        <div class="data-group" id="groupFingerprint"></div>
       </div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
+  </section>
+
+  <!-- Tracker protection tests -->
+  <section class="block" id="trackerSection" style="display:none">
+    <h2 class="section-heading" id="trackerTitle"></h2>
+    <div id="trackerResults"></div>
+    <div id="trackerVerdict" class="tracker-verdict"></div>
   </section>
 
   <section class="block implications-block" id="implicationsBlock">
@@ -482,6 +496,19 @@ const I18N = {
       fallback6:'Регулярно проверяйте настройки контент-блокеров и разрешений, чтобы они не включались сами собой.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    trackers:{
+      title:'Защита от трекеров',
+      pixel:{name:'Рекламный пиксель',blocked:'Заблокирован',open:'Не заблокирован'},
+      analytics:{name:'Скрипт аналитики',blocked:'Заблокирован',open:'Не заблокирован'},
+      iframe:{name:'Рекламный фрейм',blocked:'Заблокирован',open:'Не заблокирован'},
+      dnt:{name:'Do Not Track',blocked:'Включён',open:'Выключен'},
+      gpc:{name:'Global Privacy Control',blocked:'Включён',open:'Выключен'},
+      verdict:function(blocked,total){
+        if(blocked>=4) return 'Отличная защита: '+blocked+' из '+total+' трекеров заблокированы. Ваш браузер хорошо настроен.';
+        if(blocked>=2) return 'Частичная защита: '+blocked+' из '+total+' трекеров заблокированы. Установите uBlock Origin для полной защиты.';
+        return 'Слабая защита: только '+blocked+' из '+total+' трекеров заблокированы. Настоятельно рекомендуем установить uBlock Origin.';
+      }
+    },
     implications:{
       problemTitle:'Что происходит с вашими данными',
       problemText:'<p>Каждый раз, когда вы открываете сайт, браузер автоматически передаёт десятки характеристик — без вашего разрешения и без всплывающих окон. Сайты не хранят этот отпечаток у себя — они передают его рекламным сетям.</p><p>Рекламная сеть может присутствовать сразу на миллионах сайтов. Это значит, что один невидимый трекер молча следит за вами везде, где вы бываете в интернете — и собирает полную историю ваших интересов, покупок, маршрутов и привычек.</p><p>Этот профиль не удаляется, когда вы чистите cookies. Он не исчезает в режиме инкогнито. Он существует, пока существует ваш браузер и устройство.</p>',
@@ -560,6 +587,66 @@ const I18N = {
             firefox:{action:'Оставьте 1\u20132 языка',detail:'about:preferences \u2192 Язык'},
             brave:{action:'Оставьте 1\u20132 языка',detail:'Настройки \u2192 Языки'},
             safari:{action:'Измените порядок языков в системных настройках',detail:'Системные настройки \u2192 Основные \u2192 Язык и регион'}
+          }
+        },
+        webgl:{
+          title:'Защитите WebGL-отпечаток',
+          problem:'WebGL раскрывает модель вашего GPU \u2014 это мощный идентификатор устройства.',
+          instructions:{
+            chrome:{action:'Установите WebGL Fingerprint Defender',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/webgl%20fingerprint%20defender'}},
+            firefox:{action:'Отключите WebGL',detail:'about:config \u2192 webgl.disabled \u2192 true'},
+            brave:{action:'Brave рандомизирует WebGL-отпечаток',note:'Shields \u2192 Fingerprinting \u2192 Strict'},
+            safari:{action:'Safari ограничивает доступ к WebGL по умолчанию',note:'Дополнительных действий не требуется'}
+          }
+        },
+        audioFp:{
+          title:'Защитите аудио-отпечаток',
+          problem:'Браузер обрабатывает звук уникально \u2014 по этому признаку вас можно узнать.',
+          instructions:{
+            chrome:{action:'Специальных расширений нет \u2014 используйте Brave или Firefox',detail:'Brave и Firefox с resistFingerprinting защищают от аудио-трекинга'},
+            firefox:{action:'Включите privacy.resistFingerprinting',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'},
+            brave:{action:'Brave рандомизирует аудио-отпечаток',note:'Защита включена по умолчанию'},
+            safari:{action:'Safari частично защищает от аудио-трекинга',note:'Встроенная защита ITP'}
+          }
+        },
+        fonts:{
+          title:'Сократите список нестандартных шрифтов',
+          problem:function(n){return 'Обнаружено '+n+' нестандартных шрифтов \u2014 набор установленных шрифтов помогает сайтам отличить ваше устройство от других.';},
+          instructions:{
+            chrome:{action:'Удалите экзотические шрифты, которые не используете',detail:'Панель управления \u2192 Шрифты (Windows) или Font Book (macOS)'},
+            firefox:{action:'Удалите экзотические шрифты + включите resistFingerprinting',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'},
+            brave:{action:'Brave ограничивает видимость шрифтов',note:'Shields \u2192 Fingerprinting \u2192 Strict'},
+            safari:{action:'Safari ограничивает доступ к списку шрифтов',note:'Встроенная защита'}
+          }
+        },
+        spoofing:{
+          title:'Обнаружены несоответствия в данных браузера',
+          problem:'Некоторые данные вашего браузера не совпадают друг с другом. Это может быть VPN, расширение для приватности или подмена User-Agent. Несоответствия иногда делают вас более заметным, а не менее.',
+          instructions:{
+            chrome:{action:'Проверьте расширения, которые подменяют User-Agent',detail:'chrome://extensions \u2192 отключите User-Agent Switcher и подобные'},
+            firefox:{action:'Проверьте расширения и настройки приватности',detail:'about:addons \u2192 отключите подмену UA, если не нужна'},
+            brave:{action:'Brave может вызывать мелкие несоответствия \u2014 это нормально',note:'Встроенная защита Brave иногда создаёт контролируемые аномалии'},
+            safari:{action:'Проверьте расширения Safari',detail:'Safari \u2192 Настройки \u2192 Расширения'}
+          }
+        },
+        canvasRandomized:{
+          title:'Обнаружена рандомизация canvas',
+          problem:'Ваше расширение рандомизирует canvas-отпечаток. Это хорошо для приватности, но может сделать вас уникальным среди пользователей без такой защиты.',
+          instructions:{
+            chrome:{action:'Рассмотрите переход на Brave',detail:'В Brave рандомизация canvas работает на уровне браузера, что менее заметно'},
+            firefox:{action:'privacy.resistFingerprinting работает аналогично',detail:'Это стандартный механизм Firefox \u2014 менее заметен, чем расширения'},
+            brave:{action:'Brave рандомизирует canvas на уровне браузера',note:'Это штатное поведение \u2014 не стоит менять'},
+            safari:{action:'Safari имеет встроенную защиту canvas',note:'Дополнительных действий не требуется'}
+          }
+        },
+        tzMismatch:{
+          title:'Часовой пояс не совпадает с IP',
+          problem:'Ваш часовой пояс не совпадает с вашим IP-адресом. Если вы используете VPN, синхронизируйте время с локацией VPN-сервера.',
+          instructions:{
+            chrome:{action:'Синхронизируйте часовой пояс с VPN',detail:'Выберите VPN-сервер в той же стране, что и ваш системный часовой пояс'},
+            firefox:{action:'Синхронизируйте часовой пояс с VPN',detail:'Выберите VPN-сервер в той же стране, что и ваш системный часовой пояс'},
+            brave:{action:'Синхронизируйте часовой пояс с VPN',detail:'Выберите VPN-сервер в той же стране, что и ваш системный часовой пояс'},
+            safari:{action:'Синхронизируйте часовой пояс с VPN',detail:'Выберите VPN-сервер в той же стране, что и ваш системный часовой пояс'}
           }
         }
       },
@@ -925,7 +1012,7 @@ const I18N = {
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
     methodSummary:'<b>Как считаем результат</b>',
-    methodText:'Для каждого из 18 сигналов (браузер, ОС, разрешение экрана, GPU, число ядер, объём памяти, языки, расширения, Canvas/Audio-хэш и др.) рассчитывается информационная энтропия: -log\u2082(вероятность). Вероятности берутся из встроенных частотных таблиц, составленных на основе данных EFF Panopticlick и исследований FingerprintJS. Сигналы, которые встречаются редко (нестандартный GPU, редкий браузер, необычное разрешение), дают больший вклад в итоговый балл. Алгоритм учитывает зависимости между сигналами (например, Safari + Apple GPU корректируются). Итоговый процент — это перцентиль вашей энтропии среди 25 000 смоделированных отпечатков. Подсчёт выполняется локально и никуда не отправляется.',
+    methodText:'Для каждого из 21 сигнала (браузер, ОС, разрешение экрана, GPU, число ядер, объём памяти, языки, расширения, Canvas/Audio-хэш, WebGL-рендерер, аудио-отпечаток, набор шрифтов и др.) рассчитывается информационная энтропия: -log\u2082(вероятность). Вероятности берутся из встроенных частотных таблиц, составленных на основе данных EFF Panopticlick и исследований FingerprintJS. Сигналы, которые встречаются редко (нестандартный GPU, редкий браузер, необычное разрешение), дают больший вклад в итоговый балл. Алгоритм учитывает зависимости между сигналами (например, Safari + Apple GPU корректируются). Итоговый процент — это перцентиль вашей энтропии среди 25 000 смоделированных отпечатков. Подсчёт выполняется локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — ipwho.is, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     batteryUnavailable:'Недоступно в этом браузере',
@@ -1058,6 +1145,19 @@ const I18N = {
       fallback6:'Review blocker settings and permissions regularly so they do not silently re-enable themselves.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    trackers:{
+      title:'Tracker protection',
+      pixel:{name:'Ad tracking pixel',blocked:'Blocked',open:'Not blocked'},
+      analytics:{name:'Analytics script',blocked:'Blocked',open:'Not blocked'},
+      iframe:{name:'Ad frame',blocked:'Blocked',open:'Not blocked'},
+      dnt:{name:'Do Not Track',blocked:'Enabled',open:'Disabled'},
+      gpc:{name:'Global Privacy Control',blocked:'Enabled',open:'Disabled'},
+      verdict:function(blocked,total){
+        if(blocked>=4) return 'Excellent protection: '+blocked+' of '+total+' trackers blocked. Your browser is well configured.';
+        if(blocked>=2) return 'Partial protection: '+blocked+' of '+total+' trackers blocked. Install uBlock Origin for full protection.';
+        return 'Weak protection: only '+blocked+' of '+total+' trackers blocked. We strongly recommend installing uBlock Origin.';
+      }
+    },
     implications:{
       problemTitle:'What happens to your data',
       problemText:'<p>Every time you open a website, your browser automatically sends dozens of characteristics \u2014 without your permission and without any pop-ups. Sites do not store this fingerprint themselves \u2014 they pass it to ad networks.</p><p>An ad network can be present on millions of sites at once. That means a single invisible tracker silently follows you everywhere you go online \u2014 collecting a complete history of your interests, purchases, routes, and habits.</p><p>This profile is not deleted when you clear cookies. It does not disappear in incognito mode. It exists as long as your browser and device exist.</p>',
@@ -1136,6 +1236,66 @@ const I18N = {
             firefox:{action:'Keep 1\u20132 languages',detail:'about:preferences \u2192 Language'},
             brave:{action:'Keep 1\u20132 languages',detail:'Settings \u2192 Languages'},
             safari:{action:'Change language order in system settings',detail:'System Settings \u2192 General \u2192 Language & Region'}
+          }
+        },
+        webgl:{
+          title:'Protect your WebGL fingerprint',
+          problem:'WebGL reveals your GPU model \u2014 a powerful device identifier.',
+          instructions:{
+            chrome:{action:'Install WebGL Fingerprint Defender',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/webgl%20fingerprint%20defender'}},
+            firefox:{action:'Disable WebGL',detail:'about:config \u2192 webgl.disabled \u2192 true'},
+            brave:{action:'Brave randomises the WebGL fingerprint',note:'Shields \u2192 Fingerprinting \u2192 Strict'},
+            safari:{action:'Safari limits WebGL access by default',note:'No additional action required'}
+          }
+        },
+        audioFp:{
+          title:'Protect your audio fingerprint',
+          problem:'Your browser processes sound uniquely \u2014 this trait can identify you.',
+          instructions:{
+            chrome:{action:'No dedicated extensions \u2014 use Brave or Firefox',detail:'Brave and Firefox with resistFingerprinting protect against audio tracking'},
+            firefox:{action:'Enable privacy.resistFingerprinting',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'},
+            brave:{action:'Brave randomises the audio fingerprint',note:'Protection is enabled by default'},
+            safari:{action:'Safari partially protects against audio tracking',note:'Built-in ITP protection'}
+          }
+        },
+        fonts:{
+          title:'Reduce non-standard fonts',
+          problem:function(n){return n+' non-standard fonts detected \u2014 installed fonts help sites distinguish your device from others.';},
+          instructions:{
+            chrome:{action:'Remove exotic fonts you do not use',detail:'Control Panel \u2192 Fonts (Windows) or Font Book (macOS)'},
+            firefox:{action:'Remove exotic fonts + enable resistFingerprinting',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'},
+            brave:{action:'Brave limits font visibility',note:'Shields \u2192 Fingerprinting \u2192 Strict'},
+            safari:{action:'Safari limits access to the font list',note:'Built-in protection'}
+          }
+        },
+        spoofing:{
+          title:'Browser data inconsistencies detected',
+          problem:'Some of your browser data does not match. This could be a VPN, a privacy extension, or User-Agent spoofing. Inconsistencies sometimes make you more visible, not less.',
+          instructions:{
+            chrome:{action:'Check extensions that spoof your User-Agent',detail:'chrome://extensions \u2192 disable User-Agent Switcher and similar'},
+            firefox:{action:'Check extensions and privacy settings',detail:'about:addons \u2192 disable UA spoofing if not needed'},
+            brave:{action:'Brave may cause minor inconsistencies \u2014 this is normal',note:'Brave built-in protection sometimes creates controlled anomalies'},
+            safari:{action:'Check your Safari extensions',detail:'Safari \u2192 Settings \u2192 Extensions'}
+          }
+        },
+        canvasRandomized:{
+          title:'Canvas randomisation detected',
+          problem:'Your extension randomises the canvas fingerprint. This is good for privacy, but may make you unique among users without such protection.',
+          instructions:{
+            chrome:{action:'Consider switching to Brave',detail:'Brave randomises canvas at the browser level, which is less detectable'},
+            firefox:{action:'privacy.resistFingerprinting works similarly',detail:'This is a standard Firefox mechanism \u2014 less detectable than extensions'},
+            brave:{action:'Brave randomises canvas at the browser level',note:'This is standard behaviour \u2014 no need to change'},
+            safari:{action:'Safari has built-in canvas protection',note:'No additional action required'}
+          }
+        },
+        tzMismatch:{
+          title:'Timezone does not match IP',
+          problem:'Your timezone does not match your IP address. If you use a VPN, synchronise the time with the VPN server location.',
+          instructions:{
+            chrome:{action:'Synchronise your timezone with VPN',detail:'Choose a VPN server in the same country as your system timezone'},
+            firefox:{action:'Synchronise your timezone with VPN',detail:'Choose a VPN server in the same country as your system timezone'},
+            brave:{action:'Synchronise your timezone with VPN',detail:'Choose a VPN server in the same country as your system timezone'},
+            safari:{action:'Synchronise your timezone with VPN',detail:'Choose a VPN server in the same country as your system timezone'}
           }
         }
       },
@@ -1468,7 +1628,7 @@ const I18N = {
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
     methodSummary:'<b>How we calculate it</b>',
-    methodText:'For each of 18 signals (browser, OS, screen resolution, GPU, core count, memory, languages, extensions, Canvas/Audio hash, etc.) we compute information entropy: -log\u2082(probability). Probabilities come from built-in frequency tables based on EFF Panopticlick data and FingerprintJS research. Rare signals (unusual GPU, uncommon browser, atypical resolution) contribute more to the final score. The algorithm accounts for signal dependencies (e.g. Safari + Apple GPU are correlated). The final percentage is your entropy\u2019s percentile among 25,000 simulated fingerprints. All calculations run locally and nothing is uploaded.',
+    methodText:'For each of 21 signals (browser, OS, screen resolution, GPU, core count, memory, languages, extensions, Canvas/Audio hash, WebGL renderer, audio fingerprint, font set, etc.) we compute information entropy: -log\u2082(probability). Probabilities come from built-in frequency tables based on EFF Panopticlick data and FingerprintJS research. Rare signals (unusual GPU, uncommon browser, atypical resolution) contribute more to the final score. The algorithm accounts for signal dependencies (e.g. Safari + Apple GPU are correlated). The final percentage is your entropy\u2019s percentile among 25,000 simulated fingerprints. All calculations run locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. On page load, the browser queries your IP data via ipapi.co (with fallbacks to ipwho.is, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
     batteryUnavailable:'Not available in this browser',
@@ -1601,6 +1761,19 @@ const I18N = {
       fallback6:'Bloklagich va ruxsat sozlamalarini vaqti-vaqti bilan tekshirib turing — ular o‘z-o‘zidan yoqilib ketmasin.'
     },
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
+    trackers:{
+      title:"Trekerlardan himoya",
+      pixel:{name:"Reklama pikseli",blocked:"Bloklangan",open:"Bloklanmagan"},
+      analytics:{name:"Analitika skripti",blocked:"Bloklangan",open:"Bloklanmagan"},
+      iframe:{name:"Reklama freyimi",blocked:"Bloklangan",open:"Bloklanmagan"},
+      dnt:{name:"Do Not Track",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
+      gpc:{name:"Global Privacy Control",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
+      verdict:function(blocked,total){
+        if(blocked>=4) return "Ajoyib himoya: "+blocked+" dan "+total+" ta treker bloklangan. Brauzeringiz yaxshi sozlangan.";
+        if(blocked>=2) return "Qisman himoya: "+blocked+" dan "+total+" ta treker bloklangan. To\u02BBliq himoya uchun uBlock Origin o\u02BBrnating.";
+        return "Zaif himoya: faqat "+blocked+" dan "+total+" ta treker bloklangan. uBlock Origin o\u02BBrnatishni tavsiya qilamiz.";
+      }
+    },
     implications:{
       problemTitle:'Ma\u02BBlumotlaringizga nima bo\u02BBlmoqda',
       problemText:'<p>Har safar saytni ochganingizda, brauzer avtomatik ravishda o\u02BBnlab xususiyatlarni uzatadi \u2014 sizning ruxsatingizsiz va hech qanday oynalarsiz. Saytlar bu barmoq izini o\u02BBzlarida saqlamaydi \u2014 ular uni reklama tarmoqlariga uzatadi.</p><p>Reklama tarmog\u02BBi bir vaqtning o\u02BBzida millionlab saytlarda bo\u02BBlishi mumkin. Bu shuni anglatadiki, bitta ko\u02BBrinmas treker siz internetda qayerda bo\u02BBlsangiz, jimgina kuzatadi \u2014 va qiziqishlaringiz, xaridlaringiz, yo\u02BBllaringiz va odatlaringiz to\u02BBliq tarixini yig\u02BBadi.</p><p>Bu profil cookie fayllarini tozalaganingizda o\u02BBchirilmaydi. Inkognito rejimida yo\u02BBqolmaydi. Brauzeringiz va qurilmangiz mavjud ekan, u ham mavjud.</p>',
@@ -1679,6 +1852,66 @@ const I18N = {
             firefox:{action:"1\u20132 ta tilni qoldiring",detail:"about:preferences \u2192 Til"},
             brave:{action:"1\u20132 ta tilni qoldiring",detail:"Sozlamalar \u2192 Tillar"},
             safari:{action:"Tizim sozlamalarida tillar tartibini o\u02BBzgartiring",detail:"Tizim sozlamalari \u2192 Umumiy \u2192 Til va mintaqa"}
+          }
+        },
+        webgl:{
+          title:"WebGL barmoq izini himoya qiling",
+          problem:"WebGL GPU modelingizni ochib beradi \u2014 bu kuchli qurilma identifikatori.",
+          instructions:{
+            chrome:{action:"WebGL Fingerprint Defender o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/webgl%20fingerprint%20defender'}},
+            firefox:{action:"WebGL ni o\u02BBchiring",detail:"about:config \u2192 webgl.disabled \u2192 true"},
+            brave:{action:"Brave WebGL barmoq izini tasodiflashtiradi",note:"Shields \u2192 Fingerprinting \u2192 Strict"},
+            safari:{action:"Safari WebGL ga kirishni sukut bo\u02BByicha cheklaydi",note:"Qo\u02BBshimcha amallar talab qilinmaydi"}
+          }
+        },
+        audioFp:{
+          title:"Audio barmoq izini himoya qiling",
+          problem:"Brauzer tovushni noyob tarzda qayta ishlaydi \u2014 bu belgiga qarab sizni tanish mumkin.",
+          instructions:{
+            chrome:{action:"Maxsus kengaytmalar yo\u02BBq \u2014 Brave yoki Firefox dan foydalaning",detail:"Brave va Firefox resistFingerprinting bilan audio trekingdan himoyalaydi"},
+            firefox:{action:"privacy.resistFingerprinting ni yoqing",detail:"about:config \u2192 privacy.resistFingerprinting \u2192 true"},
+            brave:{action:"Brave audio barmoq izini tasodiflashtiradi",note:"Himoya sukut bo\u02BByicha yoqilgan"},
+            safari:{action:"Safari audio trekingdan qisman himoyalaydi",note:"ITP ichki himoyasi"}
+          }
+        },
+        fonts:{
+          title:"Nostandart shriftlar sonini kamaytiring",
+          problem:function(n){return n+" ta nostandart shrift aniqlandi \u2014 o\u02BBrnatilgan shriftlar to\u02BBplami qurilmangizni boshqalardan ajratishga yordam beradi.";},
+          instructions:{
+            chrome:{action:"Ishlatilmaydigan ekzotik shriftlarni o\u02BBchiring",detail:"Boshqaruv paneli \u2192 Shriftlar (Windows) yoki Font Book (macOS)"},
+            firefox:{action:"Ekzotik shriftlarni o\u02BBchiring + resistFingerprinting ni yoqing",detail:"about:config \u2192 privacy.resistFingerprinting \u2192 true"},
+            brave:{action:"Brave shriftlar ko\u02BBrinishini cheklaydi",note:"Shields \u2192 Fingerprinting \u2192 Strict"},
+            safari:{action:"Safari shriftlar ro\u02BByxatiga kirishni cheklaydi",note:"Ichki himoya"}
+          }
+        },
+        spoofing:{
+          title:"Brauzer ma\u02BBlumotlarida nomuvofiqliklar aniqlandi",
+          problem:"Brauzeringizning ba\u02BBzi ma\u02BBlumotlari bir-biriga mos kelmaydi. Bu VPN, maxfiylik kengaytmasi yoki User-Agent almashtirilishi bo\u02BBlishi mumkin. Nomuvofiqliklar ba\u02BBzan sizni kamroq emas, balki ko\u02BBproq ko\u02BBzga ko\u02BBrinadigan qiladi.",
+          instructions:{
+            chrome:{action:"User-Agent ni almashtiruvchi kengaytmalarni tekshiring",detail:"chrome://extensions \u2192 User-Agent Switcher va shunga o\u02BBxshashlarni o\u02BBchiring"},
+            firefox:{action:"Kengaytmalar va maxfiylik sozlamalarini tekshiring",detail:"about:addons \u2192 kerak bo\u02BBlmasa UA almashtirishni o\u02BBchiring"},
+            brave:{action:"Brave kichik nomuvofiqliklar keltirib chiqarishi mumkin \u2014 bu normal",note:"Brave ichki himoyasi ba\u02BBzan boshqariladigan anomaliyalar yaratadi"},
+            safari:{action:"Safari kengaytmalarini tekshiring",detail:"Safari \u2192 Sozlamalar \u2192 Kengaytmalar"}
+          }
+        },
+        canvasRandomized:{
+          title:"Canvas tasodiflashtirish aniqlandi",
+          problem:"Kengaytmangiz canvas barmoq izini tasodiflashtirmoqda. Bu maxfiylik uchun yaxshi, lekin bunday himoyasiz foydalanuvchilar orasida sizni noyob qilishi mumkin.",
+          instructions:{
+            chrome:{action:"Brave ga o\u02BBtishni ko\u02BBrib chiqing",detail:"Brave brauzer darajasida canvas ni tasodiflashtiradi, bu kamroq seziladi"},
+            firefox:{action:"privacy.resistFingerprinting xuddi shunday ishlaydi",detail:"Bu Firefox ning standart mexanizmi \u2014 kengaytmalarga qaraganda kamroq seziladi"},
+            brave:{action:"Brave brauzer darajasida canvas ni tasodiflashtiradi",note:"Bu standart xatti-harakat \u2014 o\u02BBzgartirish shart emas"},
+            safari:{action:"Safari ichki canvas himoyasiga ega",note:"Qo\u02BBshimcha amallar talab qilinmaydi"}
+          }
+        },
+        tzMismatch:{
+          title:"Vaqt zonasi IP bilan mos kelmaydi",
+          problem:"Vaqt zonangiz IP manzilingiz bilan mos kelmaydi. Agar VPN ishlatayotgan bo\u02BBlsangiz, vaqtni VPN server joylashuvi bilan sinxronlashtiring.",
+          instructions:{
+            chrome:{action:"Vaqt zonasini VPN bilan sinxronlashtiring",detail:"Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            firefox:{action:"Vaqt zonasini VPN bilan sinxronlashtiring",detail:"Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            brave:{action:"Vaqt zonasini VPN bilan sinxronlashtiring",detail:"Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            safari:{action:"Vaqt zonasini VPN bilan sinxronlashtiring",detail:"Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"}
           }
         }
       },
@@ -2034,7 +2267,7 @@ const I18N = {
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
     methodSummary:'<b>Natija qanday olinadi</b>',
-    methodText:"18 ta signal (brauzer, OT, ekran oʻlchami, GPU, yadrolar soni, xotira, tillar, kengaytmalar, Canvas/Audio xesh va boshq.) uchun axborot entropiyasi hisoblanadi: -log₂(ehtimollik). Ehtimolliklar EFF Panopticlick va FingerprintJS tadqiqotlari asosida tuzilgan ichki chastota jadvallaridan olinadi. Kam uchraydigan signallar (noodatiy GPU, kam tarqalgan brauzer, nostandart oʻlcham) yakuniy ballga koʻproq hissa qoʻshadi. Algoritm signallar orasidagi bogʻliqlikni hisobga oladi. Yakuniy foiz — 25 000 ta modellashtirilgan barmoq izi orasida sizning entropiyangiz percentili. Hisoblash brauzeringizni tark etmaydi.",
+    methodText:"21 ta signal (brauzer, OT, ekran o\u02BBlchami, GPU, yadrolar soni, xotira, tillar, kengaytmalar, Canvas/Audio xesh, WebGL renderer, audio barmoq izi, shriftlar to\u02BBplami va boshq.) uchun axborot entropiyasi hisoblanadi: -log\u2082(ehtimollik). Ehtimolliklar EFF Panopticlick va FingerprintJS tadqiqotlari asosida tuzilgan ichki chastota jadvallaridan olinadi. Kam uchraydigan signallar (noodatiy GPU, kam tarqalgan brauzer, nostandart o\u02BBlcham) yakuniy ballga ko\u02BBproq hissa qo\u02BBshadi. Algoritm signallar orasidagi bog\u02BBliqlikni hisobga oladi. Yakuniy foiz \u2014 25 000 ta modellashtirilgan barmoq izi orasida sizning entropiyangiz percentili. Hisoblash brauzeringizni tark etmaydi.",
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa ipwho.is, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
     batteryUnavailable:'Bu brauzerda mavjud emas',
@@ -2220,6 +2453,84 @@ function sortDeep(value){
 async function canvasHash(){try{const c=document.createElement('canvas');c.width=320;c.height=120;const g=c.getContext('2d');const grad=g.createLinearGradient(0,0,320,0);grad.addColorStop(0,'#000');grad.addColorStop(1,'#0bf');g.fillStyle=grad;g.fillRect(0,0,320,120);g.fillStyle='#fff';g.font='16px Arial';g.rotate(0.03);g.fillText('fp',10,24);g.fillText(navigator.userAgent,10,60);return sha256(c.toDataURL());}catch(_){return '';}}
 async function audioHash(){try{const ctx=new OfflineAudioContext(1,44100,44100);const o=ctx.createOscillator();o.type='triangle';o.frequency.value=1000;const comp=ctx.createDynamicsCompressor();o.connect(comp);comp.connect(ctx.destination);o.start(0);o.stop(0.1);const buf=await ctx.startRendering();const ch=buf.getChannelData(0);let acc=0;for(let i=0;i<ch.length;i+=64){acc+=Math.abs(ch[i]);}return sha256(String(acc));}catch(_){return '';}}
 function webglInfo(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return{};const dbg=gl.getExtension('WEBGL_debug_renderer_info');return{vendor:dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),renderer:dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};}catch(_){return{};}}
+function getWebGLFingerprint(){
+  try{
+    const canvas=document.createElement('canvas');
+    const gl=canvas.getContext('webgl')||canvas.getContext('experimental-webgl');
+    if(!gl) return{supported:false};
+    const debugInfo=gl.getExtension('WEBGL_debug_renderer_info');
+    const renderer=debugInfo?gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL):'N/A';
+    const vendor=debugInfo?gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL):'N/A';
+    const extensions=(gl.getSupportedExtensions()||[]);
+    canvas.width=256;canvas.height=256;
+    const vShader=gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vShader,'attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}');
+    gl.compileShader(vShader);
+    const fShader=gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fShader,'precision mediump float;void main(){gl_FragColor=vec4(0.86,0.27,0.33,1.0);}');
+    gl.compileShader(fShader);
+    const prog=gl.createProgram();
+    gl.attachShader(prog,vShader);gl.attachShader(prog,fShader);gl.linkProgram(prog);gl.useProgram(prog);
+    const buf=gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-0.5,-0.5,0.5,-0.5,0,0.5]),gl.STATIC_DRAW);
+    const loc=gl.getAttribLocation(prog,'p');
+    gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+    gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3);
+    const pixels=new Uint8Array(256*256*4);
+    gl.readPixels(0,0,256,256,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+    let h=0;for(let i=0;i<pixels.length;i+=37){h=((h<<5)-h)+pixels[i];h=h&h;}
+    const renderHash=Math.abs(h).toString(16).padStart(8,'0');
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    return{supported:true,renderer:renderer,vendor:vendor,extensionsCount:extensions.length,hash:renderHash};
+  }catch(_){return{supported:false};}
+}
+async function getAudioFingerprint(){
+  try{
+    const AudioCtx=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+    if(!AudioCtx) return{supported:false};
+    const context=new AudioCtx(1,44100,44100);
+    const osc=context.createOscillator();
+    osc.type='triangle';osc.frequency.setValueAtTime(10000,context.currentTime);
+    const comp=context.createDynamicsCompressor();
+    comp.threshold.setValueAtTime(-50,context.currentTime);
+    comp.knee.setValueAtTime(40,context.currentTime);
+    comp.ratio.setValueAtTime(12,context.currentTime);
+    comp.attack.setValueAtTime(0,context.currentTime);
+    comp.release.setValueAtTime(0.25,context.currentTime);
+    osc.connect(comp);comp.connect(context.destination);osc.start(0);
+    const buffer=await context.startRendering();
+    const data=buffer.getChannelData(0);
+    let h=0;for(let i=4500;i<5000;i++){h=((h<<5)-h)+Math.round(data[i]*1000000);h=h&h;}
+    return{supported:true,hash:Math.abs(h).toString(16).padStart(8,'0')};
+  }catch(_){return{supported:false};}
+}
+function getFontFingerprint(){
+  try{
+    const baseFonts=['monospace','sans-serif','serif'];
+    const testFonts=['Arial','Verdana','Times New Roman','Georgia','Courier New','Comic Sans MS','Impact','Trebuchet MS','Arial Black','Palatino','Lucida Console','Tahoma','Helvetica','Calibri','Cambria','Segoe UI','Optima','Futura','Gill Sans','Candara','Century Gothic','Garamond','Book Antiqua','Franklin Gothic Medium','Consolas','Menlo','Monaco','SF Pro Text','Roboto','Noto Sans'];
+    const canvas=document.createElement('canvas');
+    const ctx=canvas.getContext('2d');
+    if(!ctx) return{count:0,hash:'0'};
+    const testStr='mmmmmmmmmmlli';
+    const size='72px';
+    const baseWidths={};
+    for(const base of baseFonts){
+      ctx.font=size+' '+base;
+      baseWidths[base]=ctx.measureText(testStr).width;
+    }
+    const detected=[];
+    for(const font of testFonts){
+      for(const base of baseFonts){
+        ctx.font=size+" '"+font+"', "+base;
+        if(ctx.measureText(testStr).width!==baseWidths[base]){detected.push(font);break;}
+      }
+    }
+    let h=0;const s=detected.join(',');
+    for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h=h&h;}
+    return{count:detected.length,hash:Math.abs(h).toString(16).padStart(8,'0'),list:detected};
+  }catch(_){return{count:0,hash:'0'};}
+}
 async function getBattery(){try{if(navigator.getBattery){const b=await navigator.getBattery();return{level:b.level,charging:b.charging};}return{unavailable:true};}catch(_){return{unavailable:true};}}
 async function getPermissions(){const names=['geolocation','notifications','camera','microphone','clipboard-read','clipboard-write','persistent-storage'];const out={};if(!navigator.permissions)return out;await Promise.all(names.map(async n=>{try{const st=await navigator.permissions.query({name:n});out[n]=st.state;}catch(_){}}));return out;}
 async function getMediaDevices(){try{if(!navigator.mediaDevices?.enumerateDevices)return[];const list=await navigator.mediaDevices.enumerateDevices();return list.map(d=>({kind:d.kind,label:!!d.label}));}catch(_){return[];}}
@@ -2566,7 +2877,26 @@ const FREQ = {
   'ip.country': {'unknown':0.36,'US':0.07,'CN':0.06,'IN':0.055,'RU':0.032,'BR':0.03,'ID':0.028,'NG':0.024,'JP':0.02,'DE':0.02,'GB':0.019,'FR':0.018,'__other':0.284},
   // connection quality (Ookla Q2 2024 global)
   'speed.bucket': {'none':0.42,'slow':0.24,'mid':0.22,'fast':0.12},
-  'latency.bucket': {'unknown':0.37,'responsive':0.33,'moderate':0.2,'slow':0.1}
+  'latency.bucket': {'unknown':0.37,'responsive':0.33,'moderate':0.2,'slow':0.1},
+  // WebGL renderer (GPU identifier via WebGL debug info)
+  'webgl.renderer': {
+    'ANGLE (Apple, Apple M1, OpenGL)':0.12,
+    'ANGLE (Apple, Apple M2, OpenGL)':0.06,
+    'ANGLE (Apple, Apple M3, OpenGL)':0.04,
+    'ANGLE (Intel, Intel UHD Graphics, OpenGL)':0.15,
+    'ANGLE (NVIDIA, GeForce GTX 1650, OpenGL)':0.05,
+    'ANGLE (NVIDIA, GeForce RTX 3060, OpenGL)':0.04,
+    'ANGLE (AMD, Radeon RX 580, OpenGL)':0.03,
+    'Mali-G78':0.08,
+    'Adreno (TM) 730':0.05,
+    'Adreno (TM) 660':0.06,
+    'Apple GPU':0.10,
+    '__other':0.22
+  },
+  // AudioContext fingerprint hash bucket
+  'audio.hash': {'common':0.35,'__other':0.65},
+  // Detected fonts count bucket
+  'fonts.bucket': {'0-10':0.15,'11-15':0.25,'16-20':0.30,'21-25':0.18,'26+':0.12}
 };
 const ALPHA = 1; // Laplace
 const FREQ_META = Object.fromEntries(Object.entries(FREQ).map(([name,table])=>{
@@ -2644,6 +2974,7 @@ function touchBucketKey(touch,pointer){
   if(pointer==='fine'&&maxPoints<=1)return'limited';
   return'multi';
 }
+function bucketFontsCount(n){if(n<=10)return'0-10';if(n<=15)return'11-15';if(n<=20)return'16-20';if(n<=25)return'21-25';return'26+';}
 function brandFromRenderer(r){
   r=(r||'').toLowerCase();
   if(r.includes('nvidia'))return'NVIDIA';
@@ -2687,11 +3018,16 @@ function entropyFromFeatures(f){
   H += -Math.log2(pFrom('ip.country', f.ipCountry));
   H += -Math.log2(pFrom('speed.bucket', f.speedBucket));
   H += -Math.log2(pFrom('latency.bucket', f.latencyBucket));
+  H += -Math.log2(pFrom('webgl.renderer', f.webglRenderer));
+  H += -Math.log2(pFrom('audio.hash', f.audioHash));
+  H += -Math.log2(pFrom('fonts.bucket', f.fontsBucket));
   // лёгкая коррекция зависимостей (GPU×browser Safari/Apple; screen×dpr)
   if(f.browser==='Safari' && f.gpuBrand==='Apple') H -= 1.0;
   if(f.browser==='Safari' && f.osFamily!=='macOS' && f.osFamily!=='iOS') H -= 0.5;
   if((f.dpr==='2'||f.dpr==='3') && f.screen.endsWith('@'+f.dpr)) H -= 0.5;
   if(f.osFamily==='Android' && f.touchBucket==='none') H -= 0.5;
+  // WebGL renderer correlates with GPU brand
+  if(f.gpuBrand && f.webglRenderer && f.webglRenderer!=='__other' && f.gpuBrand===((f.webglRenderer||'').split('/')[0]||'').trim()) H -= 0.5;
   return Math.max(0,H);
 }
 function sampleFromTable(table){
@@ -2724,7 +3060,10 @@ function buildEntropyDistribution(samples=25000){
       ipDetail:sampleFromTable('ip.detail'),
       ipCountry:sampleFromTable('ip.country'),
       speedBucket:sampleFromTable('speed.bucket'),
-      latencyBucket:sampleFromTable('latency.bucket')
+      latencyBucket:sampleFromTable('latency.bucket'),
+      webglRenderer:sampleFromTable('webgl.renderer'),
+      audioHash:sampleFromTable('audio.hash'),
+      fontsBucket:sampleFromTable('fonts.bucket')
     };
     dist.push(entropyFromFeatures(f));
   }
@@ -2743,6 +3082,111 @@ function percentileFromH(H){
   return Math.min(100,Math.max(0,Math.round(percentile*100)));
 }
 
+/* ============== Tracker Tests ============== */
+let _trackerTestResults=null;
+
+async function runTrackerTests(){
+  if(typeof Image==='undefined') return [];
+  const results=[];
+
+  // Test 1: Tracking pixel (ad-like bait element)
+  results.push(await new Promise(resolve=>{
+    const img=new Image();
+    let done=false;
+    img.onload=()=>{if(!done){done=true;resolve({id:'pixel',blocked:false});}};
+    img.onerror=()=>{if(!done){done=true;resolve({id:'pixel',blocked:true});}};
+    const bait=document.createElement('div');
+    bait.className='ad_banner ad-banner adsbygoogle';
+    bait.style.cssText='width:1px;height:1px;position:absolute;left:-9999px;top:-9999px';
+    document.body.appendChild(bait);
+    setTimeout(()=>{
+      const blocked=bait.offsetHeight===0||bait.clientHeight===0||window.getComputedStyle(bait).display==='none'||window.getComputedStyle(bait).visibility==='hidden';
+      document.body.removeChild(bait);
+      if(!done){done=true;resolve({id:'pixel',blocked:blocked});}
+    },500);
+  }));
+
+  // Test 2: Analytics-like script element
+  results.push(await new Promise(resolve=>{
+    let done=false;
+    const el=document.createElement('div');
+    el.id='google_ads_frame';
+    el.className='adsbox';
+    el.style.cssText='width:1px;height:1px;position:absolute;left:-9999px;top:-9999px';
+    el.innerHTML='&nbsp;';
+    document.body.appendChild(el);
+    setTimeout(()=>{
+      const blocked=el.offsetHeight===0||el.clientHeight===0||window.getComputedStyle(el).display==='none';
+      document.body.removeChild(el);
+      if(!done){done=true;resolve({id:'analytics',blocked:blocked});}
+    },500);
+  }));
+
+  // Test 3: Third-party iframe bait
+  results.push(await new Promise(resolve=>{
+    const el=document.createElement('div');
+    el.className='ad-placement sponsored-banner';
+    el.style.cssText='width:1px;height:1px;position:absolute;left:-9999px;top:-9999px';
+    el.innerHTML='<span>ad</span>';
+    document.body.appendChild(el);
+    setTimeout(()=>{
+      const blocked=el.offsetHeight===0||window.getComputedStyle(el).display==='none';
+      document.body.removeChild(el);
+      resolve({id:'iframe',blocked:blocked});
+    },500);
+  }));
+
+  // Test 4: Do Not Track header
+  const dnt=navigator.doNotTrack==='1'||window.doNotTrack==='1';
+  results.push({id:'dnt',blocked:dnt});
+
+  // Test 5: Global Privacy Control
+  const gpc=navigator.globalPrivacyControl===true;
+  results.push({id:'gpc',blocked:gpc});
+
+  return results;
+}
+
+function renderTrackerTests(results,t){
+  const section=getEl('trackerSection');
+  const titleEl=getEl('trackerTitle');
+  const container=getEl('trackerResults');
+  const verdictEl=getEl('trackerVerdict');
+  if(!section||!container) return;
+
+  const tt=t.trackers;
+  if(!tt) return;
+
+  titleEl.textContent=tt.title;
+  container.innerHTML='';
+
+  let blockedCount=0;
+  const testKeys=['pixel','analytics','iframe','dnt','gpc'];
+
+  results.forEach(r=>{
+    const meta=tt[r.id];
+    if(!meta) return;
+    if(r.blocked) blockedCount++;
+    const row=document.createElement('div');
+    row.className='tracker-row';
+    const badge=document.createElement('span');
+    badge.className='tracker-badge '+(r.blocked?'tracker-badge--blocked':'tracker-badge--open');
+    badge.textContent=r.blocked?(meta.blocked):(meta.open);
+    const name=document.createElement('span');
+    name.className='tracker-name';
+    name.textContent=meta.name;
+    row.appendChild(badge);
+    row.appendChild(name);
+    container.appendChild(row);
+  });
+
+  if(verdictEl&&typeof tt.verdict==='function'){
+    verdictEl.textContent=tt.verdict(blockedCount,results.length);
+  }
+
+  section.style.display='';
+}
+
 /* ============== Collect ============== */
 async function computeSnapshot(){
   const uaData=navigator.userAgentData;
@@ -2755,14 +3199,17 @@ async function computeSnapshot(){
   const tz=LOCAL_TZ;
   const tzOffset=new Date().getTimezoneOffset();
   const gl=webglInfo();
-  const [cv,au,perms,media,bat,uaHints]=await Promise.all([
+  const [cv,au,perms,media,bat,uaHints,webglFp,audioFp]=await Promise.all([
     canvasHash(),
     audioHash(),
     getPermissions(),
     getMediaDevices(),
     getBattery(),
-    getUaHints(uaData)
+    getUaHints(uaData),
+    Promise.resolve(getWebGLFingerprint()),
+    getAudioFingerprint()
   ]);
+  const fontsFp=getFontFingerprint();
   const net=netInfo();
   const pixelRatio=Number(window.devicePixelRatio||1)||1;
   const languages=getLanguages();
@@ -2782,7 +3229,7 @@ async function computeSnapshot(){
     storage:{local:hasStorage('localStorage'),session:hasStorage('sessionStorage'),indexedDB:!!window.indexedDB},
     touch:{maxTouchPoints:navigator.maxTouchPoints||0,ontouchstart:('ontouchstart' in window)},
     pointer,
-    hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, server:state.serverData, speed:state.speed
+    hw, gl, net, perms, media, plugins:getPlugins(), battery:bat, hashes:{canvas:cv,audio:au}, webgl:webglFp, audioFp:audioFp, fontsFp:fontsFp, server:state.serverData, speed:state.speed
   };
   try{
     basic.exposure=await collectExposureData(basic);
@@ -2814,8 +3261,11 @@ async function computeSnapshot(){
   const ipCountry = ipCountryKey(state.serverData);
   const speedBucket = bucketSpeedValue(state.speed);
   const latencyBucket = bucketLatencyValue(state.speed);
+  const webglRenderer = (basic.webgl&&basic.webgl.supported)?basic.webgl.renderer:'__other';
+  const audioHashBucket = (basic.audioFp&&basic.audioFp.supported)?'__other':'common';
+  const fontsBucket = bucketFontsCount((basic.fontsFp&&basic.fontsFp.count)||0);
 
-  const H = entropyFromFeatures({browser,osFamily,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,memoryBucket,coresBucket,hasCanvas,hasAudio,pluginsBucket,permBucket,storageBucket,touchBucket,ipDetail,ipCountry,speedBucket,latencyBucket});
+  const H = entropyFromFeatures({browser,osFamily,screen:scr,dpr:String(basic.screen.pixelRatio),langsCount,gpuBrand,memoryBucket,coresBucket,hasCanvas,hasAudio,pluginsBucket,permBucket,storageBucket,touchBucket,ipDetail,ipCountry,speedBucket,latencyBucket,webglRenderer,audioHash:audioHashBucket,fontsBucket});
   const pct = percentileFromH(H);
 
   return {basic, fp, H, pct};
@@ -2906,6 +3356,24 @@ const CARD_CONTENT = {
     use:{ru:'Звук генерируется и превращается в хеш, по нему вас узнают',en:'The browser generates a tone and turns it into a hash to recognise you',uz:'Brauzer tovush yaratib, xeshga aylantiradi va shu orqali sizi taniydi'},
     ex:{ru:'Совпадающий аудио-хеш означает ту же систему и настройки',en:'A matching audio hash points to the same system and settings',uz:'Bir xil audio xesh bir xil tizim va sozlamalarni ko‘rsatadi'},
     adv:{ru:'Включите аудиозащиту или используйте расширения с рандомизацией',en:'Enable audio protections or use extensions that randomise it',uz:'Audio himoyasini yoqing yoki tasodiflashtiruvchi kengaytmadan foydalaning'}
+  },
+  webglFp:{
+    label:{ru:'WebGL-отпечаток',en:'WebGL fingerprint',uz:'WebGL barmoq izi'},
+    use:{ru:'WebGL раскрывает рендерер GPU и создаёт уникальный хеш рендеринга',en:'WebGL exposes the GPU renderer and creates a unique rendering hash',uz:'WebGL GPU rendererini ochib beradi va noyob rendering xeshini yaratadi'},
+    ex:{ru:'Например, конкретная модель GPU вместе с хешем рендеринга выделяют устройство',en:'For example, a specific GPU model combined with the rendering hash singles out the device',uz:'Masalan, aniq GPU modeli rendering xeshi bilan birgalikda qurilmani ajratib koʻrsatadi'},
+    adv:{ru:'Установите расширение для защиты WebGL или отключите его',en:'Install a WebGL protection extension or disable it',uz:'WebGL himoya kengaytmasini oʻrnating yoki uni oʻchirib qoʻying'}
+  },
+  audioCtx:{
+    label:{ru:'Аудио-контекст',en:'AudioContext fingerprint',uz:'AudioContext barmoq izi'},
+    use:{ru:'OfflineAudioContext обрабатывает звук и создаёт хеш, уникальный для вашей системы',en:'OfflineAudioContext processes sound and creates a hash unique to your system',uz:'OfflineAudioContext tovushni qayta ishlab, tizimingizga xos noyob xesh yaratadi'},
+    ex:{ru:'Одинаковый аудио-хеш означает ту же звуковую подсистему',en:'An identical audio hash means the same audio subsystem',uz:'Bir xil audio xesh bir xil audio quyi tizimni anglatadi'},
+    adv:{ru:'Используйте Firefox с resistFingerprinting или Brave для рандомизации',en:'Use Firefox with resistFingerprinting or Brave for randomisation',uz:'Tasodiflashtirish uchun Firefox resistFingerprinting yoki Brave dan foydalaning'}
+  },
+  fontsDetected:{
+    label:{ru:'Обнаруженные шрифты',en:'Detected fonts',uz:'Aniqlangan shriftlar'},
+    use:{ru:'Набор установленных шрифтов помогает сайтам создать уникальный профиль устройства',en:'The set of installed fonts helps sites build a unique device profile',uz:'Oʻrnatilgan shriftlar toʻplami saytlarga noyob qurilma profilini yaratishga yordam beradi'},
+    ex:{ru:'Например, 25 нестандартных шрифтов резко сужают круг',en:'For example, 25 non-standard fonts drastically narrow the pool',uz:'Masalan, 25 ta nostandart shrift doirani keskin toraytiradi'},
+    adv:{ru:'Удалите ненужные шрифты или используйте браузер с ограниченным доступом к шрифтам',en:'Remove unneeded fonts or use a browser that limits font access',uz:'Keraksiz shriftlarni oʻchiring yoki shriftlarga kirishni cheklaydigan brauzerdan foydalaning'}
   },
   perm:{
     label:{ru:'Разрешения',en:'Permissions',uz:'Ruxsatlar'},
@@ -2999,7 +3467,8 @@ const state={
   vpn:{status:'uncertain',reasons:[],checked:false},
   sharePayload:null,
   profilingContext:null,
-  speedResult:null
+  speedResult:null,
+  spoofingResult:null
 };
 let snapshotCache=null;
 let snapshotPromise=null;
@@ -3763,6 +4232,70 @@ function summarizeKeyPermissions(entries,t){
 }
 
 
+function checkSpoofing(basic){
+  var issues=[];
+  var ua=(typeof navigator!=='undefined'&&navigator.userAgent)||'';
+  var platform=(typeof navigator!=='undefined'&&navigator.platform)||'';
+
+  // 1. UA vs platform consistency
+  var uaWin=/Windows/i.test(ua);
+  var uaMac=/Macintosh|Mac OS/i.test(ua);
+  var uaLinux=/Linux/i.test(ua)&&!/Android/i.test(ua);
+  var uaAndroid=/Android/i.test(ua);
+  var platWin=/Win/i.test(platform);
+  var platMac=/Mac/i.test(platform);
+  var platLinux=/Linux/i.test(platform);
+
+  if(uaWin&&!platWin) issues.push('ua_platform');
+  if(uaMac&&!platMac) issues.push('ua_platform');
+  if(uaLinux&&!platLinux&&!uaAndroid) issues.push('ua_platform');
+
+  // 2. Canvas randomization (run canvas twice, compare)
+  if(typeof document!=='undefined'){
+    try{
+      var c1=document.createElement('canvas');c1.width=200;c1.height=50;
+      var ctx1=c1.getContext('2d');
+      ctx1.fillStyle='#f60';ctx1.fillRect(10,10,100,30);
+      ctx1.fillStyle='#069';ctx1.font='14px Arial';
+      ctx1.fillText('Fingerprint test',2,15);
+      var d1=c1.toDataURL();
+
+      var c2=document.createElement('canvas');c2.width=200;c2.height=50;
+      var ctx2=c2.getContext('2d');
+      ctx2.fillStyle='#f60';ctx2.fillRect(10,10,100,30);
+      ctx2.fillStyle='#069';ctx2.font='14px Arial';
+      ctx2.fillText('Fingerprint test',2,15);
+      var d2=c2.toDataURL();
+
+      if(d1!==d2) issues.push('canvas_randomized');
+    }catch(_){}
+  }
+
+  // 3. Timezone vs IP geolocation
+  if(basic&&state.serverData){
+    var ipTz=state.serverData?.details?.timezone||'';
+    var browserTz=(typeof Intl!=='undefined'&&Intl.DateTimeFormat().resolvedOptions().timeZone)||'';
+    if(ipTz&&browserTz){
+      var ipRegion=ipTz.split('/')[0]||'';
+      var brRegion=browserTz.split('/')[0]||'';
+      if(ipRegion&&brRegion&&ipRegion!==brRegion) issues.push('tz_mismatch');
+    }
+  }
+
+  // 4. Screen resolution vs DPR anomaly
+  if(typeof screen!=='undefined'){
+    var dpr=(typeof window!=='undefined'&&window.devicePixelRatio)||1;
+    var sw=screen.width||0;
+    var sh=screen.height||0;
+    if(dpr>=2&&sw<1000&&sh<700) issues.push('screen_dpr');
+  }
+
+  // 5. navigator.webdriver
+  if(typeof navigator!=='undefined'&&navigator.webdriver===true) issues.push('webdriver');
+
+  return{consistent:issues.length===0,issues:issues};
+}
+
 function renderShockBullets(basic,t,snapshot){
   const ul=getEl('shockList');
   const groups={
@@ -4033,6 +4566,21 @@ function renderShockBullets(basic,t,snapshot){
       lines.push(t.shock.webrtcSafe);
     }
     totalRows++;
+
+    // Spoofing/consistency check
+    const spoofing=checkSpoofing(basic);
+    state.spoofingResult=spoofing;
+    if(spoofing){
+      const spoofLabel={ru:'\u0414\u0430\u043d\u043d\u044b\u0435 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430',en:'Browser data',uz:"Brauzer ma\u02BBlumotlari"}[currentLang];
+      if(spoofing.consistent){
+        const naturalText={ru:'\u0412\u044b\u0433\u043b\u044f\u0434\u0438\u0442 \u0435\u0441\u0442\u0435\u0441\u0442\u0432\u0435\u043d\u043d\u043e',en:'Looks natural',uz:"Tabiiy ko\u02BBrinadi"}[currentLang];
+        groups.network.appendChild(mkRow(spoofLabel,naturalText,{badge:'safe'}));
+      }else{
+        const issuesText={ru:'\u041e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d\u044b \u043d\u0435\u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0438\u044f',en:'Inconsistencies found',uz:"Nomuvofiqliklar aniqlandi"}[currentLang];
+        groups.network.appendChild(mkRow(spoofLabel,issuesText,{badge:'warning'}));
+      }
+      totalRows++;
+    }
   }
 
   // === FINGERPRINT GROUP ===
@@ -4044,6 +4592,27 @@ function renderShockBullets(basic,t,snapshot){
     }
     if(basic.hashes?.audio){
       groups.fingerprint.appendChild(mkRow('Audio',esc(basic.hashes.audio.substring(0,8)),{code:true}));
+      totalRows++;
+    }
+    if(basic.webgl&&basic.webgl.supported){
+      const rendererShort=(basic.webgl.renderer||'N/A').length>30?(basic.webgl.renderer.substring(0,27)+'...'):basic.webgl.renderer;
+      groups.fingerprint.appendChild(mkRow('WebGL',esc(rendererShort),{code:true}));
+      totalRows++;
+      if(basic.webgl.hash){
+        const webglHashLabel={ru:'WebGL \u0445\u0435\u0448',en:'WebGL hash',uz:'WebGL xesh'}[currentLang];
+        groups.fingerprint.appendChild(mkRow(webglHashLabel,esc(basic.webgl.hash),{code:true}));
+        totalRows++;
+      }
+    }
+    if(basic.audioFp&&basic.audioFp.supported){
+      const audioFpLabel={ru:'\u0410\u0443\u0434\u0438\u043e \u0445\u0435\u0448',en:'Audio hash',uz:'Audio xesh'}[currentLang];
+      groups.fingerprint.appendChild(mkRow(audioFpLabel,esc(basic.audioFp.hash),{code:true}));
+      totalRows++;
+    }
+    if(basic.fontsFp&&basic.fontsFp.count>0){
+      const fontsLabel={ru:'\u0428\u0440\u0438\u0444\u0442\u044b',en:'Fonts',uz:'Shriftlar'}[currentLang];
+      const fontsValue=basic.fontsFp.count+' ('+esc(basic.fontsFp.hash)+')';
+      groups.fingerprint.appendChild(mkRow(fontsLabel,fontsValue,{code:true}));
       totalRows++;
     }
     if(basic.exposure?.adblock){
@@ -4235,6 +4804,31 @@ function renderImplications(basic,t){
         const n=basic.languages.length;
         if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=function(){return fn(n);};}
         picks.push(rec);
+      }
+      if(basic.webgl&&basic.webgl.supported&&impl.personal.webgl){
+        picks.push(impl.personal.webgl);
+      }
+      if(basic.audioFp&&basic.audioFp.supported&&impl.personal.audioFp){
+        picks.push(impl.personal.audioFp);
+      }
+      if(basic.fontsFp&&basic.fontsFp.count>15&&impl.personal.fonts){
+        const rec=Object.assign({},impl.personal.fonts);
+        const n=basic.fontsFp.count;
+        if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=function(){return fn(n);};}
+        picks.push(rec);
+      }
+      // Spoofing recs
+      const spoofing=state.spoofingResult;
+      if(spoofing&&!spoofing.consistent){
+        if(spoofing.issues.includes('ua_platform')&&impl.personal.spoofing){
+          picks.push(impl.personal.spoofing);
+        }
+        if(spoofing.issues.includes('canvas_randomized')&&impl.personal.canvasRandomized){
+          picks.push(impl.personal.canvasRandomized);
+        }
+        if(spoofing.issues.includes('tz_mismatch')&&impl.personal.tzMismatch){
+          picks.push(impl.personal.tzMismatch);
+        }
       }
       if(picks.length){
         const heading=document.createElement('div');
@@ -4624,6 +5218,7 @@ async function render(lang){
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
   renderProfilingSection(snapshotCache?.basic||null,t);
+  if(_trackerTestResults) renderTrackerTests(_trackerTestResults,t);
 
   try{
     const {basic,fp,H,pct}=await getSnapshot();
@@ -4728,6 +5323,16 @@ async function render(lang){
 
     renderShockBullets(basic,t,{fp,H,pct});
     renderImplications(basic,t);
+    // Run tracker tests in parallel with other profiling
+    if(!_trackerTestResults){
+      runTrackerTests().then(results=>{
+        _trackerTestResults=results;
+        const tNow=I18N[currentLang]||I18N.ru;
+        renderTrackerTests(results,tNow);
+      });
+    }else{
+      renderTrackerTests(_trackerTestResults,t);
+    }
     if(!state.serverData&&!state.ipFetchDone){
       autoFetchIp().then(()=>{
         state.ipFetchDone=true;
