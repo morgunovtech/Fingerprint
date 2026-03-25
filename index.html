@@ -229,52 +229,46 @@ const I18N = {
     langButton:'Язык',
     langLabels:{ru:'Русский',en:'Английский',uz:'Узбекский'},
     theme:{label:'Тема',modes:{auto:'Авто',light:'Светлая',dark:'Тёмная',contrast:'Контраст'}},
-    introTitle:'«Цифровой отпечаток»: что это и зачем вам знать',
+    introTitle:'«Цифровой отпечаток»: что о вас знают сайты',
     introRichHtml:/* html */`
       <section class="fp-section" lang="ru" aria-labelledby="fp-title">
-        <h2 id="fp-title">«Цифровой отпечаток»: что это и зачем вам знать</h2>
+        <h3>«Цифровой отпечаток»: что о вас знают сайты</h3>
         <p>
-          У каждого устройства и браузера есть уникальный набор характеристик — «цифровой отпечаток».
-          Он позволяет распознавать вас между визитами и связывать действия на разных сайтах — даже без регистрации.
+          Каждый браузер оставляет уникальный след — набор технических характеристик,
+          который сайты читают молча, без запроса и без вашего разрешения.
+          Это называется цифровым отпечатком.
         </p>
-        <h3>Как это работает</h3>
+        <h3>Как работает слежка без cookies</h3>
         <p>
-          Вы посетили сайты n1, n2, n3 без логина. Затем на сайте n4 (например, соцсеть) создаёте аккаунт.
-          Брокеры данных (<abbr title="посредники, торгующие и агрегирующие пользовательские данные">data brokers</abbr>)
-          и рекламные сети, имеющие доступ к вашему отпечатку,
-          сопоставляют совпадающие признаки и связывают прежние посещения с конкретным человеком.
+          Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток.
+          Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать
+          все прошлые визиты с вашим именем и продать этот профиль.
         </p>
-        <h3>К чему это может привести</h3>
+        <h3>Чем это опасно лично для вас</h3>
         <ul class="fp-list">
-          <li>Навязчивый таргетинг и ценовая персонализация.</li>
-          <li>Сбор подробного профиля интересов и привычек.</li>
-          <li>Фишинг и социальная инженерия.</li>
-          <li>При утечках — риск шантажа и мошенничества.</li>
+          <li>Магазины повышают цены, зная ваше устройство и платёжеспособность.</li>
+          <li>Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее.</li>
+          <li>Страховые компании и работодатели покупают профили у брокеров данных.</li>
+          <li>После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.</li>
         </ul>
         <h3>Что делает этот сервис</h3>
         <p>
-          Мы наглядно показываем, какие данные видны прямо сейчас, объясняем риски простым языком
-          и даём пошаговые советы, как уменьшить цифровой след.
+          Показывает, что видно о вас прямо сейчас, и объясняет,
+          как снизить риски — без технических знаний.
         </p>
         <h3>Как мы обрабатываем данные</h3>
         <p>
-          Все вычисления выполняются локально в вашем браузере: мы ничего никуда не отправляем и не храним; регистрация не нужна.
-          Вы можете сохранить результат в PDF или безопасно поделиться им с близкими — без раскрытия исходных данных.
-        </p>
-        <h3>Дополнительно: «Определить IP и уточнить данные»</h3>
-        <p>
-          По вашему запросу измерит скорость интернета, покажет, что раскрывает ваш IP-адрес,
-          и подскажет, похоже ли, что вы используете VPN.
+          Все вычисления — только в вашем браузере.
+          Мы ничего не сохраняем и не передаём. Регистрация не нужна.
         </p>
       </section>
     `,
     introParagraphs:[
-      'У каждого устройства и браузера есть уникальный набор характеристик — «цифровой отпечаток». Он позволяет распознавать вас между визитами и связывать действия на разных сайтах — даже без регистрации.',
-      'Вы посетили сайты n1, n2, n3 без логина. Затем на сайте n4 (например, соцсеть) создаёте аккаунт. Брокеры данных и рекламные сети сопоставляют совпадающие признаки и связывают прежние посещения с конкретным человеком.',
-      'Навязчивый таргетинг и ценовая персонализация, сбор подробного профиля, фишинг и социальная инженерия, а при утечках — риск шантажа и мошенничества.',
-      'Мы наглядно показываем, какие данные видны прямо сейчас, объясняем риски простым языком и даём пошаговые советы, как уменьшить цифровой след.',
-      'Все вычисления выполняются локально в вашем браузере: мы ничего никуда не отправляем и не храним; регистрация не нужна. Вы можете сохранить результат в PDF или безопасно поделиться им с близкими — без раскрытия исходных данных.',
-      'Отдельная кнопка «Определить IP и уточнить данные» измеряет скорость интернета, показывает, что раскрывает ваш IP-адрес, и подсказывает, похоже ли, что вы используете VPN.'
+      'Каждый браузер оставляет уникальный след — набор технических характеристик, который сайты читают молча, без запроса и без вашего разрешения. Это называется цифровым отпечатком.',
+      'Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток. Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать все прошлые визиты с вашим именем и продать этот профиль.',
+      'Магазины повышают цены, зная ваше устройство и платёжеспособность. Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее. Страховые компании и работодатели покупают профили у брокеров данных. После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.',
+      'Показывает, что видно о вас прямо сейчас, и объясняет, как снизить риски — без технических знаний.',
+      'Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём. Регистрация не нужна.'
     ],
     uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
     uniqPracticeTitle:'Что это значит на практике:',
@@ -661,51 +655,46 @@ const I18N = {
     langButton:'Language',
     langLabels:{ru:'Russian',en:'English',uz:'Uzbek'},
     theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark',contrast:'Contrast'}},
-    introTitle:'“Digital fingerprint”: what it is and why it matters',
+    introTitle:'”Digital fingerprint”: what websites know about you',
     introRichHtml:/* html */`
-      <section class="fp-section" lang="en" aria-labelledby="fp-title">
-        <h2 id="fp-title">“Digital fingerprint”: what it is and why it matters</h2>
+      <section class=”fp-section” lang=”en” aria-labelledby=”fp-title”>
+        <h3>”Digital fingerprint”: what websites know about you</h3>
         <p>
-          Every device and browser exposes a unique mix of characteristics — a “digital fingerprint”.
-          It lets sites recognise you between visits and connect activity across services — even without an account.
+          Every browser leaves a unique trail — a set of technical characteristics
+          that websites read silently, without asking and without your permission.
+          This is called a digital fingerprint.
         </p>
-        <h3>How it works</h3>
+        <h3>How tracking works without cookies</h3>
         <p>
-          You visit sites n1, n2, n3 without signing in. Later, on site n4 (for example a social network) you create an account.
-          Data brokers (<abbr title="intermediaries that trade and aggregate user data">data brokers</abbr>) and ad networks with access to your fingerprint
-          compare matching traits and link those previous visits to a specific person.
+          You visited dozens of websites without signing up — leaving the same fingerprint everywhere.
+          Then you created an account on one of them. Now ad networks can link
+          all your past visits to your name and sell that profile.
         </p>
-        <h3>What it can lead to</h3>
-        <ul class="fp-list">
-          <li>Persistent targeting and price discrimination.</li>
-          <li>Deep profiles of your interests and habits.</li>
-          <li>Phishing and social engineering.</li>
-          <li>Extortion or fraud if the data leaks.</li>
+        <h3>Why this is dangerous for you personally</h3>
+        <ul class=”fp-list”>
+          <li>Stores raise prices based on your device and perceived spending power.</li>
+          <li>Scammers know your city, ISP, and device — phishing becomes more precise.</li>
+          <li>Insurance companies and employers buy profiles from data brokers.</li>
+          <li>Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.</li>
         </ul>
         <h3>What this service does</h3>
         <p>
-          We show which signals are visible right now, explain the risk in plain language,
-          and provide step-by-step tips to shrink your digital footprint.
+          It shows what is visible about you right now and explains
+          how to reduce the risks — no technical knowledge required.
         </p>
         <h3>How we process data</h3>
         <p>
-          All calculations run locally in your browser: nothing is sent or stored, and you do not need to register.
-          You can save the result as a PDF or share it safely without exposing the raw data.
-        </p>
-        <h3>Extra: “Detect IP & refine data”</h3>
-        <p>
-          On demand it measures your connection speed, explains what your IP address reveals,
-          and estimates whether you appear to use a VPN.
+          All calculations happen only in your browser.
+          We do not store or transmit anything. No registration needed.
         </p>
       </section>
     `,
     introParagraphs:[
-      'Every device and browser exposes a unique mix of characteristics — a “digital fingerprint”. It lets sites recognise you between visits and link activity across services, even without logging in.',
-      'You visit sites n1, n2, n3 without signing in. Later, on site n4 (for example a social network) you create an account. Data brokers and ad networks match the shared traits and attach those earlier visits to a real person.',
-      'Aggressive targeting and price steering, deep profiling, phishing and social engineering — and if the data leaks, potential extortion or fraud.',
-      'We surface the data that is visible right now, explain the risks in plain language, and give step-by-step advice to shrink your digital footprint.',
-      'Everything runs locally in your browser. Nothing is sent or stored, no registration is required. You can save a PDF or safely share the result with trusted people without exposing raw data.',
-      'The “Detect IP & refine data” button runs on demand, measures your connection speed, shows what your IP reveals, and estimates whether a VPN is in use.'
+      'Every browser leaves a unique trail — a set of technical characteristics that websites read silently, without asking and without your permission. This is called a digital fingerprint.',
+      'You visited dozens of websites without signing up — leaving the same fingerprint everywhere. Then you created an account on one of them. Now ad networks can link all your past visits to your name and sell that profile.',
+      'Stores raise prices based on your device and perceived spending power. Scammers know your city, ISP, and device — phishing becomes more precise. Insurance companies and employers buy profiles from data brokers. Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.',
+      'It shows what is visible about you right now and explains how to reduce the risks — no technical knowledge required.',
+      'All calculations happen only in your browser. We do not store or transmit anything. No registration needed.'
     ],
     uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
     uniqPracticeTitle:'What this means in practice:',
@@ -1059,51 +1048,46 @@ const I18N = {
     langButton:'Til',
     langLabels:{ru:'Rus tili',en:'Ingliz tili',uz:'Oʻzbek tili'},
     theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi',contrast:'Kontrast'}},
-    introTitle:'“Raqamli barmoq izi”: bu nima va nega bilish kerak',
+    introTitle:'”Raqamli barmoq izi”: saytlar siz haqingizda nimalarni biladi',
     introRichHtml:/* html */`
-      <section class="fp-section" lang="uz" aria-labelledby="fp-title">
-        <h2 id="fp-title">“Raqamli barmoq izi”: bu nima va nega bilish kerak</h2>
+      <section class=”fp-section” lang=”uz” aria-labelledby=”fp-title”>
+        <h3>”Raqamli barmoq izi”: saytlar siz haqingizda nimalarni biladi</h3>
         <p>
-          Har bir qurilma va brauzer o‘ziga xos xususiyatlar to‘plamini ochib beradi — bu “raqamli barmoq izi”.
-          U saytlar uchun tashriflar orasida sizni aniqlash va turli xizmatlardagi faollikni bog‘lash imkonini beradi — hatto akkauntsiz ham.
+          Har bir brauzer noyob iz qoldiradi — texnik xususiyatlar toʻplami,
+          saytlar uni jimgina, soʻramasdan va ruxsatingizsiz oʻqiydi.
+          Bu raqamli barmoq izi deb ataladi.
         </p>
-        <h3>Bu qanday ishlaydi</h3>
+        <h3>Cookielarsiz kuzatuv qanday ishlaydi</h3>
         <p>
-          Siz n1, n2, n3 saytlarini akkauntsiz ko‘rasiz. Keyin n4 (masalan, ijtimoiy tarmoq) saytida akkaunt yaratasiz.
-          Ma’lumot brokerlari (<abbr title="foydalanuvchi maʼlumotlarini sotadigan va yigʻadigan vositachilar">data brokers</abbr>) va reklama tarmoqlari barmoq izidagi mos belgilarni taqqoslab,
-          oldingi tashriflarni aniq shaxsga bog‘laydi.
+          Siz oʻnlab saytlarga roʻyxatdan oʻtmasdan kirdingiz — hammada bir xil iz qoldirdingiz.
+          Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari
+          barcha oldingi tashriflarni ismingiz bilan bogʻlab, bu profilni sotishi mumkin.
         </p>
-        <h3>Bu nimaga olib kelishi mumkin</h3>
-        <ul class="fp-list">
-          <li>Tajovuzkor reklama va narxlarni individuallashtirish.</li>
-          <li>Qiziqish va odatlaringiz bo‘yicha chuqur profil.</li>
-          <li>Fishing va ijtimoiy muhandislik.</li>
-          <li>Ma’lumot sizib chiqsa — bosim yoki firibgarlik xavfi.</li>
+        <h3>Bu siz uchun nima uchun xavfli</h3>
+        <ul class=”fp-list”>
+          <li>Doʻkonlar qurilma va toʻlov qobiliyatingizni bilib narxlarni oshiradi.</li>
+          <li>Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq boʻladi.</li>
+          <li>Sugʻurta kompaniyalari va ish beruvchilar maʼlumot brokerlaridan profillar sotib oladi.</li>
+          <li>Maʼlumotlar bazasi sizib chiqqandan keyin profilni «oʻchirish» mumkin emas — u sizga doimo bogʻlangan.</li>
         </ul>
-        <h3>Servis nima qiladi</h3>
+        <h3>Bu servis nima qiladi</h3>
         <p>
-          Bu yerda ayni damda ko‘rinib turgan signallarni ko‘rasiz, xavflar sodda tilda tushuntiriladi
-          va raqamli izni kamaytirish uchun bosqichma-bosqich tavsiyalar beriladi.
+          Hozir siz haqingizda nimalar koʻrinishini koʻrsatadi va
+          xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.
         </p>
-        <h3>Ma’lumotlar qanday ishlanadi</h3>
+        <h3>Maʼlumotlar qanday ishlanadi</h3>
         <p>
-          Hisob-kitoblarning hammasi brauzeringizning o‘zida bajariladi: hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish shart emas.
-          Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.
-        </p>
-        <h3>Qo‘shimcha: “IP aniqlash va ma’lumotlarni aniqlashtirish”</h3>
-        <p>
-          So‘rov bo‘yicha internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi
-          va VPN ishlatilayotgani ehtimolini baholaydi.
+          Barcha hisob-kitoblar faqat brauzeringizda bajariladi.
+          Biz hech narsani saqlamaymiz va uzatmaymiz. Roʻyxatdan oʻtish shart emas.
         </p>
       </section>
     `,
     introParagraphs:[
-      'Har bir qurilma va brauzer o‘ziga xos xususiyatlar to‘plamini ochib beradi — bu “raqamli barmoq izi”. U saytlar uchun tashriflar orasida sizni aniqlash va turli xizmatlardagi faollikni bog‘lash imkonini beradi — hatto akkauntsiz ham.',
-      'Siz n1, n2, n3 saytlarini akkauntsiz ko‘rasiz. Keyin n4 (masalan, ijtimoiy tarmoq) saytida akkaunt yaratasiz. Ma’lumot brokerlari va reklama tarmoqlari barmoq izidagi mos belgilarni taqqoslab, oldingi tashriflarni aniq shaxsga bog‘laydi.',
-      'Tajovuzkor reklama va narxlarni individuallashtirish, qiziqish va odatlar bo‘yicha chuqur profil, fishing va ijtimoiy muhandislik, ma’lumot sizib chiqsa — bosim yoki firibgarlik xavfi.',
-      'Bu servis ayni damda ko‘rinib turgan signallarni ko‘rsatadi, xavflarni sodda tilda tushuntiradi va raqamli izni kamaytirish bo‘yicha bosqichma-bosqich tavsiyalar beradi.',
-      'Hisob-kitoblarning hammasi brauzeringizning o‘zida bajariladi: hech narsa yuborilmaydi va saqlanmaydi, ro‘yxatdan o‘tish shart emas. Natijani PDF ko‘rinishida saqlashingiz yoki asl ma’lumotlarni oshkor qilmasdan ishonchli odamlarga ulashishingiz mumkin.',
-      '“IP aniqlash va ma’lumotlarni aniqlashtirish” tugmasi internet tezligini o‘lchaydi, IP manzilingiz nimani ochishini ko‘rsatadi va VPN ishlatilayotganini taxmin qiladi.'
+      'Har bir brauzer noyob iz qoldiradi — texnik xususiyatlar toʻplami, saytlar uni jimgina, soʻramasdan va ruxsatingizsiz oʻqiydi. Bu raqamli barmoq izi deb ataladi.',
+      'Siz oʻnlab saytlarga roʻyxatdan oʻtmasdan kirdingiz — hammada bir xil iz qoldirdingiz. Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari barcha oldingi tashriflarni ismingiz bilan bogʻlab, bu profilni sotishi mumkin.',
+      'Doʻkonlar qurilma va toʻlov qobiliyatingizni bilib narxlarni oshiradi. Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq boʻladi. Sugʻurta kompaniyalari va ish beruvchilar maʼlumot brokerlaridan profillar sotib oladi. Maʼlumotlar bazasi sizib chiqqandan keyin profilni «oʻchirish» mumkin emas.',
+      'Hozir siz haqingizda nimalar koʻrinishini koʻrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.',
+      'Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz. Roʻyxatdan oʻtish shart emas.'
     ],
     uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
     uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
