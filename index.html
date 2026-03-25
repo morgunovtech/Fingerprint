@@ -3273,7 +3273,11 @@ function renderTrackerTests(results,t){
 }
 
 /* ============== Collect ============== */
-async function computeSnapshot(){
+// Cache stable fingerprint signals so invalidateSnapshot (IP/speed update)
+// does not re-sample non-deterministic APIs (AudioContext, Canvas)
+let _stableFpCache=null;
+async function getStableFingerprints(){
+  if(_stableFpCache) return _stableFpCache;
   const uaData=navigator.userAgentData;
   const memoryInfo=detectMemory();
   const hw={
@@ -3281,8 +3285,6 @@ async function computeSnapshot(){
     hardwareConcurrency:navigator.hardwareConcurrency??null,
     memoryLimitGb:memoryInfo.heapLimit??null
   };
-  const tz=LOCAL_TZ;
-  const tzOffset=new Date().getTimezoneOffset();
   const gl=webglInfo();
   const [cv,au,perms,media,bat,uaHints,webglFp,audioFp]=await Promise.all([
     canvasHash(),
@@ -3295,11 +3297,18 @@ async function computeSnapshot(){
     getAudioFingerprint()
   ]);
   const fontsFp=getFontFingerprint();
-  const net=netInfo();
-  const pixelRatio=Number(window.devicePixelRatio||1)||1;
   const languages=getLanguages();
   const screenSetup=detectScreenSetup();
   const pointer=detectPointerType();
+  _stableFpCache={uaData,hw,gl,cv,au,perms,media,bat,uaHints,webglFp,audioFp,fontsFp,languages,screenSetup,pointer};
+  return _stableFpCache;
+}
+async function computeSnapshot(){
+  const {uaData,hw,gl,cv,au,perms,media,bat,uaHints,webglFp,audioFp,fontsFp,languages,screenSetup,pointer}=await getStableFingerprints();
+  const tz=LOCAL_TZ;
+  const tzOffset=new Date().getTimezoneOffset();
+  const net=netInfo();
+  const pixelRatio=Number(window.devicePixelRatio||1)||1;
   const basic={
     userAgent:navigator.userAgent,
     uaBrands:uaData?.brands||null, uaMobile:uaData?.mobile??null, uaPlatform:uaData?.platform||null,
