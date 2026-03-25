@@ -176,19 +176,22 @@
     .risk-card .risk-title{font-weight:700;margin-bottom:6px}
     .risk-card .risk-body{font-size:14px;line-height:1.6;color:var(--muted)}
     .rec-section-title{font-size:16px;font-weight:600;margin:16px 0 10px}
-    .rec-card{padding:14px 14px 14px 17px;border-radius:10px;border:1px solid var(--border);background:var(--card);margin-bottom:12px;border-left:3px solid var(--border)}
+    .rec-card{padding:0;border-radius:var(--radius-md,10px);border:1px solid var(--border);background:var(--card);margin-bottom:12px;border-left:3px solid var(--border);overflow:hidden}
     .rec-card--green{border-left-color:#22c55e}
     .rec-card--yellow{border-left-color:#eab308}
     .rec-card--red{border-left-color:#ef4444}
-    .rec-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-    .rec-icon{font-size:20px}
-    .rec-title{font-weight:700}
+    .rec-card--personal{border-left-color:var(--accent,#ef4444)}
+    .rec-zone-top{padding:16px 16px 0}
+    .rec-zone-why{padding:4px 16px 12px;font-size:14px;color:var(--text-secondary,var(--muted));line-height:1.5}
+    .rec-zone-action{padding:12px 16px;background:var(--bg-raised,#F3F4F6);border-top:1px solid var(--border-subtle,var(--border))}
+    .rec-zone-action .rec-action{font-size:14px;line-height:1.5}
+    .rec-zone-action .rec-action a{color:var(--accent)}
+    .rec-zone-action .rec-detail{font-size:13px;color:var(--text-muted,var(--muted));font-family:var(--font-mono,monospace);margin-top:2px}
+    .rec-zone-action .rec-note{font-size:13px;color:var(--success,#22c55e);margin-top:4px}
+    .rec-zone-action .rec-alt{font-size:13px;color:var(--text-muted,var(--muted));margin-top:8px;font-style:italic}
+    .rec-header{display:flex;align-items:center;gap:8px}
+    .rec-title{font-weight:700;font-size:16px}
     .rec-level{font-size:11px;padding:2px 6px;border-radius:4px;margin-left:auto;white-space:nowrap}
-    .rec-problem{font-size:14px;color:var(--muted);margin-bottom:8px}
-    .rec-steps{margin:0;padding:0;list-style:none}
-    .rec-step{margin:4px 0;font-size:14px}
-    .rec-step a{color:var(--accent)}
-    .step-how{display:block;font-size:13px;color:var(--muted);margin-top:2px}
     .hero-verdict{text-align:left;padding:32px 24px;margin-bottom:24px}
     .hero-number{font-size:56px;font-weight:800;line-height:1;margin-bottom:8px;letter-spacing:-2px}
     .hero-number[data-level="high"]{color:var(--danger)}
@@ -222,7 +225,7 @@
       body{background:#fff!important;color:#111!important;font-size:13px}
       .wrap{max-width:100%;padding:0;margin:0}
       .block{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
-      .btn,.menu,.hero-actions,.shock-footer,.toolbar,.implications-block .rec-steps a{display:none!important}
+      .btn,.menu,.hero-actions,.shock-footer,.toolbar,.implications-block .rec-zone-action a{display:none!important}
       .hero-verdict{padding:16px 0}
       .hero-number{font-size:36px}
       .data-groups{grid-template-columns:1fr 1fr}
@@ -495,21 +498,138 @@ const I18N = {
       personalTitle:'На основе вашего отпечатка',
       generalTitle:'Полезно всем — независимо от результатов',
       levelLabels:{easy:'\uD83D\uDFE2 легко',medium:'\uD83D\uDFE1 средне',hard:'\uD83D\uDD34 сложно'},
+      altPrefix:'Или: ',
       personal:{
-        canvas:{title:'Защитите графический отпечаток',problem:'Ваш браузер рисует картинки уникально — по этому хэшу вас узнают на любом сайте даже без cookies.',steps:[{text:'Firefox: включите privacy.resistFingerprinting',how:'Откройте about:config в адресной строке \u2192 найдите privacy.resistFingerprinting \u2192 установите true',level:'medium'},{text:'Chrome/Edge: установите расширение CanvasBlocker',link:'https://chromewebstore.google.com/search/canvas%20blocker',level:'easy'},{text:'Brave: уже защищён — откройте Shields и убедитесь, что Fingerprinting = Strict',level:'easy'}]},
-        plugins:{title:'Сократите количество расширений',problem:n=>`У вас ${n} расширений — нестандартный набор делает ваш профиль легко узнаваемым.`,steps:[{text:'Откройте менеджер расширений и отключите всё, чем не пользуетесь каждый день',how:'Chrome: chrome://extensions \u00B7 Firefox: about:addons',level:'easy'},{text:'Создайте отдельный профиль браузера с минимальным набором для анонимных задач',how:'Chrome: три точки \u2192 Люди \u2192 Добавить \u00B7 Firefox: about:profiles',level:'easy'}]},
-        permissions:{title:'Отзовите ненужные разрешения',problem:'Камера или микрофон разрешены — сайт может активировать их без повторного запроса.',steps:[{text:'Проверьте и отзовите разрешения у всех сайтов, которым они не нужны постоянно',how:'Chrome: chrome://settings/content \u00B7 Firefox: about:preferences#privacy \u2192 Разрешения',level:'easy'}]},
-        vpn:{title:'Синхронизируйте VPN и системное время',problem:'VPN меняет IP, но системный часовой пояс остаётся — это противоречие сразу заметно.',steps:[{text:'Выбирайте сервер VPN в той же стране, что и ваш системный часовой пояс',level:'easy'},{text:'Mullvad VPN автоматически согласовывает timezone',link:'https://mullvad.net',level:'easy'}]},
-        webrtc:{title:'Устраните утечку WebRTC — это срочно',problem:'WebRTC раскрывает ваш локальный IP даже при включённом VPN.',steps:[{text:'Firefox: about:config \u2192 media.peerconnection.enabled = false',level:'easy'},{text:'Chrome: установите расширение WebRTC Leak Prevent',link:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent',level:'easy'},{text:'Проверьте после изменений: browserleaks.com/webrtc',link:'https://browserleaks.com/webrtc',level:'easy'}]},
-        languages:{title:'Упростите список языков',problem:n=>`${n} языка в настройках — нестандартная комбинация сужает круг до небольшой группы.`,steps:[{text:'Оставьте 1-2 языка для браузера',how:'Chrome: Настройки \u2192 Языки \u00B7 Firefox: about:preferences \u2192 Язык',level:'easy'}]}
+        canvas:{
+          title:'Защитите графический отпечаток',
+          problem:'Ваш браузер рисует картинки уникально — по этому хэшу вас узнают даже без cookies.',
+          instructions:{
+            chrome:{action:'Установите расширение CanvasBlocker',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/canvas%20blocker'}},
+            firefox:{action:'Включите privacy.resistFingerprinting',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'},
+            brave:{action:'Проверьте, что защита включена',detail:'Shields \u2192 Fingerprinting \u2192 Strict',note:'Brave защищает от canvas-трекинга по умолчанию'},
+            safari:{action:'Safari частично защищает от canvas-трекинга',note:'Встроенная защита Intelligent Tracking Prevention'}
+          },
+          alternative:'В Brave эта защита встроена и работает без расширений.'
+        },
+        plugins:{
+          title:'Сократите количество расширений',
+          problem:function(n){return 'У вас '+n+' расширений — нестандартный набор делает ваш профиль легко узнаваемым.';},
+          instructions:{
+            chrome:{action:'Откройте менеджер расширений и отключите ненужные',detail:'chrome://extensions'},
+            firefox:{action:'Откройте менеджер дополнений и отключите ненужные',detail:'about:addons'},
+            brave:{action:'Откройте менеджер расширений и отключите ненужные',detail:'brave://extensions'},
+            safari:{action:'Откройте настройки расширений',detail:'Safari \u2192 Настройки \u2192 Расширения'}
+          }
+        },
+        permissions:{
+          title:'Отзовите ненужные разрешения',
+          problem:'Камера или микрофон разрешены — сайт может активировать их без повторного запроса.',
+          instructions:{
+            chrome:{action:'Проверьте и отзовите разрешения',detail:'chrome://settings/content'},
+            firefox:{action:'Проверьте и отзовите разрешения',detail:'about:preferences#privacy \u2192 Разрешения'},
+            brave:{action:'Проверьте и отзовите разрешения',detail:'brave://settings/content'},
+            safari:{action:'Проверьте разрешения для каждого сайта',detail:'Safari \u2192 Настройки \u2192 Веб-сайты'}
+          }
+        },
+        vpn:{
+          title:'Синхронизируйте VPN и системное время',
+          problem:'VPN меняет IP, но системный часовой пояс остаётся — это противоречие сразу заметно.',
+          instructions:{
+            chrome:{action:'Выбирайте сервер VPN в той же стране, что и ваш часовой пояс'},
+            firefox:{action:'Выбирайте сервер VPN в той же стране, что и ваш часовой пояс'},
+            brave:{action:'Выбирайте сервер VPN в той же стране, что и ваш часовой пояс'},
+            safari:{action:'Выбирайте сервер VPN в той же стране, что и ваш часовой пояс'}
+          },
+          alternative:'Mullvad VPN автоматически согласовывает timezone.'
+        },
+        webrtc:{
+          title:'Устраните утечку WebRTC',
+          problem:'WebRTC раскрывает ваш локальный IP даже при включённом VPN.',
+          instructions:{
+            chrome:{action:'Установите расширение WebRTC Leak Prevent',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent'}},
+            firefox:{action:'Отключите WebRTC',detail:'about:config \u2192 media.peerconnection.enabled \u2192 false'},
+            brave:{action:'WebRTC уже заблокирован в Brave',note:'Shields блокируют WebRTC по умолчанию'},
+            safari:{action:'Safari блокирует WebRTC-утечки по умолчанию',note:'Дополнительных действий не требуется'}
+          }
+        },
+        languages:{
+          title:'Упростите список языков',
+          problem:function(n){return n+' языка в настройках — нестандартная комбинация сужает круг.';},
+          instructions:{
+            chrome:{action:'Оставьте 1\u20132 языка',detail:'Настройки \u2192 Языки'},
+            firefox:{action:'Оставьте 1\u20132 языка',detail:'about:preferences \u2192 Язык'},
+            brave:{action:'Оставьте 1\u20132 языка',detail:'Настройки \u2192 Языки'},
+            safari:{action:'Измените порядок языков в системных настройках',detail:'Системные настройки \u2192 Основные \u2192 Язык и регион'}
+          }
+        }
       },
       general:[
-        {icon:'\uD83D\uDFE2',title:'Установите uBlock Origin — займёт 2 минуты',body:'Блокирует рекламные трекеры, пиксели и скрипты слежки. Работает в Chrome, Firefox, Edge и Safari.',steps:[{text:'Chrome Web Store',link:'https://chromewebstore.google.com/search/ublock%20origin'},{text:'Firefox Add-ons',link:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}],level:'easy'},
-        {icon:'\uD83D\uDFE2',title:'Используйте отдельные профили браузера',body:'Работа, покупки, личное — в разных профилях. Сигналы не смешиваются, история не пересекается.',steps:[{text:'Chrome: три точки \u2192 Люди \u2192 Добавить профиль'},{text:'Firefox: about:profiles \u2192 Create a New Profile'}],level:'easy'},
-        {icon:'\uD83D\uDFE2',title:'Периодически чистите данные браузера',body:'Cookies, localStorage и кэш — три разных хранилища. Чистите все три, а не только cookies.',steps:[{text:'Chrome/Firefox: Ctrl+Shift+Delete \u2192 выбрать всё \u2192 очистить'},{text:'Делайте это раз в неделю или после важных сессий'}],level:'easy'},
-        {icon:'\uD83D\uDFE1',title:'Переключитесь на Firefox с базовой защитой',body:'Firefox + три настройки дают серьёзную защиту без потери удобства.',steps:[{text:'about:config \u2192 privacy.resistFingerprinting = true'},{text:'Установить uBlock Origin'},{text:'Установить CanvasBlocker'}],level:'medium'},
-        {icon:'\uD83D\uDFE1',title:'Используйте VPN с хорошей репутацией',body:'Скрывает IP и провайдера. Выбирайте сервис без логов.',steps:[{text:'Mullvad (анонимная оплата)',link:'https://mullvad.net'},{text:'ProtonVPN (бесплатный тариф)',link:'https://protonvpn.com'}],level:'medium'},
-        {icon:'\uD83D\uDD34',title:'Для максимальной анонимности — Tor Browser',body:'Все пользователи Tor Browser выглядят одинаково. Медленнее, но полностью нормализует отпечаток.',steps:[{text:'Скачать Tor Browser',link:'https://www.torproject.org'}],level:'hard'}
+        {
+          title:'Установите uBlock Origin',
+          body:'Блокирует рекламные трекеры, пиксели и скрипты слежки.',
+          instructions:{
+            chrome:{action:'Установите из Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            firefox:{action:'Установите из Firefox Add-ons',link:{text:'Firefox Add-ons',url:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}},
+            brave:{action:'Установите из Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            safari:{action:'Установите аналог — AdGuard для Safari',link:{text:'App Store',url:'https://apps.apple.com/app/adguard-for-safari/id1440147259'}}
+          },
+          level:'easy'
+        },
+        {
+          title:'Используйте отдельные профили браузера',
+          body:'Работа, покупки, личное — в разных профилях. Сигналы не смешиваются.',
+          instructions:{
+            chrome:{action:'Создайте новый профиль',detail:'Три точки \u2192 Люди \u2192 Добавить профиль'},
+            firefox:{action:'Создайте новый профиль',detail:'about:profiles \u2192 Create a New Profile'},
+            brave:{action:'Создайте новый профиль',detail:'Три точки \u2192 Люди \u2192 Добавить профиль'},
+            safari:{action:'Safari не поддерживает профили',note:'Используйте разные браузеры для разных задач'}
+          },
+          level:'easy'
+        },
+        {
+          title:'Периодически чистите данные браузера',
+          body:'Cookies, localStorage и кэш — три разных хранилища. Чистите все три.',
+          instructions:{
+            chrome:{action:'Очистите данные',detail:'Ctrl+Shift+Delete \u2192 выбрать всё \u2192 очистить'},
+            firefox:{action:'Очистите данные',detail:'Ctrl+Shift+Delete \u2192 выбрать всё \u2192 очистить'},
+            brave:{action:'Очистите данные',detail:'Ctrl+Shift+Delete \u2192 выбрать всё \u2192 очистить'},
+            safari:{action:'Очистите данные',detail:'Safari \u2192 Очистить историю \u2192 Всю историю'}
+          },
+          level:'easy'
+        },
+        {
+          title:'Переключитесь на Firefox с базовой защитой',
+          body:'Firefox + три настройки дают серьёзную защиту без потери удобства.',
+          instructions:{
+            chrome:{action:'Скачайте Firefox и настройте защиту',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true + uBlock Origin + CanvasBlocker'},
+            firefox:{action:'Включите расширенную защиту',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true + uBlock Origin + CanvasBlocker'},
+            brave:{action:'Brave уже предоставляет аналогичную защиту',note:'Firefox — альтернатива с более гибкими настройками'},
+            safari:{action:'Скачайте Firefox для продвинутой защиты',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'}
+          },
+          level:'medium'
+        },
+        {
+          title:'Используйте VPN с хорошей репутацией',
+          body:'Скрывает IP и провайдера. Выбирайте сервис без логов.',
+          instructions:{
+            chrome:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)'},
+            firefox:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)'},
+            brave:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)'},
+            safari:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)'}
+          },
+          level:'medium'
+        },
+        {
+          title:'Для максимальной анонимности — Tor Browser',
+          body:'Все пользователи Tor Browser выглядят одинаково. Медленнее, но полностью нормализует отпечаток.',
+          instructions:{
+            chrome:{action:'Скачайте Tor Browser',link:{text:'torproject.org',url:'https://www.torproject.org'}},
+            firefox:{action:'Скачайте Tor Browser',link:{text:'torproject.org',url:'https://www.torproject.org'}},
+            brave:{action:'Tor доступен встроенно в Brave',detail:'Новое приватное окно с Tor',note:'Или скачайте полноценный Tor Browser с torproject.org'},
+            safari:{action:'Скачайте Tor Browser',link:{text:'torproject.org',url:'https://www.torproject.org'}}
+          },
+          level:'hard'
+        }
       ]
     },
     detailTitle:'Подробности',
@@ -954,21 +1074,138 @@ const I18N = {
       personalTitle:'Based on your fingerprint',
       generalTitle:'Useful for everyone \u2014 regardless of results',
       levelLabels:{easy:'\uD83D\uDFE2 easy',medium:'\uD83D\uDFE1 medium',hard:'\uD83D\uDD34 hard'},
+      altPrefix:'Or: ',
       personal:{
-        canvas:{title:'Protect your graphics fingerprint',problem:'Your browser renders images uniquely \u2014 this hash identifies you on any site even without cookies.',steps:[{text:'Firefox: enable privacy.resistFingerprinting',how:'Open about:config in the address bar \u2192 find privacy.resistFingerprinting \u2192 set to true',level:'medium'},{text:'Chrome/Edge: install the CanvasBlocker extension',link:'https://chromewebstore.google.com/search/canvas%20blocker',level:'easy'},{text:'Brave: already protected \u2014 open Shields and ensure Fingerprinting = Strict',level:'easy'}]},
-        plugins:{title:'Reduce the number of extensions',problem:n=>`You have ${n} extensions \u2014 a non-standard set makes your profile easily recognisable.`,steps:[{text:'Open the extension manager and disable everything you do not use daily',how:'Chrome: chrome://extensions \u00B7 Firefox: about:addons',level:'easy'},{text:'Create a separate browser profile with a minimal set for anonymous tasks',how:'Chrome: three dots \u2192 People \u2192 Add \u00B7 Firefox: about:profiles',level:'easy'}]},
-        permissions:{title:'Revoke unnecessary permissions',problem:'Camera or microphone is allowed \u2014 a site can activate them without asking again.',steps:[{text:'Review and revoke permissions for all sites that do not need them permanently',how:'Chrome: chrome://settings/content \u00B7 Firefox: about:preferences#privacy \u2192 Permissions',level:'easy'}]},
-        vpn:{title:'Sync your VPN and system time',problem:'VPN changes your IP, but the system timezone stays \u2014 this mismatch is immediately noticeable.',steps:[{text:'Choose a VPN server in the same country as your system timezone',level:'easy'},{text:'Mullvad VPN automatically synchronises timezone',link:'https://mullvad.net',level:'easy'}]},
-        webrtc:{title:'Fix the WebRTC leak \u2014 this is urgent',problem:'WebRTC reveals your local IP even with VPN enabled.',steps:[{text:'Firefox: about:config \u2192 media.peerconnection.enabled = false',level:'easy'},{text:'Chrome: install the WebRTC Leak Prevent extension',link:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent',level:'easy'},{text:'Verify after changes: browserleaks.com/webrtc',link:'https://browserleaks.com/webrtc',level:'easy'}]},
-        languages:{title:'Simplify your language list',problem:n=>`${n} languages in settings \u2014 a non-standard combination narrows you down to a small group.`,steps:[{text:'Keep 1\u20132 languages for the browser',how:'Chrome: Settings \u2192 Languages \u00B7 Firefox: about:preferences \u2192 Language',level:'easy'}]}
+        canvas:{
+          title:'Protect your graphics fingerprint',
+          problem:'Your browser renders images uniquely \u2014 this hash identifies you on any site even without cookies.',
+          instructions:{
+            chrome:{action:'Install the CanvasBlocker extension',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/canvas%20blocker'}},
+            firefox:{action:'Enable privacy.resistFingerprinting',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'},
+            brave:{action:'Check that protection is enabled',detail:'Shields \u2192 Fingerprinting \u2192 Strict',note:'Brave protects against canvas tracking by default'},
+            safari:{action:'Safari partially protects against canvas tracking',note:'Built-in Intelligent Tracking Prevention'}
+          },
+          alternative:'Brave has this protection built in and it works without extensions.'
+        },
+        plugins:{
+          title:'Reduce the number of extensions',
+          problem:function(n){return 'You have '+n+' extensions \u2014 a non-standard set makes your profile easily recognisable.';},
+          instructions:{
+            chrome:{action:'Open the extension manager and disable unused ones',detail:'chrome://extensions'},
+            firefox:{action:'Open the add-ons manager and disable unused ones',detail:'about:addons'},
+            brave:{action:'Open the extension manager and disable unused ones',detail:'brave://extensions'},
+            safari:{action:'Open extension settings',detail:'Safari \u2192 Settings \u2192 Extensions'}
+          }
+        },
+        permissions:{
+          title:'Revoke unnecessary permissions',
+          problem:'Camera or microphone is allowed \u2014 a site can activate them without asking again.',
+          instructions:{
+            chrome:{action:'Review and revoke permissions',detail:'chrome://settings/content'},
+            firefox:{action:'Review and revoke permissions',detail:'about:preferences#privacy \u2192 Permissions'},
+            brave:{action:'Review and revoke permissions',detail:'brave://settings/content'},
+            safari:{action:'Review permissions for each website',detail:'Safari \u2192 Settings \u2192 Websites'}
+          }
+        },
+        vpn:{
+          title:'Sync your VPN and system time',
+          problem:'VPN changes your IP, but the system timezone stays \u2014 this mismatch is immediately noticeable.',
+          instructions:{
+            chrome:{action:'Choose a VPN server in the same country as your timezone'},
+            firefox:{action:'Choose a VPN server in the same country as your timezone'},
+            brave:{action:'Choose a VPN server in the same country as your timezone'},
+            safari:{action:'Choose a VPN server in the same country as your timezone'}
+          },
+          alternative:'Mullvad VPN automatically synchronises timezone.'
+        },
+        webrtc:{
+          title:'Fix the WebRTC leak',
+          problem:'WebRTC reveals your local IP even with VPN enabled.',
+          instructions:{
+            chrome:{action:'Install the WebRTC Leak Prevent extension',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent'}},
+            firefox:{action:'Disable WebRTC',detail:'about:config \u2192 media.peerconnection.enabled \u2192 false'},
+            brave:{action:'WebRTC is already blocked in Brave',note:'Shields block WebRTC by default'},
+            safari:{action:'Safari blocks WebRTC leaks by default',note:'No additional action required'}
+          }
+        },
+        languages:{
+          title:'Simplify your language list',
+          problem:function(n){return n+' languages in settings \u2014 a non-standard combination narrows you down.';},
+          instructions:{
+            chrome:{action:'Keep 1\u20132 languages',detail:'Settings \u2192 Languages'},
+            firefox:{action:'Keep 1\u20132 languages',detail:'about:preferences \u2192 Language'},
+            brave:{action:'Keep 1\u20132 languages',detail:'Settings \u2192 Languages'},
+            safari:{action:'Change language order in system settings',detail:'System Settings \u2192 General \u2192 Language & Region'}
+          }
+        }
       },
       general:[
-        {icon:'\uD83D\uDFE2',title:'Install uBlock Origin \u2014 takes 2 minutes',body:'Blocks ad trackers, pixels, and tracking scripts. Works in Chrome, Firefox, Edge, and Safari.',steps:[{text:'Chrome Web Store',link:'https://chromewebstore.google.com/search/ublock%20origin'},{text:'Firefox Add-ons',link:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}],level:'easy'},
-        {icon:'\uD83D\uDFE2',title:'Use separate browser profiles',body:'Work, shopping, personal \u2014 in different profiles. Signals do not mix, history does not overlap.',steps:[{text:'Chrome: three dots \u2192 People \u2192 Add profile'},{text:'Firefox: about:profiles \u2192 Create a New Profile'}],level:'easy'},
-        {icon:'\uD83D\uDFE2',title:'Periodically clear browser data',body:'Cookies, localStorage, and cache \u2014 three different stores. Clear all three, not just cookies.',steps:[{text:'Chrome/Firefox: Ctrl+Shift+Delete \u2192 select all \u2192 clear'},{text:'Do this once a week or after important sessions'}],level:'easy'},
-        {icon:'\uD83D\uDFE1',title:'Switch to Firefox with basic protection',body:'Firefox + three settings provide serious protection without losing convenience.',steps:[{text:'about:config \u2192 privacy.resistFingerprinting = true'},{text:'Install uBlock Origin'},{text:'Install CanvasBlocker'}],level:'medium'},
-        {icon:'\uD83D\uDFE1',title:'Use a reputable VPN',body:'Hides IP and ISP. Choose a no-logs service.',steps:[{text:'Mullvad (anonymous payment)',link:'https://mullvad.net'},{text:'ProtonVPN (free tier)',link:'https://protonvpn.com'}],level:'medium'},
-        {icon:'\uD83D\uDD34',title:'For maximum anonymity \u2014 Tor Browser',body:'All Tor Browser users look identical. Slower, but fully normalises the fingerprint.',steps:[{text:'Download Tor Browser',link:'https://www.torproject.org'}],level:'hard'}
+        {
+          title:'Install uBlock Origin',
+          body:'Blocks ad trackers, pixels, and tracking scripts.',
+          instructions:{
+            chrome:{action:'Install from Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            firefox:{action:'Install from Firefox Add-ons',link:{text:'Firefox Add-ons',url:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}},
+            brave:{action:'Install from Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            safari:{action:'Install the equivalent \u2014 AdGuard for Safari',link:{text:'App Store',url:'https://apps.apple.com/app/adguard-for-safari/id1440147259'}}
+          },
+          level:'easy'
+        },
+        {
+          title:'Use separate browser profiles',
+          body:'Work, shopping, personal \u2014 in different profiles. Signals do not mix.',
+          instructions:{
+            chrome:{action:'Create a new profile',detail:'Three dots \u2192 People \u2192 Add profile'},
+            firefox:{action:'Create a new profile',detail:'about:profiles \u2192 Create a New Profile'},
+            brave:{action:'Create a new profile',detail:'Three dots \u2192 People \u2192 Add profile'},
+            safari:{action:'Safari does not support profiles',note:'Use different browsers for different tasks'}
+          },
+          level:'easy'
+        },
+        {
+          title:'Periodically clear browser data',
+          body:'Cookies, localStorage, and cache \u2014 three different stores. Clear all three.',
+          instructions:{
+            chrome:{action:'Clear data',detail:'Ctrl+Shift+Delete \u2192 select all \u2192 clear'},
+            firefox:{action:'Clear data',detail:'Ctrl+Shift+Delete \u2192 select all \u2192 clear'},
+            brave:{action:'Clear data',detail:'Ctrl+Shift+Delete \u2192 select all \u2192 clear'},
+            safari:{action:'Clear data',detail:'Safari \u2192 Clear History \u2192 All History'}
+          },
+          level:'easy'
+        },
+        {
+          title:'Switch to Firefox with basic protection',
+          body:'Firefox + three settings provide serious protection without losing convenience.',
+          instructions:{
+            chrome:{action:'Download Firefox and configure protection',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true + uBlock Origin + CanvasBlocker'},
+            firefox:{action:'Enable extended protection',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true + uBlock Origin + CanvasBlocker'},
+            brave:{action:'Brave already provides similar protection',note:'Firefox is an alternative with more flexible settings'},
+            safari:{action:'Download Firefox for advanced protection',detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'}
+          },
+          level:'medium'
+        },
+        {
+          title:'Use a reputable VPN',
+          body:'Hides IP and ISP. Choose a no-logs service.',
+          instructions:{
+            chrome:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)'},
+            firefox:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)'},
+            brave:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)'},
+            safari:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)'}
+          },
+          level:'medium'
+        },
+        {
+          title:'For maximum anonymity \u2014 Tor Browser',
+          body:'All Tor Browser users look identical. Slower, but fully normalises the fingerprint.',
+          instructions:{
+            chrome:{action:'Download Tor Browser',link:{text:'torproject.org',url:'https://www.torproject.org'}},
+            firefox:{action:'Download Tor Browser',link:{text:'torproject.org',url:'https://www.torproject.org'}},
+            brave:{action:'Tor is available built-in in Brave',detail:'New private window with Tor',note:'Or download the full Tor Browser from torproject.org'},
+            safari:{action:'Download Tor Browser',link:{text:'torproject.org',url:'https://www.torproject.org'}}
+          },
+          level:'hard'
+        }
       ]
     },
     detailTitle:'Details',
@@ -1380,21 +1617,138 @@ const I18N = {
       personalTitle:'Barmoq izingiz asosida',
       generalTitle:'Hammaga foydali \u2014 natijalardan qat\u02BBiy nazar',
       levelLabels:{easy:'\uD83D\uDFE2 oson',medium:'\uD83D\uDFE1 o\u02BBrtacha',hard:'\uD83D\uDD34 qiyin'},
+      altPrefix:'Yoki: ',
       personal:{
-        canvas:{title:'Grafik barmoq izini himoya qiling',problem:'Brauzeringiz rasmlarni noyob tarzda chizadi \u2014 bu xesh bo\u02BByicha sizni har qanday saytda cookie\u02BBlarsiz ham tanishadi.',steps:[{text:'Firefox: privacy.resistFingerprinting ni yoqing',how:'Manzil satrida about:config oching \u2192 privacy.resistFingerprinting toping \u2192 true qilib o\u02BBrnating',level:'medium'},{text:'Chrome/Edge: CanvasBlocker kengaytmasini o\u02BBrnating',link:'https://chromewebstore.google.com/search/canvas%20blocker',level:'easy'},{text:'Brave: allaqachon himoyalangan \u2014 Shields oching va Fingerprinting = Strict ekanligiga ishonch hosil qiling',level:'easy'}]},
-        plugins:{title:'Kengaytmalar sonini kamaytiring',problem:n=>`Sizda ${n} ta kengaytma bor \u2014 nostandart to\u02BBplam profilingizni oson tanib olinadigan qiladi.`,steps:[{text:'Kengaytmalar menejerini oching va har kuni ishlatilmaydigan hammasini o\u02BBchiring',how:'Chrome: chrome://extensions \u00B7 Firefox: about:addons',level:'easy'},{text:'Anonim vazifalar uchun minimal to\u02BBplamli alohida brauzer profili yarating',how:'Chrome: uch nuqta \u2192 Odamlar \u2192 Qo\u02BBshish \u00B7 Firefox: about:profiles',level:'easy'}]},
-        permissions:{title:'Keraksiz ruxsatlarni bekor qiling',problem:'Kamera yoki mikrofon ruxsat berilgan \u2014 sayt ularni qayta so\u02BBramasdan faollashtirishi mumkin.',steps:[{text:'Doimiy kerak bo\u02BBlmagan barcha saytlardagi ruxsatlarni tekshiring va bekor qiling',how:'Chrome: chrome://settings/content \u00B7 Firefox: about:preferences#privacy \u2192 Ruxsatlar',level:'easy'}]},
-        vpn:{title:'VPN va tizim vaqtini sinxronlashtiring',problem:'VPN IP ni o\u02BBzgartiradi, lekin tizim vaqt zonasi qoladi \u2014 bu nomuvofiqlik darhol seziladi.',steps:[{text:'Tizim vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang',level:'easy'},{text:'Mullvad VPN vaqt zonasini avtomatik sinxronlaydi',link:'https://mullvad.net',level:'easy'}]},
-        webrtc:{title:'WebRTC oqishini bartaraf eting \u2014 bu shoshilinch',problem:'WebRTC VPN yoqilgan bo\u02BBlsa ham lokal IP ni ochib beradi.',steps:[{text:'Firefox: about:config \u2192 media.peerconnection.enabled = false',level:'easy'},{text:'Chrome: WebRTC Leak Prevent kengaytmasini o\u02BBrnating',link:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent',level:'easy'},{text:'O\u02BBzgarishlardan keyin tekshiring: browserleaks.com/webrtc',link:'https://browserleaks.com/webrtc',level:'easy'}]},
-        languages:{title:'Tillar ro\u02BByxatini soddalashtiring',problem:n=>`Sozlamalarda ${n} ta til \u2014 nostandart kombinatsiya sizni kichik guruhga qisqartiradi.`,steps:[{text:'Brauzer uchun 1-2 ta tilni qoldiring',how:'Chrome: Sozlamalar \u2192 Tillar \u00B7 Firefox: about:preferences \u2192 Til',level:'easy'}]}
+        canvas:{
+          title:"Grafik barmoq izini himoya qiling",
+          problem:"Brauzeringiz rasmlarni noyob tarzda chizadi \u2014 bu xesh bo\u02BByicha sizni cookie\u02BBlarsiz ham tanishadi.",
+          instructions:{
+            chrome:{action:"CanvasBlocker kengaytmasini o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/canvas%20blocker'}},
+            firefox:{action:"privacy.resistFingerprinting ni yoqing",detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'},
+            brave:{action:"Himoya yoqilganligini tekshiring",detail:'Shields \u2192 Fingerprinting \u2192 Strict',note:"Brave canvas-trekingdan sukut bo\u02BByicha himoyalaydi"},
+            safari:{action:"Safari canvas-trekingdan qisman himoyalaydi",note:"Intelligent Tracking Prevention ichki himoyasi"}
+          },
+          alternative:"Brave da bu himoya ichki va kengaytmalarsiz ishlaydi."
+        },
+        plugins:{
+          title:"Kengaytmalar sonini kamaytiring",
+          problem:function(n){return "Sizda "+n+" ta kengaytma bor \u2014 nostandart to\u02BBplam profilingizni oson tanib olinadigan qiladi.";},
+          instructions:{
+            chrome:{action:"Kengaytmalar menejerini oching va keraksizlarini o\u02BBchiring",detail:'chrome://extensions'},
+            firefox:{action:"Qo\u02BBshimchalar menejerini oching va keraksizlarini o\u02BBchiring",detail:'about:addons'},
+            brave:{action:"Kengaytmalar menejerini oching va keraksizlarini o\u02BBchiring",detail:'brave://extensions'},
+            safari:{action:"Kengaytmalar sozlamalarini oching",detail:"Safari \u2192 Sozlamalar \u2192 Kengaytmalar"}
+          }
+        },
+        permissions:{
+          title:"Keraksiz ruxsatlarni bekor qiling",
+          problem:"Kamera yoki mikrofon ruxsat berilgan \u2014 sayt ularni qayta so\u02BBramasdan faollashtirishi mumkin.",
+          instructions:{
+            chrome:{action:"Ruxsatlarni tekshiring va bekor qiling",detail:'chrome://settings/content'},
+            firefox:{action:"Ruxsatlarni tekshiring va bekor qiling",detail:'about:preferences#privacy \u2192 Ruxsatlar'},
+            brave:{action:"Ruxsatlarni tekshiring va bekor qiling",detail:'brave://settings/content'},
+            safari:{action:"Har bir sayt uchun ruxsatlarni tekshiring",detail:"Safari \u2192 Sozlamalar \u2192 Veb-saytlar"}
+          }
+        },
+        vpn:{
+          title:"VPN va tizim vaqtini sinxronlashtiring",
+          problem:"VPN IP ni o\u02BBzgartiradi, lekin tizim vaqt zonasi qoladi \u2014 bu nomuvofiqlik darhol seziladi.",
+          instructions:{
+            chrome:{action:"Vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            firefox:{action:"Vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            brave:{action:"Vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"},
+            safari:{action:"Vaqt zonangiz bilan bir xil mamlakatdagi VPN serverni tanlang"}
+          },
+          alternative:"Mullvad VPN vaqt zonasini avtomatik sinxronlaydi."
+        },
+        webrtc:{
+          title:"WebRTC oqishini bartaraf eting",
+          problem:"WebRTC VPN yoqilgan bo\u02BBlsa ham lokal IP ni ochib beradi.",
+          instructions:{
+            chrome:{action:"WebRTC Leak Prevent kengaytmasini o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/webrtc%20leak%20prevent'}},
+            firefox:{action:"WebRTC ni o\u02BBchiring",detail:'about:config \u2192 media.peerconnection.enabled \u2192 false'},
+            brave:{action:"WebRTC Brave da allaqachon bloklangan",note:"Shields sukut bo\u02BByicha WebRTC ni bloklaydi"},
+            safari:{action:"Safari WebRTC oqishlarini sukut bo\u02BByicha bloklaydi",note:"Qo\u02BBshimcha amallar talab qilinmaydi"}
+          }
+        },
+        languages:{
+          title:"Tillar ro\u02BByxatini soddalashtiring",
+          problem:function(n){return "Sozlamalarda "+n+" ta til \u2014 nostandart kombinatsiya sizni toraytirib qo\u02BByadi.";},
+          instructions:{
+            chrome:{action:"1\u20132 ta tilni qoldiring",detail:"Sozlamalar \u2192 Tillar"},
+            firefox:{action:"1\u20132 ta tilni qoldiring",detail:"about:preferences \u2192 Til"},
+            brave:{action:"1\u20132 ta tilni qoldiring",detail:"Sozlamalar \u2192 Tillar"},
+            safari:{action:"Tizim sozlamalarida tillar tartibini o\u02BBzgartiring",detail:"Tizim sozlamalari \u2192 Umumiy \u2192 Til va mintaqa"}
+          }
+        }
       },
       general:[
-        {icon:'\uD83D\uDFE2',title:'uBlock Origin o\u02BBrnating \u2014 2 daqiqa vaqt oladi',body:'Reklama trekerlarini, piksellarni va kuzatuv skriptlarini bloklaydi. Chrome, Firefox, Edge va Safari da ishlaydi.',steps:[{text:'Chrome Web Store',link:'https://chromewebstore.google.com/search/ublock%20origin'},{text:'Firefox Add-ons',link:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}],level:'easy'},
-        {icon:'\uD83D\uDFE2',title:'Alohida brauzer profillaridan foydalaning',body:'Ish, xaridlar, shaxsiy \u2014 turli profillarda. Signallar aralashmaydi, tarix kesishmaydi.',steps:[{text:'Chrome: uch nuqta \u2192 Odamlar \u2192 Profil qo\u02BBshish'},{text:'Firefox: about:profiles \u2192 Create a New Profile'}],level:'easy'},
-        {icon:'\uD83D\uDFE2',title:'Brauzer ma\u02BBlumotlarini vaqti-vaqti bilan tozalang',body:'Cookie, localStorage va kesh \u2014 uchta turli xotira. Faqat cookie emas, uchtasini ham tozalang.',steps:[{text:'Chrome/Firefox: Ctrl+Shift+Delete \u2192 hammasini tanlang \u2192 tozalang'},{text:'Haftada bir marta yoki muhim seanslardan keyin bajarng'}],level:'easy'},
-        {icon:'\uD83D\uDFE1',title:'Asosiy himoya bilan Firefox ga o\u02BBting',body:'Firefox + uchta sozlama qulaylikni yo\u02BBqotmasdan jiddiy himoyani ta\u02BBminlaydi.',steps:[{text:'about:config \u2192 privacy.resistFingerprinting = true'},{text:'uBlock Origin o\u02BBrnating'},{text:'CanvasBlocker o\u02BBrnating'}],level:'medium'},
-        {icon:'\uD83D\uDFE1',title:'Ishonchli VPN dan foydalaning',body:'IP va provayderni yashiradi. Loglarsiz xizmatni tanlang.',steps:[{text:'Mullvad (anonim to\u02BBlov)',link:'https://mullvad.net'},{text:'ProtonVPN (bepul tarif)',link:'https://protonvpn.com'}],level:'medium'},
-        {icon:'\uD83D\uDD34',title:'Maksimal anonimlik uchun \u2014 Tor Browser',body:'Barcha Tor Browser foydalanuvchilari bir xil ko\u02BBrinadi. Sekinroq, lekin barmoq izini to\u02BBliq normallaydi.',steps:[{text:'Tor Browser ni yuklab oling',link:'https://www.torproject.org'}],level:'hard'}
+        {
+          title:"uBlock Origin o\u02BBrnating",
+          body:"Reklama trekerlarini, piksellarni va kuzatuv skriptlarini bloklaydi.",
+          instructions:{
+            chrome:{action:"Chrome Web Store dan o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            firefox:{action:"Firefox Add-ons dan o\u02BBrnating",link:{text:'Firefox Add-ons',url:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}},
+            brave:{action:"Chrome Web Store dan o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            safari:{action:"Muqobil \u2014 Safari uchun AdGuard o\u02BBrnating",link:{text:'App Store',url:'https://apps.apple.com/app/adguard-for-safari/id1440147259'}}
+          },
+          level:'easy'
+        },
+        {
+          title:"Alohida brauzer profillaridan foydalaning",
+          body:"Ish, xaridlar, shaxsiy \u2014 turli profillarda. Signallar aralashmaydi.",
+          instructions:{
+            chrome:{action:"Yangi profil yarating",detail:"Uch nuqta \u2192 Odamlar \u2192 Profil qo\u02BBshish"},
+            firefox:{action:"Yangi profil yarating",detail:'about:profiles \u2192 Create a New Profile'},
+            brave:{action:"Yangi profil yarating",detail:"Uch nuqta \u2192 Odamlar \u2192 Profil qo\u02BBshish"},
+            safari:{action:"Safari profillarni qo\u02BBllab-quvvatlamaydi",note:"Turli vazifalar uchun turli brauzerlardan foydalaning"}
+          },
+          level:'easy'
+        },
+        {
+          title:"Brauzer ma\u02BBlumotlarini vaqti-vaqti bilan tozalang",
+          body:"Cookie, localStorage va kesh \u2014 uchta turli xotira. Uchtasini ham tozalang.",
+          instructions:{
+            chrome:{action:"Ma\u02BBlumotlarni tozalang",detail:"Ctrl+Shift+Delete \u2192 hammasini tanlang \u2192 tozalang"},
+            firefox:{action:"Ma\u02BBlumotlarni tozalang",detail:"Ctrl+Shift+Delete \u2192 hammasini tanlang \u2192 tozalang"},
+            brave:{action:"Ma\u02BBlumotlarni tozalang",detail:"Ctrl+Shift+Delete \u2192 hammasini tanlang \u2192 tozalang"},
+            safari:{action:"Ma\u02BBlumotlarni tozalang",detail:"Safari \u2192 Tarixni tozalash \u2192 Barcha tarix"}
+          },
+          level:'easy'
+        },
+        {
+          title:"Asosiy himoya bilan Firefox ga o\u02BBting",
+          body:"Firefox + uchta sozlama qulaylikni yo\u02BBqotmasdan jiddiy himoyani ta\u02BBminlaydi.",
+          instructions:{
+            chrome:{action:"Firefox ni yuklab oling va himoyani sozlang",detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true + uBlock Origin + CanvasBlocker'},
+            firefox:{action:"Kengaytirilgan himoyani yoqing",detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true + uBlock Origin + CanvasBlocker'},
+            brave:{action:"Brave allaqachon shunga o\u02BBxshash himoyani ta\u02BBminlaydi",note:"Firefox \u2014 moslashuvchan sozlamali muqobil"},
+            safari:{action:"Ilg\u02BBor himoya uchun Firefox ni yuklab oling",detail:'about:config \u2192 privacy.resistFingerprinting \u2192 true'}
+          },
+          level:'medium'
+        },
+        {
+          title:"Ishonchli VPN dan foydalaning",
+          body:"IP va provayderni yashiradi. Loglarsiz xizmatni tanlang.",
+          instructions:{
+            chrome:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)'},
+            firefox:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)'},
+            brave:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)'},
+            safari:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)'}
+          },
+          level:'medium'
+        },
+        {
+          title:"Maksimal anonimlik uchun \u2014 Tor Browser",
+          body:"Barcha Tor Browser foydalanuvchilari bir xil ko\u02BBrinadi. Sekinroq, lekin barmoq izini to\u02BBliq normallaydi.",
+          instructions:{
+            chrome:{action:"Tor Browser ni yuklab oling",link:{text:'torproject.org',url:'https://www.torproject.org'}},
+            firefox:{action:"Tor Browser ni yuklab oling",link:{text:'torproject.org',url:'https://www.torproject.org'}},
+            brave:{action:"Tor Brave da ichki mavjud",detail:"Yangi maxfiy oyna Tor bilan",note:"Yoki torproject.org dan to\u02BBliq Tor Browser ni yuklab oling"},
+            safari:{action:"Tor Browser ni yuklab oling",link:{text:'torproject.org',url:'https://www.torproject.org'}}
+          },
+          level:'hard'
+        }
       ]
     },
     detailTitle:'Batafsil',
@@ -1981,6 +2335,15 @@ function guessOSVersion(basic){
   return basic.uaPlatform||basic.platform||'OS';
 }
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function detectBrowserGroup(){
+  if(navigator.brave&&typeof navigator.brave.isBrave==='function') return 'brave';
+  const ua=navigator.userAgent||'';
+  if(/Firefox\//i.test(ua)&&!/Seamonkey/i.test(ua)) return 'firefox';
+  if(/Safari\//i.test(ua)&&!/Chrome\//i.test(ua)&&!/Chromium/i.test(ua)) return 'safari';
+  if(/Chrome\//i.test(ua)||/Chromium\//i.test(ua)) return 'chrome';
+  return 'chrome';
+}
 
 const COUNTRY_NAMES={
   US:{ru:'\u0421\u0428\u0410',en:'USA',uz:'AQSH'},
@@ -3751,23 +4114,72 @@ function summariseList(items,limit=3){
   return `${head.join(', ')}${more}`;
 }
 
-function createRecCard(rec,levelLabels){
-  const levelClass=rec.level==='easy'?'rec-card--green':rec.level==='medium'?'rec-card--yellow':'rec-card--red';
-  const card=document.createElement('div');
-  card.className='rec-card '+levelClass;
-  const problem=typeof rec.problem==='function'?rec.problem():(rec.problem||rec.body||'');
-  let stepsHtml='';
-  if(rec.steps&&rec.steps.length){
-    stepsHtml='<ul class="rec-steps">'+rec.steps.map(s=>{
-      let html='<li class="rec-step">';
-      if(s.link) html+=`<a href="${s.link}" target="_blank" rel="noopener">${s.text}</a>`;
-      else html+=s.text;
-      if(s.how) html+=`<span class="step-how">${s.how}</span>`;
-      html+='</li>';
-      return html;
-    }).join('')+'</ul>';
+const _browserGroup = detectBrowserGroup();
+
+function createRecCard(rec, levelLabels, isPersonal, altPrefix) {
+  const bg = _browserGroup;
+  const levelClass = rec.level === 'easy' ? 'rec-card--green' : rec.level === 'medium' ? 'rec-card--yellow' : rec.level === 'hard' ? 'rec-card--red' : '';
+  const personalClass = isPersonal ? 'rec-card--personal' : '';
+  const card = document.createElement('div');
+  card.className = 'rec-card ' + (isPersonal ? personalClass : levelClass);
+
+  // Zone 1: Title
+  var zoneTop = document.createElement('div');
+  zoneTop.className = 'rec-zone-top';
+  var header = document.createElement('div');
+  header.className = 'rec-header';
+  header.innerHTML = '<span class="rec-title">' + esc(rec.title) + '</span>' + (rec.level && levelLabels[rec.level] ? '<span class="rec-level">' + esc(levelLabels[rec.level]) + '</span>' : '');
+  zoneTop.appendChild(header);
+  card.appendChild(zoneTop);
+
+  // Zone 2: Why
+  var why = typeof rec.problem === 'function' ? rec.problem() : (rec.problem || rec.body || '');
+  if (why) {
+    var zoneWhy = document.createElement('div');
+    zoneWhy.className = 'rec-zone-why';
+    zoneWhy.textContent = why;
+    card.appendChild(zoneWhy);
   }
-  card.innerHTML=`<div class="rec-header"><span class="rec-icon">${rec.icon||''}</span><span class="rec-title">${rec.title}</span><span class="rec-level">${levelLabels[rec.level]||''}</span></div><div class="rec-problem">${problem}</div>${stepsHtml}`;
+
+  // Zone 3: Action (browser-specific)
+  var instr = rec.instructions && rec.instructions[bg] || rec.instructions && rec.instructions.chrome || null;
+  if (instr) {
+    var zoneAction = document.createElement('div');
+    zoneAction.className = 'rec-zone-action';
+
+    var actionEl = document.createElement('div');
+    actionEl.className = 'rec-action';
+    if (instr.link) {
+      actionEl.innerHTML = esc(instr.action) + ' \u2192 <a href="' + esc(instr.link.url) + '" target="_blank" rel="noopener">' + esc(instr.link.text) + '</a>';
+    } else {
+      actionEl.textContent = instr.action;
+    }
+    zoneAction.appendChild(actionEl);
+
+    if (instr.detail) {
+      var detailEl = document.createElement('div');
+      detailEl.className = 'rec-detail';
+      detailEl.textContent = instr.detail;
+      zoneAction.appendChild(detailEl);
+    }
+
+    if (instr.note) {
+      var noteEl = document.createElement('div');
+      noteEl.className = 'rec-note';
+      noteEl.textContent = '\u2713 ' + instr.note;
+      zoneAction.appendChild(noteEl);
+    }
+
+    if (rec.alternative && bg !== 'brave') {
+      var altEl = document.createElement('div');
+      altEl.className = 'rec-alt';
+      altEl.textContent = (altPrefix || '') + rec.alternative;
+      zoneAction.appendChild(altEl);
+    }
+
+    card.appendChild(zoneAction);
+  }
+
   return card;
 }
 
@@ -3786,12 +4198,13 @@ function renderImplications(basic,t){
     (impl.risks||[]).forEach(r=>{
       const card=document.createElement('div');
       card.className='risk-card';
-      card.innerHTML=`<div class="risk-icon">${r.icon}</div><div class="risk-title">${r.title}</div><div class="risk-body">${r.body}</div>`;
+      card.innerHTML='<div class="risk-icon">'+r.icon+'</div><div class="risk-title">'+r.title+'</div><div class="risk-body">'+r.body+'</div>';
       grid.appendChild(card);
     });
   }
   const stepsTitleEl=getEl('implStepsTitle');
   if(stepsTitleEl) stepsTitleEl.textContent=impl.stepsTitle||'';
+  const altPrefix=impl.altPrefix||'';
   const personalEl=getEl('personalRecs');
   if(personalEl){
     personalEl.innerHTML='';
@@ -3803,11 +4216,11 @@ function renderImplications(basic,t){
       if((basic.plugins||[]).length>3){
         const rec=Object.assign({},impl.personal.plugins);
         const n=(basic.plugins||[]).length;
-        if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=()=>fn(n);}
+        if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=function(){return fn(n);};}
         picks.push(rec);
       }
       const perms=basic.perms||{};
-      if(Object.values(perms).some(v=>String(v).toLowerCase()==='granted')){
+      if(Object.values(perms).some(function(v){return String(v).toLowerCase()==='granted';})){
         picks.push(impl.personal.permissions);
       }
       const vpnState=state.vpn||{};
@@ -3820,7 +4233,7 @@ function renderImplications(basic,t){
       if(basic.languages&&basic.languages.length>2){
         const rec=Object.assign({},impl.personal.languages);
         const n=basic.languages.length;
-        if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=()=>fn(n);}
+        if(typeof rec.problem==='function'){const fn=rec.problem;rec.problem=function(){return fn(n);};}
         picks.push(rec);
       }
       if(picks.length){
@@ -3828,8 +4241,8 @@ function renderImplications(basic,t){
         heading.className='rec-section-title';
         heading.textContent=impl.personalTitle||'';
         personalEl.appendChild(heading);
-        picks.forEach(rec=>{
-          if(rec) personalEl.appendChild(createRecCard(rec,impl.levelLabels||{}));
+        picks.forEach(function(rec){
+          if(rec) personalEl.appendChild(createRecCard(rec,impl.levelLabels||{},true,altPrefix));
         });
       }
     }
@@ -3842,8 +4255,8 @@ function renderImplications(basic,t){
       heading.className='rec-section-title';
       heading.textContent=impl.generalTitle||'';
       generalEl.appendChild(heading);
-      impl.general.forEach(rec=>{
-        generalEl.appendChild(createRecCard(rec,impl.levelLabels||{}));
+      impl.general.forEach(function(rec){
+        generalEl.appendChild(createRecCard(rec,impl.levelLabels||{},false,altPrefix));
       });
     }
   }
