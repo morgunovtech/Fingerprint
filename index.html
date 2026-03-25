@@ -18,22 +18,59 @@
   <style>
     :root{
       color-scheme: light dark;
-      --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042;
-      --r:16px; --shadow:0 10px 30px rgba(0,0,0,.25);
-      --accent:#60a5fa;
+      --bg:#FAFAFA; --card:#FFFFFF; --text:#111827; --muted:#6B7280; --border:#E5E7EB;
+      --r:14px; --shadow:0 4px 6px rgba(0,0,0,0.07);
+      --accent:#EF4444;
+      --text-secondary:#6B7280; --text-muted:#9CA3AF;
+      --bg-raised:#F3F4F6; --code-bg:#F3F4F6;
+      --success:#22C55E; --success-bg:#F0FDF4;
+      --warning:#F59E0B; --warning-bg:#FFFBEB;
+      --danger:#EF4444; --danger-bg:#FEF2F2;
+      --border-subtle:#F3F4F6;
+      --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+      --radius-sm:6px; --radius-md:10px; --radius-lg:14px;
+      --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
     }
-    :root.force-dark{ --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042; --shadow:0 10px 30px rgba(0,0,0,.25); --accent:#60a5fa; }
-    :root.force-light{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
-    :root.force-contrast{ --bg:#000000; --card:#0d0d0d; --text:#ffffff; --muted:#cccccc; --border:#ffffff; --shadow:0 0 0 2px #ffffff; --accent:#ffff00; }
-    @media (prefers-color-scheme: light){
-      :root:not(.force-dark):not(.force-light){ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
+    :root.force-dark{
+      --bg:#0F172A; --card:#1E293B; --text:#F1F5F9; --muted:#94A3B8; --border:#334155;
+      --shadow:0 4px 6px rgba(0,0,0,0.3); --accent:#F87171;
+      --text-secondary:#94A3B8; --text-muted:#64748B;
+      --bg-raised:#334155; --code-bg:#334155;
+      --success:#4ADE80; --success-bg:rgba(34,197,94,.1);
+      --warning:#FBBF24; --warning-bg:rgba(245,158,11,.1);
+      --danger:#F87171; --danger-bg:rgba(239,68,68,.1);
+      --border-subtle:#1E293B;
+    }
+    :root.force-light{ --bg:#FAFAFA; --card:#FFFFFF; --text:#111827; --muted:#6B7280; --border:#E5E7EB; --shadow:0 4px 6px rgba(0,0,0,0.07); --accent:#EF4444;
+      --text-secondary:#6B7280; --text-muted:#9CA3AF; --bg-raised:#F3F4F6; --code-bg:#F3F4F6;
+      --success:#22C55E; --success-bg:#F0FDF4; --warning:#F59E0B; --warning-bg:#FFFBEB; --danger:#EF4444; --danger-bg:#FEF2F2; --border-subtle:#F3F4F6;
+    }
+    :root.force-contrast{
+      --bg:#000; --card:#0d0d0d; --text:#fff; --muted:#ccc; --border:#fff;
+      --shadow:0 0 0 2px #fff; --accent:#ffff00;
+      --text-secondary:#ccc; --text-muted:#999;
+      --bg-raised:#1a1a1a; --code-bg:#1a1a1a;
+      --success:#00ff00; --warning:#ffff00; --danger:#ff0000;
+      --border-subtle:#333;
+    }
+    @media (prefers-color-scheme: dark){
+      :root:not(.force-dark):not(.force-light):not(.force-contrast){
+        --bg:#0F172A; --card:#1E293B; --text:#F1F5F9; --muted:#94A3B8; --border:#334155;
+        --shadow:0 4px 6px rgba(0,0,0,0.3); --accent:#F87171;
+        --text-secondary:#94A3B8; --text-muted:#64748B;
+        --bg-raised:#334155; --code-bg:#334155;
+        --success:#4ADE80; --success-bg:rgba(34,197,94,.1);
+        --warning:#FBBF24; --warning-bg:rgba(245,158,11,.1);
+        --danger:#F87171; --danger-bg:rgba(239,68,68,.1);
+        --border-subtle:#1E293B;
+      }
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--text);
          font:15px/1.65 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial;
          -webkit-font-smoothing:antialiased}
-    .wrap{max-width:1100px;margin:24px auto 72px;padding:0 20px}
+    .wrap{max-width:760px;margin:24px auto 72px;padding:0 24px}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     header{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
     h1{font-size:22px;margin:0}
@@ -59,8 +96,8 @@
     .intro-content--rich .fp-section abbr[title]{text-decoration:underline dotted;cursor:help}
     .section-subtitle{font-weight:600;margin:12px 0 6px}
     .big{font-weight:700;font-size:21px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px}
-    .big[data-level="high"]{color:#ef4444}
-    .big[data-level="med"]{color:#f59e0b}
+    .big[data-level="high"]{color:var(--danger)}
+    .big[data-level="med"]{color:var(--warning)}
     .big[data-level="low"]{color:var(--text)}
     .big .code-pill{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(148,163,184,.15);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1.05em;line-height:1.35;color:var(--text);text-align:center;text-wrap:balance;white-space:normal;box-shadow:inset 0 0 0 1px rgba(148,163,184,.16)}
     .big[data-level="high"] .code-pill{border-color:#ef4444;background:rgba(239,68,68,.18);box-shadow:inset 0 0 0 1px rgba(239,68,68,.28);color:var(--text)}
@@ -78,8 +115,7 @@
     .shock-insights li{padding:10px 0;font-size:15px;line-height:1.55;border-bottom:1px solid rgba(148,163,184,.1);display:flex;align-items:baseline;gap:8px}
     .shock-insights li:last-child{border-bottom:none}
     .shock-insights code{display:inline;padding:2px 8px;border-radius:6px;background:rgba(148,163,184,.12);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;letter-spacing:.3px}
-    .danger-block{border:none;background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;position:relative}
-    .danger-block::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ef4444,#f97316,#ef4444)}
+    .section-heading{font-size:22px;font-weight:700;margin:0 0 16px;color:var(--text)}
     .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
     .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
     .danger ul{margin:6px 0 0 18px; padding:0}
@@ -104,8 +140,8 @@
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     .btn:disabled{opacity:.55;cursor:not-allowed}
     .btn[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
-    .btn-primary{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border:none;font-weight:600;padding:12px 24px;border-radius:12px;font-size:15px;box-shadow:0 8px 24px rgba(239,68,68,.25);min-height:44px}
-    .btn-primary:hover{filter:brightness(.92);color:#fff;box-shadow:0 12px 32px rgba(239,68,68,.35)}
+    .btn-primary{background:var(--accent);color:#fff;border:none;font-weight:600;padding:12px 24px;border-radius:var(--radius-md);font-size:15px;box-shadow:0 8px 24px rgba(239,68,68,.2);min-height:44px}
+    .btn-primary:hover{background:var(--accent);filter:brightness(.9);color:#fff;box-shadow:0 12px 32px rgba(239,68,68,.3)}
     .btn-primary:disabled{box-shadow:none;filter:none}
     .btn-primary[aria-disabled="true"]{box-shadow:none;filter:none}
     #uniqLine{text-align:center;margin:24px 0 8px;font-size:24px;font-weight:800;letter-spacing:-.5px}
@@ -154,6 +190,37 @@
     .rec-step{margin:4px 0;font-size:14px}
     .rec-step a{color:var(--accent)}
     .step-how{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+    .hero-verdict{text-align:center;padding:32px 24px;margin-bottom:24px}
+    .hero-number{font-size:56px;font-weight:800;line-height:1;margin-bottom:8px;letter-spacing:-2px}
+    .hero-number[data-level="high"]{color:var(--danger)}
+    .hero-number[data-level="med"]{color:var(--warning)}
+    .hero-number[data-level="low"]{color:var(--success)}
+    .hero-subtitle{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)}
+    .hero-explanation{font-size:14px;color:var(--muted);margin-bottom:16px;max-width:480px;margin-left:auto;margin-right:auto}
+    .hero-actions{display:flex;gap:12px;justify-content:center;margin-bottom:16px}
+    .hero-summary{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+    .hero-summary span{display:flex;align-items:center;gap:4px}
+    .hero-summary code{font-family:var(--font-mono);font-size:12px;background:var(--code-bg);padding:1px 6px;border-radius:4px}
+    @media(max-width:640px){
+      .hero-number{font-size:40px}
+      .hero-subtitle{font-size:16px}
+      .hero-actions{flex-direction:column;align-items:stretch}
+      .hero-summary{flex-direction:column;align-items:center;gap:8px}
+    }
+    .data-groups{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+    @media(max-width:640px){.data-groups{grid-template-columns:1fr}}
+    .data-group{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+    .data-group h3{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+    .data-row{display:flex;align-items:baseline;gap:8px;padding:6px 0;font-size:14px;border-bottom:1px solid var(--border-subtle)}
+    .data-row:last-child{border-bottom:none}
+    .data-row .data-icon{flex-shrink:0;color:var(--muted);width:18px;height:18px}
+    .data-row .data-label{color:var(--text-secondary);min-width:fit-content}
+    .data-row .data-value{font-weight:500;color:var(--text);margin-left:auto;text-align:right}
+    .data-row code{font-family:var(--font-mono);font-size:13px;background:var(--code-bg);padding:1px 6px;border-radius:4px}
+    .status-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500}
+    .status-badge--safe{background:var(--success-bg);color:var(--success)}
+    .status-badge--danger{background:var(--danger-bg);color:var(--danger)}
+    .status-badge--warning{background:var(--warning-bg);color:var(--warning)}
   </style>
 </head>
 <body>
@@ -188,19 +255,35 @@
   </section>
 
   <!-- Block 2: Shock findings + uniqueness verdict -->
-  <section class="block danger-block" id="shockSection" style="display:none">
-    <div class="section-title" id="shockTitle"></div>
-    <div id="shock" style="display:none">
-      <ul id="shockList" class="shock-insights"></ul>
-      <div id="speedResult" class="small" style="margin-top:6px"></div>
-      <!-- Uniqueness verdict inside shock block -->
-      <div id="uniqLine" class="big"></div>
-      <div id="uniqVerdict" class="small"></div>
-      <div id="uniqOutcome" class="small"></div>
-      <div class="shock-footer">
+  <section class="block" id="shockSection" style="display:none">
+    <!-- Hero verdict (moved to top) -->
+    <div id="heroVerdict" class="hero-verdict" style="display:none">
+      <div class="hero-number" id="heroNumber">0</div>
+      <div class="hero-subtitle" id="heroSubtitle"></div>
+      <div class="hero-explanation" id="heroExplanation"></div>
+      <div class="hero-actions">
         <button class="btn btn-primary" id="shareBtn"></button>
-        <button class="btn" id="printBtn"></button>
+        <button class="btn btn-secondary" id="printBtn"></button>
       </div>
+      <div class="hero-summary" id="heroSummary"></div>
+    </div>
+
+    <!-- Keep old elements hidden for backward compat with selftest -->
+    <div id="uniqLine" class="big" style="display:none"></div>
+    <div id="uniqVerdict" class="small" style="display:none"></div>
+    <div id="uniqOutcome" class="small" style="display:none"></div>
+
+    <!-- Grouped data -->
+    <h2 class="section-heading" id="shockTitle"></h2>
+    <div id="shock" style="display:none">
+      <ul id="shockList" class="shock-insights" style="display:none"></ul>
+      <div class="data-groups" id="dataGroups">
+        <div class="data-group" id="groupIdentity"></div>
+        <div class="data-group" id="groupDevice"></div>
+        <div class="data-group" id="groupNetwork"></div>
+        <div class="data-group" id="groupFingerprint"></div>
+      </div>
+      <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
   </section>
 
@@ -3249,184 +3332,318 @@ function summarizeKeyPermissions(entries,t){
 
 function renderShockBullets(basic,t,snapshot){
   const ul=getEl('shockList');
-  if(!ul) return;
+  const groups={
+    identity:getEl('groupIdentity'),
+    device:getEl('groupDevice'),
+    network:getEl('groupNetwork'),
+    fingerprint:getEl('groupFingerprint')
+  };
+
   if(!basic){
     clearClockIntervals();
-    ul.innerHTML='';
+    if(ul) ul.innerHTML='';
+    Object.values(groups).forEach(g=>{if(g) g.innerHTML='';});
     shockBulletCount=0;
     syncShockVisibility();
     return;
   }
   clearClockIntervals();
+
+  // Also keep old shockList populated for selftest backward compat
   const lines=[];
+
+  const groupTitles={
+    identity:{ru:'\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f',en:'Identification',uz:'Identifikatsiya'},
+    device:{ru:'\u0423\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e',en:'Device',uz:'Qurilma'},
+    network:{ru:'\u0421\u0435\u0442\u044c',en:'Network',uz:'Tarmoq'},
+    fingerprint:{ru:'\u0426\u0438\u0444\u0440\u043e\u0432\u043e\u0439 \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043e\u043a',en:'Digital fingerprint',uz:'Raqamli barmoq izi'}
+  };
+
+  function mkRow(label,value,opts){
+    opts=opts||{};
+    const div=document.createElement('div');
+    div.className='data-row';
+    let valueHtml=value;
+    if(opts.code) valueHtml='<code>'+value+'</code>';
+    if(opts.badge){
+      const cls=opts.badge==='safe'?'status-badge--safe':opts.badge==='danger'?'status-badge--danger':'status-badge--warning';
+      valueHtml='<span class="status-badge '+cls+'">'+value+'</span>';
+    }
+    div.innerHTML='<span class="data-label">'+label+'</span><span class="data-value">'+valueHtml+'</span>';
+    return div;
+  }
+
+  // Clear groups and add titles
+  Object.entries(groups).forEach(function(entry){
+    var key=entry[0],el=entry[1];
+    if(!el) return;
+    el.innerHTML='<h3>'+(groupTitles[key][currentLang]||groupTitles[key].en)+'</h3>';
+  });
+
   const details=state.serverData?.details||{};
   const hasIp=!!state.serverData;
+  let totalRows=0;
 
-  // LOCATION (IP-dependent, localized, with flag and IP)
-  if(hasIp){
-    const rawCity=details.city||state.serverData?.geo?.city||'';
-    const rawCountry=details.country_name||state.serverData?.geo?.country||'';
-    const countryCode=resolveCountryCode(details,state.serverData?.raw,state.serverData?.geo)||'';
-    const localCity=CITY_NAMES[rawCity]?.[currentLang]||rawCity;
-    const localCountry=COUNTRY_NAMES[countryCode.toUpperCase()]?.[currentLang]||rawCountry;
-    const flag=countryCode?countryCodeToFlag(countryCode):'';
-    const ip=state.serverData?.ip||'';
-    if(localCity||localCountry){
-      lines.push(t.shock.location(flag,esc(localCity||localCountry),esc(localCity?localCountry:''),esc(ip)));
+  // === IDENTITY GROUP ===
+  if(groups.identity){
+    if(hasIp){
+      const rawCity=details.city||state.serverData?.geo?.city||'';
+      const rawCountry=details.country_name||state.serverData?.geo?.country||'';
+      const countryCode=resolveCountryCode(details,state.serverData?.raw,state.serverData?.geo)||'';
+      const localCity=CITY_NAMES[rawCity]?.[currentLang]||rawCity;
+      const localCountry=COUNTRY_NAMES[countryCode.toUpperCase()]?.[currentLang]||rawCountry;
+      const flag=countryCode?countryCodeToFlag(countryCode):'';
+      const ip=state.serverData?.ip||'';
+      const locLabel={ru:'\u0413\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044f',en:'Location',uz:'Joylashuv'}[currentLang];
+      if(localCity||localCountry){
+        const locValue=flag+' '+esc(localCity)+(localCity&&localCountry?', ':'')+esc(localCountry);
+        groups.identity.appendChild(mkRow(locLabel,locValue));
+        totalRows++;
+        if(ip){
+          groups.identity.appendChild(mkRow('IP',esc(ip),{code:true}));
+          totalRows++;
+        }
+        // Also push to old lines for selftest
+        lines.push(t.shock.location(flag,esc(localCity||localCountry),esc(localCity?localCountry:''),esc(ip)));
+      }
+    }else if(!state.ipFetchDone){
+      lines.push(t.shock.locationLoading);
     }
-  }else if(!state.ipFetchDone){
-    lines.push(t.shock.locationLoading);
+
+    const now=new Date();
+    const dtLocale=currentLang==='uz'?'uz-UZ':currentLang==='en'?'en-US':'ru-RU';
+    const dateStr=now.toLocaleDateString(dtLocale,{day:'numeric',month:'long',year:'numeric'});
+    const timeStr=now.toLocaleTimeString(dtLocale,{hour:'2-digit',minute:'2-digit'});
+    const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+    const timeLabel={ru:'\u0412\u0440\u0435\u043c\u044f',en:'Time',uz:'Vaqt'}[currentLang];
+    groups.identity.appendChild(mkRow(timeLabel,esc(dateStr)+', '+esc(timeStr)));
+    if(tz){
+      const tzLabel={ru:'\u0427\u0430\u0441\u043e\u0432\u043e\u0439 \u043f\u043e\u044f\u0441',en:'Timezone',uz:'Vaqt zonasi'}[currentLang];
+      groups.identity.appendChild(mkRow(tzLabel,esc(tz),{code:true}));
+    }
+    totalRows+=2;
+    lines.push(t.shock.datetime(esc(timeStr),esc(dateStr),esc(tz)));
+
+    if(basic.languages&&basic.languages.length>0){
+      const flags=basic.languages.slice(0,5).map(function(l){return langToFlag(l)+' '+l;}).join(', ');
+      const langLabel={ru:'\u042f\u0437\u044b\u043a\u0438',en:'Languages',uz:'Tillar'}[currentLang];
+      groups.identity.appendChild(mkRow(langLabel,flags));
+      totalRows++;
+
+      const sysLangs=basic.languages.map(function(l){return l.split('-')[0].toLowerCase();});
+      let inference='';
+      const evidence=[];
+      const hasRu=sysLangs.includes('ru');
+      const hasUz=sysLangs.includes('uz');
+      if(hasRu){
+        if(currentLang==='ru'){
+          evidence.push({ru:'ru \u0432 \u0441\u0438\u0441\u0442\u0435\u043c\u0435 + \u0441\u0430\u0439\u0442 \u043d\u0430 \u0440\u0443\u0441\u0441\u043a\u043e\u043c',en:'ru in system + site in Russian',uz:'tizimda ru + sayt ruscha'}[currentLang]);
+          inference={ru:'\u0441\u043a\u043e\u0440\u0435\u0435 \u0432\u0441\u0435\u0433\u043e, \u0440\u0443\u0441\u0441\u043a\u043e\u0433\u043e\u0432\u043e\u0440\u044f\u0449\u0438\u0439',en:'likely Russian-speaking',uz:'ehtimol ruscha gaplashadi'}[currentLang]||'';
+        }else{
+          evidence.push({ru:'ru \u0441\u0440\u0435\u0434\u0438 \u0441\u0438\u0441\u0442\u0435\u043c\u043d\u044b\u0445 \u044f\u0437\u044b\u043a\u043e\u0432',en:'ru among system languages',uz:'tizim tillarida ru bor'}[currentLang]);
+          inference={ru:'\u0432\u0435\u0440\u043e\u044f\u0442\u043d\u043e, \u0432\u043b\u0430\u0434\u0435\u0435\u0442 \u0440\u0443\u0441\u0441\u043a\u0438\u043c',en:'probably speaks Russian',uz:'ehtimol ruscha biladi'}[currentLang]||'';
+        }
+      }else if(currentLang==='ru'){
+        evidence.push({ru:'\u0441\u0430\u0439\u0442 \u043e\u0442\u043a\u0440\u044b\u0442 \u043d\u0430 \u0440\u0443\u0441\u0441\u043a\u043e\u043c',en:'site opened in Russian',uz:'sayt ruscha ochilgan'}[currentLang]);
+        inference={ru:'\u0432\u044b\u0431\u0440\u0430\u043b \u0440\u0443\u0441\u0441\u043a\u0438\u0439 \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441',en:'chose Russian interface',uz:'rus interfeysini tanlagan'}[currentLang]||'';
+      }
+      if(hasUz){
+        inference={ru:'\u0441\u043a\u043e\u0440\u0435\u0435 \u0432\u0441\u0435\u0433\u043e, \u0443\u0437\u0431\u0435\u043a\u043e\u044f\u0437\u044b\u0447\u043d\u044b\u0439',en:'likely Uzbek-speaking',uz:'ehtimol o\u02BBzbekcha gaplashadi'}[currentLang]||'';
+      }
+      const fullInference=inference+(evidence.length>0?' ('+evidence.join(', ')+')':'');
+      if(inference){
+        const inferLabel={ru:'\u0412\u044b\u0432\u043e\u0434',en:'Inference',uz:'Xulosa'}[currentLang];
+        groups.identity.appendChild(mkRow(inferLabel,inference));
+        totalRows++;
+      }
+      lines.push(t.shock.languages(flags,fullInference));
+    }
   }
 
-  // DATE/TIME
-  const now=new Date();
-  const dtLocale=currentLang==='uz'?'uz-UZ':currentLang==='en'?'en-US':'ru-RU';
-  const timeStr=now.toLocaleTimeString(dtLocale,{hour:'2-digit',minute:'2-digit'});
-  const dateStr=now.toLocaleDateString(dtLocale,{day:'numeric',month:'long',year:'numeric'});
-  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
-  lines.push(t.shock.datetime(esc(timeStr),esc(dateStr),esc(tz)));
+  // === DEVICE GROUP ===
+  if(groups.device){
+    const deviceObj=guessDevice(basic);
+    const localDevice=localizeDeviceName(deviceObj,currentLang);
+    if(localDevice){
+      const devLabel={ru:'\u0423\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e',en:'Device',uz:'Qurilma'}[currentLang];
+      let devValue=esc(localDevice.name);
+      if(localDevice.price) devValue+=' <span style="color:var(--text-muted);font-size:13px">\u2014 '+esc(localDevice.price)+'</span>';
+      groups.device.appendChild(mkRow(devLabel,devValue));
+      totalRows++;
+      lines.push(t.shock.device(esc(localDevice.name),localDevice.price?esc(localDevice.price):''));
+    }
 
-  // DEVICE
-  const deviceObj=guessDevice(basic);
-  const localDevice=localizeDeviceName(deviceObj,currentLang);
-  if(localDevice){
-    lines.push(t.shock.device(esc(localDevice.name),localDevice.price?esc(localDevice.price):''));
+    const browserStr=browserDisplayName(basic);
+    if(browserStr&&browserStr!=='\u2014'){
+      const brLabel={ru:'\u0411\u0440\u0430\u0443\u0437\u0435\u0440',en:'Browser',uz:'Brauzer'}[currentLang];
+      groups.device.appendChild(mkRow(brLabel,esc(browserStr),{code:true}));
+      totalRows++;
+
+      const pluginCount=(basic.plugins||[]).length;
+      if(pluginCount>0){
+        const extLabel={ru:'\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u044f',en:'Extensions',uz:'Kengaytmalar'}[currentLang];
+        groups.device.appendChild(mkRow(extLabel,String(pluginCount)));
+        totalRows++;
+      }
+
+      // Build old-style line for selftest compat
+      const permParts=[];
+      const perms=basic.perms||{};
+      if(perms.camera==='granted') permParts.push({ru:'\u043a\u0430\u043c\u0435\u0440\u0430',en:'camera',uz:'kamera'}[currentLang]);
+      if(perms.microphone==='granted') permParts.push({ru:'\u043c\u0438\u043a\u0440\u043e\u0444\u043e\u043d',en:'mic',uz:'mikrofon'}[currentLang]);
+      if(perms.geolocation==='granted') permParts.push({ru:'\u0433\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044f',en:'geolocation',uz:'geolokatsiya'}[currentLang]);
+      if(perms.notifications==='granted') permParts.push({ru:'\u0443\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u044f',en:'notifications',uz:'bildirishnomalar'}[currentLang]);
+      let permStr='';
+      if(permParts.length>0){
+        const granted={ru:'\u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u043e',en:'granted',uz:'ruxsat berilgan'}[currentLang];
+        permStr=granted+': '+permParts.join(', ');
+      }
+      const extParts=[];
+      if(pluginCount>0) extParts.push({ru:pluginCount+' \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0439',en:pluginCount+' extensions',uz:pluginCount+' ta kengaytma'}[currentLang]);
+      const extraInfo=[...(permStr?[permStr]:[]),...extParts].join('; ');
+      lines.push(t.shock.browser(esc(browserStr),extraInfo?esc(extraInfo):''));
+
+      // Permissions in new groups
+      const grantedPerms=[];
+      if(perms.camera==='granted') grantedPerms.push({ru:'\u043a\u0430\u043c\u0435\u0440\u0430',en:'camera',uz:'kamera'}[currentLang]);
+      if(perms.microphone==='granted') grantedPerms.push({ru:'\u043c\u0438\u043a\u0440\u043e\u0444\u043e\u043d',en:'mic',uz:'mikrofon'}[currentLang]);
+      if(perms.geolocation==='granted') grantedPerms.push({ru:'\u0433\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044f',en:'geolocation',uz:'geolokatsiya'}[currentLang]);
+      if(grantedPerms.length>0){
+        const permLabel={ru:'\u0420\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u0438\u044f',en:'Permissions',uz:'Ruxsatlar'}[currentLang];
+        groups.device.appendChild(mkRow(permLabel,grantedPerms.join(', '),{badge:'warning'}));
+        totalRows++;
+      }
+    }
   }
 
-  // BROWSER
-  const browserStr=browserDisplayName(basic);
-  if(browserStr&&browserStr!=='\u2014'){
-    const permParts=[];
-    const perms=basic.perms||{};
-    if(perms.camera==='granted') permParts.push({ru:'\u043a\u0430\u043c\u0435\u0440\u0430',en:'camera',uz:'kamera'}[currentLang]);
-    if(perms.microphone==='granted') permParts.push({ru:'\u043c\u0438\u043a\u0440\u043e\u0444\u043e\u043d',en:'mic',uz:'mikrofon'}[currentLang]);
-    if(perms.geolocation==='granted') permParts.push({ru:'\u0433\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044f',en:'geolocation',uz:'geolokatsiya'}[currentLang]);
-    if(perms.notifications==='granted') permParts.push({ru:'\u0443\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u044f',en:'notifications',uz:'bildirishnomalar'}[currentLang]);
-    let permStr='';
-    if(permParts.length>0){
-      const granted={ru:'\u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u043e',en:'granted',uz:'ruxsat berilgan'}[currentLang];
-      permStr=granted+': '+permParts.join(', ');
-    }
-    const pluginCount=(basic.plugins||[]).length;
-    const extParts=[];
-    if(pluginCount>0){
-      extParts.push({ru:`${pluginCount} \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0439`,en:`${pluginCount} extensions`,uz:`${pluginCount} ta kengaytma`}[currentLang]);
-    }
-    const extraInfo=[...(permStr?[permStr]:[]),...extParts].join('; ');
-    lines.push(t.shock.browser(esc(browserStr),extraInfo?esc(extraInfo):''));
-  }
-
-  // CONNECTION (ISP + speed + type)
-  {
+  // === NETWORK GROUP ===
+  if(groups.network){
     const parts=[];
     if(hasIp&&details.org) parts.push(esc(details.org));
     const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-    if(conn?.type&&conn.type!=='unknown'){
-      const typeMap={wifi:{ru:'Wi-Fi',en:'Wi-Fi',uz:'Wi-Fi'},cellular:{ru:'\u043c\u043e\u0431\u0438\u043b\u044c\u043d\u0430\u044f \u0441\u0435\u0442\u044c',en:'cellular',uz:'mobil tarmoq'},ethernet:{ru:'\u043a\u0430\u0431\u0435\u043b\u044c',en:'ethernet',uz:'kabel'},bluetooth:{ru:'Bluetooth',en:'Bluetooth',uz:'Bluetooth'}};
-      const typeName=typeMap[conn.type]?.[currentLang]||conn.type;
-      parts.push(typeName);
-    }
     if(state.speedResult?.mbps){
       parts.push(state.speedResult.mbps+' Mbps');
     }else if(conn?.downlink){
       parts.push(conn.downlink+' Mbps');
     }
     if(parts.length>0){
-      lines.push(t.shock.connection(parts.join(' \u00B7 ')));
+      const ispLabel={ru:'\u041f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440',en:'ISP',uz:'Provayder'}[currentLang];
+      groups.network.appendChild(mkRow(ispLabel,parts.join(' \u00B7 ')));
+      totalRows++;
     }
-  }
-
-  // VPN STATUS (always show when IP data available)
-  if(hasIp){
-    const vpnState=state.vpn||{};
-    const hasTzMismatch=details.timezone&&basic.timezone&&(details.timezone.split('/')[0]||'')!==(basic.timezone.split('/')[0]||'');
-    if(hasTzMismatch){
-      // Timezone mismatch = strong VPN signal
-      const ipCountryCode=resolveCountryCode(details,state.serverData?.raw,state.serverData?.geo)||'';
-      const ipLoc=COUNTRY_NAMES[ipCountryCode.toUpperCase()]?.[currentLang]||details.country_name||details.timezone.split('/')[0]||'';
-      const browserTz=basic.timezone||'';
-      const browserRegion=browserTz.split('/')[1]?.replace(/_/g,' ')||browserTz.split('/')[0]||'';
-      lines.push(t.shock.vpnDetected(esc(ipLoc),esc(browserRegion)));
-    }else if(vpnState.status==='likely'){
-      lines.push(t.shock.vpnSuspected);
-    }else{
-      lines.push(t.shock.vpnNotDetected);
-    }
-  }
-
-  // WEBRTC STATUS (always show)
-  const profiling=state.profilingContext;
-  const webrtcIp=profiling?.webrtcLocalIp||null;
-  if(webrtcIp&&state.serverData?.ip&&webrtcIp!==state.serverData.ip){
-    lines.push(t.shock.webrtcLeak(esc(webrtcIp)));
-  }else if(webrtcIp===null&&profiling){
-    lines.push(t.shock.webrtcSafe);
-  }else if(!profiling){
-    lines.push(t.shock.webrtcUnavailable);
-  }else{
-    lines.push(t.shock.webrtcSafe);
-  }
-
-  // CANVAS
-  if(basic.hashes?.canvas){
-    const shortHash=basic.hashes.canvas.substring(0,8);
-    lines.push(t.shock.canvas(esc(shortHash)));
-  }
-
-  // AD BLOCKER
-  if(basic.exposure?.adblock){
-    lines.push(t.shock.adblock);
-  }
-
-  // LANGUAGES (with flags and inference)
-  if(basic.languages&&basic.languages.length>0){
-    const flags=basic.languages.slice(0,5).map(l=>langToFlag(l)+' '+l).join(', ');
-    let inference='';
-    const sysLangs=basic.languages.map(l=>l.split('-')[0].toLowerCase());
-    const siteLocale=currentLang;
-    // Build evidence for inference
-    const evidence=[];
-    const hasRu=sysLangs.includes('ru');
-    const hasUz=sysLangs.includes('uz');
-    if(hasRu){
-      if(siteLocale==='ru'){
-        evidence.push({ru:'ru в системе + сайт на русском',en:'ru in system + site in Russian',uz:'tizimda ru + sayt ruscha'}[currentLang]);
-        inference={ru:'скорее всего, русскоговорящий',en:'likely Russian-speaking',uz:'ehtimol ruscha gaplashadi'}[currentLang]||'';
-      }else{
-        evidence.push({ru:'ru среди системных языков',en:'ru among system languages',uz:'tizim tillarida ru bor'}[currentLang]);
-        inference={ru:'вероятно, владеет русским',en:'probably speaks Russian',uz:'ehtimol ruscha biladi'}[currentLang]||'';
+    // old-style connection line
+    {
+      const connParts=[];
+      if(hasIp&&details.org) connParts.push(esc(details.org));
+      if(conn?.type&&conn.type!=='unknown'){
+        const typeMap={wifi:{ru:'Wi-Fi',en:'Wi-Fi',uz:'Wi-Fi'},cellular:{ru:'\u043c\u043e\u0431\u0438\u043b\u044c\u043d\u0430\u044f \u0441\u0435\u0442\u044c',en:'cellular',uz:'mobil tarmoq'},ethernet:{ru:'\u043a\u0430\u0431\u0435\u043b\u044c',en:'ethernet',uz:'kabel'},bluetooth:{ru:'Bluetooth',en:'Bluetooth',uz:'Bluetooth'}};
+        const typeName=typeMap[conn.type]?.[currentLang]||conn.type;
+        connParts.push(typeName);
       }
-    }else if(siteLocale==='ru'){
-      evidence.push({ru:'сайт открыт на русском',en:'site opened in Russian',uz:'sayt ruscha ochilgan'}[currentLang]);
-      inference={ru:'выбрал русский интерфейс',en:'chose Russian interface',uz:'rus interfeysini tanlagan'}[currentLang]||'';
+      if(state.speedResult?.mbps) connParts.push(state.speedResult.mbps+' Mbps');
+      else if(conn?.downlink) connParts.push(conn.downlink+' Mbps');
+      if(connParts.length>0) lines.push(t.shock.connection(connParts.join(' \u00B7 ')));
     }
-    if(hasUz){
-      inference={ru:'скорее всего, узбекоязычный',en:'likely Uzbek-speaking',uz:'ehtimol o\u02BBzbekcha gaplashadi'}[currentLang]||'';
+
+    if(conn?.type&&conn.type!=='unknown'){
+      const typeMap={wifi:{ru:'Wi-Fi',en:'Wi-Fi',uz:'Wi-Fi'},cellular:{ru:'\u041c\u043e\u0431\u0438\u043b\u044c\u043d\u0430\u044f \u0441\u0435\u0442\u044c',en:'Cellular',uz:'Mobil tarmoq'},ethernet:{ru:'\u041a\u0430\u0431\u0435\u043b\u044c',en:'Ethernet',uz:'Kabel'}};
+      const typeName=typeMap[conn.type]?.[currentLang]||conn.type;
+      const typeLabel={ru:'\u0422\u0438\u043f',en:'Type',uz:'Turi'}[currentLang];
+      groups.network.appendChild(mkRow(typeLabel,typeName));
+      totalRows++;
     }
-    const fullInference=inference+(evidence.length>0?' ('+evidence.join(', ')+')':'');
-    lines.push(t.shock.languages(flags,fullInference));
+
+    // VPN status
+    if(hasIp){
+      const vpnState=state.vpn||{};
+      const hasTzMismatch=details.timezone&&basic.timezone&&(details.timezone.split('/')[0]||'')!==(basic.timezone.split('/')[0]||'');
+      const vpnLabel='VPN';
+      if(hasTzMismatch||vpnState.status==='likely'){
+        const vpnText={ru:'\u041e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d',en:'Detected',uz:'Aniqlangan'}[currentLang];
+        groups.network.appendChild(mkRow(vpnLabel,vpnText,{badge:'danger'}));
+        // old-style lines
+        if(hasTzMismatch){
+          const ipCountryCode=resolveCountryCode(details,state.serverData?.raw,state.serverData?.geo)||'';
+          const ipLoc=COUNTRY_NAMES[ipCountryCode.toUpperCase()]?.[currentLang]||details.country_name||details.timezone.split('/')[0]||'';
+          const browserTz=basic.timezone||'';
+          const browserRegion=browserTz.split('/')[1]?.replace(/_/g,' ')||browserTz.split('/')[0]||'';
+          lines.push(t.shock.vpnDetected(esc(ipLoc),esc(browserRegion)));
+        }else{
+          lines.push(t.shock.vpnSuspected);
+        }
+      }else{
+        const vpnText={ru:'\u041d\u0435 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d',en:'Not detected',uz:'Aniqlanmagan'}[currentLang];
+        groups.network.appendChild(mkRow(vpnLabel,vpnText,{badge:'safe'}));
+        lines.push(t.shock.vpnNotDetected);
+      }
+      totalRows++;
+    }
+
+    // WebRTC
+    const profiling=state.profilingContext;
+    const webrtcIp=profiling?.webrtcLocalIp||null;
+    const webrtcLabel='WebRTC';
+    if(webrtcIp&&state.serverData?.ip&&webrtcIp!==state.serverData.ip){
+      const leakText={ru:'\u0423\u0442\u0435\u0447\u043a\u0430: ',en:'Leak: ',uz:'Oqish: '}[currentLang]+webrtcIp;
+      groups.network.appendChild(mkRow(webrtcLabel,leakText,{badge:'danger'}));
+      lines.push(t.shock.webrtcLeak(esc(webrtcIp)));
+    }else if(webrtcIp===null&&profiling){
+      const safeText={ru:'\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e',en:'Safe',uz:'Xavfsiz'}[currentLang];
+      groups.network.appendChild(mkRow(webrtcLabel,safeText,{badge:'safe'}));
+      lines.push(t.shock.webrtcSafe);
+    }else if(!profiling){
+      lines.push(t.shock.webrtcUnavailable);
+      const unavText={ru:'\u041d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d',en:'Unavailable',uz:'Mavjud emas'}[currentLang];
+      groups.network.appendChild(mkRow(webrtcLabel,unavText,{badge:'warning'}));
+    }else{
+      const safeText={ru:'\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e',en:'Safe',uz:'Xavfsiz'}[currentLang];
+      groups.network.appendChild(mkRow(webrtcLabel,safeText,{badge:'safe'}));
+      lines.push(t.shock.webrtcSafe);
+    }
+    totalRows++;
   }
 
-  // BATTERY (if low)
+  // === FINGERPRINT GROUP ===
+  if(groups.fingerprint){
+    if(basic.hashes?.canvas){
+      groups.fingerprint.appendChild(mkRow('Canvas',esc(basic.hashes.canvas.substring(0,8)),{code:true}));
+      totalRows++;
+      lines.push(t.shock.canvas(esc(basic.hashes.canvas.substring(0,8))));
+    }
+    if(basic.hashes?.audio){
+      groups.fingerprint.appendChild(mkRow('Audio',esc(basic.hashes.audio.substring(0,8)),{code:true}));
+      totalRows++;
+    }
+    if(basic.exposure?.adblock){
+      const adLabel={ru:'\u0411\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0449\u0438\u043a',en:'Ad blocker',uz:'Bloklagich'}[currentLang];
+      const adText={ru:'\u041e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d',en:'Detected',uz:'Aniqlangan'}[currentLang];
+      groups.fingerprint.appendChild(mkRow(adLabel,adText,{badge:'safe'}));
+      totalRows++;
+      lines.push(t.shock.adblock);
+    }
+  }
+
+  // BATTERY (if low) - old lines only
   if(basic.battery&&basic.battery.level!=null&&!basic.battery.unavailable&&basic.battery.level<0.3){
     const pct=Math.round(basic.battery.level*100);
     lines.push(t.shock.battery(pct));
   }
-
-  // MEDIA DEVICES (if many)
+  // MEDIA DEVICES (if many) - old lines only
   const mediaCount=(basic.media?.audioInput||0)+(basic.media?.videoInput||0);
   if(mediaCount>2){
     lines.push(t.shock.mediaDevices(mediaCount));
   }
 
-  // Render
-  ul.innerHTML='';
-  lines.filter(Boolean).forEach(text=>{
-    const li=document.createElement('li');
-    li.innerHTML=text;
-    ul.appendChild(li);
-  });
-  shockBulletCount=lines.filter(Boolean).length;
+  // Render old shockList for selftest backward compat
+  if(ul){
+    ul.innerHTML='';
+    lines.filter(Boolean).forEach(function(text){
+      const li=document.createElement('li');
+      li.innerHTML=text;
+      ul.appendChild(li);
+    });
+  }
+  shockBulletCount=totalRows>0?totalRows:lines.filter(Boolean).length;
   syncShockVisibility();
 }
 
@@ -3991,6 +4208,76 @@ async function render(lang){
     }else{
       outcomeEl.textContent='';
       outcomeEl.style.display='none';
+    }
+
+    // === HERO VERDICT (new redesign) ===
+    const heroEl=getEl('heroVerdict');
+    const heroNumEl=getEl('heroNumber');
+    const heroSubEl=getEl('heroSubtitle');
+    const heroExpEl=getEl('heroExplanation');
+
+    if(heroEl&&heroNumEl){
+      heroEl.style.display='block';
+      heroNumEl.dataset.level=level;
+      heroNumEl.textContent=pct+'%';
+
+      if(typeof window.matchMedia==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+        let current=0;
+        const duration=1200;
+        const start=performance.now();
+        function animateCount(now2){
+          const elapsed=now2-start;
+          const progress=Math.min(elapsed/duration,1);
+          const eased=1-Math.pow(1-progress,3);
+          current=Math.round(eased*pct);
+          heroNumEl.textContent=current+'%';
+          if(progress<1&&typeof requestAnimationFrame==='function') requestAnimationFrame(animateCount);
+        }
+        if(typeof requestAnimationFrame==='function') requestAnimationFrame(animateCount);
+      }
+
+      if(heroSubEl) heroSubEl.textContent=uniqCopy.headline||'';
+
+      const heroVerdictTexts={
+        high:{
+          ru:'\u0421\u0430\u0439\u0442\u044b \u043c\u043e\u0433\u0443\u0442 \u043b\u0435\u0433\u043a\u043e \u0443\u0437\u043d\u0430\u0442\u044c \u0432\u0430\u0441 \u0431\u0435\u0437 cookies \u0438 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438.',
+          en:'Websites can easily recognise you without cookies or sign-up.',
+          uz:'Saytlar sizni cookie va ro\u02BByxatdan o\u02BBtishsiz osongina tanishi mumkin.'
+        },
+        med:{
+          ru:'\u0412\u0430\u0441 \u0441\u043b\u043e\u0436\u043d\u0435\u0435 \u043e\u0442\u0441\u043b\u0435\u0434\u0438\u0442\u044c, \u043d\u043e \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438 IP \u0438\u043b\u0438 cookies \u2014 \u0440\u0438\u0441\u043a \u0440\u0430\u0441\u0442\u0451\u0442.',
+          en:'Harder to track, but adding IP or cookies increases the risk.',
+          uz:'Kuzatish qiyinroq, lekin IP yoki cookie qo\u02BBshilsa xavf oshadi.'
+        },
+        low:{
+          ru:'\u0412\u044b \u043d\u0435\u043f\u043b\u043e\u0445\u043e \u0437\u0430\u0449\u0438\u0449\u0435\u043d\u044b, \u043d\u043e \u0440\u0435\u0434\u043a\u0438\u0435 \u043f\u043b\u0430\u0433\u0438\u043d\u044b \u0438\u043b\u0438 \u0448\u0440\u0438\u0444\u0442\u044b \u043c\u043e\u0433\u0443\u0442 \u0432\u0430\u0441 \u0432\u044b\u0434\u0430\u0442\u044c.',
+          en:'You are fairly protected, but rare plugins or fonts could single you out.',
+          uz:'Yaxshi himoyalangansiz, lekin noodatiy kengaytmalar sizni ajratishi mumkin.'
+        }
+      };
+      if(heroExpEl) heroExpEl.textContent=heroVerdictTexts[level]?.[currentLang]||'';
+    }
+
+    // Hero summary
+    const heroSummaryEl=getEl('heroSummary');
+    if(heroSummaryEl){
+      const summaryParts=[];
+      const details2=state.serverData?.details||{};
+      if(state.serverData){
+        const rawCity=details2.city||'';
+        const countryCode2=resolveCountryCode(details2,state.serverData?.raw,state.serverData?.geo)||'';
+        const localCity2=CITY_NAMES[rawCity]?.[currentLang]||rawCity;
+        const localCountry2=COUNTRY_NAMES[countryCode2.toUpperCase()]?.[currentLang]||'';
+        const flag2=countryCode2?countryCodeToFlag(countryCode2):'';
+        if(localCity2) summaryParts.push('<span>'+flag2+' '+esc(localCity2)+(localCountry2?', '+esc(localCountry2):'')+'</span>');
+      }
+      const deviceObj2=guessDevice(basic);
+      const localDevice2=localizeDeviceName(deviceObj2,currentLang);
+      if(localDevice2) summaryParts.push('<span>'+esc(localDevice2.name)+'</span>');
+      const browserStr2=browserDisplayName(basic);
+      if(browserStr2&&browserStr2!=='\u2014') summaryParts.push('<span>'+esc(browserStr2)+'</span>');
+      if(basic.hashes?.canvas) summaryParts.push('<span><code>'+esc(basic.hashes.canvas.substring(0,8))+'</code></span>');
+      heroSummaryEl.innerHTML=summaryParts.join('<span style="color:var(--border)">|</span>');
     }
 
     const s=basic.screen;
