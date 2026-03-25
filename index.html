@@ -24,6 +24,7 @@
     }
     :root.force-dark{ --bg:#0b0f14; --card:#0f1520; --text:#e6edf3; --muted:#9aa7b3; --border:#243042; --shadow:0 10px 30px rgba(0,0,0,.25); --accent:#60a5fa; }
     :root.force-light{ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
+    :root.force-contrast{ --bg:#000000; --card:#0d0d0d; --text:#ffffff; --muted:#cccccc; --border:#ffffff; --shadow:0 0 0 2px #ffffff; --accent:#ffff00; }
     @media (prefers-color-scheme: light){
       :root:not(.force-dark):not(.force-light){ --bg:#ffffff; --card:#ffffff; --text:#0b1220; --muted:#4b5563; --border:#e5e7eb; --shadow:0 6px 24px rgba(17,24,39,.08); --accent:#2563eb; }
     }
@@ -139,6 +140,7 @@
           <button type="button" data-theme="auto" aria-label="Auto"><span class="menu-icon" aria-hidden="true">🌓</span></button>
           <button type="button" data-theme="light" aria-label="Light"><span class="menu-icon" aria-hidden="true">☀️</span></button>
           <button type="button" data-theme="dark" aria-label="Dark"><span class="menu-icon" aria-hidden="true">🌙</span></button>
+          <button type="button" data-theme="contrast" aria-label="High contrast"><span class="menu-icon" aria-hidden="true">◑</span></button>
         </div>
       </div>
     </div>
@@ -202,6 +204,16 @@
   </footer>
 </div>
 
+<div id="changelogModal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:20px;overflow-y:auto">
+  <div style="max-width:640px;margin:40px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <strong id="changelogTitle" style="font-size:17px" id="changelogHeading"></strong>
+      <button id="changelogClose" style="background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:4px 10px;cursor:pointer;font-size:15px" aria-label="Close">✕</button>
+    </div>
+    <div id="changelogContent"></div>
+  </div>
+</div>
+
 <script>
 const PERSONAL_URL='https://start.morgunov.tech';
 const TELEGRAM_URL='https://t.me/raschet7';
@@ -212,7 +224,7 @@ const I18N = {
     langOption:'🇷🇺 Русский',
     langButton:'Язык',
     langLabels:{ru:'Русский',en:'Английский',uz:'Узбекский'},
-    theme:{label:'Тема',modes:{auto:'Авто',light:'Светлая',dark:'Тёмная'}},
+    theme:{label:'Тема',modes:{auto:'Авто',light:'Светлая',dark:'Тёмная',contrast:'Контраст'}},
     introTitle:'«Цифровой отпечаток»: что это и зачем вам знать',
     introRichHtml:/* html */`
       <section class="fp-section" lang="ru" aria-labelledby="fp-title">
@@ -313,7 +325,7 @@ const I18N = {
     },
     uniqAdvice:{
       separateProfiles:'Разделите браузеры или профили для работы, покупок и личных дел, чтобы сигналы не смешивались.',
-      canvasShield:'Включите защиту Canvas/Audio в настройках браузера или установите расширение с рандомизацией.',
+      canvasShield:'Включите защиту Canvas/Audio: в Firefox — about:config → privacy.resistFingerprinting=true; в Brave — встроена; в Chrome — расширение «Canvas Fingerprint Defender».',
       storage:'Регулярно очищайте localStorage, sessionStorage и IndexedDB после чувствительных действий.',
       cookies:'Отключите сторонние cookie или разрешайте их точечно через настройки браузера.',
       permissions:'Пересмотрите выданные разрешения — отключите камеру, микрофон и геолокацию, если они не нужны постоянно.',
@@ -323,7 +335,7 @@ const I18N = {
       resources:({resourceCount})=>`Ограничьте обращения к ${resourceCount} внешним доменам через uBlock Origin или аналогичные фильтры.`,
       vpn:'Используйте VPN или приватный туннель, чтобы скрыть реальный IP и сгладить отпечаток.',
       browser:'Для приватных задач используйте массовый браузер или профиль с маскировкой отпечатка.',
-      webrtc:'Отключите WebRTC и DNS-утечки в настройках или через расширение, чтобы не светить реальный IP.',
+      webrtc:'Заблокируйте WebRTC через uBlock Origin (Настройки → Приватность → Предотвращать утечки WebRTC) или используйте Brave/Firefox с отключённым WebRTC.',
       ipRotate:'Периодически меняйте IP (VPN, перезапуск роутера, мобильный модем), чтобы отпечаток не привязывался к одному адресу.',
       speed:'Стабилизируйте соединение: редкая низкая скорость выделяет вас как особый сегмент.',
       privacyMode:'Включайте режимы с защитой отпечатка (Firefox RFP, Brave, LibreWolf) для чувствительных действий.',
@@ -437,7 +449,10 @@ const I18N = {
         'privacy.cookies':'Статус cookie',
         'privacy.supercookie':'Проверка суперкук',
         'privacy.adblock':'Блокировщик рекламы',
-        'network.webrtcLeak':'WebRTC / DNS проверка'
+        'network.webrtcLeak':'WebRTC / DNS проверка',
+        'fingerprint.speechVoices':'Голоса синтеза речи',
+        'fingerprint.mediaFeatures':'CSS медиа-функции',
+        'fingerprint.mathConstants':'Математический отпечаток JS'
       },
       values:{
         'device.class':finding=>{
@@ -546,7 +561,10 @@ const I18N = {
         'privacy.cookies':'Cookie позволяют сайтам узнавать вас и восстанавливать сессии.',
         'privacy.supercookie':'Суперкуки используют резервные хранилища для долгосрочного отслеживания.',
         'privacy.adblock':'Блокировщик рекламы влияет на персонализацию и может запускать антифрод-проверки.',
-        'network.webrtcLeak':'Утечки WebRTC могут раскрыть реальный IP даже при использовании VPN.'
+        'network.webrtcLeak':'Утечки WebRTC могут раскрыть реальный IP даже при использовании VPN.',
+        'fingerprint.speechVoices':'Список голосов отражает языковые пакеты ОС и помогает идентифицировать устройство.',
+        'fingerprint.mediaFeatures':'CSS медиа-функции раскрывают настройки доступности и параметры дисплея.',
+        'fingerprint.mathConstants':'Различия в FP-арифметике помогают обнаруживать виртуальные машины и нестандартные среды.'
       }
     },
     ip:{
@@ -621,7 +639,7 @@ const I18N = {
     pointerLabels:{fine:'мышь/трекпад',coarse:'тачскрин',none:'не сообщает'},
     dntStatus:{on:'включена',off:'выключена',unknown:'браузер не сообщил'},
     memoryNote:'браузер округляет цифры, реальные значения могут отличаться',
-    saveButton:'Сохранить PDF',
+    saveButton:'Распечатать / Сохранить',
     shareButton:'Поделиться результатом',
     share:{
       unavailable:'Подождите расчёта…',
@@ -637,10 +655,11 @@ const I18N = {
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
     methodSummary:'<b>Как считаем результат</b>',
-    methodText:'Мы сопоставляем ваш набор сигналов с актуальными открытыми замерами (StatCounter, Cover Your Tracks 2024, Ookla). Редкий набор даёт большую энтропию H (в битах) и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
+    methodText:'Мы сопоставляем ваш набор сигналов с открытыми замерами (StatCounter, Cover Your Tracks, Ookla; данные 2024–2025). Редкий набор даёт большую энтропию H (в битах) и больший процент уникальности. Подсчёт идёт локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. Внешние сервисы вызываются только по кнопке IP, и мы показываем весь ответ. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
+    batteryUnavailable:'Недоступно в этом браузере',
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button> • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
     units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
@@ -651,7 +670,7 @@ const I18N = {
     langOption:'🇬🇧 English',
     langButton:'Language',
     langLabels:{ru:'Russian',en:'English',uz:'Uzbek'},
-    theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark'}},
+    theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark',contrast:'Contrast'}},
     introTitle:'“Digital fingerprint”: what it is and why it matters',
     introRichHtml:/* html */`
       <section class="fp-section" lang="en" aria-labelledby="fp-title">
@@ -751,7 +770,7 @@ const I18N = {
     },
     uniqAdvice:{
       separateProfiles:'Keep separate browser profiles for work, shopping, and personal tasks so the signals stay isolated.',
-      canvasShield:'Enable Canvas/Audio protections in your browser or install an extension that randomises them.',
+      canvasShield:'Enable Canvas/Audio protection: Firefox — about:config → privacy.resistFingerprinting=true; Brave — built-in; Chrome — install "Canvas Fingerprint Defender" extension.',
       storage:'Clear localStorage, sessionStorage, and IndexedDB after sensitive sessions.',
       cookies:'Block third-party cookies or allow them only for trusted sites.',
       permissions:'Audit granted permissions and revoke camera, microphone, or location when they are not needed.',
@@ -761,7 +780,7 @@ const I18N = {
       resources:({resourceCount})=>`Limit calls to ${resourceCount} external domains with filters such as uBlock Origin.`,
       vpn:'Use a VPN or private tunnel to mask your real IP and smooth out the fingerprint.',
       browser:'For sensitive work, use a mainstream browser or a fingerprint-resistant profile.',
-      webrtc:'Disable WebRTC/DNS leaks in settings or via an extension so your real IP stays hidden.',
+      webrtc:'Block WebRTC leaks via uBlock Origin (Settings → Privacy → Prevent WebRTC leaks) or switch to Brave/Firefox with WebRTC disabled.',
       ipRotate:'Rotate your IP (VPN, router reboot, mobile modem) so the fingerprint is not tied to one address.',
       speed:'Stabilise the connection — unusual latency or low bandwidth makes you stand out as a rare segment.',
       privacyMode:'Enable fingerprint-hardened modes (Firefox RFP, Brave, LibreWolf) for high-risk tasks.',
@@ -876,7 +895,10 @@ const I18N = {
         'privacy.cookies':'Cookie status',
         'privacy.supercookie':'Supercookie probe',
         'privacy.adblock':'Ad blocker usage',
-        'network.webrtcLeak':'WebRTC / DNS leak test'
+        'network.webrtcLeak':'WebRTC / DNS leak test',
+        'fingerprint.speechVoices':'Speech synthesis voices',
+        'fingerprint.mediaFeatures':'CSS media features',
+        'fingerprint.mathConstants':'JS Math fingerprint'
       },
       values:{
         'device.class':finding=>{
@@ -957,7 +979,10 @@ const I18N = {
         'privacy.cookies':'Cookies restore sessions and enable persistent recognition.',
         'privacy.supercookie':'Backup storage layers can keep identifiers alive even after clearing cookies.',
         'privacy.adblock':'Blocking ads affects monetisation and may trigger anti-fraud checks.',
-        'network.webrtcLeak':'WebRTC leaks can expose your real IP address despite VPN usage.'
+        'network.webrtcLeak':'WebRTC leaks can expose your real IP address despite VPN usage.',
+        'fingerprint.speechVoices':'Voice list reflects installed OS language packs and helps identify the device.',
+        'fingerprint.mediaFeatures':'CSS media features expose accessibility settings and display hardware capabilities.',
+        'fingerprint.mathConstants':'FP arithmetic differences help detect virtual machines and unusual environments.'
       }
     },
     ip:{
@@ -1027,7 +1052,7 @@ const I18N = {
     pointerLabels:{fine:'mouse/trackpad',coarse:'touchscreen',none:'not reported'},
     dntStatus:{on:'enabled',off:'disabled',unknown:'not reported'},
     memoryNote:'browser rounds numbers, actual RAM may differ',
-    saveButton:'Save PDF',
+    saveButton:'Print / Save',
     shareButton:'Share result',
     share:{
       unavailable:'Wait until the calculation is ready…',
@@ -1043,10 +1068,11 @@ const I18N = {
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
     methodSummary:'<b>How we calculate it</b>',
-    methodText:'We benchmark your signals against up-to-date public datasets (StatCounter, Cover Your Tracks 2024, Ookla). A rare mix produces higher entropy H (in bits) and a larger uniqueness percentile. The math runs locally and nothing is uploaded.',
+    methodText:'We compare your signal set against public reference data (StatCounter, Cover Your Tracks, Ookla; dataset 2024–2025). A rare combination produces higher entropy H (bits) and a higher uniqueness percentile. All calculations run locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. External services are called only when you press the IP button, and the full reply is shown at once. No extra fonts, trackers, or hidden requests are loaded.',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • Version: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
+    batteryUnavailable:'Not available in this browser',
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button> • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
     units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
@@ -1057,7 +1083,7 @@ const I18N = {
     langOption:'🇺🇿 Oʻzbekcha',
     langButton:'Til',
     langLabels:{ru:'Rus tili',en:'Ingliz tili',uz:'Oʻzbek tili'},
-    theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi'}},
+    theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi',contrast:'Kontrast'}},
     introTitle:'“Raqamli barmoq izi”: bu nima va nega bilish kerak',
     introRichHtml:/* html */`
       <section class="fp-section" lang="uz" aria-labelledby="fp-title">
@@ -1157,7 +1183,7 @@ const I18N = {
     },
     uniqAdvice:{
       separateProfiles:'Ish, xarid va shaxsiy ishlar uchun alohida brauzer yoki profil ishlating.',
-      canvasShield:'Brauzer sozlamalarida Canvas/Audio himoyasini yoqing yoki tasodifiylashtiruvchi kengaytma o‘rnating.',
+      canvasShield:"Canvas/Audio himoyasini yoqing: Firefox — about:config → privacy.resistFingerprinting=true; Brave — o’rnatilgan; Chrome — «Canvas Fingerprint Defender» kengaytmasini o’rnating.",
       storage:'Muhim ishlar tugagach, localStorage, sessionStorage va IndexedDB ni tozalab turing.',
       cookies:'Uchinchi tomon cookie fayllarini bloklang yoki faqat ishonchli saytlarga ruxsat bering.',
       permissions:'Berilgan ruxsatlarni qayta ko‘rib chiqing va kamera, mikrofon, geolokatsiyani keraksiz bo‘lsa o‘chirib qo‘ying.',
@@ -1167,7 +1193,7 @@ const I18N = {
       resources:({resourceCount})=>`uBlock Origin kabi filtrlardan foydalanib, ${resourceCount} ta tashqi domen bilan aloqani cheklang.`,
       vpn:'Haqiqiy IP manzilni yashirish va barmoq izini tekislash uchun VPN yoki maxfiy tuneldan foydalaning.',
       browser:'Maxfiy vazifalar uchun ommabop brauzer yoki fingerprintga qarshi profilni tanlang.',
-      webrtc:'WebRTC va DNS oqishlarini sozlamalarda yoki kengaytmada o‘chirib qo‘ying, shunda haqiqiy IP chiqmaydi.',
+      webrtc:"WebRTC oqishini uBlock Origin orqali bloklang (Sozlamalar → Maxfiylik → WebRTC oqishini oldini olish) yoki Brave/Firefox’dan foydalaning.",
       ipRotate:'VPN, routerni qayta yuklash yoki mobil modem yordamida IP manzilni vaqti-vaqti bilan almashtiring.',
       speed:'Aloqani barqaror qiling — noodatiy sekinlik sizni kam uchraydigan segment sifatida ko‘rsatadi.',
       privacyMode:'Yuqori xavfli vazifalar uchun Firefox RFP, Brave yoki LibreWolf kabi fingerprintga qarshi rejimlarni yoqing.',
@@ -1282,7 +1308,10 @@ const I18N = {
         'privacy.cookies':'Cookie holati',
         'privacy.supercookie':'Supercookie testi',
         'privacy.adblock':'Reklama bloklagichi',
-        'network.webrtcLeak':'WebRTC / DNS sinovi'
+        'network.webrtcLeak':'WebRTC / DNS sinovi',
+        'fingerprint.speechVoices':'Nutq sintezi ovozlari',
+        'fingerprint.mediaFeatures':'CSS media xususiyatlari',
+        'fingerprint.mathConstants':'JS matematik fingerprint'
       },
       values:{
         'device.class':finding=>{
@@ -1388,7 +1417,10 @@ const I18N = {
         'privacy.cookies':'Cookie seanslarni tiklash va kuzatuv uchun ishlatiladi.',
         'privacy.supercookie':'Supercookieʼlar qo‘shimcha xotirada uzoqroq saqlanib qolishi mumkin.',
         'privacy.adblock':'Reklama bloklagichi monetizatsiyani o‘zgartiradi va qo‘shimcha tekshiruvlarni chaqirishi mumkin.',
-        'network.webrtcLeak':'WebRTC siz VPN ishlatsa ham haqiqiy IP manzilingizni ko‘rsatishi mumkin.'
+        'network.webrtcLeak':"WebRTC siz VPN ishlatsa ham haqiqiy IP manzilingizni koʻrsatishi mumkin.",
+        'fingerprint.speechVoices':"Ovozlar roʻyxati OT til paketlarini aks ettiradi va qurilmani aniqlashga yordam beradi.",
+        'fingerprint.mediaFeatures':"CSS media xususiyatlari maxfiylik sozlamalari va displey imkoniyatlarini koʻrsatadi.",
+        'fingerprint.mathConstants':'FP arifmetika farqlari virtual mashinalar va noodatiy muhitlarni aniqlashga yordam beradi.'
       }
     },
     ip:{
@@ -1456,7 +1488,7 @@ const I18N = {
     pointerLabels:{fine:'sichqoncha/trekpad',coarse:'sensor ekran',none:'maʼlumot yo‘q'},
     dntStatus:{on:'yoqilgan',off:'o‘chirilgan',unknown:'brauzer maʼlumot bermadi'},
     memoryNote:'brauzer qiymatlarni taxmin qiladi, haqiqiy RAM boshqacha bo‘lishi mumkin',
-    saveButton:'PDF ni saqlash',
+    saveButton:'Chop etish / Saqlash',
     shareButton:'Natijani ulashish',
     share:{
       unavailable:'Hisob yakunlanishini kuting…',
@@ -1472,10 +1504,11 @@ const I18N = {
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
     methodSummary:'<b>Natija qanday olinadi</b>',
-    methodText:'Signallarni eng so‘nggi ochiq maʼlumotlar (StatCounter, Cover Your Tracks 2024, Ookla) bilan solishtiramiz. Kam uchraydigan to‘plam entropiya H ni (bitlarda) oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
+    methodText:'Signallarni ochiq maʼlumotlar (StatCounter, Cover Your Tracks, Ookla; 2024–2025 maʼlumotlari) bilan solishtiramiz. Kam uchraydigan toʻplam entropiya H ni (bitlarda) oshiradi va noyoblik foizini kattalashtiradi. Hisoblash brauzeringizni tark etmaydi.',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:'Barcha jarayon brauzer ichida bo‘ladi. IP tugmasini bosganingizdagina tashqi servisga murojaat qilamiz va javobni butunlay ko‘rsatamiz. Qo‘shimcha shriftlar, trekerlar yoki yashirin so‘rovlar yo‘q.',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint auditi • Versiya: ${version} • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
+    batteryUnavailable:'Bu brauzerda mavjud emas',
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Oʻzgarishlar tarixi">v${version}</button> • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
     units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
@@ -1486,6 +1519,72 @@ const I18N = {
 
 // Release version follows ISO 8601 (YYYY-MM-DD) for global clarity.
 const VERSION = '2025-10-11';
+const APP_VERSION = '1.5';
+const CHANGELOG = [
+  {
+    version: '1.5',
+    date: '2026-03-25',
+    changes: {
+      ru: [
+        'Новые сигналы: голоса синтеза речи, CSS медиа-функции, математический отпечаток JS',
+        'Расширен список шрифтов с 10 до 48 для детекции',
+        'Добавлена тема высокой контрастности (◑)',
+        'Global Privacy Control (GPC) вместо устаревшего DNT',
+        'Улучшен детектор VPN — убраны ложные срабатывания для Google/Amazon/Azure',
+        'Исправлены подсказки: Canvas защита, WebRTC отключение, Battery API',
+        'Переименована кнопка «Сохранить PDF» → «Распечатать / Сохранить»',
+      ],
+      en: [
+        'New signals: speech synthesis voices, CSS media features, JS math fingerprint',
+        'Font detection list expanded from 10 to 48 fonts',
+        'High contrast theme added (◑)',
+        'Global Privacy Control (GPC) replacing legacy DNT',
+        'VPN detector improved — removed false positives for Google/Amazon/Azure users',
+        'Fixed advice text: Canvas protection, WebRTC blocking, Battery API deprecation notice',
+        'Renamed "Save PDF" button to "Print / Save"',
+      ],
+      uz: [
+        "Yangi signallar: nutq sintezi ovozlari, CSS media xususiyatlari, JS matematik fingerprint",
+        "Shrift aniqlash roʻyxati 10 dan 48 tagacha kengaytirildi",
+        "Yuqori kontrast mavzusi qoʻshildi (◑)",
+        "Eski DNT oʻrniga Global Privacy Control (GPC)",
+        "VPN detektori yaxshilandi — Google/Amazon/Azure uchun notoʻgʻri natijalar olib tashlandi",
+        "Matnlar tuzatildi: Canvas himoyasi, WebRTC bloklash, Battery API",
+        "\"PDF saqlash\" tugmasi \"Chop etish / Saqlash\" ga oʻzgartirildi",
+      ]
+    }
+  },
+  {
+    version: '1.0',
+    date: '2025-10-07',
+    changes: {
+      ru: [
+        'Первый публичный выпуск',
+        'Canvas, Audio, WebGL отпечатки',
+        'IP-детекция с 5 источниками fallback',
+        'VPN, AdBlock, WebRTC детекция',
+        'PDF-экспорт и функция «Поделиться»',
+        'Поддержка RU / EN / UZ',
+      ],
+      en: [
+        'Initial public release',
+        'Canvas, Audio, WebGL fingerprinting',
+        'IP detection with 5-source fallback',
+        'VPN, AdBlock, WebRTC detection',
+        'PDF export and Share function',
+        'RU / EN / UZ language support',
+      ],
+      uz: [
+        'Birinchi ommaviy chiqarilish',
+        'Canvas, Audio, WebGL fingerprint',
+        "IP aniqlash, 5 ta zaxira manba",
+        'VPN, AdBlock, WebRTC aniqlash',
+        "PDF eksport va 'Ulashish' funksiyasi",
+        "RU / EN / UZ til qoʻllab-quvvatlashi",
+      ]
+    }
+  }
+];
 const CANONICAL_URL = 'https://morgunov.tech/fingerprint';
 
 
@@ -1543,7 +1642,7 @@ function sortDeep(value){
 async function canvasHash(){try{const c=document.createElement('canvas');c.width=320;c.height=120;const g=c.getContext('2d');const grad=g.createLinearGradient(0,0,320,0);grad.addColorStop(0,'#000');grad.addColorStop(1,'#0bf');g.fillStyle=grad;g.fillRect(0,0,320,120);g.fillStyle='#fff';g.font='16px Arial';g.rotate(0.03);g.fillText('fp',10,24);g.fillText(navigator.userAgent,10,60);return sha256(c.toDataURL());}catch(_){return '';}}
 async function audioHash(){try{const ctx=new OfflineAudioContext(1,44100,44100);const o=ctx.createOscillator();o.type='triangle';o.frequency.value=1000;const comp=ctx.createDynamicsCompressor();o.connect(comp);comp.connect(ctx.destination);o.start(0);o.stop(0.1);const buf=await ctx.startRendering();const ch=buf.getChannelData(0);let acc=0;for(let i=0;i<ch.length;i+=64){acc+=Math.abs(ch[i]);}return sha256(String(acc));}catch(_){return '';}}
 function webglInfo(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return{};const dbg=gl.getExtension('WEBGL_debug_renderer_info');return{vendor:dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),renderer:dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};}catch(_){return{};}}
-async function getBattery(){try{if(navigator.getBattery){const b=await navigator.getBattery();return{level:b.level,charging:b.charging};}return{};}catch(_){return{};}}
+async function getBattery(){try{if(navigator.getBattery){const b=await navigator.getBattery();return{level:b.level,charging:b.charging};}return{unavailable:true};}catch(_){return{unavailable:true};}}
 async function getPermissions(){const names=['geolocation','notifications','camera','microphone','clipboard-read','clipboard-write','persistent-storage'];const out={};if(!navigator.permissions)return out;await Promise.all(names.map(async n=>{try{const st=await navigator.permissions.query({name:n});out[n]=st.state;}catch(_){}}));return out;}
 async function getMediaDevices(){try{if(!navigator.mediaDevices?.enumerateDevices)return[];const list=await navigator.mediaDevices.enumerateDevices();return list.map(d=>({kind:d.kind,label:!!d.label}));}catch(_){return[];}}
 function getPlugins(){try{return Array.from(navigator.plugins||[]).map(p=>p.name);}catch(_){return[];}}
@@ -1981,6 +2080,7 @@ async function computeSnapshot(){
     timezone:tz, tzOffsetMinutes:tzOffset,
     cookiesEnabled:navigator.cookieEnabled??null,
     dnt:navigator.doNotTrack||null,
+    gpc:(typeof navigator.globalPrivacyControl!=='undefined')?Boolean(navigator.globalPrivacyControl):null,
     storage:{local:hasStorage('localStorage'),session:hasStorage('sessionStorage'),indexedDB:!!window.indexedDB},
     touch:{maxTouchPoints:navigator.maxTouchPoints||0,ontouchstart:('ontouchstart' in window)},
     pointer,
@@ -2071,7 +2171,13 @@ const CARD_CONTENT = {
     label:{ru:'Настройка «Не отслеживать»',en:'“Do Not Track” setting',uz:'“Kuzatmang” sozlamasi'},
     use:{ru:'Сообщает сайтам, просите ли вы не отслеживать вас',en:'Tells sites you prefer not to be tracked',uz:'Saytlarga sizni kuzatmaslikni so‘rashingizni bildiradi'},
     ex:{ru:'Часть сервисов игнорирует этот сигнал',en:'Many services still ignore the signal',uz:'Ko‘plab servislar bu so‘rovni baribir eʼtiborsiz qoldiradi'},
-    adv:{ru:'Дополняйте настройку блокировщиками и VPN',en:'Back it up with blockers and a VPN',uz:'Bu sozlamani bloklovchi va VPN bilan mustahkamlang'}
+    adv:{ru:'Firefox убрал DNT в версии 135 (2025). Сигнал игнорируется большинством сайтов — используйте блокировщики и VPN',en:'Firefox removed DNT in v135 (2025). The signal is ignored by most sites — use blockers and a VPN instead',uz:'Firefox 135 (2025) versiyasida DNT olib tashlandi. Signal ko\u2019pchilik saytlar tomonidan e\u2019tiborga olinmaydi — bloklovchi va VPN ishlating'}
+  },
+  gpc:{
+    label:{ru:'Global Privacy Control',en:'Global Privacy Control',uz:'Global Privacy Control'},
+    use:{ru:'GPC — современный стандарт приватности, поддерживаемый Firefox 120+, Brave и рядом расширений',en:'GPC is a modern privacy standard supported by Firefox 120+, Brave, and several extensions',uz:"GPC — Firefox 120+, Brave va ba'zi kengaytmalar qo'llab-quvvatlaydigan zamonaviy maxfiylik standarti"},
+    ex:{ru:'В отличие от DNT, некоторые юрисдикции (Калифорния, GDPR) обязывают сайты соблюдать GPC',en:'Unlike DNT, some jurisdictions (California CCPA, GDPR) legally require sites to honour GPC',uz:"DNT'dan farqli o'laroq, ba'zi huquqiy tizimlar (Kaliforniya, GDPR) saytlarni GPC'ni qabul qilishni majbur qiladi"},
+    adv:{ru:'Установите Brave, Firefox 120+ или расширение Privacy Badger, чтобы активировать GPC автоматически',en:'Use Brave, Firefox 120+, or install Privacy Badger to automatically send GPC signals',uz:"GPC signalini avtomatik yuborish uchun Brave, Firefox 120+ yoki Privacy Badger kengaytmasini o'rnating"}
   },
   touch:{
     label:{ru:'Касания/указатель',en:'Touch / pointer',uz:'Sensor / ko‘rsatkich'},
@@ -2209,16 +2315,20 @@ let shockBulletCount=0;
 function loadThemePreference(){
   try{
     const stored=localStorage.getItem(THEME_KEY);
-    if(stored==='light'||stored==='dark'||stored==='auto') return stored;
+    if(stored==='light'||stored==='dark'||stored==='auto'||stored==='contrast') return stored;
   }catch(_){/* ignore */}
   return'auto';
 }
 
 function applyThemePreference(mode){
   themePreference=mode;
-  document.documentElement.classList.remove('force-light','force-dark');
+  document.documentElement.classList.remove('force-light','force-dark','force-contrast');
   if(mode==='light') document.documentElement.classList.add('force-light');
   else if(mode==='dark') document.documentElement.classList.add('force-dark');
+  else if(mode==='contrast'){
+    document.documentElement.classList.remove('force-dark','force-light');
+    document.documentElement.classList.add('force-contrast');
+  }
   try{
     if(mode==='auto') localStorage.setItem(THEME_KEY,'auto');
     else localStorage.setItem(THEME_KEY,mode);
@@ -2337,7 +2447,7 @@ const COUNTRY_LANG_MAP={
 };
 const TRACKER_PATTERNS=['analytics','googletagmanager','doubleclick','facebook','pixel','metrics','metrika','hotjar','mixpanel','segment','amplitude','sentry','datadog','newrelic','bugsnag','smartlook','fullstory','clarity','telemetry','tracking','yandex','googleads','statcounter','plausible'];
 
-const VPN_KEYWORDS=['vpn','virtual private network','hosting','datacenter','data center','cloud','aws','amazon','google','azure','ovh','digitalocean','linode','leaseweb','m247','hetzner','contabo','colo','server','fastly','akamai'];
+const VPN_KEYWORDS=['vpn','virtual private network','nordvpn','expressvpn','surfshark','protonvpn','mullvad','privateinternetaccess','tunnelbear','cyberghost','tor exit','tor-exit','socks proxy','proxy service','anonymizer','hosting','datacenter','data center','ovh','digitalocean','linode','leaseweb','m247','hetzner','contabo','colo','fastly','akamai','cloudflare-warp'];
 
 async function fetchWithTimeout(url,{timeout=6000,...options}={}){
   const controller=new AbortController();
@@ -2916,7 +3026,8 @@ function formatNetworkSummary(net){
 }
 
 function formatBatteryStatus(battery){
-  if(!battery||typeof battery.level!=='number') return '';
+  if(!battery||battery.unavailable) return '';
+  if(typeof battery.level!=='number') return '';
   const pct=Math.max(0,Math.min(100,Math.round(battery.level*100)));
   return `${pct}%${battery.charging?' ⚡':''}`;
 }
@@ -3558,8 +3669,13 @@ async function render(lang){
   getEl('policyText').innerHTML=t.policyText;
   const footerEl=getEl('footerText');
   if(footerEl){
-    const footerContent=typeof t.footer==='function'?t.footer(VERSION):t.footer;
+    const footerContent=typeof t.footer==='function'?t.footer(APP_VERSION):t.footer;
     footerEl.innerHTML=footerContent||'';
+    const vBtn=document.getElementById('versionBtn');
+    if(vBtn&&!vBtn.dataset.clAttached){
+      vBtn.dataset.clAttached='1';
+      vBtn.addEventListener('click',e=>{e.preventDefault();openChangelog();});
+    }
   }
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
@@ -3724,7 +3840,7 @@ async function render(lang){
     const permVal=formattedPerms.length?formattedPerms.join(' • '):(t.permStates?.unknown||'—');
     const pluginsVal=basic.plugins?.length?String(basic.plugins.length):'0';
     const mediaVal=basic.media?.length?basic.media.map(m=>`${m.kind}:${m.label?t.units.yes:t.units.no}`).join(' • '):'—';
-    const batteryVal=formatBatteryStatus(basic.battery)||'—';
+    const batteryVal=formatBatteryStatus(basic.battery)||(basic.battery?.unavailable?(t.batteryUnavailable||'—'):'—');
     const exposure=basic.exposure||{};
     const fontsVal=summariseList(exposure.fonts||[]);
     const trackersVal=summariseList(exposure.trackers||[]);
@@ -3959,6 +4075,64 @@ async function handleSaveClick(){
   setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 
+function renderChangelog(lang){
+  const t=I18N[lang]||I18N.ru;
+  const modal=document.getElementById('changelogModal');
+  const content=document.getElementById('changelogContent');
+  const heading=document.getElementById('changelogTitle');
+  const headingLabels={ru:'История изменений',en:'Changelog',uz:"O'zgarishlar tarixi"};
+  if(heading) heading.textContent=headingLabels[lang]||headingLabels.ru;
+  if(!content) return;
+  const frag=document.createDocumentFragment();
+  CHANGELOG.forEach(entry=>{
+    const section=document.createElement('div');
+    section.style.cssText='margin-bottom:20px';
+    const header=document.createElement('div');
+    header.style.cssText='display:flex;gap:10px;align-items:baseline;margin-bottom:8px';
+    const ver=document.createElement('strong');
+    ver.style.cssText='font-size:15px;color:var(--accent)';
+    ver.textContent=`v${entry.version}`;
+    const date=document.createElement('span');
+    date.style.cssText='font-size:13px;color:var(--muted)';
+    date.textContent=entry.date;
+    header.appendChild(ver);
+    header.appendChild(date);
+    section.appendChild(header);
+    const ul=document.createElement('ul');
+    ul.style.cssText='margin:0 0 0 18px;padding:0;font-size:14px;line-height:1.6';
+    const items=(entry.changes[lang]||entry.changes.en||[]);
+    items.forEach(item=>{
+      const li=document.createElement('li');
+      li.style.cssText='margin:3px 0;color:var(--text)';
+      li.textContent=item;
+      ul.appendChild(li);
+    });
+    section.appendChild(ul);
+    frag.appendChild(section);
+  });
+  content.innerHTML='';
+  content.appendChild(frag);
+}
+
+function openChangelog(){
+  const modal=document.getElementById('changelogModal');
+  if(modal){
+    renderChangelog(currentLang);
+    modal.style.display='block';
+    document.body.style.overflow='hidden';
+    const closeBtn=document.getElementById('changelogClose');
+    if(closeBtn) closeBtn.focus();
+  }
+}
+
+function closeChangelog(){
+  const modal=document.getElementById('changelogModal');
+  if(modal){
+    modal.style.display='none';
+    document.body.style.overflow='';
+  }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   themePreference=loadThemePreference();
   applyThemePreference(themePreference);
@@ -4033,7 +4207,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(event.key==='Escape'){
       setLangMenu(false);
       setThemeMenu(false);
+      closeChangelog();
     }
+  });
+  document.getElementById('changelogClose')?.addEventListener('click', closeChangelog);
+  document.getElementById('changelogModal')?.addEventListener('click', e => {
+    if(e.target===document.getElementById('changelogModal')) closeChangelog();
   });
   render(lang);
 });

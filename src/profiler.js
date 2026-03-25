@@ -1,15 +1,16 @@
 /* eslint-disable no-console */
 const FONT_CANDIDATES = [
-  'Arial',
-  'Helvetica',
-  'Times New Roman',
-  'Courier New',
-  'Georgia',
-  'Roboto',
-  'Open Sans',
-  'SF Pro Text',
-  'Segoe UI',
-  'Noto Sans',
+  'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia',
+  'Roboto', 'Open Sans', 'SF Pro Text', 'Segoe UI', 'Noto Sans',
+  'Calibri', 'Cambria', 'Consolas', 'Trebuchet MS', 'Verdana',
+  'Impact', 'Tahoma', 'Franklin Gothic Medium', 'Comic Sans MS',
+  'Palatino Linotype', 'Arial Black', 'Lucida Sans Unicode',
+  'Apple Chancery', 'Optima', 'Baskerville', 'Hoefler Text', 'Papyrus',
+  'Ubuntu', 'Cantarell', 'Droid Sans', 'Source Sans Pro', 'Lato',
+  'Montserrat', 'Raleway', 'PT Sans', 'Nunito', 'Merriweather',
+  'Liberation Sans', 'DejaVu Sans', 'FreeSans',
+  'Microsoft YaHei', 'Malgun Gothic', 'Noto Serif', 'Noto Mono',
+  'Myriad Pro', 'Gill Sans', 'Futura', 'Century Gothic',
 ];
 const MAC_DISPLAY_MAP = [
   { width: 3456, height: 2234, label: 'Apple MacBook Pro 16″' },
@@ -1081,6 +1082,113 @@ async function collectNetworkSignals() {
     measurement,
   };
 }
+function detectSpeechVoices() {
+  try {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices();
+    if (!voices || !voices.length) return null;
+    const names = voices.map((v) => v.name);
+    const langs = [...new Set(voices.map((v) => v.lang.split('-')[0]))];
+    const localVoices = voices.filter((v) => v.localService).length;
+    const value = `${voices.length} voices, ${langs.length} langs (${langs.slice(0, 4).join(', ')}${langs.length > 4 ? '…' : ''})`;
+    const evidence = [
+      `count=${voices.length}`,
+      `local=${localVoices}`,
+      `langs=${langs.join(',')}`,
+      `sample=${names.slice(0, 3).join('|')}`,
+    ];
+    return {
+      key: 'fingerprint.speechVoices',
+      label: 'Speech synthesis voices',
+      value,
+      confidence: CLAMP(0.3 + Math.min(voices.length / 30, 0.5)),
+      evidence,
+      method: 'observation',
+      limitations: 'Voice list reflects OS language packs installed. Consistent fingerprint on same OS + language setup.',
+    };
+  } catch (error) {
+    console.debug('Speech voices detection failed', error);
+    return null;
+  }
+}
+function detectMediaFeatures() {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return null;
+  try {
+    const checks = [
+      { name: 'prefers-reduced-motion', query: '(prefers-reduced-motion: reduce)' },
+      { name: 'forced-colors', query: '(forced-colors: active)' },
+      { name: 'prefers-contrast:more', query: '(prefers-contrast: more)' },
+      { name: 'prefers-contrast:less', query: '(prefers-contrast: less)' },
+      { name: 'color-gamut:p3', query: '(color-gamut: p3)' },
+      { name: 'color-gamut:rec2020', query: '(color-gamut: rec2020)' },
+      { name: 'hover:none', query: '(hover: none)' },
+      { name: 'pointer:coarse', query: '(pointer: coarse)' },
+      { name: 'any-pointer:fine', query: '(any-pointer: fine)' },
+      { name: 'inverted-colors', query: '(inverted-colors: inverted)' },
+      { name: 'prefers-color-scheme:dark', query: '(prefers-color-scheme: dark)' },
+    ];
+    const active = [];
+    const evidence = [];
+    for (const { name, query } of checks) {
+      try {
+        const result = window.matchMedia(query).matches;
+        evidence.push(`${name}=${result}`);
+        if (result) active.push(name);
+      } catch (_) { /* unsupported */ }
+    }
+    const value = active.length ? active.join(', ') : 'none active';
+    return {
+      key: 'fingerprint.mediaFeatures',
+      label: 'CSS media features',
+      value,
+      confidence: active.some((a) => a === 'forced-colors' || a === 'inverted-colors') ? 0.8 : 0.5,
+      evidence,
+      method: 'observation',
+      limitations: 'Reflects OS accessibility settings and display hardware capabilities.',
+    };
+  } catch (error) {
+    console.debug('Media features detection failed', error);
+    return null;
+  }
+}
+function detectMathFingerprint() {
+  try {
+    const ops = [
+      () => Math.tan(-1e308),
+      () => Math.atan2(1e308, 1),
+      () => Math.sinh(1),
+      () => Math.cosh(1),
+      () => Math.log(1e-308),
+      () => 1 / Math.log2(Math.E),
+      () => Math.hypot(2, 3),
+      () => Math.cbrt(2),
+      () => Math.acos(0.5),
+      () => Math.sin(Math.PI),
+    ];
+    const results = ops.map((fn) => {
+      try {
+        const v = fn();
+        return Number.isFinite(v) ? v.toString(36).slice(0, 8) : String(v);
+      } catch (_) {
+        return 'err';
+      }
+    });
+    const sig = results.join('|');
+    return {
+      key: 'fingerprint.mathConstants',
+      label: 'JS Math fingerprint',
+      value: sig.slice(0, 80),
+      confidence: 0.4,
+      evidence: [`sig=${sig.slice(0, 40)}`],
+      method: 'measurement',
+      limitations: 'Varies across JIT engines and CPU FP units; useful for detecting virtual machines or unusual environments.',
+    };
+  } catch (error) {
+    console.debug('Math fingerprint failed', error);
+    return null;
+  }
+}
 export async function runProfiling(ip) {
   const basic = collectBasicFromGlobal();
   const ua = await collectUaHighEntropy();
@@ -1130,6 +1238,12 @@ export async function runProfiling(ip) {
   const webrtcFinding = await runWebRtcLeakTest();
   if (webrtcFinding)
     findings.push(webrtcFinding);
+  const speechFinding = detectSpeechVoices();
+  if (speechFinding) findings.push(speechFinding);
+  const mediaFeaturesFinding = detectMediaFeatures();
+  if (mediaFeaturesFinding) findings.push(mediaFeaturesFinding);
+  const mathFinding = detectMathFingerprint();
+  if (mathFinding) findings.push(mathFinding);
   const uaDumpEvidence = ua?.fullVersionList?.map((item) => `${item.brand} ${item.version}`) ?? navigator.userAgentData?.brands?.map((item) => `${item.brand} ${item.version}`) ?? [];
   findings.push({
     key: 'browser.uaCh',
