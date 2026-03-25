@@ -356,7 +356,7 @@ const I18N = {
     shockTitle:'\u0427\u0442\u043e \u0441\u0430\u0439\u0442 \u0437\u043d\u0430\u0435\u0442 \u043e \u0432\u0430\u0441',
     shock:{
       title:'\u0427\u0442\u043e \u0441\u0430\u0439\u0442 \u0437\u043d\u0430\u0435\u0442 \u043e \u0432\u0430\u0441',
-      location:(city,country)=>`\uD83D\uDCCD \u0412\u044b \u0432 <code>${city}, ${country}</code> \u2014 \u044d\u0442\u043e \u0432\u0438\u0434\u043d\u043e \u0431\u0435\u0437 GPS`,
+      location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} \u0412\u044b \u0432 <code>${city}, ${country}</code> \u2014 IP: <code>${ip}</code>`,
       locationLoading:'\uD83D\uDCCD \u041e\u043f\u0440\u0435\u0434\u0435\u043b\u044f\u0435\u043c \u043c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435\u2026',
       datetime:(date,time,tz)=>`\uD83D\uDD50 \u0421\u0435\u0439\u0447\u0430\u0441 \u0443 \u0432\u0430\u0441 <code>${time}</code>, <code>${date}</code> \u2014 \u0447\u0430\u0441\u043e\u0432\u043e\u0439 \u043f\u043e\u044f\u0441 <code>${tz}</code>`,
       vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN или прокси обнаружен</b>: IP в <code>${ipLoc}</code>, но устройство настроено на <code>${devLoc}</code>. Это вызовет капчи, а некоторые сервисы могут заблокировать доступ`,
@@ -366,7 +366,9 @@ const I18N = {
       browser:(name,perms)=>`\uD83C\uDF10 \u0411\u0440\u0430\u0443\u0437\u0435\u0440: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 \u0412\u0430\u0448\u0435 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435: <code>${parts}</code>`,
       adblock:'\uD83D\uDEE1\uFE0F \u0412\u044b \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0435 \u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0449\u0438\u043a \u0440\u0435\u043a\u043b\u0430\u043c\u044b',
-      webrtcLeak:localIp=>`\uD83D\uDD13 WebRTC \u0440\u0430\u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442 \u0432\u0430\u0448 \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 IP: ${localIp} \u2014 VPN \u0435\u0433\u043e \u043d\u0435 \u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442`,
+      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC-утечка</b>: ваш локальный IP <code>${localIp}</code> виден — VPN его не скрывает`,
+      webrtcSafe:'\uD83D\uDD12 WebRTC-утечка не обнаружена',
+      webrtcUnavailable:'\u2753 WebRTC: не удалось проверить',
       canvas:(hash)=>`\uD83C\uDFA8 \u0423 \u0432\u0430\u0448\u0435\u0433\u043e \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430 \u0435\u0441\u0442\u044c \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0433\u0440\u0430\u0444\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043e\u043a <code>${hash}</code> \u2014 \u043f\u043e \u043d\u0435\u043c\u0443 \u0432\u0430\u0441 \u043c\u043e\u0436\u043d\u043e \u0443\u0437\u043d\u0430\u0442\u044c \u043d\u0430 \u043b\u044e\u0431\u043e\u043c \u0441\u0430\u0439\u0442\u0435 \u0431\u0435\u0437 cookies`,
       languages:(flags,inference)=>`\uD83C\uDF10 \u042f\u0437\u044b\u043a\u0438: ${flags}${inference?' \u2014 '+inference:''}`,
       battery:level=>`\uD83D\uDD0B \u0417\u0430\u0440\u044f\u0434 ${level}% \u2014 \u0432\u044b, \u0432\u0435\u0440\u043e\u044f\u0442\u043d\u043e, \u0432 \u0434\u043e\u0440\u043e\u0433\u0435`,
@@ -785,7 +787,7 @@ const I18N = {
     shockTitle:'What the site knows about you',
     shock:{
       title:'What the site knows about you',
-      location:(city,country)=>`\uD83D\uDCCD You\u2019re in <code>${city}, ${country}</code> \u2014 visible without GPS`,
+      location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} You\u2019re in <code>${city}, ${country}</code> \u2014 IP: <code>${ip}</code>`,
       locationLoading:'\uD83D\uDCCD Detecting your location\u2026',
       datetime:(date,time,tz)=>`\uD83D\uDD50 Your time is <code>${time}</code>, <code>${date}</code> \u2014 timezone <code>${tz}</code>`,
       vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN or proxy detected</b>: IP is in <code>${ipLoc}</code>, but your device is set to <code>${devLoc}</code>. This will trigger CAPTCHAs and some services may block access`,
@@ -795,7 +797,9 @@ const I18N = {
       browser:(name,perms)=>`\uD83C\uDF10 Browser: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 Your connection: <code>${parts}</code>`,
       adblock:"\uD83D\uDEE1\uFE0F You\u2019re using an ad blocker",
-      webrtcLeak:localIp=>`\uD83D\uDD13 WebRTC reveals your local IP: ${localIp} \u2014 your VPN doesn\u2019t hide it`,
+      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC leak</b>: your local IP <code>${localIp}</code> is visible \u2014 your VPN doesn\u2019t hide it`,
+      webrtcSafe:'\uD83D\uDD12 No WebRTC leak detected',
+      webrtcUnavailable:'\u2753 WebRTC: could not check',
       canvas:(hash)=>`\uD83C\uDFA8 Your browser has a unique graphic fingerprint <code>${hash}</code> \u2014 it can identify you on any site without cookies`,
       languages:(flags,inference)=>`\uD83C\uDF10 Languages: ${flags}${inference?' \u2014 '+inference:''}`,
       battery:level=>`\uD83D\uDD0B Battery at ${level}% \u2014 you\u2019re probably on the go`,
@@ -1181,7 +1185,7 @@ const I18N = {
     shockTitle:"Sayt siz haqingizda nimalarni biladi",
     shock:{
       title:"Sayt siz haqingizda nimalarni biladi",
-      location:(city,country)=>`\uD83D\uDCCD Siz <code>${city}, ${country}</code>dasiz \u2014 GPSsiz ham ko\u02BBrinadi`,
+      location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} Siz <code>${city}, ${country}</code>dasiz \u2014 IP: <code>${ip}</code>`,
       locationLoading:"\uD83D\uDCCD Joylashuvingiz aniqlanmoqda\u2026",
       datetime:(date,time,tz)=>`\uD83D\uDD50 Sizda hozir <code>${time}</code>, <code>${date}</code> \u2014 vaqt zonasi <code>${tz}</code>`,
       vpnDetected:(ipLoc,devLoc)=>`\uD83D\uDFE1 <b>VPN yoki proksi aniqlandi</b>: IP <code>${ipLoc}</code> da, lekin qurilmangiz <code>${devLoc}</code> ga sozlangan. Bu kapchalarni chaqiradi va ba'zi xizmatlar kirishni bloklashi mumkin`,
@@ -1191,7 +1195,9 @@ const I18N = {
       browser:(name,perms)=>`\uD83C\uDF10 Brauzer: <code>${name}</code>${perms?' \u2014 '+perms:''}`,
       connection:(parts)=>`\uD83D\uDCE1 Aloqangiz: <code>${parts}</code>`,
       adblock:"\uD83D\uDEE1\uFE0F Siz reklama bloklagichidan foydalanasiz",
-      webrtcLeak:localIp=>`\uD83D\uDD13 WebRTC lokal IP manzilingizni ochib beradi: ${localIp} \u2014 VPN uni yashirmaydi`,
+      webrtcLeak:localIp=>`\uD83D\uDD13 <b>WebRTC oqishi</b>: lokal IP <code>${localIp}</code> ko\u02BBrinmoqda \u2014 VPN uni yashirmaydi`,
+      webrtcSafe:'\uD83D\uDD12 WebRTC oqishi aniqlanmadi',
+      webrtcUnavailable:'\u2753 WebRTC: tekshirib bo\u02BBlmadi',
       canvas:(hash)=>`\uD83C\uDFA8 Brauzeringizda noyob grafik barmoq izi bor <code>${hash}</code> \u2014 u orqali sizni istalgan saytda cookie\u2019siz tanib olishadi`,
       languages:(flags,inference)=>`\uD83C\uDF10 Tillar: ${flags}${inference?' \u2014 '+inference:''}`,
       battery:level=>`\uD83D\uDD0B Quvvat ${level}% \u2014 ehtimol yo\u02BBldasiz`,
@@ -1735,6 +1741,7 @@ const CITY_NAMES={
 
 const LANG_FLAGS={en:'\uD83C\uDDEC\uD83C\uDDE7',ru:'\uD83C\uDDF7\uD83C\uDDFA',uz:'\uD83C\uDDFA\uD83C\uDDFF',uk:'\uD83C\uDDFA\uD83C\uDDE6',de:'\uD83C\uDDE9\uD83C\uDDEA',fr:'\uD83C\uDDEB\uD83C\uDDF7',es:'\uD83C\uDDEA\uD83C\uDDF8',pt:'\uD83C\uDDE7\uD83C\uDDF7',zh:'\uD83C\uDDE8\uD83C\uDDF3',ja:'\uD83C\uDDEF\uD83C\uDDF5',ko:'\uD83C\uDDF0\uD83C\uDDF7',ar:'\uD83C\uDDF8\uD83C\uDDE6',hi:'\uD83C\uDDEE\uD83C\uDDF3',tr:'\uD83C\uDDF9\uD83C\uDDF7',kk:'\uD83C\uDDF0\uD83C\uDDFF',ky:'\uD83C\uDDF0\uD83C\uDDEC',tg:'\uD83C\uDDF9\uD83C\uDDEF'};
 function langToFlag(code){const base=code.split('-')[0].toLowerCase();return LANG_FLAGS[base]||'\uD83C\uDFF3\uFE0F';}
+function countryCodeToFlag(cc){if(!cc||cc.length!==2)return'';const a=cc.toUpperCase();return String.fromCodePoint(0x1F1E6+a.charCodeAt(0)-65,0x1F1E6+a.charCodeAt(1)-65);}
 
 function guessAppleChip(renderer){if(!renderer)return null;const m=renderer.match(/Apple\s+M(\d)(?:\s*(Pro|Max|Ultra))?/i);return m?('Apple M'+m[1]+(m[2]?' '+m[2]:'')):null;}
 function guessDevice(b){
@@ -3134,15 +3141,17 @@ function renderShockBullets(basic,t,snapshot){
   const details=state.serverData?.details||{};
   const hasIp=!!state.serverData;
 
-  // LOCATION (IP-dependent, localized)
+  // LOCATION (IP-dependent, localized, with flag and IP)
   if(hasIp){
     const rawCity=details.city||state.serverData?.geo?.city||'';
     const rawCountry=details.country_name||state.serverData?.geo?.country||'';
     const countryCode=resolveCountryCode(details,state.serverData?.raw,state.serverData?.geo)||'';
     const localCity=CITY_NAMES[rawCity]?.[currentLang]||rawCity;
     const localCountry=COUNTRY_NAMES[countryCode.toUpperCase()]?.[currentLang]||rawCountry;
+    const flag=countryCode?countryCodeToFlag(countryCode):'';
+    const ip=state.serverData?.ip||'';
     if(localCity||localCountry){
-      lines.push(t.shock.location(esc(localCity||localCountry),esc(localCity?localCountry:'')));
+      lines.push(t.shock.location(flag,esc(localCity||localCountry),esc(localCity?localCountry:''),esc(ip)));
     }
   }else if(!state.ipFetchDone){
     lines.push(t.shock.locationLoading);
@@ -3224,11 +3233,17 @@ function renderShockBullets(basic,t,snapshot){
     }
   }
 
-  // WEBRTC LEAK
+  // WEBRTC STATUS (always show)
   const profiling=state.profilingContext;
   const webrtcIp=profiling?.webrtcLocalIp||null;
   if(webrtcIp&&state.serverData?.ip&&webrtcIp!==state.serverData.ip){
-    lines.push(t.shock.webrtcLeak(webrtcIp));
+    lines.push(t.shock.webrtcLeak(esc(webrtcIp)));
+  }else if(webrtcIp===null&&profiling){
+    lines.push(t.shock.webrtcSafe);
+  }else if(!profiling){
+    lines.push(t.shock.webrtcUnavailable);
+  }else{
+    lines.push(t.shock.webrtcSafe);
   }
 
   // CANVAS
