@@ -198,14 +198,13 @@
     .hero-number[data-level="med"]{color:var(--warning)}
     .hero-number[data-level="low"]{color:var(--success)}
     .hero-subtitle{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)}
-    .hero-explanation{font-size:14px;color:var(--muted);margin-bottom:16px;max-width:480px}
     .hero-actions{display:flex;gap:12px;justify-content:flex-start;margin-bottom:16px}
     @media(max-width:640px){
       .hero-number{font-size:40px}
       .hero-subtitle{font-size:16px}
       .hero-actions{flex-direction:column;align-items:stretch}
     }
-    .data-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .data-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
     @media(max-width:640px){.data-groups{grid-template-columns:1fr}}
     .data-group{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
     .data-group h3{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
@@ -240,6 +239,13 @@
     .tracker-badge--open{background:var(--danger-bg,rgba(239,68,68,.1));color:var(--danger,#ef4444)}
     .tracker-name{flex:1;color:var(--text)}
     .tracker-verdict{margin-top:12px;padding:12px 16px;border-radius:var(--radius-md,10px);background:var(--bg-raised,#F3F4F6);font-size:14px;line-height:1.5}
+    .btn-link{background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px;padding:4px 0;text-decoration:underline;text-underline-offset:3px}
+    .btn-link:hover{opacity:.8}
+    .methodology-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+    .methodology-content{background:var(--card,#fff);border-radius:var(--radius-lg,14px);padding:24px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:var(--shadow)}
+    .methodology-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted);line-height:1}
+    .methodology-content h3{margin:0 0 12px;font-size:18px}
+    .methodology-content .small{font-size:14px;line-height:1.7;color:var(--text)}
   </style>
 </head>
 <body>
@@ -279,12 +285,19 @@
     <div id="heroVerdict" class="hero-verdict" style="display:none">
       <div class="hero-number" id="heroNumber">0</div>
       <div class="hero-subtitle" id="heroSubtitle"></div>
-      <div class="hero-explanation" id="heroExplanation"></div>
+      <div id="heroConclusion" class="hero-conclusion"></div>
+      <button class="btn btn-link" id="methodologyBtn" style="display:none"></button>
       <div class="hero-actions">
         <button class="btn btn-primary" id="shareBtn"></button>
-        <button class="btn btn-secondary" id="printBtn"></button>
+        <button class="btn" id="printBtn"></button>
       </div>
-      <div id="heroConclusion" class="hero-conclusion"></div>
+      <div id="methodologyModal" class="methodology-modal" style="display:none">
+        <div class="methodology-content">
+          <button class="methodology-close" id="methodologyClose">&times;</button>
+          <h3 id="methodologyTitle"></h3>
+          <div id="methodologyBody" class="small"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Keep old elements hidden for backward compat with selftest -->
@@ -298,7 +311,7 @@
         <div class="data-group" id="groupIdentity"></div>
         <div class="data-group" id="groupDevice"></div>
         <div class="data-group" id="groupNetwork"></div>
-        <div class="data-group" id="groupFingerprint"></div>
+        <div class="data-group" id="groupFingerprint" style="display:none"></div>
       </div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
     </div>
@@ -338,18 +351,6 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
       </summary>
       <div class="cards" id="cards"></div>
-    </details>
-  </section>
-
-  <!-- Block 5: Methodology & Policy -->
-  <section class="block">
-    <details>
-      <summary id="methodSummary"></summary>
-      <div class="small" id="methodText" style="margin-top:6px"></div>
-    </details>
-    <details>
-      <summary id="policySummary"></summary>
-      <div class="small" id="policyText" style="margin-top:6px"></div>
     </details>
   </section>
 
@@ -408,8 +409,12 @@ const I18N = {
         </p>
         <h3>Как мы обрабатываем данные</h3>
         <p>
-          Все вычисления — только в вашем браузере.
-          Мы ничего не сохраняем и не передаём. Регистрация не нужна.
+          Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём.
+          Сервис полностью бесплатный, без рекламы и регистрации.
+          При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co
+          (при недоступности — ipwho.is, ipify.org или myip.com).
+          Мы показываем весь ответ в интерфейсе.
+          Других внешних запросов нет — ни сторонних шрифтов, ни трекеров, ни скрытых скриптов.
         </p>
       </section>
     `,
@@ -418,7 +423,7 @@ const I18N = {
       'Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток. Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать все прошлые визиты с вашим именем и продать этот профиль.',
       'Магазины повышают цены, зная ваше устройство и платёжеспособность. Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее. Страховые компании и работодатели покупают профили у брокеров данных. После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.',
       'Показывает, что видно о вас прямо сейчас, и объясняет, как снизить риски — без технических знаний.',
-      'Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём. Регистрация не нужна.'
+      'Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём. Сервис полностью бесплатный, без рекламы и регистрации. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — ipwho.is, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет — ни сторонних шрифтов, ни трекеров, ни скрытых скриптов.'
     ],
     uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
     uniqPracticeTitle:'Что это значит на практике:',
@@ -498,11 +503,17 @@ const I18N = {
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     trackers:{
       title:'Защита от трекеров',
+      description:'Мы имитируем типичные методы слежки (рекламные пиксели, скрипты аналитики, рекламные фреймы) и проверяем, блокирует ли ваш браузер или расширения эти элементы. Чем больше заблокировано — тем лучше защищена ваша приватность.',
       pixel:{name:'Рекламный пиксель',blocked:'Заблокирован',open:'Не заблокирован'},
+      pixelExplain:'Невидимые картинки 1\u00D71 пиксель, которые рекламные сети встраивают в страницы для отслеживания ваших визитов',
       analytics:{name:'Скрипт аналитики',blocked:'Заблокирован',open:'Не заблокирован'},
+      analyticsExplain:'Скрипты вроде Google Analytics, которые собирают данные о вашем поведении на сайте',
       iframe:{name:'Рекламный фрейм',blocked:'Заблокирован',open:'Не заблокирован'},
+      iframeExplain:'Встроенные рекламные блоки, которые загружают контент с серверов рекламных сетей',
       dnt:{name:'Do Not Track',blocked:'Включён',open:'Выключен'},
+      dntExplain:'Сигнал браузера, просящий сайты не отслеживать вас (большинство сайтов его игнорируют)',
       gpc:{name:'Global Privacy Control',blocked:'Включён',open:'Выключен'},
+      gpcExplain:'Юридически обязывающий сигнал приватности, поддерживаемый законодательством некоторых стран',
       verdict:function(blocked,total){
         if(blocked>=4) return 'Отличная защита: '+blocked+' из '+total+' трекеров заблокированы. Ваш браузер хорошо настроен.';
         if(blocked>=2) return 'Частичная защита: '+blocked+' из '+total+' трекеров заблокированы. Установите uBlock Origin для полной защиты.';
@@ -516,10 +527,11 @@ const I18N = {
       risks:[
         {icon:'\uD83D\uDCB8',title:'Вы платите больше, чем другие',body:'Интернет-магазины и сервисы бронирования видят вашу модель устройства, браузер и поведение. Пользователям MacBook нередко показывают более высокие цены на авиабилеты и отели, чем пользователям бюджетных Android-устройств — это ценовая дискриминация, и она законна в большинстве стран.'},
         {icon:'\uD83C\uDFAF',title:'Реклама знает о вас больше, чем ваши друзья',body:'На основе отпечатка рекламные системы знают, какие сайты вы посещали, что искали, когда не спали ночью и какие темы вас беспокоят. Эти данные используются не только для рекламы — страховые компании и работодатели покупают профили у брокеров данных.'},
-        {icon:'\uD83C\uDFA3',title:'Фишинг становится точнее',body:'Мошенники, купившие базу с вашим профилем, знают ваш город, провайдера, устройство и язык. Письмо, в котором упоминается ваш MacBook или аккаунт вашего провайдера, выглядит убедительно — именно так работают целевые фишинговые атаки.'},
-        {icon:'\uD83D\uDD13',title:'Режим инкогнито вас не защищает',body:'Большинство пользователей верят, что инкогнито = анонимность. Это не так. Режим инкогнито скрывает историю только от других людей на вашем устройстве. Ваш отпечаток, IP и все сигналы при этом остаются прежними — сайты видят вас точно так же.'},
+        {icon:'\uD83C\uDFA3',title:'Мошенничество становится точнее',body:'Мошенники, купившие базу с вашим профилем, знают ваш город, провайдера, устройство и язык. Письмо, в котором упоминается ваш MacBook или аккаунт вашего провайдера, выглядит убедительно — именно так работают целевые мошеннические атаки.'},
+        {icon:'\uD83D\uDD13',title:'Режим инкогнито вас не защищает',body:'Большинство пользователей верят, что инкогнито = анонимность. Это не так. Режим инкогнито скрывает историю только от других людей на вашем устройстве. Ваш отпечаток, IP и все сигналы при этом остаются прежними — сайты видят вас точно так же. Инкогнито стирает историю, куки и кэш при завершении сессии — на этом всё. Он не скрывает ваш цифровой отпечаток, не шифрует трафик, не маскирует IP-адрес и сохраняет загруженные файлы.'},
         {icon:'\uD83D\uDDC2\uFE0F',title:'Ваш профиль существует без вашего ведома',body:'Прямо сейчас в базах данных брокеров данных (Acxiom, Oracle Data Cloud, Nielsen и др.) существует файл с вашими интересами, маршрутами, покупками и предполагаемым доходом. Вы не давали на это согласие. Вы не можете его удалить.'},
-        {icon:'\u26A0\uFE0F',title:'После утечки — навсегда',body:'В 2023–2024 годах произошли тысячи утечек данных из рекламных платформ. Если профиль с вашим отпечатком утёк — его не отозвать. Мошенники годами используют старые базы для целевых атак.'}
+        {icon:'\u26A0\uFE0F',title:'После утечки — навсегда',body:'В 2023–2024 годах произошли тысячи утечек данных из рекламных платформ. Если профиль с вашим отпечатком утёк — его не отозвать. Мошенники годами используют старые базы для целевых атак.'},
+        {icon:'\uD83D\uDD10',title:'VPN не гарантирует вашу приватность',body:'VPN помогает скрыть трафик и подменить IP, но не прячет ваш цифровой отпечаток. Провайдер видит, что вы используете VPN. Некоторые VPN-сервисы хранят данные о ваших действиях, и доступ к ним может быть получен по запросу или через утечку.'}
       ],
       stepsTitle:'Что сделать прямо сейчас',
       personalTitle:'На основе вашего отпечатка',
@@ -655,9 +667,9 @@ const I18N = {
           title:'Установите uBlock Origin',
           body:'Блокирует рекламные трекеры, пиксели и скрипты слежки.',
           instructions:{
-            chrome:{action:'Установите из Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            chrome:{action:'Установите из Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm'}},
             firefox:{action:'Установите из Firefox Add-ons',link:{text:'Firefox Add-ons',url:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}},
-            brave:{action:'Установите из Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            brave:{action:'Установите из Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm'}},
             safari:{action:'Установите аналог — AdGuard для Safari',link:{text:'App Store',url:'https://apps.apple.com/app/adguard-for-safari/id1440147259'}}
           },
           level:'easy'
@@ -699,11 +711,12 @@ const I18N = {
           title:'Используйте VPN с хорошей репутацией',
           body:'Скрывает IP и провайдера. Выбирайте сервис без логов.',
           instructions:{
-            chrome:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)'},
-            firefox:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)'},
-            brave:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)'},
-            safari:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)'}
+            chrome:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            firefox:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            brave:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            safari:{action:'Рекомендуемые VPN-сервисы',detail:'Mullvad (mullvad.net) или ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}}
           },
+          expandDetail:'<b>На что обратить внимание при выборе VPN:</b><ul style="margin:8px 0 0 16px;padding:0"><li>Политика no-logs — если провайдер ничего не хранит, выдавать нечего</li><li>Kill-switch — отключает сеть при потере связи с VPN-сервером</li><li>Юрисдикция — позволяет сервису отказаться от раскрытия данных</li><li>Обфускация трафика — маскирует VPN-соединение от провайдера</li><li>Серверы в разных странах — доступ к локальным ресурсам</li><li>Результаты независимых аудитов безопасности</li></ul>',
           level:'medium'
         },
         {
@@ -719,7 +732,7 @@ const I18N = {
         }
       ]
     },
-    detailTitle:'Подробности',
+    detailTitle:'Подробности для профессионалов',
     shockTitle:'\u0427\u0442\u043e \u0441\u0430\u0439\u0442 \u0437\u043d\u0430\u0435\u0442 \u043e \u0432\u0430\u0441',
     shock:{
       title:'\u0427\u0442\u043e \u0441\u0430\u0439\u0442 \u0437\u043d\u0430\u0435\u0442 \u043e \u0432\u0430\u0441',
@@ -1011,6 +1024,7 @@ const I18N = {
     copy:{hint:'Нажмите, чтобы скопировать',done:'Скопировано'},
     examplePrefix:'Пример:',
     advicePrefix:'💡 Совет:',
+    methodologyButton:'Как рассчитывается процент?',
     methodSummary:'<b>Как считаем результат</b>',
     methodText:'Для каждого из 21 сигнала (браузер, ОС, разрешение экрана, GPU, число ядер, объём памяти, языки, расширения, Canvas/Audio-хэш, WebGL-рендерер, аудио-отпечаток, набор шрифтов и др.) рассчитывается информационная энтропия: -log\u2082(вероятность). Вероятности берутся из встроенных частотных таблиц, составленных на основе данных EFF Panopticlick и исследований FingerprintJS. Сигналы, которые встречаются редко (нестандартный GPU, редкий браузер, необычное разрешение), дают больший вклад в итоговый балл. Алгоритм учитывает зависимости между сигналами (например, Safari + Apple GPU корректируются). Итоговый процент — это перцентиль вашей энтропии среди 25 000 смоделированных отпечатков. Подсчёт выполняется локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
@@ -1057,8 +1071,12 @@ const I18N = {
         </p>
         <h3>How we process data</h3>
         <p>
-          All calculations happen only in your browser.
-          We do not store or transmit anything. No registration needed.
+          All calculations happen only in your browser. We do not store or transmit anything.
+          The service is completely free, ad-free, and requires no registration.
+          On page load, the browser queries your IP data via ipapi.co
+          (with fallbacks to ipwho.is, ipify.org, or myip.com if unavailable).
+          We display the full response in the interface.
+          There are no other external requests — no third-party fonts, trackers, or hidden scripts.
         </p>
       </section>
     `,
@@ -1067,7 +1085,7 @@ const I18N = {
       'You visited dozens of websites without signing up — leaving the same fingerprint everywhere. Then you created an account on one of them. Now ad networks can link all your past visits to your name and sell that profile.',
       'Stores raise prices based on your device and perceived spending power. Scammers know your city, ISP, and device — phishing becomes more precise. Insurance companies and employers buy profiles from data brokers. Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.',
       'It shows what is visible about you right now and explains how to reduce the risks — no technical knowledge required.',
-      'All calculations happen only in your browser. We do not store or transmit anything. No registration needed.'
+      'All calculations happen only in your browser. We do not store or transmit anything. The service is completely free, ad-free, and requires no registration. On page load, the browser queries your IP data via ipapi.co (with fallbacks to ipwho.is, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests — no third-party fonts, trackers, or hidden scripts.'
     ],
     uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
     uniqPracticeTitle:'What this means in practice:',
@@ -1147,11 +1165,17 @@ const I18N = {
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     trackers:{
       title:'Tracker protection',
+      description:'We simulate common tracking methods (ad pixels, analytics scripts, ad frames) and check whether your browser or extensions block them. The more blocked, the better your privacy is protected.',
       pixel:{name:'Ad tracking pixel',blocked:'Blocked',open:'Not blocked'},
+      pixelExplain:'Invisible 1\u00D71 pixel images that ad networks embed in pages to track your visits',
       analytics:{name:'Analytics script',blocked:'Blocked',open:'Not blocked'},
+      analyticsExplain:'Scripts like Google Analytics that collect data about your behavior on sites',
       iframe:{name:'Ad frame',blocked:'Blocked',open:'Not blocked'},
+      iframeExplain:'Embedded ad blocks that load content from ad network servers',
       dnt:{name:'Do Not Track',blocked:'Enabled',open:'Disabled'},
+      dntExplain:'A browser signal asking sites not to track you (most sites ignore it)',
       gpc:{name:'Global Privacy Control',blocked:'Enabled',open:'Disabled'},
+      gpcExplain:'A legally binding privacy signal supported by laws in some countries',
       verdict:function(blocked,total){
         if(blocked>=4) return 'Excellent protection: '+blocked+' of '+total+' trackers blocked. Your browser is well configured.';
         if(blocked>=2) return 'Partial protection: '+blocked+' of '+total+' trackers blocked. Install uBlock Origin for full protection.';
@@ -1165,10 +1189,11 @@ const I18N = {
       risks:[
         {icon:'\uD83D\uDCB8',title:'You pay more than others',body:'Online stores and booking services see your device model, browser, and behaviour. MacBook users are often shown higher prices for flights and hotels than users of budget Android devices \u2014 this is price discrimination, and it is legal in most countries.'},
         {icon:'\uD83C\uDFAF',title:'Ads know more about you than your friends',body:'Based on your fingerprint, ad systems know which sites you visited, what you searched for, when you were awake at night, and which topics concern you. This data is used not only for ads \u2014 insurance companies and employers buy profiles from data brokers.'},
-        {icon:'\uD83C\uDFA3',title:'Phishing becomes more precise',body:'Scammers who bought a database with your profile know your city, ISP, device, and language. An email that mentions your MacBook or your ISP account looks convincing \u2014 this is exactly how targeted phishing attacks work.'},
-        {icon:'\uD83D\uDD13',title:'Incognito mode does not protect you',body:'Most users believe that incognito = anonymity. It is not. Incognito mode only hides history from other people on your device. Your fingerprint, IP, and all signals remain the same \u2014 sites see you just as before.'},
+        {icon:'\uD83C\uDFA3',title:'Phishing (targeted scam emails) becomes more precise',body:'Scammers who bought a database with your profile know your city, ISP, device, and language. An email that mentions your MacBook or your ISP account looks convincing \u2014 this is exactly how targeted phishing attacks work.'},
+        {icon:'\uD83D\uDD13',title:'Incognito mode does not protect you',body:'Most users believe that incognito = anonymity. It is not. Incognito mode only hides history from other people on your device. Your fingerprint, IP, and all signals remain the same \u2014 sites see you just as before. Incognito clears history, cookies, and cache when the session ends \u2014 that is all. It does not hide your digital fingerprint, does not encrypt traffic, does not mask your IP address, and keeps downloaded files.'},
         {icon:'\uD83D\uDDC2\uFE0F',title:'Your profile exists without your knowledge',body:'Right now, in the databases of data brokers (Acxiom, Oracle Data Cloud, Nielsen, etc.) there is a file with your interests, routes, purchases, and estimated income. You did not consent to this. You cannot delete it.'},
-        {icon:'\u26A0\uFE0F',title:'After a leak \u2014 forever',body:'In 2023\u20132024, thousands of data leaks occurred from advertising platforms. If a profile with your fingerprint leaked \u2014 it cannot be recalled. Scammers use old databases for targeted attacks for years.'}
+        {icon:'\u26A0\uFE0F',title:'After a leak \u2014 forever',body:'In 2023\u20132024, thousands of data leaks occurred from advertising platforms. If a profile with your fingerprint leaked \u2014 it cannot be recalled. Scammers use old databases for targeted attacks for years.'},
+        {icon:'\uD83D\uDD10',title:'VPN does not guarantee your privacy',body:'A VPN helps hide your traffic and mask your IP, but it does not conceal your digital fingerprint. Your ISP can see you are using a VPN. Some VPN providers log your activity, and this data can be obtained through legal requests or breaches.'}
       ],
       stepsTitle:'What to do right now',
       personalTitle:'Based on your fingerprint',
@@ -1304,9 +1329,9 @@ const I18N = {
           title:'Install uBlock Origin',
           body:'Blocks ad trackers, pixels, and tracking scripts.',
           instructions:{
-            chrome:{action:'Install from Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            chrome:{action:'Install from Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm'}},
             firefox:{action:'Install from Firefox Add-ons',link:{text:'Firefox Add-ons',url:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}},
-            brave:{action:'Install from Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            brave:{action:'Install from Chrome Web Store',link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm'}},
             safari:{action:'Install the equivalent \u2014 AdGuard for Safari',link:{text:'App Store',url:'https://apps.apple.com/app/adguard-for-safari/id1440147259'}}
           },
           level:'easy'
@@ -1348,11 +1373,12 @@ const I18N = {
           title:'Use a reputable VPN',
           body:'Hides IP and ISP. Choose a no-logs service.',
           instructions:{
-            chrome:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)'},
-            firefox:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)'},
-            brave:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)'},
-            safari:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)'}
+            chrome:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            firefox:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            brave:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            safari:{action:'Recommended VPN services',detail:'Mullvad (mullvad.net) or ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}}
           },
+          expandDetail:'<b>What to look for when choosing a VPN:</b><ul style="margin:8px 0 0 16px;padding:0"><li>No-logs policy \u2014 if the provider stores nothing, there is nothing to hand over</li><li>Kill-switch \u2014 cuts network when VPN connection drops</li><li>Jurisdiction \u2014 allows the provider to refuse data disclosure</li><li>Traffic obfuscation \u2014 hides VPN usage from your ISP</li><li>Servers in multiple countries \u2014 access to regional content</li><li>Independent security audit results</li></ul>',
           level:'medium'
         },
         {
@@ -1368,7 +1394,7 @@ const I18N = {
         }
       ]
     },
-    detailTitle:'Details',
+    detailTitle:'Details for professionals',
     shockTitle:'What the site knows about you',
     shock:{
       title:'What the site knows about you',
@@ -1627,6 +1653,7 @@ const I18N = {
     copy:{hint:'Click to copy',done:'Copied'},
     examplePrefix:'Example:',
     advicePrefix:'💡 Tip:',
+    methodologyButton:'How is the percentage calculated?',
     methodSummary:'<b>How we calculate it</b>',
     methodText:'For each of 21 signals (browser, OS, screen resolution, GPU, core count, memory, languages, extensions, Canvas/Audio hash, WebGL renderer, audio fingerprint, font set, etc.) we compute information entropy: -log\u2082(probability). Probabilities come from built-in frequency tables based on EFF Panopticlick data and FingerprintJS research. Rare signals (unusual GPU, uncommon browser, atypical resolution) contribute more to the final score. The algorithm accounts for signal dependencies (e.g. Safari + Apple GPU are correlated). The final percentage is your entropy\u2019s percentile among 25,000 simulated fingerprints. All calculations run locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
@@ -1671,19 +1698,23 @@ const I18N = {
           Hozir siz haqingizda nimalar koʻrinishini koʻrsatadi va
           xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.
         </p>
-        <h3>Maʼlumotlar qanday ishlanadi</h3>
+        <h3>Ma\u02BClumotlar qanday ishlanadi</h3>
         <p>
-          Barcha hisob-kitoblar faqat brauzeringizda bajariladi.
-          Biz hech narsani saqlamaymiz va uzatmaymiz. Roʻyxatdan oʻtish shart emas.
+          Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz.
+          Xizmat to\u02BBliq bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz.
+          Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi
+          (mavjud bo\u02BBlmasa ipwho.is, ipify.org yoki myip.com ishlatiladi).
+          Javobning hammasini interfeysda ko\u02BBrsatamiz.
+          Boshqa tashqi so\u02BBrovlar yo\u02BBq — uchinchi tomon shriftlar, trekerlar yoki yashirin skriptlar yo\u02BBq.
         </p>
       </section>
     `,
     introParagraphs:[
-      'Har bir brauzer noyob iz qoldiradi — texnik xususiyatlar toʻplami, saytlar uni jimgina, soʻramasdan va ruxsatingizsiz oʻqiydi. Bu raqamli barmoq izi deb ataladi.',
-      'Siz oʻnlab saytlarga roʻyxatdan oʻtmasdan kirdingiz — hammada bir xil iz qoldirdingiz. Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari barcha oldingi tashriflarni ismingiz bilan bogʻlab, bu profilni sotishi mumkin.',
-      'Doʻkonlar qurilma va toʻlov qobiliyatingizni bilib narxlarni oshiradi. Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq boʻladi. Sugʻurta kompaniyalari va ish beruvchilar maʼlumot brokerlaridan profillar sotib oladi. Maʼlumotlar bazasi sizib chiqqandan keyin profilni «oʻchirish» mumkin emas.',
-      'Hozir siz haqingizda nimalar koʻrinishini koʻrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.',
-      'Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz. Roʻyxatdan oʻtish shart emas.'
+      'Har bir brauzer noyob iz qoldiradi — texnik xususiyatlar to\u02BBplami, saytlar uni jimgina, so\u02BBramasdan va ruxsatingizsiz o\u02BBqiydi. Bu raqamli barmoq izi deb ataladi.',
+      'Siz o\u02BBnlab saytlarga ro\u02BByxatdan o\u02BBtmasdan kirdingiz — hammada bir xil iz qoldirdingiz. Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari barcha oldingi tashriflarni ismingiz bilan bog\u02BBlab, bu profilni sotishi mumkin.',
+      'Do\u02BBkonlar qurilma va to\u02BBlov qobiliyatingizni bilib narxlarni oshiradi. Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq bo\u02BBladi. Sug\u02BBurta kompaniyalari va ish beruvchilar ma\u02BClumot brokerlaridan profillar sotib oladi. Ma\u02BClumotlar bazasi sizib chiqqandan keyin profilni «o\u02BBchirish» mumkin emas.',
+      'Hozir siz haqingizda nimalar ko\u02BBrinishini ko\u02BBrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.',
+      'Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz. Xizmat to\u02BBliq bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa ipwho.is, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq — uchinchi tomon shriftlar, trekerlar yoki yashirin skriptlar yo\u02BBq.'
     ],
     uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
     uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
@@ -1763,11 +1794,17 @@ const I18N = {
     uniqAdviceFallback:['fallback1','fallback2','fallback3','fallback4','fallback5','fallback6'],
     trackers:{
       title:"Trekerlardan himoya",
+      description:"Biz keng tarqalgan kuzatuv usullarini (reklama piksellari, analitika skriptlari, reklama freymlar) simulyatsiya qilamiz va brauzeringiz ularni bloklayotganini tekshiramiz.",
       pixel:{name:"Reklama pikseli",blocked:"Bloklangan",open:"Bloklanmagan"},
+      pixelExplain:"Reklama tarmoqlari sahifalarga joylashtiradigan ko\u02BBrinmas 1\u00D71 piksel rasmlar",
       analytics:{name:"Analitika skripti",blocked:"Bloklangan",open:"Bloklanmagan"},
+      analyticsExplain:"Saytdagi xatti-harakatlaringiz haqida ma\u02BClumot to\u02BBplaydigan skriptlar",
       iframe:{name:"Reklama freyimi",blocked:"Bloklangan",open:"Bloklanmagan"},
+      iframeExplain:"Reklama tarmoqlari serverlaridan kontent yuklaydigan o\u02BBrnatilgan reklama bloklari",
       dnt:{name:"Do Not Track",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
+      dntExplain:"Saytlardan sizni kuzatmaslikni so\u02BBraydigan brauzer signali",
       gpc:{name:"Global Privacy Control",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
+      gpcExplain:"Ba\u02BBzi mamlakatlar qonunchiligida qo\u02BBllab-quvvatlanadigan maxfiylik signali",
       verdict:function(blocked,total){
         if(blocked>=4) return "Ajoyib himoya: "+blocked+" dan "+total+" ta treker bloklangan. Brauzeringiz yaxshi sozlangan.";
         if(blocked>=2) return "Qisman himoya: "+blocked+" dan "+total+" ta treker bloklangan. To\u02BBliq himoya uchun uBlock Origin o\u02BBrnating.";
@@ -1781,10 +1818,11 @@ const I18N = {
       risks:[
         {icon:'\uD83D\uDCB8',title:'Siz boshqalardan ko\u02BBproq to\u02BBlaysiz',body:'Internet-do\u02BBkonlar va bron qilish xizmatlari qurilma modelingiz, brauzeringiz va xatti-harakatlaringizni ko\u02BBradi. MacBook foydalanuvchilariga ko\u02BBpincha aviabilet va mehmonxonalar uchun byudjetli Android qurilmalar foydalanuvchilariga qaraganda yuqoriroq narxlar ko\u02BBrsatiladi \u2014 bu narx kamsitishi bo\u02BBlib, aksariyat mamlakatlarda qonuniy.'},
         {icon:'\uD83C\uDFAF',title:'Reklama siz haqingizda do\u02BBstlaringizdan ko\u02BBproq biladi',body:'Barmoq izingiz asosida reklama tizimlari qaysi saytlarga kirgansiz, nimani qidirganingiz, kechasi qachon uxlamaganingiz va qaysi mavzular sizni tashvishlantirishini biladi. Bu ma\u02BBlumotlar faqat reklama uchun emas \u2014 sug\u02BBurta kompaniyalari va ish beruvchilar ma\u02BBlumot brokerlaridan profillar sotib oladi.'},
-        {icon:'\uD83C\uDFA3',title:'Fishing aniqroq bo\u02BBladi',body:'Profilingiz bilan bazani sotib olgan firibgarlar shahringiz, provayderingiz, qurilmangiz va tilingizni biladi. MacBook yoki provayder akkountingizni eslatuvchi xat ishonchli ko\u02BBrinadi \u2014 nishonlangan fishing hujumlari aynan shunday ishlaydi.'},
-        {icon:'\uD83D\uDD13',title:'Inkognito rejimi sizni himoya qilmaydi',body:'Ko\u02BBpchilik foydalanuvchilar inkognito = anonimlik deb hisoblaydi. Bu noto\u02BBg\u02BBri. Inkognito rejimi tarixni faqat qurilmangizdagi boshqa odamlardan yashiradi. Barmoq izingiz, IP va barcha signallar avvalgidek qoladi \u2014 saytlar sizni xuddi shunday ko\u02BBradi.'},
+        {icon:'\uD83C\uDFA3',title:'Fishing (maqsadli firibgarlik xatlari) aniqroq bo\u02BBladi',body:'Profilingiz bilan bazani sotib olgan firibgarlar shahringiz, provayderingiz, qurilmangiz va tilingizni biladi. MacBook yoki provayder akkountingizni eslatuvchi xat ishonchli ko\u02BBrinadi \u2014 nishonlangan fishing hujumlari aynan shunday ishlaydi.'},
+        {icon:'\uD83D\uDD13',title:'Inkognito rejimi sizni himoya qilmaydi',body:'Ko\u02BBpchilik foydalanuvchilar inkognito = anonimlik deb hisoblaydi. Bu noto\u02BBg\u02BBri. Inkognito rejimi tarixni faqat qurilmangizdagi boshqa odamlardan yashiradi. Barmoq izingiz, IP va barcha signallar avvalgidek qoladi \u2014 saytlar sizni xuddi shunday ko\u02BBradi. Inkognito sessiya tugaganda tarix, cookie va keshni tozalaydi. Lekin raqamli barmoq izingizni yashirmaydi, trafikni shifrlamaydi, IP manzilni berkitmaydi.'},
         {icon:'\uD83D\uDDC2\uFE0F',title:'Profilingiz sizning xabaringizsiz mavjud',body:'Hozir ma\u02BBlumot brokerlari (Acxiom, Oracle Data Cloud, Nielsen va boshqalar) ma\u02BBlumotlar bazasida sizning qiziqishlaringiz, yo\u02BBllaringiz, xaridlaringiz va taxminiy daromadingiz bilan fayl mavjud. Siz bunga rozilik bermadingiz. Uni o\u02BBchira olmaysiz.'},
-        {icon:'\u26A0\uFE0F',title:'Sizib chiqqandan keyin \u2014 abadiy',body:'2023\u20132024 yillarda reklama platformalaridan minglab ma\u02BBlumot sizishlari ro\u02BBy berdi. Agar barmoq izingiz bilan profil sizib chiqqan bo\u02BBlsa \u2014 uni qaytarib bo\u02BBlmaydi. Firibgarlar eski bazalardan yillab nishonlangan hujumlar uchun foydalanadi.'}
+        {icon:'\u26A0\uFE0F',title:'Sizib chiqqandan keyin \u2014 abadiy',body:'2023\u20132024 yillarda reklama platformalaridan minglab ma\u02BBlumot sizishlari ro\u02BBy berdi. Agar barmoq izingiz bilan profil sizib chiqqan bo\u02BBlsa \u2014 uni qaytarib bo\u02BBlmaydi. Firibgarlar eski bazalardan yillab nishonlangan hujumlar uchun foydalanadi.'},
+        {icon:'\uD83D\uDD10',title:"VPN maxfiylikni kafolatlamaydi",body:"VPN trafikni yashirish va IP ni almashtirish uchun yordam beradi, lekin raqamli barmoq izingizni yashirmaydi. Provayder VPN ishlatayotganingizni ko\u02BBradi. Ba\u02BBzi VPN xizmatlari faoliyatingiz haqidagi ma\u02BClumotlarni saqlaydi."}
       ],
       stepsTitle:'Hozir nima qilish kerak',
       personalTitle:'Barmoq izingiz asosida',
@@ -1920,9 +1958,9 @@ const I18N = {
           title:"uBlock Origin o\u02BBrnating",
           body:"Reklama trekerlarini, piksellarni va kuzatuv skriptlarini bloklaydi.",
           instructions:{
-            chrome:{action:"Chrome Web Store dan o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            chrome:{action:"Chrome Web Store dan o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm'}},
             firefox:{action:"Firefox Add-ons dan o\u02BBrnating",link:{text:'Firefox Add-ons',url:'https://addons.mozilla.org/firefox/addon/ublock-origin/'}},
-            brave:{action:"Chrome Web Store dan o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/search/ublock%20origin'}},
+            brave:{action:"Chrome Web Store dan o\u02BBrnating",link:{text:'Chrome Web Store',url:'https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm'}},
             safari:{action:"Muqobil \u2014 Safari uchun AdGuard o\u02BBrnating",link:{text:'App Store',url:'https://apps.apple.com/app/adguard-for-safari/id1440147259'}}
           },
           level:'easy'
@@ -1964,11 +2002,12 @@ const I18N = {
           title:"Ishonchli VPN dan foydalaning",
           body:"IP va provayderni yashiradi. Loglarsiz xizmatni tanlang.",
           instructions:{
-            chrome:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)'},
-            firefox:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)'},
-            brave:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)'},
-            safari:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)'}
+            chrome:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            firefox:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            brave:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}},
+            safari:{action:"Tavsiya etilgan VPN xizmatlari",detail:'Mullvad (mullvad.net) yoki ProtonVPN (protonvpn.com)',link:{text:'Mullvad',url:'https://mullvad.net'}}
           },
+          expandDetail:"<b>VPN tanlashda nimaga e\u02BBtibor berish kerak:</b><ul style=\"margin:8px 0 0 16px;padding:0\"><li>No-logs siyosati \u2014 provayder hech narsa saqlamasa, topshiradigan narsa yo\u02BBq</li><li>Kill-switch \u2014 VPN uzilganda tarmoqni o\u02BBchiradi</li><li>Yurisdiksiya \u2014 xizmatga ma\u02BClumotlarni oshkor qilishdan bosh tortish imkonini beradi</li><li>Trafik obfuskatsiyasi \u2014 VPN ishlatishni provayderdan yashiradi</li><li>Turli mamlakatlarda serverlar</li><li>Mustaqil xavfsizlik auditi natijalari</li></ul>",
           level:'medium'
         },
         {
@@ -1984,7 +2023,7 @@ const I18N = {
         }
       ]
     },
-    detailTitle:'Batafsil',
+    detailTitle:"Mutaxassislar uchun tafsilotlar",
     shockTitle:"Sayt siz haqingizda nimalarni biladi",
     shock:{
       title:"Sayt siz haqingizda nimalarni biladi",
@@ -2266,6 +2305,7 @@ const I18N = {
     copy:{hint:'Nusxa olish uchun bosing',done:'Nusxalandi'},
     examplePrefix:'Misol:',
     advicePrefix:'💡 Maslahat:',
+    methodologyButton:"Foiz qanday hisoblanadi?",
     methodSummary:'<b>Natija qanday olinadi</b>',
     methodText:"21 ta signal (brauzer, OT, ekran o\u02BBlchami, GPU, yadrolar soni, xotira, tillar, kengaytmalar, Canvas/Audio xesh, WebGL renderer, audio barmoq izi, shriftlar to\u02BBplami va boshq.) uchun axborot entropiyasi hisoblanadi: -log\u2082(ehtimollik). Ehtimolliklar EFF Panopticlick va FingerprintJS tadqiqotlari asosida tuzilgan ichki chastota jadvallaridan olinadi. Kam uchraydigan signallar (noodatiy GPU, kam tarqalgan brauzer, nostandart o\u02BBlcham) yakuniy ballga ko\u02BBproq hissa qo\u02BBshadi. Algoritm signallar orasidagi bog\u02BBliqlikni hisobga oladi. Yakuniy foiz \u2014 25 000 ta modellashtirilgan barmoq izi orasida sizning entropiyangiz percentili. Hisoblash brauzeringizni tark etmaydi.",
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
@@ -2282,8 +2322,17 @@ const I18N = {
 
 // Release version follows ISO 8601 (YYYY-MM-DD) for global clarity.
 const VERSION = '2025-10-11';
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 const CHANGELOG = [
+  {
+    version:'2.1',
+    date:'2026-03-25',
+    changes:{
+      ru:['Новые сигналы: WebGL, AudioContext, Font fingerprinting','Симуляция трекеров (5 тестов)','Детекция подмены данных браузера','Персонализация рекомендаций по браузеру','Карточка рисков VPN','Модальное окно методологии'],
+      en:['New signals: WebGL, AudioContext, Font fingerprinting','Tracker simulation (5 tests)','Browser data spoofing detection','Browser-specific recommendations','VPN risk card','Methodology modal'],
+      uz:["Yangi signallar: WebGL, AudioContext, Font fingerprinting","Treker simulyatsiyasi (5 ta test)","Brauzer ma\u02BClumotlari soxtalashtirish aniqlash","Brauzerga moslashtirilgan tavsiyalar","VPN xavf kartasi","Metodologiya modali"]
+    }
+  },
   {
     version: '2.0',
     date: '2026-03-25',
@@ -2402,6 +2451,7 @@ const CANONICAL_URL = 'https://morgunov.tech/fingerprint';
 const LOCAL_TZ=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||null;}catch(_){return null;}})();
 const TEXT_ENCODER=new TextEncoder();
 const IS_IOS=(()=>{const ua=navigator.userAgent||'';const platform=navigator.platform||'';return /iP(?:ad|hone|od)/.test(ua)||(platform==='MacIntel'&&navigator.maxTouchPoints>1);})();
+const IS_ANDROID=/Android/i.test(navigator.userAgent);
 function detectPointerType(){
   try{
     if(window.matchMedia&&window.matchMedia('(pointer:fine)').matches)return'fine';
@@ -3160,6 +3210,14 @@ function renderTrackerTests(results,t){
   titleEl.textContent=tt.title;
   container.innerHTML='';
 
+  if(tt.description){
+    const descP=document.createElement('p');
+    descP.className='small';
+    descP.style.marginBottom='12px';
+    descP.textContent=tt.description;
+    container.appendChild(descP);
+  }
+
   let blockedCount=0;
   const testKeys=['pixel','analytics','iframe','dnt','gpc'];
 
@@ -3172,11 +3230,24 @@ function renderTrackerTests(results,t){
     const badge=document.createElement('span');
     badge.className='tracker-badge '+(r.blocked?'tracker-badge--blocked':'tracker-badge--open');
     badge.textContent=r.blocked?(meta.blocked):(meta.open);
-    const name=document.createElement('span');
-    name.className='tracker-name';
-    name.textContent=meta.name;
+    const textWrap=document.createElement('div');
+    textWrap.style.flex='1';
+    const nameEl=document.createElement('div');
+    nameEl.className='tracker-name';
+    nameEl.textContent=meta.name;
+    const explainKey=r.id+'Explain';
+    const explain=tt[explainKey]||'';
+    if(explain){
+      const explainEl=document.createElement('div');
+      explainEl.style.cssText='font-size:12px;color:var(--text-muted,var(--muted));margin-top:2px';
+      explainEl.textContent=explain;
+      textWrap.appendChild(nameEl);
+      textWrap.appendChild(explainEl);
+    }else{
+      textWrap.appendChild(nameEl);
+    }
     row.appendChild(badge);
-    row.appendChild(name);
+    row.appendChild(textWrap);
     container.appendChild(row);
   });
 
@@ -4697,7 +4768,8 @@ function createRecCard(rec, levelLabels, isPersonal, altPrefix) {
   zoneTop.className = 'rec-zone-top';
   var header = document.createElement('div');
   header.className = 'rec-header';
-  header.innerHTML = '<span class="rec-title">' + esc(rec.title) + '</span>' + (rec.level && levelLabels[rec.level] ? '<span class="rec-level">' + esc(levelLabels[rec.level]) + '</span>' : '');
+  var levelHtml = (isPersonal && rec.level && levelLabels[rec.level]) ? '<span class="rec-level">' + esc(levelLabels[rec.level]) + '</span>' : '';
+  header.innerHTML = '<span class="rec-title">' + esc(rec.title) + '</span>' + levelHtml;
   zoneTop.appendChild(header);
   card.appendChild(zoneTop);
 
@@ -4744,6 +4816,20 @@ function createRecCard(rec, levelLabels, isPersonal, altPrefix) {
       altEl.className = 'rec-alt';
       altEl.textContent = (altPrefix || '') + rec.alternative;
       zoneAction.appendChild(altEl);
+    }
+
+    if(rec.expandDetail){
+      var details=document.createElement('details');
+      details.style.cssText='margin-top:8px;font-size:13px';
+      var summary=document.createElement('summary');
+      summary.style.cssText='cursor:pointer;color:var(--accent);font-size:13px';
+      summary.textContent={ru:'\u041f\u043e\u0434\u0440\u043e\u0431\u043d\u0435\u0435 \u043e \u0432\u044b\u0431\u043e\u0440\u0435 VPN',en:'More on choosing a VPN',uz:"VPN tanlash haqida batafsil"}[currentLang]||'More';
+      details.appendChild(summary);
+      var expandContent=document.createElement('div');
+      expandContent.style.cssText='margin-top:8px;line-height:1.6';
+      expandContent.innerHTML=rec.expandDetail;
+      details.appendChild(expandContent);
+      zoneAction.appendChild(details);
     }
 
     card.appendChild(zoneAction);
@@ -5201,10 +5287,8 @@ async function render(lang){
   }
   getEl('detailTitle').textContent=t.detailTitle;
   getEl('shockTitle').textContent=t.shock.title;
-  getEl('methodSummary').innerHTML=t.methodSummary;
-  getEl('methodText').innerHTML=t.methodText;
-  getEl('policySummary').innerHTML=t.policySummary;
-  getEl('policyText').innerHTML=t.policyText;
+  const methodBtn=getEl('methodologyBtn');
+  if(methodBtn) methodBtn.textContent=t.methodologyButton||'How is the percentage calculated?';
   const footerEl=getEl('footerText');
   if(footerEl){
     const footerContent=typeof t.footer==='function'?t.footer(APP_VERSION):t.footer;
@@ -5262,7 +5346,6 @@ async function render(lang){
     const heroEl=getEl('heroVerdict');
     const heroNumEl=getEl('heroNumber');
     const heroSubEl=getEl('heroSubtitle');
-    const heroExpEl=getEl('heroExplanation');
 
     if(heroEl&&heroNumEl){
       heroEl.style.display='block';
@@ -5285,25 +5368,6 @@ async function render(lang){
       }
 
       if(heroSubEl) heroSubEl.textContent=uniqCopy.headline||'';
-
-      const heroVerdictTexts={
-        high:{
-          ru:'\u0421\u0430\u0439\u0442\u044b \u043c\u043e\u0433\u0443\u0442 \u043b\u0435\u0433\u043a\u043e \u0443\u0437\u043d\u0430\u0442\u044c \u0432\u0430\u0441 \u0431\u0435\u0437 cookies \u0438 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438.',
-          en:'Websites can easily recognise you without cookies or sign-up.',
-          uz:'Saytlar sizni cookie va ro\u02BByxatdan o\u02BBtishsiz osongina tanishi mumkin.'
-        },
-        med:{
-          ru:'\u0412\u0430\u0441 \u0441\u043b\u043e\u0436\u043d\u0435\u0435 \u043e\u0442\u0441\u043b\u0435\u0434\u0438\u0442\u044c, \u043d\u043e \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438 IP \u0438\u043b\u0438 cookies \u2014 \u0440\u0438\u0441\u043a \u0440\u0430\u0441\u0442\u0451\u0442.',
-          en:'Harder to track, but adding IP or cookies increases the risk.',
-          uz:'Kuzatish qiyinroq, lekin IP yoki cookie qo\u02BBshilsa xavf oshadi.'
-        },
-        low:{
-          ru:'\u0412\u044b \u043d\u0435\u043f\u043b\u043e\u0445\u043e \u0437\u0430\u0449\u0438\u0449\u0435\u043d\u044b, \u043d\u043e \u0440\u0435\u0434\u043a\u0438\u0435 \u043f\u043b\u0430\u0433\u0438\u043d\u044b \u0438\u043b\u0438 \u0448\u0440\u0438\u0444\u0442\u044b \u043c\u043e\u0433\u0443\u0442 \u0432\u0430\u0441 \u0432\u044b\u0434\u0430\u0442\u044c.',
-          en:'You are fairly protected, but rare plugins or fonts could single you out.',
-          uz:'Yaxshi himoyalangansiz, lekin noodatiy kengaytmalar sizni ajratishi mumkin.'
-        }
-      };
-      if(heroExpEl) heroExpEl.textContent=heroVerdictTexts[level]?.[currentLang]||'';
     }
 
     // Hero summary
@@ -5528,14 +5592,20 @@ async function copyText(value){
 function flashShareMessage(btn,message,restore){
   const original=restore||btn.dataset.label||btn.textContent;
   btn.textContent=message;
+  btn.style.background='var(--success,#22c55e)';
+  btn.style.color='#fff';
+  const timeout=2000;
   setTimeout(()=>{
     btn.textContent=btn.dataset.label||original;
-  },1800);
+    btn.style.background='';
+    btn.style.color='';
+  },timeout);
 }
 
 async function handleShareClick(){
   const btn=getEl('shareBtn');
   if(!btn)return;
+  if(btn.getAttribute('aria-disabled')==='true')return;
   const t=I18N[currentLang]||I18N.ru;
   const payload=state.sharePayload;
   if(!payload){
@@ -5611,7 +5681,7 @@ async function handleSaveClick(){
         return;
       }
     }catch(_){/* fallback to download */}
-  }else if(typeof window.print==='function'){
+  }else if(!IS_ANDROID && typeof window.print==='function'){
     try{
       window.print();
       return;
@@ -5766,6 +5836,31 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('changelogModal')?.addEventListener('click', e => {
     if(e.target===document.getElementById('changelogModal')) closeChangelog();
   });
+  // Methodology modal
+  const methodBtnEl=getEl('methodologyBtn');
+  const methodModal=getEl('methodologyModal');
+  const methodCloseEl=getEl('methodologyClose');
+  const methodTitle=getEl('methodologyTitle');
+  const methodBodyEl=getEl('methodologyBody');
+  if(methodBtnEl){
+    methodBtnEl.style.display='inline-flex';
+    methodBtnEl.addEventListener('click',()=>{
+      const t=I18N[currentLang]||I18N.ru;
+      if(methodTitle) methodTitle.innerHTML=t.methodSummary||'';
+      if(methodBodyEl) methodBodyEl.innerHTML=t.methodText||'';
+      if(methodModal) methodModal.style.display='flex';
+    });
+  }
+  if(methodCloseEl){
+    methodCloseEl.addEventListener('click',()=>{
+      if(methodModal) methodModal.style.display='none';
+    });
+  }
+  if(methodModal){
+    methodModal.addEventListener('click',(e)=>{
+      if(e.target===methodModal) methodModal.style.display='none';
+    });
+  }
   render(lang);
 });
 </script>
