@@ -344,7 +344,7 @@
   </section>
 
   <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
-    © <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • Версия: 2025-10-07 • <a href="https://t.me/raschet7" target="_blank" rel="noopener">Telegram</a> • <a href="https://s.morgunov.tech" target="_blank" rel="noopener">start.morgunov.tech</a>
+    © <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка
   </footer>
 </div>
 
@@ -814,9 +814,9 @@ const I18N = {
     methodSummary:'<b>Как считаем результат</b>',
     methodText:'Для каждого из 18 сигналов (браузер, ОС, разрешение экрана, GPU, число ядер, объём памяти, языки, расширения, Canvas/Audio-хэш и др.) рассчитывается информационная энтропия: -log\u2082(вероятность). Вероятности берутся из встроенных частотных таблиц, составленных на основе данных EFF Panopticlick и исследований FingerprintJS. Сигналы, которые встречаются редко (нестандартный GPU, редкий браузер, необычное разрешение), дают больший вклад в итоговый балл. Алгоритм учитывает зависимости между сигналами (например, Safari + Apple GPU корректируются). Итоговый процент — это перцентиль вашей энтропии среди 25 000 смоделированных отпечатков. Подсчёт выполняется локально и никуда не отправляется.',
     policySummary:'<b>Как обращаемся с данными</b>',
-    policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер автоматически запрашивает ipapi.co — для определения города и провайдера по IP. Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
+    policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — ipwho.is, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     batteryUnavailable:'Недоступно в этом браузере',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button> • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button>`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
     units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
@@ -1240,9 +1240,9 @@ const I18N = {
     methodSummary:'<b>How we calculate it</b>',
     methodText:'For each of 18 signals (browser, OS, screen resolution, GPU, core count, memory, languages, extensions, Canvas/Audio hash, etc.) we compute information entropy: -log\u2082(probability). Probabilities come from built-in frequency tables based on EFF Panopticlick data and FingerprintJS research. Rare signals (unusual GPU, uncommon browser, atypical resolution) contribute more to the final score. The algorithm accounts for signal dependencies (e.g. Safari + Apple GPU are correlated). The final percentage is your entropy\u2019s percentile among 25,000 simulated fingerprints. All calculations run locally and nothing is uploaded.',
     policySummary:'<b>How we handle data</b>',
-    policyText:'All processing happens in your browser. On page load, the browser automatically queries ipapi.co to determine your city and ISP from your IP address. We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
+    policyText:'All processing happens in your browser. On page load, the browser queries your IP data via ipapi.co (with fallbacks to ipwho.is, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
     batteryUnavailable:'Not available in this browser',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button> • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button>`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
     units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
@@ -1689,9 +1689,9 @@ const I18N = {
     methodSummary:'<b>Natija qanday olinadi</b>',
     methodText:"18 ta signal (brauzer, OT, ekran oʻlchami, GPU, yadrolar soni, xotira, tillar, kengaytmalar, Canvas/Audio xesh va boshq.) uchun axborot entropiyasi hisoblanadi: -log₂(ehtimollik). Ehtimolliklar EFF Panopticlick va FingerprintJS tadqiqotlari asosida tuzilgan ichki chastota jadvallaridan olinadi. Kam uchraydigan signallar (noodatiy GPU, kam tarqalgan brauzer, nostandart oʻlcham) yakuniy ballga koʻproq hissa qoʻshadi. Algoritm signallar orasidagi bogʻliqlikni hisobga oladi. Yakuniy foiz — 25 000 ta modellashtirilgan barmoq izi orasida sizning entropiyangiz percentili. Hisoblash brauzeringizni tark etmaydi.",
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
-    policyText:"Barcha jarayon brauzer ichida boʻladi. Sahifa yuklanganda brauzer avtomatik ravishda ipapi.co ga soʻrov yuboradi — shahar va provayderni IP orqali aniqlash uchun. Javobning hammasini interfeysda koʻrsatamiz. Boshqa tashqi soʻrovlar yoʻq. Qoʻshimcha shriftlar, trekerlar yoki yashirin soʻrovlar yoʻq.",
+    policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa ipwho.is, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
     batteryUnavailable:'Bu brauzerda mavjud emas',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Oʻzgarishlar tarixi">v${version}</button> • <a href="${TELEGRAM_URL}" target="_blank" rel="noopener">Telegram</a> • <a href="${PERSONAL_URL}" target="_blank" rel="noopener">start.morgunov.tech</a>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="O\u02BBzgarishlar tarixi">v${version}</button>`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
     units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
@@ -1702,8 +1702,35 @@ const I18N = {
 
 // Release version follows ISO 8601 (YYYY-MM-DD) for global clarity.
 const VERSION = '2025-10-11';
-const APP_VERSION = '1.5';
+const APP_VERSION = '2.0';
 const CHANGELOG = [
+  {
+    version: '2.0',
+    date: '2026-03-25',
+    changes: {
+      ru: [
+        'Полный редизайн: verdict-first архитектура',
+        'Группировка данных: идентификация, устройство, сеть',
+        'Блок рисков и персональные рекомендации',
+        'Нормализация частотных таблиц энтропии',
+        'Collapsible блок подробностей',
+      ],
+      en: [
+        'Full redesign: verdict-first architecture',
+        'Data grouping: identity, device, network',
+        'Risk cards and personal recommendations',
+        'Entropy frequency table normalization',
+        'Collapsible details block',
+      ],
+      uz: [
+        "To\u02BBliq qayta dizayn: verdict-first arxitektura",
+        "Ma\u02BClumotlar guruhlash: identifikatsiya, qurilma, tarmoq",
+        "Xavf kartalari va shaxsiy tavsiyalar",
+        "Entropiya chastota jadvallarini normalizatsiya",
+        "Collapsible tafsilotlar bloki",
+      ]
+    }
+  },
   {
     version: '1.5',
     date: '2026-03-25',
@@ -1734,6 +1761,27 @@ const CHANGELOG = [
         "VPN detektori yaxshilandi — Google/Amazon/Azure uchun notoʻgʻri natijalar olib tashlandi",
         "Matnlar tuzatildi: Canvas himoyasi, WebRTC bloklash, Battery API",
         "\"PDF saqlash\" tugmasi \"Chop etish / Saqlash\" ga oʻzgartirildi",
+      ]
+    }
+  },
+  {
+    version: '1.1',
+    date: '2025-10-11',
+    changes: {
+      ru: [
+        'Добавлен детектор батареи (Battery API)',
+        'Улучшена точность определения устройства',
+        'Исправлены мелкие ошибки интерфейса',
+      ],
+      en: [
+        'Added battery detector (Battery API)',
+        'Improved device detection accuracy',
+        'Minor UI bug fixes',
+      ],
+      uz: [
+        "Batareya detektori qo\u02BBshildi (Battery API)",
+        "Qurilma aniqlash aniqligi yaxshilandi",
+        "Kichik interfeys xatolari tuzatildi",
       ]
     }
   },
@@ -1904,11 +1952,13 @@ function guessOSVersion(basic){
   const pvMajor=parseInt(pvString.split('.')[0]||'',10);
   const legacy=legacyOsFromUa(ua);
   if(platform.includes('mac')){
-    if(legacy) return legacy;
     if(!Number.isNaN(pvMajor)){
       const map={24:'macOS 15',23:'macOS 14',22:'macOS 13',21:'macOS 12',20:'macOS 11',19:'macOS 10.15'};
-      return map[pvMajor]||`macOS (Darwin ${pvString||pvMajor})`;
+      if(map[pvMajor]) return map[pvMajor];
+      if(pvMajor>24) return `macOS (Darwin ${pvString||pvMajor})`;
     }
+    if(legacy&&!/Mac OS X 10[_.]15[_.]7/.test(ua)) return legacy;
+    if(!Number.isNaN(pvMajor)) return `macOS (Darwin ${pvString||pvMajor})`;
     return 'macOS';
   }
   if(platform.includes('ios')||/iPhone|iPad|iPod/i.test(ua)){
@@ -3396,7 +3446,7 @@ function renderShockBullets(basic,t,snapshot){
       const cls=opts.badge==='safe'?'status-badge--safe':opts.badge==='danger'?'status-badge--danger':'status-badge--warning';
       valueHtml='<span class="status-badge '+cls+'">'+value+'</span>';
     }
-    div.innerHTML='<span class="data-label">'+label+'</span><span class="data-value">'+valueHtml+'</span>';
+    div.innerHTML='<span class="data-label">'+esc(label)+'</span><span class="data-value">'+valueHtml+'</span>';
     return div;
   }
 

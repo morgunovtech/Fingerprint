@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const FONT_CANDIDATES = [
   'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia',
   'Roboto', 'Open Sans', 'SF Pro Text', 'Segoe UI', 'Noto Sans',
@@ -95,7 +94,6 @@ function detectGlRenderer() {
     }
     return null;
   } catch (error) {
-    console.debug('GL renderer detection failed', error);
     return null;
   }
 }
@@ -377,7 +375,6 @@ async function measureNetwork(probeUrl) {
       samples.push({ mbps, latency });
     }
     catch (error) {
-      console.debug('Network probe failed', error);
     }
   }
   if (!samples.length)
@@ -584,7 +581,6 @@ async function buildStorageFinding() {
       limitations: 'This reflects browser quota for this site, not your physical disk capacity.',
     };
   } catch (error) {
-    console.debug('Storage estimate failed', error);
     return null;
   }
 }
@@ -667,7 +663,6 @@ function detectSystemFonts() {
       limitations: 'Font detection is approximate; browsers can mask or reduce this signal to limit fingerprinting.',
     };
   } catch (error) {
-    console.debug('Font detection failed', error);
     return null;
   }
 }
@@ -734,13 +729,11 @@ async function probeIndexedDb(key) {
           request.result.close();
         }
         catch (error) {
-          console.debug('IndexedDB close failed', error);
         }
         try {
           idb.deleteDatabase(key);
         }
         catch (error) {
-          console.debug('IndexedDB delete failed', error);
         }
         if (!settled)
           resolve(true);
@@ -751,7 +744,6 @@ async function probeIndexedDb(key) {
       };
     });
   } catch (error) {
-    console.debug('IndexedDB probe failed', error);
     return false;
   }
 }
@@ -813,7 +805,6 @@ function detectAdBlocker() {
     }
     document.body.removeChild(bait);
   } catch (error) {
-    console.debug('Ad blocker detection failed', error);
   }
   if (blocked != null)
     evidence.push(`hidden=${blocked}`);
@@ -844,7 +835,6 @@ async function runWebRtcLeakTest() {
         pc.createDataChannel('probe');
       }
       catch (error) {
-        console.debug('RTC data channel failed', error);
       }
     }
     const gatherPromise = new Promise((resolve) => {
@@ -876,14 +866,12 @@ async function runWebRtcLeakTest() {
     await pc.setLocalDescription(offer);
     await gatherPromise;
   } catch (error) {
-    console.debug('WebRTC leak probe failed', error);
   }
   finally {
     try {
       pc?.close();
     }
     catch (error) {
-      console.debug('WebRTC close failed', error);
     }
   }
   const ips = new Set();
@@ -1018,7 +1006,6 @@ async function collectUaHighEntropy() {
     const values = await uaData.getHighEntropyValues(fields);
     return { ...values, mobile: values.mobile ?? uaData.mobile ?? null };
   } catch (error) {
-    console.debug('UA high entropy hints unavailable', error);
     return null;
   }
 }
@@ -1033,7 +1020,6 @@ function collectTrackSignals(basic, deviceSignals) {
       colorGamut = gamuts.find((g) => window.matchMedia(`(color-gamut: ${g})`).matches) ?? null;
     }
   } catch (error) {
-    console.debug('color-gamut detection failed', error);
   }
   let hdr = false;
   try {
@@ -1041,7 +1027,6 @@ function collectTrackSignals(basic, deviceSignals) {
       hdr = window.matchMedia('(dynamic-range: high)').matches;
     }
   } catch (error) {
-    console.debug('HDR detection failed', error);
   }
   return {
     canvasActive,
@@ -1063,7 +1048,6 @@ function resolvedTimeZone() {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   } catch (error) {
-    console.debug('Time zone resolution failed', error);
     return undefined;
   }
 }
@@ -1108,7 +1092,6 @@ function detectSpeechVoices() {
       limitations: 'Voice list reflects OS language packs installed. Consistent fingerprint on same OS + language setup.',
     };
   } catch (error) {
-    console.debug('Speech voices detection failed', error);
     return null;
   }
 }
@@ -1148,7 +1131,6 @@ function detectMediaFeatures() {
       limitations: 'Reflects OS accessibility settings and display hardware capabilities.',
     };
   } catch (error) {
-    console.debug('Media features detection failed', error);
     return null;
   }
 }
@@ -1185,7 +1167,6 @@ function detectMathFingerprint() {
       limitations: 'Varies across JIT engines and CPU FP units; useful for detecting virtual machines or unusual environments.',
     };
   } catch (error) {
-    console.debug('Math fingerprint failed', error);
     return null;
   }
 }
