@@ -1162,7 +1162,7 @@ const I18N = {
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — freeipapi.com, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     batteryUnavailable:'Недоступно в этом браузере',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button><br><span style="opacity:.5;font-size:12px">Сервис размещён на Cloudflare. Cloudflare Web Analytics собирает анонимную статистику посещений (без cookies и персональных данных).</span>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button><br><span style="opacity:.5;font-size:12px">Сервис размещён на Cloudflare. Cloudflare Web Analytics собирает анонимную статистику посещений (без cookies и персональных данных).</span><br><span id="footerVisitCount" style="display:none;opacity:.5;font-size:12px"></span>`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
     units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
@@ -1816,7 +1816,7 @@ const I18N = {
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. On page load, the browser queries your IP data via ipapi.co (with fallbacks to freeipapi.com, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
     batteryUnavailable:'Not available in this browser',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button><br><span style="opacity:.5;font-size:12px">Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics (no cookies, no personal data).</span>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button><br><span style="opacity:.5;font-size:12px">Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics (no cookies, no personal data).</span><br><span id="footerVisitCount" style="display:none;opacity:.5;font-size:12px"></span>`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
     units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
@@ -2493,7 +2493,7 @@ const I18N = {
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa freeipapi.com, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
     batteryUnavailable:'Bu brauzerda mavjud emas',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="O\u02BBzgarishlar tarixi">v${version}</button><br><span style="opacity:.5;font-size:12px">Cloudflare\u2019da joylashtirilgan. Cloudflare Web Analytics anonim tashrif statistikasini yig\u02BBadi (cookie va shaxsiy ma\u02BClumotlarsiz).</span>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="O\u02BBzgarishlar tarixi">v${version}</button><br><span style="opacity:.5;font-size:12px">Cloudflare\u2019da joylashtirilgan. Cloudflare Web Analytics anonim tashrif statistikasini yig\u02BBadi (cookie va shaxsiy ma\u02BClumotlarsiz).</span><br><span id="footerVisitCount" style="display:none;opacity:.5;font-size:12px"></span>`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
     units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
@@ -4807,11 +4807,26 @@ function renderShockBullets(basic,t,snapshot){
       lines.push(t.shock.device(esc(localDevice.name)));
     }
 
+    // Phase 3.3: OS row with visitor percentage
+    {
+      const osStr=guessOSVersion(basic);
+      if(osStr){
+        const osLabel={ru:'\u041e\u0421',en:'OS',uz:'OT'}[currentLang];
+        const osRow=mkRow(osLabel,esc(osStr));
+        appendStatLabel(osRow,getStatPercent('os',osStr));
+        groups.identity.appendChild(osRow);
+        totalRows++;
+      }
+    }
+
     const browserStr=browserDisplayName(basic);
     if(browserStr&&browserStr!=='\u2014'){
       const brLabel={ru:'\u0411\u0440\u0430\u0443\u0437\u0435\u0440',en:'Browser',uz:'Brauzer'}[currentLang];
       const brIcon=getBrowserIcon(browserStr);
-      groups.identity.appendChild(mkRow(brLabel,brIcon+esc(browserStr),{code:true}));
+      const brRow=mkRow(brLabel,brIcon+esc(browserStr),{code:true});
+      // Phase 3.3: append visitor % for browser
+      appendStatLabel(brRow,getStatPercent('browsers',browserStr));
+      groups.identity.appendChild(brRow);
       totalRows++;
 
       // Build old-style line for selftest compat (no extension count row)
@@ -5715,11 +5730,15 @@ async function render(lang){
       vBtn.dataset.clAttached='1';
       vBtn.addEventListener('click',e=>{e.preventDefault();openChangelog();});
     }
+    // Phase 3.3: populate visit count if stats already loaded
+    updateFooterVisitCount();
   }
   getEl('printBtn').textContent=t.saveButton;
   getEl('printBtn').dataset.label=t.saveButton;
   renderProfilingSection(snapshotCache?.basic||null,t);
   if(_trackerTestResults) renderTrackerTests(_trackerTestResults,t);
+  // Phase 3.3: fetch visitor stats non-blocking (fire-and-forget)
+  fetchVisitorStats();
 
   try{
     const {basic,fp,H,pct}=await getSnapshot();
@@ -6355,7 +6374,10 @@ function renderServerFingerprint(whoamiData,t){
   const tlsCipher=tls.cipher||tls.cipherSuite||'';
   if(tlsVersion||tlsCipher){
     const tlsVal=(tlsVersion&&tlsCipher)?(tlsVersion+' / '+tlsCipher):(tlsVersion||tlsCipher);
-    group.appendChild(mkServerRow(labels.tls||'TLS',tlsVal,{code:true}));
+    const tlsRow=mkServerRow(labels.tls||'TLS',tlsVal,{code:true});
+    // Phase 3.3: append visitor % for TLS version
+    if(tlsVersion) appendStatLabel(tlsRow,getStatPercent('tls_versions',tlsVersion));
+    group.appendChild(tlsRow);
   }
 
   // HTTP protocol
@@ -6514,9 +6536,72 @@ function renderContradictions(whoamiData,clientBasic,t){
   container.appendChild(details);
 }
 
+/* ============== Phase 3.3: Visitor Stats ============== */
+const WORKER_API='https://fingerprint-api.xfxrrpkvr5.workers.dev';
+let _visitorStats=null;
+
+async function fetchVisitorStats(){
+  if(_visitorStats) return _visitorStats;
+  try{
+    const resp=await fetch(WORKER_API+'/api/stats',{cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(!resp.ok) return null;
+    const data=await resp.json();
+    _visitorStats=data;
+    updateFooterVisitCount();
+  }catch(e){
+    // Non-critical — ignore errors silently
+  }
+  return _visitorStats;
+}
+
+// Returns percentage (0–100, rounded) of visitors in a given category matching key, or null
+function getStatPercent(category,key){
+  if(!_visitorStats) return null;
+  if((_visitorStats.total_visits||0)<100) return null;
+  const catData=_visitorStats[category];
+  if(!catData) return null;
+  // Try exact match first, then prefix match (e.g. "Chrome" matches "Chrome 134")
+  let count=catData[key];
+  if(count==null){
+    // Try to find a key in catData that starts with the provided key (or vice versa)
+    const lkey=(key||'').toLowerCase();
+    for(const k of Object.keys(catData)){
+      if(k.toLowerCase().startsWith(lkey)||lkey.startsWith(k.toLowerCase())){
+        count=catData[k];
+        break;
+      }
+    }
+  }
+  if(count==null) return null;
+  const pct=Math.round(count*100/(_visitorStats.total_visits||1));
+  return pct>0?pct:null;
+}
+
+// Appends a muted percentage label after the data-value span in a given row element
+function appendStatLabel(rowEl,pct){
+  if(pct==null) return;
+  const valSpan=rowEl.querySelector('.data-value');
+  if(!valSpan) return;
+  const label=document.createElement('span');
+  label.style.cssText='color:var(--muted);font-size:11px;white-space:nowrap;font-weight:400;display:block;margin-top:2px';
+  const txt={ru:`у ${pct}% посетителей`,en:`${pct}% of visitors`,uz:`${pct}% tashrif buyuruvchilardan`}[currentLang]||`${pct}% of visitors`;
+  label.textContent='('+txt+')';
+  valSpan.appendChild(label);
+}
+
+function updateFooterVisitCount(){
+  if(!_visitorStats) return;
+  const n=_visitorStats.total_visits||0;
+  if(!n) return;
+  const el=document.getElementById('footerVisitCount');
+  if(!el) return;
+  const txt={ru:`Проверено ${n} отпечатков`,en:`${n} fingerprints checked`,uz:`${n} barmoq izi tekshirildi`}[currentLang]||`${n} fingerprints checked`;
+  el.textContent=txt;
+  el.style.display='';
+}
+
 /* ============== FingerprintJS Pro (Advanced) ============== */
 let _fpjsPromise=null;
-const WORKER_API='https://fingerprint-api.xfxrrpkvr5.workers.dev';
 const FPJS_API_KEY='sE9LTvMdm0ITAz950nNQ';
 async function loadFingerprintJS(){
   if(_fpjsPromise) return _fpjsPromise;
