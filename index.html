@@ -5022,12 +5022,11 @@ function renderShockBullets(basic,t,snapshot){
     opts=opts||{};
     const div=document.createElement('div');
     div.className=opts.badge?'data-row data-row--status':'data-row';
-    let valueHtml=value;
-    if(opts.code) valueHtml='<code>'+value+'</code>';
-    if(opts.badge){
-      const cls=opts.badge==='safe'?'status-badge--safe':opts.badge==='danger'?'status-badge--danger':'status-badge--warning';
-      valueHtml='<span class="status-badge '+cls+'">'+value+'</span>';
-    }
+    let valueHtml;
+    if(opts&&opts.html){valueHtml=value;}
+    else if(opts&&opts.code){valueHtml='<code>'+esc(value)+'</code>';}
+    else if(opts&&opts.badge){const cls=opts.badge==='safe'?'status-badge--safe':opts.badge==='danger'?'status-badge--danger':'status-badge--warning';valueHtml='<span class="status-badge '+cls+'">'+esc(value)+'</span>';}
+    else{valueHtml=esc(value);}
     div.innerHTML='<span class="data-label">'+esc(label)+'</span><span class="data-value">'+valueHtml+'</span>';
     return div;
   }
@@ -5059,7 +5058,7 @@ function renderShockBullets(basic,t,snapshot){
       const locLabel={ru:'\u0413\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044f',en:'Location',uz:'Joylashuv'}[currentLang];
       if(localCity||localCountry){
         const locValue=flag+' '+esc(localCity)+(localCity&&localCountry?', ':'')+esc(localCountry);
-        groups.identity.appendChild(mkRow(locLabel,locValue));
+        groups.identity.appendChild(mkRow(locLabel,locValue,{html:true}));
         totalRows++;
         // Also push to old lines for selftest
         lines.push(t.shock.location(flag,esc(localCity||localCountry),esc(localCity?localCountry:''),esc(ipForNetwork)));
@@ -5073,7 +5072,7 @@ function renderShockBullets(basic,t,snapshot){
     const dtLocale=currentLang==='uz'?'uz-UZ':currentLang==='en'?'en-US':'ru-RU';
     const dateStr=now.toLocaleDateString(dtLocale,{day:'numeric',month:'long',year:'numeric'});
     const dateLabel={ru:'\u0414\u0430\u0442\u0430',en:'Date',uz:'Sana'}[currentLang];
-    groups.identity.appendChild(mkRow(dateLabel,esc(dateStr)));
+    groups.identity.appendChild(mkRow(dateLabel,dateStr));
     totalRows++;
 
     // Time row (live, updates every second)
@@ -5101,7 +5100,7 @@ function renderShockBullets(basic,t,snapshot){
 
     if(tz){
       const tzLabel={ru:'\u0427\u0430\u0441\u043e\u0432\u043e\u0439 \u043f\u043e\u044f\u0441',en:'Timezone',uz:'Vaqt zonasi'}[currentLang];
-      groups.identity.appendChild(mkRow(tzLabel,esc(tz),{code:true}));
+      groups.identity.appendChild(mkRow(tzLabel,tz,{code:true}));
     }
     const timeStr=now.toLocaleTimeString(dtLocale,{hour:'2-digit',minute:'2-digit'});
     lines.push(t.shock.datetime(esc(timeStr),esc(dateStr),esc(tz)));
@@ -5109,7 +5108,7 @@ function renderShockBullets(basic,t,snapshot){
     if(basic.languages&&basic.languages.length>0){
       const flags=basic.languages.slice(0,5).map(function(l){return langToFlag(l)+' '+l;}).join(', ');
       const langLabel={ru:'\u042f\u0437\u044b\u043a\u0438',en:'Languages',uz:'Tillar'}[currentLang];
-      groups.identity.appendChild(mkRow(langLabel,flags));
+      groups.identity.appendChild(mkRow(langLabel,flags,{html:true}));
       totalRows++;
 
       const sysLangs=basic.languages.map(function(l){return l.split('-')[0].toLowerCase();});
@@ -5146,7 +5145,7 @@ function renderShockBullets(basic,t,snapshot){
       // Append OS version to device name
       const osVer=guessOSVersion(basic);
       const devDisplay=osVer?localDevice.name+' \u00B7 '+osVer:localDevice.name;
-      groups.identity.appendChild(mkRow(devLabel,devIcon+esc(devDisplay)));
+      groups.identity.appendChild(mkRow(devLabel,devIcon+esc(devDisplay),{html:true}));
       totalRows++;
       lines.push(t.shock.device(esc(devDisplay)));
     }
@@ -5175,7 +5174,7 @@ function renderShockBullets(basic,t,snapshot){
     if(browserStr&&browserStr!=='\u2014'){
       const brLabel={ru:'\u0411\u0440\u0430\u0443\u0437\u0435\u0440',en:'Browser',uz:'Brauzer'}[currentLang];
       const brIcon=getBrowserIcon(browserStr);
-      const brRow=mkRow(brLabel,brIcon+esc(browserStr),{code:true});
+      const brRow=mkRow(brLabel,brIcon+'<code>'+esc(browserStr)+'</code>',{html:true});
       // Phase 3.3: append visitor % for browser
       appendStatLabel(brRow,getStatPercent('browsers',browserStr));
       groups.identity.appendChild(brRow);
@@ -5213,7 +5212,7 @@ function renderShockBullets(basic,t,snapshot){
     // Show IP as first row in network group (#13: localized label)
     if(ipForNetwork){
       const ipLabel={ru:'\u0412\u0430\u0448 IP-\u0430\u0434\u0440\u0435\u0441',en:'Your IP address',uz:'Sizning IP manzilingiz'}[currentLang];
-      groups.network.appendChild(mkRow(ipLabel,esc(ipForNetwork),{code:true}));
+      groups.network.appendChild(mkRow(ipLabel,ipForNetwork,{code:true}));
       totalRows++;
     }
     // Remove duplicate ipRow in networkResults (#11)
@@ -5323,17 +5322,17 @@ function renderShockBullets(basic,t,snapshot){
   // === FINGERPRINT GROUP ===
   if(groups.fingerprint){
     if(basic.hashes?.canvas){
-      groups.fingerprint.appendChild(mkRow('Canvas',esc(basic.hashes.canvas.substring(0,8)),{code:true}));
+      groups.fingerprint.appendChild(mkRow('Canvas',basic.hashes.canvas.substring(0,8),{code:true}));
       totalRows++;
       lines.push(t.shock.canvas(esc(basic.hashes.canvas.substring(0,8))));
     }
     if(basic.hashes?.audio){
-      groups.fingerprint.appendChild(mkRow('Audio',esc(basic.hashes.audio.substring(0,8)),{code:true}));
+      groups.fingerprint.appendChild(mkRow('Audio',basic.hashes.audio.substring(0,8),{code:true}));
       totalRows++;
     }
     if(basic.webgl&&basic.webgl.supported){
       const rendererShort=(basic.webgl.renderer||'N/A').length>30?(basic.webgl.renderer.substring(0,27)+'...'):basic.webgl.renderer;
-      groups.fingerprint.appendChild(mkRow('WebGL',esc(rendererShort),{code:true}));
+      groups.fingerprint.appendChild(mkRow('WebGL',rendererShort,{code:true}));
       totalRows++;
       if(basic.webgl.hash){
         const webglHashLabel={ru:'WebGL \u0445\u0435\u0448',en:'WebGL hash',uz:'WebGL xesh'}[currentLang];
