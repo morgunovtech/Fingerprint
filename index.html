@@ -43,16 +43,13 @@
       --danger:#F87171; --danger-bg:rgba(239,68,68,.1);
       --border-subtle:#1E293B;
     }
-    :root.force-light{ --bg:#FAFAFA; --card:#FFFFFF; --text:#111827; --muted:#6B7280; --border:#E5E7EB; --shadow:0 4px 6px rgba(0,0,0,0.07); --accent:#EF4444;
-      --text-secondary:#6B7280; --text-muted:#9CA3AF; --bg-raised:#F3F4F6; --code-bg:#F3F4F6;
-      --success:#22C55E; --success-bg:#F0FDF4; --warning:#F59E0B; --warning-bg:#FFFBEB; --danger:#EF4444; --danger-bg:#FEF2F2; --border-subtle:#F3F4F6;
-    }
+    :root.force-light{color-scheme:light}
     :root.force-contrast{
       --bg:#000; --card:#0d0d0d; --text:#fff; --muted:#ccc; --border:#fff;
       --shadow:0 0 0 2px #fff; --accent:#ffff00;
       --text-secondary:#ccc; --text-muted:#999;
       --bg-raised:#1a1a1a; --code-bg:#1a1a1a;
-      --success:#00ff00; --warning:#ffff00; --danger:#ff0000;
+      --success:#00ff00; --success-bg:#001a00; --warning:#ffff00; --warning-bg:#1a1600; --danger:#ff0000; --danger-bg:#1a0000;
       --border-subtle:#333;
     }
     @media (prefers-color-scheme: dark){
@@ -102,8 +99,8 @@
     .big[data-level="med"]{color:var(--warning)}
     .big[data-level="low"]{color:var(--text)}
     .big .code-pill{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(148,163,184,.15);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1.05em;line-height:1.35;color:var(--text);text-align:center;text-wrap:balance;white-space:normal;box-shadow:inset 0 0 0 1px rgba(148,163,184,.16)}
-    .big[data-level="high"] .code-pill{border-color:#ef4444;background:rgba(239,68,68,.18);box-shadow:inset 0 0 0 1px rgba(239,68,68,.28);color:var(--text)}
-    .big[data-level="med"] .code-pill{border-color:#f59e0b;background:rgba(245,158,11,.2);box-shadow:inset 0 0 0 1px rgba(245,158,11,.28);color:var(--text)}
+    .big[data-level="high"] .code-pill{border-color:var(--danger);background:var(--danger-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--danger) 28%, transparent);color:var(--text)}
+    .big[data-level="med"] .code-pill{border-color:var(--warning);background:var(--warning-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--warning) 28%, transparent);color:var(--text)}
     .big[data-level="low"] .code-pill{border-color:var(--border);background:rgba(148,163,184,.16);box-shadow:inset 0 0 0 1px rgba(148,163,184,.2)}
     .uniq-note{font-size:14px;color:var(--muted);line-height:1.5;display:block;margin:0;grid-column:1/-1;max-width:720px}
     #introText p{margin:6px 0}
@@ -118,13 +115,13 @@
     .shock-insights li:last-child{border-bottom:none}
     .shock-insights code{display:inline;padding:2px 8px;border-radius:6px;background:rgba(148,163,184,.12);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;letter-spacing:.3px}
     .section-heading{font-size:22px;font-weight:700;margin:0 0 16px;color:var(--text)}
-    .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:rgba(12,18,28,.08);font-weight:600;font-size:.95em;margin:0 2px}
-    .danger{margin:8px 0 0; padding:10px 12px; border:1px solid #ef4444; border-radius:10px; background:rgba(239,68,68,.08);}
+    .pill{display:inline-flex;align-items:center;padding:0 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-raised);font-weight:600;font-size:.95em;margin:0 2px}
+    .danger{margin:8px 0 0; padding:10px 12px; border:1px solid var(--danger); border-radius:10px; background:var(--danger-bg);}
     .danger ul{margin:6px 0 0 18px; padding:0}
     .shock-footer{display:flex;justify-content:center;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(148,163,184,.1)}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
     .card{border:1px solid var(--border);border-radius:12px;padding:12px}
-    .title{font-weight:700;margin-bottom:6px}
+    .card-title{font-weight:700;margin-bottom:6px}
     .val{white-space:normal;word-break:break-word}
     .line{display:block;margin-top:4px}
     .hint{color:var(--text)}
@@ -136,7 +133,7 @@
     a{color:var(--accent);text-decoration:none}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s,text-decoration-color .2s;text-align:center;gap:6px}
-    .btn-inline{padding:6px 12px;font-size:13px;border-radius:8px;margin-left:8px}
+    .btn-inline{padding:6px 12px;font-size:13px;border-radius:8px;margin-left:8px;min-height:44px}
     .btn .btn-text{display:inline-flex;align-items:center}
     .btn:hover{background-color:rgba(96,165,250,0.12);border-color:var(--accent);color:var(--accent)}
     .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -150,7 +147,7 @@
     #uniqLine .code-pill{display:block;padding:16px 24px;border-radius:14px;font-size:22px;font-weight:800;letter-spacing:-.3px;line-height:1.3;text-wrap:balance}
     #shockList{margin:6px 0 0;padding:0}
     @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-    .skeleton{background:linear-gradient(90deg,var(--bg-raised) 25%,var(--border-subtle) 50%,var(--bg-raised) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;height:1em;margin:6px 0}
+    .skeleton{background:linear-gradient(90deg,var(--bg-raised) 25%,var(--border) 50%,var(--bg-raised) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;height:1em;margin:6px 0}
     .skeleton-hero{height:56px;width:120px;margin-bottom:8px}
     .skeleton-line{height:14px;width:80%;margin:8px 0}
     @keyframes shockFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -160,7 +157,7 @@
       h1{font-size:20px}
       .wrap{padding:0 16px}
       .block{padding:16px}
-      .big{font-size:19px;grid-template-columns:min-content 1fr}
+      .big{font-size:19px}
       header{align-items:flex-start}
       .toolbar{margin-left:0}
     }
@@ -183,9 +180,9 @@
     .rec-section-title{font-size:16px;font-weight:600;margin:16px 0 10px}
     .rec-card{padding:0;border-radius:var(--radius-md,10px);border:1px solid var(--border);background:var(--card);margin-bottom:12px;border-left:3px solid var(--border);overflow:hidden}
     .rec-overflow-wrap{margin-top:4px}
-    .rec-card--green{border-left-color:#22c55e}
-    .rec-card--yellow{border-left-color:#eab308}
-    .rec-card--red{border-left-color:#ef4444}
+    .rec-card--green{border-left-color:var(--success)}
+    .rec-card--yellow{border-left-color:var(--warning)}
+    .rec-card--red{border-left-color:var(--danger)}
     .rec-card--personal{border-left-color:var(--accent,#ef4444)}
     .rec-zone-top{padding:16px 16px 0}
     .rec-zone-why{padding:4px 16px 12px;font-size:14px;color:var(--text-secondary,var(--muted));line-height:1.5}
@@ -304,8 +301,8 @@
     /* === Live clock tick === */
     .live-clock{font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
     /* === a11y: skip-to-content === */
-    .skip-link{position:absolute;top:-40px;left:0;background:var(--accent);color:#fff;padding:8px 16px;z-index:200;font-size:14px;border-radius:0 0 8px 0;transition:top .2s}
-    .skip-link:focus{top:0}
+    .skip-link{position:absolute;transform:translateY(-100%);top:0;left:0;background:var(--accent);color:#fff;padding:8px 16px;z-index:200;font-size:14px;border-radius:0 0 8px 0;transition:transform .2s}
+    .skip-link:focus{transform:translateY(0);top:0}
     /* === a11y: minimum touch targets === */
     .btn{min-height:44px;min-width:44px}
     .btn-link{min-height:44px;display:inline-flex;align-items:center}
@@ -352,18 +349,18 @@
       .story-data-grid{grid-template-columns:1fr}
       .story-stage::before{font-size:48px}
     }
-    .view-mode-active{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(96,165,250,.12)!important}
+    .btn.view-mode-active{border-color:var(--accent);color:var(--accent);background:rgba(96,165,250,.12)}
   </style>
 </head>
 <body>
 <a href="#mainContent" class="skip-link">Skip to content</a>
 <div class="wrap">
   <header>
-    <nav aria-label="Site controls">
     <h1 id="siteTitle">Fingerprint</h1><span class="sub">by <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a></span>
+    <nav aria-label="Site controls">
     <div class="toolbar">
       <div class="lang-switcher menu">
-        <button class="btn" id="langBtn" aria-haspopup="true" aria-expanded="false">Язык</button>
+        <button class="btn" id="langBtn" type="button" aria-haspopup="menu" aria-expanded="false">Язык</button>
         <div class="menu-panel" id="langMenu" hidden>
           <button type="button" data-lang="ru" aria-label="Русский">🇷🇺</button>
           <button type="button" data-lang="en" aria-label="English">🇬🇧</button>
@@ -371,7 +368,7 @@
         </div>
       </div>
       <div class="theme-switcher menu">
-        <button class="btn" id="themeBtn" type="button" aria-haspopup="true" aria-expanded="false"><span class="menu-icon" aria-hidden="true">🌓</span><span class="btn-text">Тема</span></button>
+        <button class="btn" id="themeBtn" type="button" aria-haspopup="menu" aria-expanded="false"><span class="menu-icon" aria-hidden="true">🌓</span><span class="btn-text">Тема</span></button>
         <div class="menu-panel" id="themeMenu" hidden>
           <button type="button" data-theme="auto" aria-label="Auto"><span class="menu-icon" aria-hidden="true">🌓</span></button>
           <button type="button" data-theme="light" aria-label="Light"><span class="menu-icon" aria-hidden="true">☀️</span></button>
@@ -379,7 +376,7 @@
           <button type="button" data-theme="contrast" aria-label="High contrast"><span class="menu-icon" aria-hidden="true">◑</span></button>
         </div>
       </div>
-      <button class="btn" id="viewModeBtn" style="gap:4px">📖 <span id="viewModeBtnText">История</span></button>
+      <button class="btn" id="viewModeBtn" type="button" style="gap:4px"><span aria-hidden="true">📖</span> <span id="viewModeBtnText">История</span></button>
     </div>
     </nav>
   </header>
@@ -394,9 +391,10 @@
 
   <!-- Block 2: Shock findings + uniqueness verdict -->
   <section class="block" id="shockSection" style="display:none">
+    <!-- Skeleton loading (visible by default, hidden when heroVerdict shows) -->
+    <div id="heroSkeleton"><div class="skeleton skeleton-hero"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line" style="width:60%"></div></div>
     <!-- Hero verdict (moved to top) -->
     <div id="heroVerdict" class="hero-verdict" style="display:none">
-      <div id="heroSkeleton"><div class="skeleton skeleton-hero"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line" style="width:60%"></div></div>
       <div class="hero-top-row">
         <div class="hero-number" id="heroNumber">0</div>
         <button class="btn btn-link" id="methodologyBtn" style="display:none"></button>
@@ -410,8 +408,8 @@
       </div>
       <div id="heroBadgeFpjs" style="display:none;margin-top:12px;font-size:13px;color:var(--muted);line-height:1.5"></div>
       <div id="methodologyModal" class="methodology-modal" role="dialog" aria-modal="true" aria-labelledby="methodologyTitle" style="display:none">
-        <div class="methodology-content">
-          <button class="methodology-close" id="methodologyClose">&times;</button>
+        <div class="methodology-content" tabindex="-1">
+          <button class="methodology-close" id="methodologyClose" aria-label="Close">&times;</button>
           <h3 id="methodologyTitle"></h3>
           <div id="methodologyBody" class="small"></div>
         </div>
@@ -425,7 +423,7 @@
     <h2 class="section-heading" id="shockTitle"></h2>
     <div id="shock" style="display:none">
       <ul id="shockList" class="shock-insights" style="display:none"></ul>
-      <div class="data-groups" id="dataGroups" style="grid-template-columns:1fr">
+      <div class="data-groups" id="dataGroups">
         <div class="data-group" id="groupIdentity"></div>
       </div>
     </div>
@@ -525,15 +523,13 @@
 </div><!-- /storyMode -->
 
   </main>
-  <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
-    © <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка
-  </footer>
+  <footer class="small" style="text-align:center;margin-top:48px;padding:16px 0;border-top:1px solid var(--border)" id="footerText"></footer>
 </div>
 
 <div id="changelogModal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:20px;overflow-y:auto">
-  <div style="max-width:640px;margin:40px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow)">
+  <div style="max-width:640px;margin:40px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow)" tabindex="-1">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <strong id="changelogTitle" style="font-size:17px"></strong>
+      <h2 id="changelogTitle" style="font-size:17px;font-weight:700;margin:0"></h2>
       <button id="changelogClose" style="background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:4px 10px;cursor:pointer;font-size:15px" aria-label="Close">✕</button>
     </div>
     <div id="changelogContent"></div>
@@ -543,6 +539,7 @@
 <script>
 const PERSONAL_URL='https://s.morgunov.tech';
 const TELEGRAM_URL='https://t.me/raschet7';
+const WORKER_API='https://fingerprint-api.xfxrrpkvr5.workers.dev';
 
 /* ================= I18N ================= */
 const I18N = {
@@ -625,6 +622,7 @@ const I18N = {
     },
     uniqOutcomeTitle:'Итог.',
     uniqOutcomeTail:'Примените шаги выше — и ваш цифровой след станет слабее без ощутимой потери удобства.',
+    // TODO: extract uniqMeaning to shared function — duplicated across all 3 locales
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
       const headline=lvl==='high'?'Ваш отпечаток уникальнее, чем у большинства пользователей':lvl==='med'?'Ваш отпечаток заметнее среднего':'Ваш отпечаток близок к среднему';
@@ -680,10 +678,10 @@ const I18N = {
       gpc:{name:'Global Privacy Control',blocked:'Включён',open:'Выключен'},
       gpcExplain:'Юридически обязывающий сигнал приватности, поддерживаемый законодательством некоторых стран',
       verdict:function(blocked,total){
-        if(blocked>=5) return '\u2705 \u041e\u0442\u043b\u0438\u0447\u043d\u0430\u044f \u0437\u0430\u0449\u0438\u0442\u0430! \u0412\u0441\u0435 \u043f\u0440\u043e\u0432\u0435\u0440\u0435\u043d\u043d\u044b\u0435 \u0442\u0440\u0435\u043a\u0435\u0440\u044b \u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u044b.';
-        if(blocked>=3) return '\u0425\u043e\u0440\u043e\u0448\u0430\u044f \u0437\u0430\u0449\u0438\u0442\u0430. \u0411\u043e\u043b\u044c\u0448\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0440\u0435\u043a\u0435\u0440\u043e\u0432 \u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u044b. \u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043e\u0441\u0442\u0430\u0432\u0448\u0438\u0435\u0441\u044f \u043d\u0435\u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u044d\u043b\u0435\u043c\u0435\u043d\u0442\u044b.';
-        if(blocked>=1) return '\u0427\u0430\u0441\u0442\u0438\u0447\u043d\u0430\u044f \u0437\u0430\u0449\u0438\u0442\u0430. \u0412\u0430\u0448 \u0431\u0440\u0430\u0443\u0437\u0435\u0440 \u0431\u043b\u043e\u043a\u0438\u0440\u0443\u0435\u0442 \u043d\u0435\u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0442\u0440\u0435\u043a\u0435\u0440\u044b, \u043d\u043e \u043d\u0435 \u0432\u0441\u0435. \u0414\u043b\u044f \u043f\u043e\u043b\u043d\u043e\u0439 \u0437\u0430\u0449\u0438\u0442\u044b \u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u043c uBlock Origin.';
-        return '\u0412\u0430\u0448 \u0431\u0440\u0430\u0443\u0437\u0435\u0440 \u043d\u0435 \u0431\u043b\u043e\u043a\u0438\u0440\u0443\u0435\u0442 \u043d\u0438 \u043e\u0434\u0438\u043d \u0442\u0440\u0435\u043a\u0435\u0440. \u0421\u0430\u0439\u0442\u044b \u043c\u043e\u0433\u0443\u0442 \u043e\u0442\u0441\u043b\u0435\u0436\u0438\u0432\u0430\u0442\u044c \u043a\u0430\u0436\u0434\u044b\u0439 \u0432\u0430\u0448 \u0432\u0438\u0437\u0438\u0442 \u0441 \u043f\u043e\u043c\u043e\u0449\u044c\u044e \u0440\u0435\u043a\u043b\u0430\u043c\u043d\u044b\u0445 \u043f\u0438\u043a\u0441\u0435\u043b\u0435\u0439, \u0441\u043a\u0440\u0438\u043f\u0442\u043e\u0432 \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0438 \u0438 \u0440\u0435\u043a\u043b\u0430\u043c\u043d\u044b\u0445 \u0444\u0440\u0435\u0439\u043c\u043e\u0432. \u0420\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u043c \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c uBlock Origin \u2014 \u044d\u0442\u043e \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e\u0435 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0435, \u043a\u043e\u0442\u043e\u0440\u043e\u0435 \u0440\u0435\u0448\u0438\u0442 \u0431\u043e\u043b\u044c\u0448\u0438\u043d\u0441\u0442\u0432\u043e \u043f\u0440\u043e\u0431\u043b\u0435\u043c.';
+        if(blocked>=5) return '\u2705 Отличная защита! Все проверенные трекеры заблокированы (' + blocked + ' из ' + total + ').';
+        if(blocked>=3) return 'Хорошая защита. Большинство трекеров заблокированы (' + blocked + ' из ' + total + '). Проверьте оставшиеся незаблокированные элементы.';
+        if(blocked>=1) return 'Частичная защита (' + blocked + ' из ' + total + '). Ваш браузер блокирует некоторые трекеры, но не все. Для полной защиты рекомендуем uBlock Origin.';
+        return 'Ваш браузер не блокирует ни один трекер (0 из ' + total + '). Сайты могут отслеживать каждый ваш визит с помощью рекламных пикселей, скриптов аналитики и рекламных фреймов. Рекомендуем установить uBlock Origin \u2014 это бесплатное расширение, которое решит большинство проблем.';
       }
     },
     implications:{
@@ -929,7 +927,6 @@ const I18N = {
     fpjsLoading:'Загрузка...',
     fpjsRecheck:'Проверить снова',
     fpjs:{groupTitle:'Результат FingerprintJS Pro',visitorId:'ID посетителя',confidence:'Уверенность',identified:'Идентифицируемы?',yes:'Да',no:'Нет'},
-    shockTitle:'\u0427\u0442\u043e \u0441\u0430\u0439\u0442 \u0437\u043d\u0430\u0435\u0442 \u043e \u0432\u0430\u0441',
     shock:{
       title:'\u0427\u0442\u043e \u0441\u0430\u0439\u0442 \u0437\u043d\u0430\u0435\u0442 \u043e \u0432\u0430\u0441',
       location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} \u0412\u044b \u0432 <code>${city}, ${country}</code> \u2014 IP: <code>${ip}</code>`,
@@ -1222,7 +1219,7 @@ const I18N = {
     advicePrefix:'💡 Совет:',
     methodologyButton:'Как рассчитывается процент?',
     methodSummary:'<b>Как считаем результат</b>',
-    methodText:'<p><b>Что мы измеряем</b></p><p>Ваш браузер передаёт сайтам 17\u00A0параметров: тип браузера, ОС, разрешение экрана, видеокарту, число ядер процессора, объём памяти, языки, расширения, графический и аудио\u2011отпечатки, шрифты и другие.</p><p><b>Как считаем</b></p><p>Для каждого параметра мы смотрим, насколько он редкий. Например, Chrome на Windows\u00A0\u2014 массовая комбинация. А старый Firefox с необычным GPU\u00A0\u2014 редкость, которая выделяет вас из толпы.</p><p>Чем больше редких параметров совпало\u00A0\u2014 тем выше итоговый балл.</p><p><b>Откуда берутся данные</b></p><p>Вероятности основаны на открытых исследованиях EFF\u00A0Panopticlick и FingerprintJS. Мы также учитываем зависимости между параметрами (Safari всегда работает с Apple\u00A0GPU, поэтому эта пара не удваивает счёт).</p><p><b>Что означает процент</b></p><p>Мы моделируем 25\u00A0000\u00A0виртуальных браузеров и сравниваем ваш результат с ними. Если вы набрали 85%\u00A0\u2014 значит ваш отпечаток уникальнее, чем у 85% смоделированных пользователей.</p><p style="opacity:.7;font-size:13px">Все вычисления происходят в вашем браузере и никуда не отправляются.</p>',
+    methodText:'<p><b>Что мы измеряем</b></p><p>Ваш браузер передаёт сайтам 21\u00A0параметр: тип браузера, ОС, разрешение экрана, видеокарту, число ядер процессора, объём памяти, языки, расширения, графический и аудио\u2011отпечатки, шрифты и другие.</p><p><b>Как считаем</b></p><p>Для каждого параметра мы смотрим, насколько он редкий. Например, Chrome на Windows\u00A0\u2014 массовая комбинация. А старый Firefox с необычным GPU\u00A0\u2014 редкость, которая выделяет вас из толпы.</p><p>Чем больше редких параметров совпало\u00A0\u2014 тем выше итоговый балл.</p><p><b>Откуда берутся данные</b></p><p>Вероятности основаны на открытых исследованиях EFF\u00A0Panopticlick и FingerprintJS. Мы также учитываем зависимости между параметрами (Safari всегда работает с Apple\u00A0GPU, поэтому эта пара не удваивает счёт).</p><p><b>Что означает процент</b></p><p>Мы моделируем 25\u00A0000\u00A0виртуальных браузеров и сравниваем ваш результат с ними. Если вы набрали 85%\u00A0\u2014 значит ваш отпечаток уникальнее, чем у 85% смоделированных пользователей.</p><p style="opacity:.7;font-size:13px">Все вычисления происходят в вашем браузере и никуда не отправляются.</p>',
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — freeipapi.com, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     batteryUnavailable:'Недоступно в этом браузере',
@@ -1404,6 +1401,7 @@ const I18N = {
     },
     uniqOutcomeTitle:'Summary.',
     uniqOutcomeTail:'Follow the steps above to shrink your digital footprint without losing everyday comfort.',
+    // TODO: extract uniqMeaning to shared function — duplicated across all 3 locales
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
       const headline=lvl==='high'?'Your fingerprint stands out more than most users':lvl==='med'?'Your fingerprint is moderately distinctive':'Your fingerprint blends in with the crowd';
@@ -1459,10 +1457,10 @@ const I18N = {
       gpc:{name:'Global Privacy Control',blocked:'Enabled',open:'Disabled'},
       gpcExplain:'A legally binding privacy signal supported by laws in some countries',
       verdict:function(blocked,total){
-        if(blocked>=5) return '\u2705 Excellent protection! All tested trackers are blocked.';
-        if(blocked>=3) return 'Good protection. Most trackers are blocked. Check the remaining unblocked elements.';
-        if(blocked>=1) return 'Partial protection. Your browser blocks some trackers, but not all. For full protection we recommend uBlock Origin.';
-        return 'Your browser does not block any trackers. Websites can track every visit using ad pixels, analytics scripts, and ad frames. We recommend installing uBlock Origin \u2014 a free extension that solves most of these issues.';
+        if(blocked>=5) return '\u2705 Excellent protection! All tested trackers are blocked (' + blocked + ' of ' + total + ').';
+        if(blocked>=3) return 'Good protection. Most trackers are blocked (' + blocked + ' of ' + total + '). Check the remaining unblocked elements.';
+        if(blocked>=1) return 'Partial protection (' + blocked + ' of ' + total + '). Your browser blocks some trackers, but not all. For full protection we recommend uBlock Origin.';
+        return 'Your browser does not block any trackers (0 of ' + total + '). Websites can track every visit using ad pixels, analytics scripts, and ad frames. We recommend installing uBlock Origin \u2014 a free extension that solves most of these issues.';
       }
     },
     implications:{
@@ -1708,7 +1706,6 @@ const I18N = {
     fpjsLoading:'Loading...',
     fpjsRecheck:'Re-check',
     fpjs:{groupTitle:'FingerprintJS Pro Result',visitorId:'Visitor ID',confidence:'Confidence',identified:'Identifiable?',yes:'Yes',no:'No'},
-    shockTitle:'What the site knows about you',
     shock:{
       title:'What the site knows about you',
       location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} You\u2019re in <code>${city}, ${country}</code> \u2014 IP: <code>${ip}</code>`,
@@ -2150,6 +2147,7 @@ const I18N = {
     },
     uniqOutcomeTitle:'Xulosa.',
     uniqOutcomeTail:'Yuqoridagi qadamlarni bajarsangiz, kundalik qulaylikni yo‘qotmasdan raqamli izingizni kamaytirasiz.',
+    // TODO: extract uniqMeaning to shared function — duplicated across all 3 locales
     uniqMeaning(pct,{level}={}){
       const lvl=level||(pct>=70?'high':pct>=40?'med':'low');
       const headline=lvl==='high'?'Barmoq izingiz ko\u02BBpchilikdan ko\u02BBra noyobroq':lvl==='med'?'Barmoq izingiz o\u02BBrtacha darajada ajralib turadi':'Barmoq izingiz ko\u02BBpchilikka o\u02BBxshaydi';
@@ -2205,10 +2203,10 @@ const I18N = {
       gpc:{name:"Global Privacy Control",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
       gpcExplain:"Ba\u02BBzi mamlakatlar qonunchiligida qo\u02BBllab-quvvatlanadigan maxfiylik signali",
       verdict:function(blocked,total){
-        if(blocked>=5) return "\u2705 Ajoyib himoya! Barcha tekshirilgan trekerlar bloklangan.";
-        if(blocked>=3) return "Yaxshi himoya. Ko\u02BBpchilik trekerlar bloklangan. Qolgan bloklanmagan elementlarni tekshiring.";
-        if(blocked>=1) return "Qisman himoya. Brauzeringiz ba\u02BBzi trekerlarni bloklaydi, lekin hammasini emas. To\u02BBliq himoya uchun uBlock Origin ni tavsiya qilamiz.";
-        return "Brauzeringiz birorta ham trekerni bloklamaydi. Saytlar har bir tashrifingizni reklama piksellari, analitika skriptlari va reklama freymlar yordamida kuzatishi mumkin. uBlock Origin o\u02BBrnatishni tavsiya qilamiz \u2014 bu bepul kengaytma ko\u02BBpchilik muammolarni hal qiladi.";
+        if(blocked>=5) return "\u2705 Ajoyib himoya! Barcha tekshirilgan trekerlar bloklangan (" + blocked + " / " + total + ").";
+        if(blocked>=3) return "Yaxshi himoya. Ko\u02BBpchilik trekerlar bloklangan (" + blocked + " / " + total + "). Qolgan bloklanmagan elementlarni tekshiring.";
+        if(blocked>=1) return "Qisman himoya (" + blocked + " / " + total + "). Brauzeringiz ba\u02BBzi trekerlarni bloklaydi, lekin hammasini emas. To\u02BBliq himoya uchun uBlock Origin ni tavsiya qilamiz.";
+        return "Brauzeringiz birorta ham trekerni bloklamaydi (0 / " + total + "). Saytlar har bir tashrifingizni reklama piksellari, analitika skriptlari va reklama freymlar yordamida kuzatishi mumkin. uBlock Origin o\u02BBrnatishni tavsiya qilamiz \u2014 bu bepul kengaytma ko\u02BBpchilik muammolarni hal qiladi.";
       }
     },
     implications:{
@@ -2454,7 +2452,6 @@ const I18N = {
     fpjsLoading:"Yuklanmoqda...",
     fpjsRecheck:"Qayta tekshirish",
     fpjs:{groupTitle:"FingerprintJS Pro natijasi",visitorId:"Tashrif ID",confidence:"Ishonch darajasi",identified:"Aniqlanasizmi?",yes:"Ha",no:"Yo\u02BBq"},
-    shockTitle:"Sayt siz haqingizda nimalarni biladi",
     shock:{
       title:"Sayt siz haqingizda nimalarni biladi",
       location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} Siz <code>${city}, ${country}</code>dasiz \u2014 IP: <code>${ip}</code>`,
@@ -2477,7 +2474,7 @@ const I18N = {
       fingerprintId:(hash,pct)=>`\uD83D\uDD11 Raqamli ID: ${hash}\u2026 \u2014 foydalanuvchilarning ${pct}% dan noyobroq`
     },
     profiling:{
-      title:'Profiling',
+      title:'Profillash',
       intro:[
         'Brauzer ochiq ko‘rsatayotgan signallar asosida ehtimoliy profil tuzamiz. Hisob-kitoblar faqat sizning qurilmangizda bajariladi.',
         'Portretni aniqroq qilish uchun istasangiz IP va tezlik testini ishga tushiring.'
@@ -2737,7 +2734,7 @@ const I18N = {
     advicePrefix:'💡 Maslahat:',
     methodologyButton:"Foiz qanday hisoblanadi?",
     methodSummary:'<b>Natija qanday olinadi</b>',
-    methodText:'<p><b>Nimani o\u02BBlchaymiz</b></p><p>Brauzeringiz har bir saytga 17\u00A0ta parametrni uzatadi: brauzer turi, OT, ekran o\u02BBlchami, videokarta, protsessor yadrolari, xotira, tillar, kengaytmalar, grafik va audio izlar, shriftlar va boshqalar.</p><p><b>Qanday baholaymiz</b></p><p>Har bir parametr uchun uning qanchalik kam uchraydigani tekshiriladi. Windows\u2019da Chrome\u00A0\u2014 juda keng tarqalgan. Noodatiy GPU bilan eski Firefox\u00A0\u2014 noyoblik, siz ajralib turasiz.</p><p>Noyob parametrlar qancha ko\u02BBp bo\u02BBlsa\u00A0\u2014 ball shuncha yuqori.</p><p><b>Ma\u02BClumot qayerdan</b></p><p>Ehtimolliklar EFF\u00A0Panopticlick va FingerprintJS ochiq tadqiqotlariga asoslangan. Signallar orasidagi bog\u02BBliqliklar ham hisobga olinadi.</p><p><b>Foiz nimani anglatadi</b></p><p>25\u00A0000\u00A0ta virtual brauzer modellashtiriladi va sizning natijangiz ular bilan taqqoslanadi. Agar 85% bo\u02BBlsa\u00A0\u2014 sizning izingiz modellashtirilgan foydalanuvchilarning 85% dan noyobroq.</p><p style="opacity:.7;font-size:13px">Barcha hisob-kitoblar brauzeringizda amalga oshiriladi va hech qayerga yuborilmaydi.</p>',
+    methodText:'<p><b>Nimani o\u02BBlchaymiz</b></p><p>Brauzeringiz har bir saytga 21\u00A0ta parametrni uzatadi: brauzer turi, OT, ekran o\u02BBlchami, videokarta, protsessor yadrolari, xotira, tillar, kengaytmalar, grafik va audio izlar, shriftlar va boshqalar.</p><p><b>Qanday baholaymiz</b></p><p>Har bir parametr uchun uning qanchalik kam uchraydigani tekshiriladi. Windows\u2019da Chrome\u00A0\u2014 juda keng tarqalgan. Noodatiy GPU bilan eski Firefox\u00A0\u2014 noyoblik, siz ajralib turasiz.</p><p>Noyob parametrlar qancha ko\u02BBp bo\u02BBlsa\u00A0\u2014 ball shuncha yuqori.</p><p><b>Ma\u02BClumot qayerdan</b></p><p>Ehtimolliklar EFF\u00A0Panopticlick va FingerprintJS ochiq tadqiqotlariga asoslangan. Signallar orasidagi bog\u02BBliqliklar ham hisobga olinadi.</p><p><b>Foiz nimani anglatadi</b></p><p>25\u00A0000\u00A0ta virtual brauzer modellashtiriladi va sizning natijangiz ular bilan taqqoslanadi. Agar 85% bo\u02BBlsa\u00A0\u2014 sizning izingiz modellashtirilgan foydalanuvchilarning 85% dan noyobroq.</p><p style="opacity:.7;font-size:13px">Barcha hisob-kitoblar brauzeringizda amalga oshiriladi va hech qayerga yuborilmaydi.</p>',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa freeipapi.com, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
     batteryUnavailable:'Bu brauzerda mavjud emas',
@@ -3002,10 +2999,10 @@ function detectScreenSetup(){
   const scr=window.screen;
   if(!scr) return {mode:'unknown',count:null};
   if(typeof scr.isExtended==='boolean'){
-    return {mode:scr.isExtended?'multi':'single',count:scr.isExtended?2:1};
+    return {mode:scr.isExtended?'multi':'single',count:scr.isExtended?null:1};
   }
   const extended=Boolean((typeof scr.availLeft==='number'&&scr.availLeft!==0)||(typeof scr.availTop==='number'&&scr.availTop!==0));
-  if(extended) return {mode:'multi',count:2};
+  if(extended) return {mode:'multi',count:null};
   return {mode:'single',count:1};
 }
 
@@ -3026,9 +3023,10 @@ async function canvasHash(){try{const c=document.createElement('canvas');c.width
 async function audioHash(){try{const ctx=new OfflineAudioContext(1,44100,44100);const o=ctx.createOscillator();o.type='triangle';o.frequency.value=1000;const comp=ctx.createDynamicsCompressor();o.connect(comp);comp.connect(ctx.destination);o.start(0);o.stop(0.1);const buf=await ctx.startRendering();const ch=buf.getChannelData(0);let acc=0;for(let i=0;i<ch.length;i+=64){acc+=Math.abs(ch[i]);}return sha256(String(acc));}catch(_){return '';}}
 function webglInfo(){try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');if(!gl)return{};const dbg=gl.getExtension('WEBGL_debug_renderer_info');return{vendor:dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),renderer:dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};}catch(_){return{};}}
 function getWebGLFingerprint(){
+  let gl=null;
   try{
     const canvas=document.createElement('canvas');
-    const gl=canvas.getContext('webgl')||canvas.getContext('experimental-webgl');
+    gl=canvas.getContext('webgl')||canvas.getContext('experimental-webgl');
     if(!gl) return{supported:false};
     const debugInfo=gl.getExtension('WEBGL_debug_renderer_info');
     const renderer=debugInfo?gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL):'N/A';
@@ -3053,9 +3051,9 @@ function getWebGLFingerprint(){
     gl.readPixels(0,0,256,256,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
     let h=0;for(let i=0;i<pixels.length;i+=37){h=((h<<5)-h)+pixels[i];h=h&h;}
     const renderHash=Math.abs(h).toString(16).padStart(8,'0');
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
     return{supported:true,renderer:renderer,vendor:vendor,extensionsCount:extensions.length,hash:renderHash};
   }catch(_){return{supported:false};}
+  finally{try{if(gl)gl.getExtension('WEBGL_lose_context')?.loseContext();}catch(_){}}
 }
 async function getAudioFingerprint(){
   try{
@@ -3104,13 +3102,14 @@ function getFontFingerprint(){
   }catch(_){return{count:0,hash:'0'};}
 }
 async function getBattery(){try{if(navigator.getBattery){const b=await navigator.getBattery();return{level:b.level,charging:b.charging};}return{unavailable:true};}catch(_){return{unavailable:true};}}
-async function getPermissions(){const names=['geolocation','notifications','camera','microphone','clipboard-read','clipboard-write','persistent-storage'];const out={};if(!navigator.permissions)return out;await Promise.all(names.map(async n=>{try{const st=await navigator.permissions.query({name:n});out[n]=st.state;}catch(_){}}));return out;}
+async function getPermissions(){const names=['geolocation','notifications','camera','microphone','clipboard-read','clipboard-write','persistent-storage'];const out={};if(!navigator.permissions)return out;await Promise.all(names.map(async n=>{try{const st=await navigator.permissions.query({name:n});out[n]=st.state;}catch(_){out[n]='error';}}));return out;}
 async function getMediaDevices(){try{if(!navigator.mediaDevices?.enumerateDevices)return[];const list=await navigator.mediaDevices.enumerateDevices();return list.map(d=>({kind:d.kind,label:!!d.label}));}catch(_){return[];}}
 function getPlugins(){try{return Array.from(navigator.plugins||[]).map(p=>p.name);}catch(_){return[];}}
 function netInfo(){try{const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(!c)return{};return{downlink:c.downlink,rtt:c.rtt,effectiveType:c.effectiveType};}catch(_){return{};}}
+// NOTE: expects negated getTimezoneOffset() — caller passes -basic.tzOffsetMinutes
 function utcOffsetStr(mins){const sign=mins<=0?'+':'-';const abs=Math.abs(mins);const hh=String(Math.floor(abs/60)).padStart(2,'0');const mm=String(abs%60).padStart(2,'0');return`UTC${sign}${hh}:${mm}`;}
 function timeInTZ(tz,loc,withSeconds){
-  const locale=loc||'ru-RU';
+  const locale=loc||(currentLang==='uz'?'uz-UZ':currentLang==='en'?'en-US':'ru-RU');
   const d=new Date();
   const date=d.toLocaleDateString(locale,{timeZone:tz});
   const timeOpts={timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false};
@@ -3118,7 +3117,7 @@ function timeInTZ(tz,loc,withSeconds){
   const time=d.toLocaleTimeString(locale,timeOpts);
   return `${time} ${date}`;
 }
-function tzCityName(tz){if(!tz)return'ваша TZ';const parts=tz.split('/');let city=parts[1]||parts[0];return city.replace('_',' ');}
+function tzCityName(tz){if(!tz)return null;const parts=tz.split('/');let city=parts[1]||parts[0];return city.replace(/_/g,' ');}
 function detectMemory(){const info={deviceMemory:null,heapLimit:null};try{if(typeof navigator.deviceMemory==='number'&&!Number.isNaN(navigator.deviceMemory)){info.deviceMemory=Math.max(1,Math.round(navigator.deviceMemory));}}catch(_){/* ignore */}try{const perf=performance?.memory;if(perf&&typeof perf.jsHeapSizeLimit==='number'&&perf.jsHeapSizeLimit>0){info.heapLimit=Math.max(1,Math.round(perf.jsHeapSizeLimit/(1024*1024*1024)));}}catch(_){/* ignore */}return info;}
 function probableBrowsers(b){
   const ua=b.userAgent||'';
@@ -3129,7 +3128,7 @@ function probableBrowsers(b){
   /OPR\//.test(ua)&&out.push('Opera');
   /YaBrowser\//.test(ua)&&out.push('Yandex Browser');
   /Firefox\//.test(ua)&&out.push('Firefox');
-  (/Chrome\//.test(ua)&&!/Edg\/|OPR\/|YaBrowser\//.test(ua))&&out.push('Chrome','Brave');
+  if(/Chrome\//.test(ua)&&!/Edg\/|OPR\/|YaBrowser\//.test(ua)){out.push('Chrome');if(navigator.brave)out.push('Brave');}
   (/Safari\//.test(ua)&&!/Chrome\//.test(ua))&&out.push('Safari');
   return out.length?Array.from(new Set(out)).join(' / '):'—';
 }
@@ -4081,7 +4080,6 @@ const state={
   vpn:{status:'uncertain',reasons:[],checked:false},
   sharePayload:null,
   profilingContext:null,
-  speedResult:null,
   spoofingResult:null
 };
 let snapshotCache=null;
@@ -4684,7 +4682,7 @@ function createCard(key,value,t,lang){
   const card=document.createElement('div');
   card.className='card';
   const title=document.createElement('div');
-  title.className='title';
+  title.className='card-title';
   title.textContent=resolveLocaleText(info?.label,lang,'');
   card.appendChild(title);
   const valueEl=document.createElement('div');
@@ -5222,8 +5220,8 @@ function renderShockBullets(basic,t,snapshot){
     const parts=[];
     if(hasIp&&details.org) parts.push(esc(details.org));
     const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-    if(state.speedResult?.mbps){
-      parts.push(state.speedResult.mbps+' Mbps');
+    if(state.speed?.mbps){
+      parts.push(state.speed.mbps+' Mbps');
     }else if(conn?.downlink){
       parts.push(conn.downlink+' Mbps');
     }
@@ -5241,7 +5239,7 @@ function renderShockBullets(basic,t,snapshot){
         const typeName=typeMap[conn.type]?.[currentLang]||conn.type;
         connParts.push(typeName);
       }
-      if(state.speedResult?.mbps) connParts.push(state.speedResult.mbps+' Mbps');
+      if(state.speed?.mbps) connParts.push(state.speed.mbps+' Mbps');
       else if(conn?.downlink) connParts.push(conn.downlink+' Mbps');
       if(connParts.length>0) lines.push(t.shock.connection(connParts.join(' \u00B7 ')));
     }
@@ -5975,7 +5973,7 @@ function formatMonitorText(info,t){
   if(!info||!info.mode) return t.monitorText?.unknown||'';
   if(info.mode==='multi'){
     const label=t.monitorText?.multi;
-    const count=info.count||2;
+    const count=info.count||'2+';
     if(typeof label==='function') return label(count);
     return label||'';
   }
@@ -6319,7 +6317,7 @@ async function render(lang){
         state.trackerResults=results;
         const tNow=I18N[currentLang]||I18N.ru;
         renderTrackerTests(results,tNow);
-      });
+      }).catch(function(err){console.warn('tracker tests failed',err);});
     }else{
       renderTrackerTests(_trackerTestResults,t);
     }
@@ -6709,7 +6707,7 @@ function animateSpeedHero(targetMbps,latency,t){
   // Count-up animation
   const duration=800;
   const start=performance.now();
-  const from=0;
+  const from=parseFloat(heroNumber.textContent)||0;
   const to=targetMbps;
   function step(now){
     const elapsed=now-start;
@@ -6782,7 +6780,6 @@ async function runRealSpeedTest(t){
     animateSpeedHero(mbps,latency,t);
 
     state.speed={status:'done',mbps,latency,error:null,note:'measured'};
-    state.speedResult={mbps,latency,note:'measured'};
   }catch(e){
     heroNumber.textContent='—';
     heroNumber.style.opacity='1';
@@ -6824,6 +6821,7 @@ async function handleNetworkCheck(){
     if(state.whoamiData) renderServerFingerprint(state.whoamiData,t);
     if(btn){btn.textContent=t.networkRecheck||'Re-check';btn.disabled=false;}
   }catch(e){
+    state.ipFetchDone=true;
     if(btn){btn.textContent=t.networkButton||'Check network';btn.disabled=false;}
     const resultsEl=getEl('networkResults');
     if(resultsEl){
@@ -7034,9 +7032,7 @@ function renderContradictions(whoamiData,clientBasic,t){
 
   // 1. Timezone
   const serverTz=cc.server_timezone||cc.timezone||'';
-  const clientTz=clientBasic?
-    (()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return '';}})()
-    :(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return '';}})();
+  const clientTz=(clientBasic&&clientBasic.timezone)||(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(_){return '';}})();
   if(serverTz&&clientTz&&serverTz!==clientTz){
     issues.push({field:labels.timezone||'Timezone',server:serverTz,client:clientTz});
   }
@@ -7123,7 +7119,6 @@ function renderContradictions(whoamiData,clientBasic,t){
 }
 
 /* ============== Phase 3.3: Visitor Stats ============== */
-const WORKER_API='https://fingerprint-api.xfxrrpkvr5.workers.dev';
 let _visitorStats=null;
 
 async function fetchVisitorStats(){
@@ -7274,7 +7269,7 @@ async function autoRunFingerprintJS(){
   }
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
+function initApp(){
   themePreference=loadThemePreference();
   applyThemePreference(themePreference);
   const lang=detectLang();
@@ -7310,11 +7305,6 @@ document.addEventListener('DOMContentLoaded',()=>{
         render(value);
       });
     });
-    document.addEventListener('click',event=>{
-      if(!langMenuIsOpen) return;
-      if(langMenu.contains(event.target)||event.target===langBtn) return;
-      setLangMenu(false);
-    });
   }
   const themeBtn=getEl('themeBtn');
   const themeMenu=getEl('themeMenu');
@@ -7338,12 +7328,15 @@ document.addEventListener('DOMContentLoaded',()=>{
         themeBtn.focus({preventScroll:true});
       });
     });
-    document.addEventListener('click',event=>{
-      if(themeMenuIsOpen&&!(themeMenu.contains(event.target)||event.target===themeBtn)){
-        setThemeMenu(false);
-      }
-    });
   }
+  document.addEventListener('click',event=>{
+    if(langMenuIsOpen&&langMenu&&!(langMenu.contains(event.target)||event.target===langBtn)){
+      setLangMenu(false);
+    }
+    if(themeMenuIsOpen&&themeMenu&&!(themeMenu.contains(event.target)||event.target===themeBtn)){
+      setThemeMenu(false);
+    }
+  });
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'){
       setLangMenu(false);
@@ -7353,7 +7346,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   document.getElementById('changelogClose')?.addEventListener('click', closeChangelog);
   document.getElementById('changelogModal')?.addEventListener('click', e => {
-    if(e.target===document.getElementById('changelogModal')) closeChangelog();
+    if(e.target===e.currentTarget) closeChangelog();
   });
   // Methodology modal
   const methodBtnEl=getEl('methodologyBtn');
@@ -7424,7 +7417,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   setViewMode(currentViewMode);
   render(lang);
-});
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initApp);}else{initApp();}
 </script>
 </body>
 </html>
