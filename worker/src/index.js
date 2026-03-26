@@ -5,10 +5,198 @@
  *   GET  /api/scan?target=example.com   — full fingerprint report
  *   GET  /api/scan?target=8.8.8.8       — IP scan
  *   GET  /api/health                     — health check
+ *   GET  /api/whoami                     — visitor's own fingerprint (from request)
+ *   GET  /api/check                      — whoami with content negotiation
  *   OPTIONS *                            — CORS preflight
  */
 
 import { collectFingerprint } from './collector.js';
+
+/* ============ /api/whoami — build visitor profile from request ============ */
+
+function parseUA(ua) {
+  if (!ua) return { browser: null, version: null, os: null, os_version: null };
+  let browser = null, version = null, os = null, os_version = null;
+  // Browser detection
+  const browsers = [
+    [/Edg(?:e|A|iOS)?\/(\S+)/, 'Edge'],
+    [/OPR\/(\S+)|Opera\/(\S+)/, 'Opera'],
+    [/Brave\/(\S+)/, 'Brave'],
+    [/Vivaldi\/(\S+)/, 'Vivaldi'],
+    [/YaBrowser\/(\S+)/, 'Yandex'],
+    [/SamsungBrowser\/(\S+)/, 'Samsung Internet'],
+    [/Firefox\/(\S+)/, 'Firefox'],
+    [/CriOS\/(\S+)/, 'Chrome iOS'],
+    [/Chrome\/(\S+)/, 'Chrome'],
+    [/Safari\/(\S+)/, 'Safari'],
+  ];
+  for (const [re, name] of browsers) {
+    const m = ua.match(re);
+    if (m) { browser = name; version = (m[1] || m[2] || '').split('.')[0]; break; }
+  }
+  // If Safari detected, check version from Version/X
+  if (browser === 'Safari') {
+    const vm = ua.match(/Version\/(\S+)/);
+    if (vm) version = vm[1].split('.')[0];
+  }
+  // OS detection
+  if (/Windows NT (\d+\.\d+)/.test(ua)) { os = 'Windows'; os_version = RegExp.$1; }
+  else if (/Mac OS X ([\d_]+)/.test(ua)) { os = 'macOS'; os_version = RegExp.$1.replace(/_/g, '.'); }
+  else if (/CrOS/.test(ua)) { os = 'ChromeOS'; }
+  else if (/Android ([\d.]+)/.test(ua)) { os = 'Android'; os_version = RegExp.$1; }
+  else if (/iPhone|iPad/.test(ua)) { os = 'iOS'; const m = ua.match(/OS ([\d_]+)/); if (m) os_version = m[1].replace(/_/g, '.'); }
+  else if (/Linux/.test(ua)) { os = 'Linux'; }
+  return { browser, version, os, os_version };
+}
+
+function parseHints(headers) {
+  const ua = headers.get('sec-ch-ua') || null;
+  const platform = headers.get('sec-ch-ua-platform') || null;
+  const mobile = headers.get('sec-ch-ua-mobile') || null;
+  const model = headers.get('sec-ch-ua-model') || null;
+  const pv = headers.get('sec-ch-ua-platform-version') || null;
+  if (!ua && !platform) return null;
+  // Parse brand from hints
+  let browser = null;
+  if (ua) {
+    // "Chromium";v="134", "Google Chrome";v="134"
+    const brands = [...ua.matchAll(/"([^"]+)";v="([^"]+)"/g)];
+    for (const [, name] of brands) {
+      if (name !== 'Not A(Brand' && name !== 'Not/A)Brand' && !name.startsWith('Not')) {
+        browser = name; break;
+      }
+    }
+  }
+  return {
+    ua: ua,
+    platform: platform ? platform.replace(/"/g, '') : null,
+    mobile: mobile || null,
+    model: model ? model.replace(/"/g, '') : null,
+    platform_version: pv ? pv.replace(/"/g, '') : null,
+    browser,
+  };
+}
+
+async function hashHeaders(headerOrder, headers) {
+  // Build canonical string from header names + select values
+  const signalHeaders = ['accept', 'accept-language', 'accept-encoding', 'user-agent'];
+  const parts = headerOrder.map(h => {
+    const val = signalHeaders.includes(h.toLowerCase()) ? headers.get(h) || '' : '';
+    return h.toLowerCase() + ':' + val;
+  });
+  const data = new TextEncoder().encode(parts.join('|'));
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(hash)].slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function checkConsistency(uaParsed, hintsParsed) {
+  if (!uaParsed || !hintsParsed) return { consistent: true, details: 'Insufficient data for cross-check' };
+  const issues = [];
+  // Browser check
+  if (hintsParsed.browser && uaParsed.browser) {
+    const hb = hintsParsed.browser.toLowerCase();
+    const ub = uaParsed.browser.toLowerCase();
+    if (!hb.includes(ub) && !ub.includes(hb) && !(hb.includes('chrom') && ub.includes('chrom'))) {
+      issues.push(`UA says ${uaParsed.browser}, hints say ${hintsParsed.browser}`);
+    }
+  }
+  // Platform check
+  if (hintsParsed.platform && uaParsed.os) {
+    const hp = hintsParsed.platform.toLowerCase();
+    const uo = uaParsed.os.toLowerCase();
+    const platformMap = { 'windows': 'windows', 'macos': 'macos', 'linux': 'linux', 'android': 'android', 'ios': 'ios', 'chromeos': 'chromeos' };
+    const hpNorm = Object.keys(platformMap).find(k => hp.includes(k)) || hp;
+    const uoNorm = Object.keys(platformMap).find(k => uo.includes(k)) || uo;
+    if (hpNorm !== uoNorm) {
+      issues.push(`UA says ${uaParsed.os}, hints say ${hintsParsed.platform}`);
+    }
+  }
+  // Mobile check
+  if (hintsParsed.mobile && uaParsed.os) {
+    const isMobileUA = ['android', 'ios'].includes(uaParsed.os.toLowerCase());
+    const isMobileHint = hintsParsed.mobile === '?1';
+    if (isMobileUA !== isMobileHint) {
+      issues.push(`UA ${isMobileUA ? 'mobile' : 'desktop'}, hints ${isMobileHint ? 'mobile' : 'desktop'}`);
+    }
+  }
+  return {
+    consistent: issues.length === 0,
+    issues,
+    details: issues.join('; ') || 'All checks passed',
+  };
+}
+
+function buildWhoami(request) {
+  const cf = request.cf || {};
+  const headers = request.headers;
+  const ip = headers.get('cf-connecting-ip') || headers.get('x-real-ip') || '0.0.0.0';
+
+  // Collect header order (approximation — CF may reorder, but it's the best we have)
+  const headerOrder = [];
+  for (const [key] of headers.entries()) {
+    if (!key.startsWith('cf-') && key !== 'x-real-ip' && key !== 'x-forwarded-for') {
+      headerOrder.push(key);
+    }
+  }
+
+  const uaParsed = parseUA(headers.get('user-agent') || '');
+  const hintsParsed = parseHints(headers);
+  const consistency = checkConsistency(uaParsed, hintsParsed);
+
+  // Cross-check data (for frontend to compare with client-side)
+  const crossCheck = {
+    server_timezone: cf.timezone || null,
+    server_country: cf.country || null,
+    server_platform: uaParsed.os || null,
+    server_browser: uaParsed.browser ? `${uaParsed.browser} ${uaParsed.version || ''}`.trim() : null,
+    server_accept_language: headers.get('accept-language') || null,
+  };
+
+  return {
+    ip,
+    geo: {
+      country: cf.country || null,
+      city: cf.city || null,
+      region: cf.region || null,
+      timezone: cf.timezone || null,
+      colo: cf.colo || null,
+      continent: cf.continent || null,
+      latitude: cf.latitude || null,
+      longitude: cf.longitude || null,
+      is_eu: cf.isEUCountry || false,
+    },
+    network: {
+      asn: cf.asn || null,
+      asOrganization: cf.asOrganization || null,
+      httpProtocol: cf.httpProtocol || null,
+      tlsVersion: cf.tlsVersion || null,
+      tlsCipher: cf.tlsCipher || null,
+    },
+    headers: {
+      user_agent: headers.get('user-agent') || null,
+      accept_language: headers.get('accept-language') || null,
+      accept_encoding: headers.get('accept-encoding') || null,
+      dnt: headers.get('dnt') || null,
+      client_hints: hintsParsed,
+      header_order: headerOrder,
+    },
+    // Phase 1.1: computed fields
+    ua_parsed: uaParsed,
+    hints_parsed: hintsParsed,
+    header_hash: null, // will be filled async — see below
+    consistency,
+    // Phase 1.2: cross-check
+    cross_check: crossCheck,
+  };
+}
+
+// Async wrapper that fills header_hash
+async function buildWhoamiAsync(request) {
+  const result = buildWhoami(request);
+  const headerOrder = result.headers.header_order;
+  result.header_hash = await hashHeaders(headerOrder, request.headers);
+  return result;
+}
 
 function corsHeaders(request, env) {
   const origin = request.headers.get('Origin') || '';
@@ -53,6 +241,43 @@ export default {
         timestamp: new Date().toISOString(),
         kv_available: !!env.CACHE,
       }, 200, request, env);
+    }
+
+    // === /api/whoami — visitor's own fingerprint from request metadata ===
+    if (url.pathname === '/api/whoami') {
+      const w = await buildWhoamiAsync(request);
+      return jsonResponse(w, 200, request, env);
+    }
+
+    // === /api/check — same as whoami, with content negotiation ===
+    if (url.pathname === '/api/check') {
+      const accept = request.headers.get('Accept') || '';
+      const w = await buildWhoamiAsync(request);
+      if (accept.includes('application/json')) {
+        return jsonResponse(w, 200, request, env);
+      }
+      // Plain text for curl
+      const lines = [
+        `IP:        ${w.ip}`,
+        `Country:   ${w.geo.country || '—'}`,
+        `City:      ${w.geo.city || '—'}`,
+        `Region:    ${w.geo.region || '—'}`,
+        `Timezone:  ${w.geo.timezone || '—'}`,
+        `ASN:       ${w.network.asn || '—'}`,
+        `Colo:      ${w.geo.colo || '—'}`,
+        `TLS:       ${w.network.tlsVersion || '—'} / ${w.network.tlsCipher || '—'}`,
+        `HTTP:      ${w.network.httpProtocol || '—'}`,
+        `Browser:   ${w.headers.user_agent || '—'}`,
+        `Languages: ${w.headers.accept_language || '—'}`,
+        `Header#:   ${w.header_hash || '—'}`,
+      ];
+      if (w.consistency && !w.consistency.consistent) {
+        lines.push(`⚠ Mismatch: ${w.consistency.details}`);
+      }
+      return new Response(lines.join('\n') + '\n', {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8', ...corsHeaders(request, env) },
+      });
     }
 
     // Speed test — download endpoint (serves random bytes for measuring throughput)
