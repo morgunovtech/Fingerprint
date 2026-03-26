@@ -414,6 +414,14 @@
     </div>
   </section>
 
+  <!-- Server Fingerprint (Phase 2.1) -->
+  <section class="block" id="serverFpSection" style="display:none">
+    <h2 class="section-heading" id="serverFpTitle"></h2>
+    <p id="serverFpDesc" class="small" style="margin-bottom:12px"></p>
+    <div class="data-group" id="groupServerFp"></div>
+    <div id="contradictionsBlock" style="margin-top:16px"></div>
+  </section>
+
   <!-- Tracker protection tests -->
   <section class="block" id="trackerSection" style="display:none">
     <h2 class="section-heading" id="trackerTitle"></h2>
@@ -833,6 +841,23 @@ const I18N = {
     networkRecheck:'Проверить снова',
     osintLoading:'Сканируем публичные базы данных...',
     osint:{title:'Разведка по сети',geo:'Геолокация',isp:'Провайдер',asn:'ASN',type:'Тип подключения',rep:'Репутация IP',clean:'Чисто',listed:'В чёрном списке',ptr:'Обратный DNS',checks:'проверок пройдено',duration:'Время сканирования'},
+    serverFpTitle:'Серверный отпечаток',
+    serverFpDesc:'Это то, что любой сервер видит ещё до выполнения JavaScript: TLS-версия, HTTP-протокол, порядок заголовков и клиентские подсказки браузера. Эти данные нельзя скрыть средствами JavaScript.',
+    serverFp:{tls:'TLS',http:'HTTP-протокол',headerHash:'Хеш заголовков',headerOrder:'Порядок заголовков',chPlatform:'CH: Платформа',chMobile:'CH: Мобильное',chBrowser:'CH: Браузер',asn:'ASN',org:'Организация'},
+    contradictions:{
+      title:'Проверка консистентности',
+      consistent:'Данные консистентны',
+      discrepancies:'Обнаружены расхождения',
+      significant:'Значительные расхождения',
+      timezone:'Часовой пояс',
+      platform:'Платформа',
+      browser:'Браузер',
+      uaConsistency:'UA vs Client Hints',
+      serverSide:'Сервер',
+      clientSide:'Браузер',
+      eduTitle:'Что это значит?',
+      eduText:'Расхождения между серверными и клиентскими данными могут указывать на использование VPN, прокси, эмулятора или инструментов для подмены отпечатка. Сайты используют эти несоответствия для выявления ботов и мошенников.'
+    },
     fpjsTitle:'Сравнение с глобальной базой',
     fpjsDesc:'Сравните ваш отпечаток с базой FingerprintJS Pro (миллиарды отпечатков). Это покажет, насколько вы реально идентифицируемы.',
     fpjsDisclaimer:'\u26A0 Данные будут отправлены на серверы FingerprintJS для сравнения. Мы используем бесплатный тариф (до 20\u00A0000 проверок/мес). FingerprintJS не получает ваши персональные данные.',
@@ -1503,6 +1528,23 @@ const I18N = {
     networkRecheck:'Re-check',
     osintLoading:'Scanning public databases...',
     osint:{title:'Network Intelligence',geo:'Geolocation',isp:'ISP',asn:'ASN',type:'Connection type',rep:'IP Reputation',clean:'Clean',listed:'Blacklisted',ptr:'Reverse DNS',checks:'checks passed',duration:'Scan time'},
+    serverFpTitle:'Server Fingerprint',
+    serverFpDesc:'This is what any server sees before JavaScript runs: TLS version, HTTP protocol, header order, and browser Client Hints. These cannot be hidden by JavaScript.',
+    serverFp:{tls:'TLS',http:'HTTP Protocol',headerHash:'Header Hash',headerOrder:'Header Order',chPlatform:'CH: Platform',chMobile:'CH: Mobile',chBrowser:'CH: Browser',asn:'ASN',org:'Organization'},
+    contradictions:{
+      title:'Consistency Check',
+      consistent:'Data consistent',
+      discrepancies:'Discrepancies found',
+      significant:'Significant discrepancies',
+      timezone:'Timezone',
+      platform:'Platform',
+      browser:'Browser',
+      uaConsistency:'UA vs Client Hints',
+      serverSide:'Server',
+      clientSide:'Browser',
+      eduTitle:'What does this mean?',
+      eduText:'Discrepancies between server-side and client-side data may indicate VPN usage, proxy, emulator, or fingerprint-spoofing tools. Websites use these mismatches to detect bots and fraudsters.'
+    },
     fpjsTitle:'Compare with global database',
     fpjsDesc:'Compare your fingerprint against FingerprintJS Pro\u2019s database (billions of fingerprints). This shows how identifiable you really are.',
     fpjsDisclaimer:'\u26A0 Data will be sent to FingerprintJS servers for comparison. We use the free tier (up to 20,000 checks/month). FingerprintJS does not receive your personal data.',
@@ -2140,6 +2182,23 @@ const I18N = {
     networkRecheck:"Qayta tekshirish",
     osintLoading:"Ochiq bazalar tekshirilmoqda...",
     osint:{title:"Tarmoq razvedkasi",geo:"Geolokatsiya",isp:"Provayder",asn:"ASN",type:"Ulanish turi",rep:"IP reputatsiyasi",clean:"Toza",listed:"Qora ro\u02BByxatda",ptr:"Teskari DNS",checks:"tekshiruv o\u02BBtdi",duration:"Skanerlash vaqti"},
+    serverFpTitle:"Server barmoq izi",
+    serverFpDesc:"Bu JavaScript ishga tushishidan oldin har qanday server ko\u02BBradigan narsa: TLS versiyasi, HTTP protokoli, sarlavhalar tartibi va brauzer Client Hints. Bularni JavaScript yordamida yashirib bo\u02BBlmaydi.",
+    serverFp:{tls:"TLS",http:"HTTP protokoli",headerHash:"Sarlavha xeshi",headerOrder:"Sarlavhalar tartibi",chPlatform:"CH: Platforma",chMobile:"CH: Mobil",chBrowser:"CH: Brauzer",asn:"ASN",org:"Tashkilot"},
+    contradictions:{
+      title:"Izchillikni tekshirish",
+      consistent:"Ma\u02BClumotlar mos",
+      discrepancies:"Nomuvofiqliklar topildi",
+      significant:"Jiddiy nomuvofiqliklar",
+      timezone:"Vaqt mintaqasi",
+      platform:"Platforma",
+      browser:"Brauzer",
+      uaConsistency:"UA vs Client Hints",
+      serverSide:"Server",
+      clientSide:"Brauzer",
+      eduTitle:"Bu nima degani?",
+      eduText:"Server va klient ma\u02BClumotlari o\u02BBrtasidagi tafovutlar VPN, proksi, emulator yoki barmoq izi almashtirish vositalaridan foydalanishni ko\u02BBrsatishi mumkin. Veb-saytlar botlar va firibgarlarni aniqlash uchun bu nomuvofiqliklardan foydalanadi."
+    },
     fpjsTitle:"Global baza bilan solishtirish",
     fpjsDesc:"Barmoq izingizni FingerprintJS Pro bazasi (milliardlab izlar) bilan solishtiring. Bu sizni qanchalik aniqlanishingizni ko\u02BBrsatadi.",
     fpjsDisclaimer:"\u26A0 Ma\u02BClumotlar solishtirish uchun FingerprintJS serverlariga yuboriladi. Bepul tarif (oyiga 20\u00A0000 tekshiruvgacha). FingerprintJS shaxsiy ma\u02BClumotlaringizni olmaydi.",
@@ -5636,6 +5695,9 @@ async function render(lang){
   // Network section
   const netTitleEl=getEl('networkTitle');if(netTitleEl)netTitleEl.textContent=t.networkTitle||'';
   const netDescEl=getEl('networkDesc');if(netDescEl)netDescEl.textContent=t.networkDesc||'';
+  // Server Fingerprint section
+  const serverFpTitleEl=getEl('serverFpTitle');if(serverFpTitleEl)serverFpTitleEl.textContent=t.serverFpTitle||'';
+  const serverFpDescEl=getEl('serverFpDesc');if(serverFpDescEl)serverFpDescEl.textContent=t.serverFpDesc||'';
   const netBtnEl=getEl('networkBtn');if(netBtnEl&&!netBtnEl.disabled)netBtnEl.textContent=t.networkButton||'Check network';
   // FingerprintJS Pro section
   const fpjsTitleEl=getEl('fpjsTitle');if(fpjsTitleEl)fpjsTitleEl.textContent=t.fpjsTitle||'';
@@ -6188,6 +6250,8 @@ async function handleNetworkCheck(){
     // Call Worker OSINT API if we have an IP
     const ip=state.serverData?.ip||state.serverData?.details?.ip||null;
     if(ip) fetchOsintReport(ip,t);
+    // Render Server Fingerprint section if whoami data is available
+    if(state.whoamiData) renderServerFingerprint(state.whoamiData,t);
     if(btn){btn.textContent=t.networkRecheck||'Re-check';btn.disabled=false;}
   }catch(e){
     if(btn){btn.textContent=t.networkButton||'Check network';btn.disabled=false;}
@@ -6247,6 +6311,207 @@ function renderOsintReport(data,t){
 }
 function makeOsintRow(label,value){
   return '<div class="row"><span class="label">'+esc(label)+'</span><span class="value">'+value+'</span></div>';
+}
+
+/* ============== Server Fingerprint (Phase 2.1) ============== */
+function renderServerFingerprint(whoamiData,t){
+  const section=getEl('serverFpSection');
+  if(!section) return;
+  section.style.display='';
+
+  const titleEl=getEl('serverFpTitle');
+  if(titleEl) titleEl.textContent=t.serverFpTitle||'Server Fingerprint';
+  const descEl=getEl('serverFpDesc');
+  if(descEl) descEl.textContent=t.serverFpDesc||'';
+
+  const group=getEl('groupServerFp');
+  if(!group) return;
+  group.innerHTML='';
+
+  const labels=t.serverFp||{tls:'TLS',http:'HTTP Protocol',headerHash:'Header Hash',headerOrder:'Header Order',chPlatform:'CH: Platform',chMobile:'CH: Mobile',chBrowser:'CH: Browser',asn:'ASN',org:'Organization'};
+
+  function mkServerRow(label,value,opts){
+    opts=opts||{};
+    const div=document.createElement('div');
+    div.className='data-row';
+    let valueHtml;
+    if(opts.code){
+      valueHtml='<code>'+esc(value)+'</code>';
+    }else{
+      valueHtml=esc(value);
+    }
+    div.innerHTML='<span class="data-label">'+esc(label)+'</span><span class="data-value">'+valueHtml+'</span>';
+    return div;
+  }
+
+  const tls=whoamiData.tls||{};
+  const http=whoamiData.http||{};
+  const headers=whoamiData.headers||{};
+  const hints=whoamiData.client_hints||whoamiData.clientHints||{};
+  const network=whoamiData.network||{};
+
+  // TLS version + cipher
+  const tlsVersion=tls.version||tls.tlsVersion||'';
+  const tlsCipher=tls.cipher||tls.cipherSuite||'';
+  if(tlsVersion||tlsCipher){
+    const tlsVal=(tlsVersion&&tlsCipher)?(tlsVersion+' / '+tlsCipher):(tlsVersion||tlsCipher);
+    group.appendChild(mkServerRow(labels.tls||'TLS',tlsVal,{code:true}));
+  }
+
+  // HTTP protocol
+  const httpProto=http.protocol||http.version||whoamiData.httpProtocol||'';
+  if(httpProto){
+    group.appendChild(mkServerRow(labels.http||'HTTP Protocol',httpProto,{code:true}));
+  }
+
+  // Header hash
+  const headerHash=headers.hash||whoamiData.headerHash||whoamiData.header_hash||'';
+  if(headerHash){
+    group.appendChild(mkServerRow(labels.headerHash||'Header Hash',headerHash,{code:true}));
+  }
+
+  // Header order (first 8, comma-separated)
+  const headerOrder=headers.order||whoamiData.headerOrder||whoamiData.header_order||[];
+  if(Array.isArray(headerOrder)&&headerOrder.length>0){
+    const orderStr=headerOrder.slice(0,8).join(', ')+(headerOrder.length>8?', …':'');
+    group.appendChild(mkServerRow(labels.headerOrder||'Header Order',orderStr));
+  }else if(typeof headerOrder==='string'&&headerOrder){
+    group.appendChild(mkServerRow(labels.headerOrder||'Header Order',headerOrder));
+  }
+
+  // Client Hints
+  const chPlatform=hints.platform||hints.sec_ch_ua_platform||hints['sec-ch-ua-platform']||'';
+  if(chPlatform){
+    group.appendChild(mkServerRow(labels.chPlatform||'CH: Platform',chPlatform));
+  }
+  const chMobile=hints.mobile!=null?String(hints.mobile):hints.sec_ch_ua_mobile||hints['sec-ch-ua-mobile']||'';
+  if(chMobile!==''&&chMobile!=null){
+    group.appendChild(mkServerRow(labels.chMobile||'CH: Mobile',chMobile));
+  }
+  const chBrowser=hints.browser||hints.sec_ch_ua||hints['sec-ch-ua']||'';
+  if(chBrowser){
+    group.appendChild(mkServerRow(labels.chBrowser||'CH: Browser',chBrowser,{code:true}));
+  }
+
+  // ASN + Org
+  const asn=network.asn?(network.asn.toString().startsWith('AS')?network.asn:'AS'+network.asn):'';
+  const org=network.asOrganization||network.org||'';
+  if(asn||org){
+    const asnOrg=[asn,org].filter(Boolean).join(' · ');
+    group.appendChild(mkServerRow(labels.asn||'ASN',asnOrg,{code:true}));
+  }
+
+  // Render contradictions block
+  const clientBasic=snapshotCache?snapshotCache.basic:null;
+  renderContradictions(whoamiData,clientBasic,t);
+}
+
+/* ============== Contradictions Check (Phase 2.2) ============== */
+function renderContradictions(whoamiData,clientBasic,t){
+  const container=getEl('contradictionsBlock');
+  if(!container) return;
+  container.innerHTML='';
+
+  const cc=whoamiData.cross_check||{};
+  const consistency=whoamiData.consistency||{};
+  const labels=t.contradictions||{
+    title:'Consistency Check',consistent:'Data consistent',discrepancies:'Discrepancies found',
+    significant:'Significant discrepancies',timezone:'Timezone',platform:'Platform',browser:'Browser',
+    uaConsistency:'UA vs Client Hints',serverSide:'Server',clientSide:'Browser',
+    eduTitle:'What does this mean?',
+    eduText:'Discrepancies between server-side and client-side data may indicate VPN usage, proxy, emulator, or fingerprint-spoofing tools.'
+  };
+
+  const issues=[];
+
+  // 1. Timezone
+  const serverTz=cc.server_timezone||cc.timezone||'';
+  const clientTz=clientBasic?
+    (()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return '';}})()
+    :(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return '';}})();
+  if(serverTz&&clientTz&&serverTz!==clientTz){
+    issues.push({field:labels.timezone||'Timezone',server:serverTz,client:clientTz});
+  }
+
+  // 2. Platform
+  const serverPlatform=cc.server_platform||'';
+  const clientPlatform=(clientBasic&&(clientBasic.uaPlatform||clientBasic.platform))||navigator.platform||'';
+  if(serverPlatform&&clientPlatform){
+    const sp=serverPlatform.toLowerCase();
+    const cp=clientPlatform.toLowerCase();
+    if(sp&&cp&&!cp.includes(sp)&&!sp.includes(cp)){
+      issues.push({field:labels.platform||'Platform',server:serverPlatform,client:clientPlatform});
+    }
+  }
+
+  // 3. Browser
+  const serverBrowser=cc.server_browser||'';
+  const clientBrowser=clientBasic?browserFamily(clientBasic.userAgent||navigator.userAgent):browserFamily(navigator.userAgent);
+  if(serverBrowser&&clientBrowser&&clientBrowser!=='__other'){
+    const sb=serverBrowser.toLowerCase();
+    const cb=clientBrowser.toLowerCase();
+    if(!sb.includes(cb)&&!cb.includes(sb)){
+      issues.push({field:labels.browser||'Browser',server:serverBrowser,client:clientBrowser});
+    }
+  }
+
+  // 4. UA vs Client Hints consistency
+  const uaConsistencyIssues=consistency.issues||consistency.ua_ch_issues||[];
+  if(Array.isArray(uaConsistencyIssues)&&uaConsistencyIssues.length>0){
+    issues.push({field:labels.uaConsistency||'UA vs Client Hints',server:uaConsistencyIssues.join('; '),client:''});
+  }else if(consistency.consistent===false||(typeof consistency.consistent==='string'&&consistency.consistent==='false')){
+    issues.push({field:labels.uaConsistency||'UA vs Client Hints',server:'mismatch',client:''});
+  }
+
+  // Badge
+  let badgeCls,badgeText;
+  if(issues.length===0){
+    badgeCls='status-badge--safe';
+    badgeText=labels.consistent||'Data consistent';
+  }else if(issues.length<=2){
+    badgeCls='status-badge--warning';
+    badgeText=labels.discrepancies||'Discrepancies found';
+  }else{
+    badgeCls='status-badge--danger';
+    badgeText=labels.significant||'Significant discrepancies';
+  }
+
+  const titleDiv=document.createElement('div');
+  titleDiv.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:8px';
+  titleDiv.innerHTML='<span style="font-size:13px;font-weight:600;color:var(--text-secondary)">'+esc(labels.title||'Consistency Check')+'</span>'
+    +'<span class="status-badge '+badgeCls+'">'+esc(badgeText)+'</span>';
+  container.appendChild(titleDiv);
+
+  // Issue rows
+  if(issues.length>0){
+    const issueGroup=document.createElement('div');
+    issueGroup.className='data-group';
+    issueGroup.style.marginBottom='12px';
+    issues.forEach(function(issue){
+      const row=document.createElement('div');
+      row.className='data-row';
+      const valHtml=issue.client
+        ?'<span style="color:var(--danger)"><code>'+esc(issue.server)+'</code> vs <code>'+esc(issue.client)+'</code></span>'
+        :'<span style="color:var(--warning)"><code>'+esc(issue.server)+'</code></span>';
+      row.innerHTML='<span class="data-label">'+esc(issue.field)+'</span><span class="data-value">'+valHtml+'</span>';
+      issueGroup.appendChild(row);
+    });
+    container.appendChild(issueGroup);
+  }
+
+  // Educational expand block
+  const details=document.createElement('details');
+  details.style.cssText='margin-top:8px;font-size:13px';
+  const summary=document.createElement('summary');
+  summary.style.cssText='cursor:pointer;color:var(--text-secondary);list-style:none;padding:4px 0';
+  summary.textContent=labels.eduTitle||'What does this mean?';
+  const eduP=document.createElement('p');
+  eduP.className='small';
+  eduP.style.cssText='margin:8px 0 0;color:var(--text-secondary)';
+  eduP.textContent=labels.eduText||'';
+  details.appendChild(summary);
+  details.appendChild(eduP);
+  container.appendChild(details);
 }
 
 /* ============== FingerprintJS Pro (Advanced) ============== */
