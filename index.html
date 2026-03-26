@@ -361,6 +361,7 @@
       <div class="hero-actions">
         <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn" id="printBtn"></button>
+        <button class="btn" id="fpjsHeroBtn" style="display:none;gap:6px"></button>
       </div>
       <div id="heroBadgeFpjs" style="display:none;margin-top:12px;font-size:13px;color:var(--muted);line-height:1.5"></div>
       <div id="methodologyModal" class="methodology-modal" role="dialog" aria-modal="true" aria-labelledby="methodologyTitle" style="display:none">
@@ -396,10 +397,10 @@
         <div class="speed-hero-label" id="speedHeroLabel"></div>
         <div class="speed-hero-latency" id="speedHeroLatency" style="color:var(--muted);font-size:13px;margin-top:4px"></div>
       </div>
-      <div id="ipRow" style="display:none;margin-bottom:8px"></div>
+      <div id="ipRow" style="display:none"></div>
       <div class="data-group" id="groupNetwork"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
-      <div id="osintResults" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"></div>
+      <div id="osintResults" style="display:none"></div>
     </div>
   </section>
 
@@ -440,11 +441,26 @@
       <h2 class="section-title" id="implRisksTitle"></h2>
       <div class="risk-cards-grid" id="implRisksGrid"></div>
     </div>
-    <!-- Section C: Steps -->
+  </section>
+
+  <!-- Section C: Steps (separate block with collapsible sections) -->
+  <section class="block implications-block" id="recsBlock">
     <div class="section section--steps">
-      <h2 class="section-title" id="implStepsTitle"></h2>
-      <div id="personalRecs"></div>
-      <div id="generalRecs"></div>
+      <h2 class="section-heading" id="implStepsTitle"></h2>
+      <details id="personalRecsDetails" open>
+        <summary style="cursor:pointer;font-weight:600;font-size:16px;margin:8px 0;list-style:none;display:flex;align-items:center;gap:6px">
+          <span id="personalRecsSummaryText"></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div id="personalRecs"></div>
+      </details>
+      <details id="generalRecsDetails">
+        <summary style="cursor:pointer;font-weight:600;font-size:16px;margin:8px 0;list-style:none;display:flex;align-items:center;gap:6px">
+          <span id="generalRecsSummaryText"></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div id="generalRecs"></div>
+      </details>
     </div>
   </section>
 
@@ -615,10 +631,10 @@ const I18N = {
       gpc:{name:'Global Privacy Control',blocked:'Включён',open:'Выключен'},
       gpcExplain:'Юридически обязывающий сигнал приватности, поддерживаемый законодательством некоторых стран',
       verdict:function(blocked,total){
-        const adBlocked=Math.min(blocked,3);
-        if(blocked>=4) return 'Отличная защита: '+blocked+' из '+total+' проверок пройдены ('+adBlocked+' блокировки рекламы + сигналы приватности). Ваш браузер хорошо настроен.';
-        if(blocked>=2) return 'Частичная защита: '+blocked+' из '+total+' проверок пройдены. Установите uBlock Origin для блокировки трекеров.';
-        return 'Защита не обнаружена: '+blocked+' из '+total+' проверок пройдены. Рекомендуем установить uBlock Origin.';
+        if(blocked>=5) return '\u2705 \u041e\u0442\u043b\u0438\u0447\u043d\u0430\u044f \u0437\u0430\u0449\u0438\u0442\u0430! \u0412\u0441\u0435 \u043f\u0440\u043e\u0432\u0435\u0440\u0435\u043d\u043d\u044b\u0435 \u0442\u0440\u0435\u043a\u0435\u0440\u044b \u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u044b.';
+        if(blocked>=3) return '\u0425\u043e\u0440\u043e\u0448\u0430\u044f \u0437\u0430\u0449\u0438\u0442\u0430. \u0411\u043e\u043b\u044c\u0448\u0438\u043d\u0441\u0442\u0432\u043e \u0442\u0440\u0435\u043a\u0435\u0440\u043e\u0432 \u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u044b. \u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043e\u0441\u0442\u0430\u0432\u0448\u0438\u0435\u0441\u044f \u043d\u0435\u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u044d\u043b\u0435\u043c\u0435\u043d\u0442\u044b.';
+        if(blocked>=1) return '\u0427\u0430\u0441\u0442\u0438\u0447\u043d\u0430\u044f \u0437\u0430\u0449\u0438\u0442\u0430. \u0412\u0430\u0448 \u0431\u0440\u0430\u0443\u0437\u0435\u0440 \u0431\u043b\u043e\u043a\u0438\u0440\u0443\u0435\u0442 \u043d\u0435\u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0442\u0440\u0435\u043a\u0435\u0440\u044b, \u043d\u043e \u043d\u0435 \u0432\u0441\u0435. \u0414\u043b\u044f \u043f\u043e\u043b\u043d\u043e\u0439 \u0437\u0430\u0449\u0438\u0442\u044b \u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u043c uBlock Origin.';
+        return '\u0412\u0430\u0448 \u0431\u0440\u0430\u0443\u0437\u0435\u0440 \u043d\u0435 \u0431\u043b\u043e\u043a\u0438\u0440\u0443\u0435\u0442 \u043d\u0438 \u043e\u0434\u0438\u043d \u0442\u0440\u0435\u043a\u0435\u0440. \u0421\u0430\u0439\u0442\u044b \u043c\u043e\u0433\u0443\u0442 \u043e\u0442\u0441\u043b\u0435\u0436\u0438\u0432\u0430\u0442\u044c \u043a\u0430\u0436\u0434\u044b\u0439 \u0432\u0430\u0448 \u0432\u0438\u0437\u0438\u0442 \u0441 \u043f\u043e\u043c\u043e\u0449\u044c\u044e \u0440\u0435\u043a\u043b\u0430\u043c\u043d\u044b\u0445 \u043f\u0438\u043a\u0441\u0435\u043b\u0435\u0439, \u0441\u043a\u0440\u0438\u043f\u0442\u043e\u0432 \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0438 \u0438 \u0440\u0435\u043a\u043b\u0430\u043c\u043d\u044b\u0445 \u0444\u0440\u0435\u0439\u043c\u043e\u0432. \u0420\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u043c \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c uBlock Origin \u2014 \u044d\u0442\u043e \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e\u0435 \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0435, \u043a\u043e\u0442\u043e\u0440\u043e\u0435 \u0440\u0435\u0448\u0438\u0442 \u0431\u043e\u043b\u044c\u0448\u0438\u043d\u0441\u0442\u0432\u043e \u043f\u0440\u043e\u0431\u043b\u0435\u043c.';
       }
     },
     implications:{
@@ -630,8 +646,7 @@ const I18N = {
         {icon:'\uD83C\uDFAF',title:'Реклама знает о вас больше, чем ваши друзья',body:'На основе отпечатка рекламные системы знают, какие сайты вы посещали, что искали, когда не спали ночью и какие темы вас беспокоят. Эти данные используются не только для рекламы — страховые компании и работодатели покупают профили у брокеров данных.'},
         {icon:'\uD83C\uDFA3',title:'Мошенничество становится точнее',body:'Мошенники, купившие базу с вашим профилем, знают ваш город, провайдера, устройство и язык. Письмо, в котором упоминается ваш MacBook или аккаунт вашего провайдера, выглядит убедительно — именно так работают целевые мошеннические атаки.'},
         {icon:'\uD83D\uDD13',title:'Режим инкогнито вас не защищает',body:'Большинство пользователей верят, что инкогнито = анонимность. Это не так. Режим инкогнито скрывает историю только от других людей на вашем устройстве. Ваш отпечаток, IP и все сигналы при этом остаются прежними — сайты видят вас точно так же. Инкогнито стирает историю, куки и кэш при завершении сессии — на этом всё. Он не скрывает ваш цифровой отпечаток, не шифрует трафик, не маскирует IP-адрес и сохраняет загруженные файлы.'},
-        {icon:'\uD83D\uDDC2\uFE0F',title:'Ваш профиль существует без вашего ведома',body:'Прямо сейчас в базах данных брокеров данных (Acxiom, Oracle Data Cloud, Nielsen и др.) существует файл с вашими интересами, маршрутами, покупками и предполагаемым доходом. Вы не давали на это согласие. Вы не можете его удалить.'},
-        {icon:'\u26A0\uFE0F',title:'После утечки — навсегда',body:'В 2023–2024 годах произошли тысячи утечек данных из рекламных платформ. Если профиль с вашим отпечатком утёк — его не отозвать. Мошенники годами используют старые базы для целевых атак.'},
+        {icon:'\uD83D\uDDC2\uFE0F',title:'Ваш профиль существует без вашего ведома — и утечка навсегда',body:'Прямо сейчас в базах данных брокеров данных (Acxiom, Oracle Data Cloud, Nielsen и др.) существует файл с вашими интересами, маршрутами, покупками и предполагаемым доходом. Вы не давали на это согласие. Вы не можете его удалить. В 2023\u20132024 годах произошли тысячи утечек данных из рекламных платформ. Если профиль с вашим отпечатком утёк \u2014 его не отозвать. Мошенники годами используют старые базы для целевых атак.'},
         {icon:'\uD83D\uDD10',title:'VPN не гарантирует вашу приватность',body:'VPN помогает скрыть трафик и подменить IP, но не прячет ваш цифровой отпечаток. Провайдер видит, что вы используете VPN. Некоторые VPN-сервисы хранят данные о ваших действиях, и доступ к ним может быть получен по запросу или через утечку.'}
       ],
       stepsTitle:'Что сделать прямо сейчас',
@@ -1303,9 +1318,10 @@ const I18N = {
       gpc:{name:'Global Privacy Control',blocked:'Enabled',open:'Disabled'},
       gpcExplain:'A legally binding privacy signal supported by laws in some countries',
       verdict:function(blocked,total){
-        if(blocked>=4) return 'Excellent protection: '+blocked+' of '+total+' checks passed (ad blocking + privacy signals). Your browser is well configured.';
-        if(blocked>=2) return 'Partial protection: '+blocked+' of '+total+' checks passed. Install uBlock Origin to block trackers.';
-        return 'No protection detected: '+blocked+' of '+total+' checks passed. We recommend installing uBlock Origin.';
+        if(blocked>=5) return '\u2705 Excellent protection! All tested trackers are blocked.';
+        if(blocked>=3) return 'Good protection. Most trackers are blocked. Check the remaining unblocked elements.';
+        if(blocked>=1) return 'Partial protection. Your browser blocks some trackers, but not all. For full protection we recommend uBlock Origin.';
+        return 'Your browser does not block any trackers. Websites can track every visit using ad pixels, analytics scripts, and ad frames. We recommend installing uBlock Origin \u2014 a free extension that solves most of these issues.';
       }
     },
     implications:{
@@ -1317,8 +1333,7 @@ const I18N = {
         {icon:'\uD83C\uDFAF',title:'Ads know more about you than your friends',body:'Based on your fingerprint, ad systems know which sites you visited, what you searched for, when you were awake at night, and which topics concern you. This data is used not only for ads \u2014 insurance companies and employers buy profiles from data brokers.'},
         {icon:'\uD83C\uDFA3',title:'Phishing (targeted scam emails) becomes more precise',body:'Scammers who bought a database with your profile know your city, ISP, device, and language. An email that mentions your MacBook or your ISP account looks convincing \u2014 this is exactly how targeted phishing attacks work.'},
         {icon:'\uD83D\uDD13',title:'Incognito mode does not protect you',body:'Most users believe that incognito = anonymity. It is not. Incognito mode only hides history from other people on your device. Your fingerprint, IP, and all signals remain the same \u2014 sites see you just as before. Incognito clears history, cookies, and cache when the session ends \u2014 that is all. It does not hide your digital fingerprint, does not encrypt traffic, does not mask your IP address, and keeps downloaded files.'},
-        {icon:'\uD83D\uDDC2\uFE0F',title:'Your profile exists without your knowledge',body:'Right now, in the databases of data brokers (Acxiom, Oracle Data Cloud, Nielsen, etc.) there is a file with your interests, routes, purchases, and estimated income. You did not consent to this. You cannot delete it.'},
-        {icon:'\u26A0\uFE0F',title:'After a leak \u2014 forever',body:'In 2023\u20132024, thousands of data leaks occurred from advertising platforms. If a profile with your fingerprint leaked \u2014 it cannot be recalled. Scammers use old databases for targeted attacks for years.'},
+        {icon:'\uD83D\uDDC2\uFE0F',title:'Your profile exists without your knowledge \u2014 and leaks are forever',body:'Right now, in the databases of data brokers (Acxiom, Oracle Data Cloud, Nielsen, etc.) there is a file with your interests, routes, purchases, and estimated income. You did not consent to this. You cannot delete it. In 2023\u20132024, thousands of data leaks occurred from advertising platforms. If a profile with your fingerprint leaked \u2014 it cannot be recalled. Scammers use old databases for targeted attacks for years.'},
         {icon:'\uD83D\uDD10',title:'VPN does not guarantee your privacy',body:'A VPN helps hide your traffic and mask your IP, but it does not conceal your digital fingerprint. Your ISP can see you are using a VPN. Some VPN providers log your activity, and this data can be obtained through legal requests or breaches.'}
       ],
       stepsTitle:'What to do right now',
@@ -1957,9 +1972,10 @@ const I18N = {
       gpc:{name:"Global Privacy Control",blocked:"Yoqilgan",open:"O\u02BBchirilgan"},
       gpcExplain:"Ba\u02BBzi mamlakatlar qonunchiligida qo\u02BBllab-quvvatlanadigan maxfiylik signali",
       verdict:function(blocked,total){
-        if(blocked>=4) return "Ajoyib himoya: "+blocked+" ta "+total+" ta tekshiruvdan oʻtildi (reklama bloklash + maxfiylik signallari). Brauzeringiz yaxshi sozlangan.";
-        if(blocked>=2) return "Qisman himoya: "+blocked+" ta "+total+" ta tekshiruvdan oʻtildi. Trekerlarni bloklash uchun uBlock Origin oʻrnating.";
-        return "Himoya topilmadi: "+blocked+" ta "+total+" ta tekshiruvdan oʻtildi. uBlock Origin oʻrnatishni tavsiya qilamiz.";
+        if(blocked>=5) return "\u2705 Ajoyib himoya! Barcha tekshirilgan trekerlar bloklangan.";
+        if(blocked>=3) return "Yaxshi himoya. Ko\u02BBpchilik trekerlar bloklangan. Qolgan bloklanmagan elementlarni tekshiring.";
+        if(blocked>=1) return "Qisman himoya. Brauzeringiz ba\u02BBzi trekerlarni bloklaydi, lekin hammasini emas. To\u02BBliq himoya uchun uBlock Origin ni tavsiya qilamiz.";
+        return "Brauzeringiz birorta ham trekerni bloklamaydi. Saytlar har bir tashrifingizni reklama piksellari, analitika skriptlari va reklama freymlar yordamida kuzatishi mumkin. uBlock Origin o\u02BBrnatishni tavsiya qilamiz \u2014 bu bepul kengaytma ko\u02BBpchilik muammolarni hal qiladi.";
       }
     },
     implications:{
@@ -1971,8 +1987,7 @@ const I18N = {
         {icon:'\uD83C\uDFAF',title:'Reklama siz haqingizda do\u02BBstlaringizdan ko\u02BBproq biladi',body:'Barmoq izingiz asosida reklama tizimlari qaysi saytlarga kirgansiz, nimani qidirganingiz, kechasi qachon uxlamaganingiz va qaysi mavzular sizni tashvishlantirishini biladi. Bu ma\u02BBlumotlar faqat reklama uchun emas \u2014 sug\u02BBurta kompaniyalari va ish beruvchilar ma\u02BBlumot brokerlaridan profillar sotib oladi.'},
         {icon:'\uD83C\uDFA3',title:'Fishing (maqsadli firibgarlik xatlari) aniqroq bo\u02BBladi',body:'Profilingiz bilan bazani sotib olgan firibgarlar shahringiz, provayderingiz, qurilmangiz va tilingizni biladi. MacBook yoki provayder akkountingizni eslatuvchi xat ishonchli ko\u02BBrinadi \u2014 nishonlangan fishing hujumlari aynan shunday ishlaydi.'},
         {icon:'\uD83D\uDD13',title:'Inkognito rejimi sizni himoya qilmaydi',body:'Ko\u02BBpchilik foydalanuvchilar inkognito = anonimlik deb hisoblaydi. Bu noto\u02BBg\u02BBri. Inkognito rejimi tarixni faqat qurilmangizdagi boshqa odamlardan yashiradi. Barmoq izingiz, IP va barcha signallar avvalgidek qoladi \u2014 saytlar sizni xuddi shunday ko\u02BBradi. Inkognito sessiya tugaganda tarix, cookie va keshni tozalaydi. Lekin raqamli barmoq izingizni yashirmaydi, trafikni shifrlamaydi, IP manzilni berkitmaydi.'},
-        {icon:'\uD83D\uDDC2\uFE0F',title:'Profilingiz sizning xabaringizsiz mavjud',body:'Hozir ma\u02BBlumot brokerlari (Acxiom, Oracle Data Cloud, Nielsen va boshqalar) ma\u02BBlumotlar bazasida sizning qiziqishlaringiz, yo\u02BBllaringiz, xaridlaringiz va taxminiy daromadingiz bilan fayl mavjud. Siz bunga rozilik bermadingiz. Uni o\u02BBchira olmaysiz.'},
-        {icon:'\u26A0\uFE0F',title:'Sizib chiqqandan keyin \u2014 abadiy',body:'2023\u20132024 yillarda reklama platformalaridan minglab ma\u02BBlumot sizishlari ro\u02BBy berdi. Agar barmoq izingiz bilan profil sizib chiqqan bo\u02BBlsa \u2014 uni qaytarib bo\u02BBlmaydi. Firibgarlar eski bazalardan yillab nishonlangan hujumlar uchun foydalanadi.'},
+        {icon:'\uD83D\uDDC2\uFE0F',title:'Profilingiz sizning xabaringizsiz mavjud \u2014 va sizish abadiy',body:'Hozir ma\u02BBlumot brokerlari (Acxiom, Oracle Data Cloud, Nielsen va boshqalar) ma\u02BBlumotlar bazasida sizning qiziqishlaringiz, yo\u02BBllaringiz, xaridlaringiz va taxminiy daromadingiz bilan fayl mavjud. Siz bunga rozilik bermadingiz. Uni o\u02BBchira olmaysiz. 2023\u20132024 yillarda reklama platformalaridan minglab ma\u02BBlumot sizishlari ro\u02BBy berdi. Agar barmoq izingiz bilan profil sizib chiqqan bo\u02BBlsa \u2014 uni qaytarib bo\u02BBlmaydi. Firibgarlar eski bazalardan yillab nishonlangan hujumlar uchun foydalanadi.'},
         {icon:'\uD83D\uDD10',title:"VPN maxfiylikni kafolatlamaydi",body:"VPN trafikni yashirish va IP ni almashtirish uchun yordam beradi, lekin raqamli barmoq izingizni yashirmaydi. Provayder VPN ishlatayotganingizni ko\u02BBradi. Ba\u02BBzi VPN xizmatlari faoliyatingiz haqidagi ma\u02BClumotlarni saqlaydi."}
       ],
       stepsTitle:'Hozir nima qilish kerak',
@@ -2825,6 +2840,8 @@ function browserDisplayName(basic){
   if(!version && basic.uaHighEntropy?.uaFullVersion){
     version=basic.uaHighEntropy.uaFullVersion.split('.')[0];
   }
+  // Trim version to major number only (e.g. "134.0.0.0" → "134")
+  if(version && version.includes('.')) version=version.split('.')[0];
   if(main && version){
     return `${main} ${version}`;
   }
@@ -4660,13 +4677,15 @@ function renderShockBullets(basic,t,snapshot){
     fingerprint:{ru:'\u0426\u0438\u0444\u0440\u043e\u0432\u043e\u0439 \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043e\u043a',en:'Digital fingerprint',uz:'Raqamli barmoq izi'}
   };
 
-  // Brand icons for device and browser
-  const deviceIcons={'apple':'\uD83C\uDF4E','mac':'\uD83C\uDF4E','iphone':'\uD83D\uDCF1','ipad':'\uD83D\uDCF1','samsung':'\uD83D\uDCF1','windows':'\uD83D\uDDA5\uFE0F','linux':'\uD83D\uDC27'};
+  // Device icons: use device-type emojis instead of brand emojis
   const browserIcons={'chrome':'\uD83C\uDF10','firefox':'\uD83E\uDD8A','safari':'\uD83E\uDDED','edge':'\uD83C\uDF10','arc':'\uD83C\uDF10','opera':'\uD83C\uDF10','brave':'\uD83E\uDD81'};
   function getDeviceIcon(name){
     const lower=(name||'').toLowerCase();
-    for(const k of Object.keys(deviceIcons)){if(lower.includes(k))return deviceIcons[k]+' ';}
-    return '';
+    if(/iphone|android.*\u0441\u043c\u0430\u0440\u0442|android.*smart|android.*phone|samsung|pixel/.test(lower)) return '\uD83D\uDCF1 ';
+    if(/ipad|android.*\u043f\u043b\u0430\u043d\u0448|android.*tablet/.test(lower)) return '\uD83D\uDCF1 ';
+    if(/macbook|laptop|\u043d\u043e\u0443\u0442\u0431\u0443\u043a|noutbuk/.test(lower)) return '\uD83D\uDCBB ';
+    if(/imac|mac pro|mac studio|desktop|\u0440\u0430\u0431\u043e\u0447\u0430\u044f \u0441\u0442\u0430\u043d\u0446\u0438\u044f|\u041f\u041a|workstation|pc/.test(lower)) return '\uD83D\uDDA5\uFE0F ';
+    return '\uD83D\uDCBB ';
   }
   function getBrowserIcon(name){
     const lower=(name||'').toLowerCase();
@@ -4688,10 +4707,11 @@ function renderShockBullets(basic,t,snapshot){
     return div;
   }
 
-  // Clear groups and add titles
+  // Clear groups and add titles (skip identity & network — section titles already provide context)
   Object.entries(groups).forEach(function(entry){
     var key=entry[0],el=entry[1];
     if(!el) return;
+    if(key==='identity'||key==='network'){el.innerHTML='';return;}
     el.innerHTML='<h3>'+(groupTitles[key][currentLang]||groupTitles[key].en)+'</h3>';
   });
 
@@ -4788,11 +4808,7 @@ function renderShockBullets(basic,t,snapshot){
         inference={ru:'\u0441\u043a\u043e\u0440\u0435\u0435 \u0432\u0441\u0435\u0433\u043e, \u0443\u0437\u0431\u0435\u043a\u043e\u044f\u0437\u044b\u0447\u043d\u044b\u0439',en:'likely Uzbek-speaking',uz:'ehtimol o\u02BBzbekcha gaplashadi'}[currentLang]||'';
       }
       const fullInference=inference+(evidence.length>0?' ('+evidence.join(', ')+')':'');
-      if(inference){
-        const inferLabel={ru:'\u0412\u044b\u0432\u043e\u0434',en:'Inference',uz:'Xulosa'}[currentLang];
-        groups.identity.appendChild(mkRow(inferLabel,inference));
-        totalRows++;
-      }
+      // Inference row removed — too speculative for users
       lines.push(t.shock.languages(flags,fullInference));
     }
 
@@ -4802,22 +4818,33 @@ function renderShockBullets(basic,t,snapshot){
     if(localDevice){
       const devLabel={ru:'\u0423\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e',en:'Device',uz:'Qurilma'}[currentLang];
       const devIcon=getDeviceIcon(localDevice.name);
-      groups.identity.appendChild(mkRow(devLabel,devIcon+esc(localDevice.name)));
+      // Append OS version to device name
+      const osVer=guessOSVersion(basic);
+      const devDisplay=osVer?localDevice.name+' \u00B7 '+osVer:localDevice.name;
+      groups.identity.appendChild(mkRow(devLabel,devIcon+esc(devDisplay)));
       totalRows++;
-      lines.push(t.shock.device(esc(localDevice.name)));
+      lines.push(t.shock.device(esc(devDisplay)));
     }
 
-    // Phase 3.3: OS row with visitor percentage
-    {
-      const osStr=guessOSVersion(basic);
-      if(osStr){
-        const osLabel={ru:'\u041e\u0421',en:'OS',uz:'OT'}[currentLang];
-        const osRow=mkRow(osLabel,esc(osStr));
-        appendStatLabel(osRow,getStatPercent('os',osStr));
-        groups.identity.appendChild(osRow);
-        totalRows++;
-      }
+    // RAM row if available
+    if(basic.hw&&basic.hw.deviceMemory){
+      const ramLabel={ru:'\uD83D\uDCBE RAM',en:'\uD83D\uDCBE RAM',uz:'\uD83D\uDCBE RAM'}[currentLang];
+      groups.identity.appendChild(mkRow(ramLabel,'\u2248'+basic.hw.deviceMemory+' GB'));
+      totalRows++;
     }
+
+    // Battery status row
+    if(basic.battery&&basic.battery.level!=null&&!basic.battery.unavailable){
+      const pct=Math.round(basic.battery.level*100);
+      const chargingStr=basic.battery.charging
+        ?{ru:', \u0437\u0430\u0440\u044f\u0436\u0430\u0435\u0442\u0441\u044f',en:', charging',uz:', quvvat olmoqda'}[currentLang]
+        :'';
+      const batLabel={ru:'\uD83D\uDD0B \u0411\u0430\u0442\u0430\u0440\u0435\u044f',en:'\uD83D\uDD0B Battery',uz:'\uD83D\uDD0B Batareya'}[currentLang];
+      groups.identity.appendChild(mkRow(batLabel,pct+'%'+chargingStr));
+      totalRows++;
+    }
+
+    // OS row removed — OS version is now shown in the device row above
 
     const browserStr=browserDisplayName(basic);
     if(browserStr&&browserStr!=='\u2014'){
@@ -4856,19 +4883,17 @@ function renderShockBullets(basic,t,snapshot){
     }
   }
 
-  // === NETWORK GROUP ===
+  // === NETWORK GROUP (no h3 title — section heading "Анализ сети" is enough) ===
   if(groups.network){
-    // Show IP as first row in network group
+    // Show IP as first row in network group (#13: localized label)
     if(ipForNetwork){
-      groups.network.appendChild(mkRow('IP',esc(ipForNetwork),{code:true}));
+      const ipLabel={ru:'\u0412\u0430\u0448 IP-\u0430\u0434\u0440\u0435\u0441',en:'Your IP address',uz:'Sizning IP manzilingiz'}[currentLang];
+      groups.network.appendChild(mkRow(ipLabel,esc(ipForNetwork),{code:true}));
       totalRows++;
     }
-    // Update ipRow element in networkResults
+    // Remove duplicate ipRow in networkResults (#11)
     const ipRowEl=getEl('ipRow');
-    if(ipRowEl&&ipForNetwork){
-      ipRowEl.innerHTML='<span class="data-label">IP</span> <code class="mono">'+esc(ipForNetwork)+'</code>';
-      ipRowEl.style.display='';
-    }
+    if(ipRowEl) ipRowEl.style.display='none';
 
     const parts=[];
     if(hasIp&&details.org) parts.push(esc(details.org));
@@ -5166,15 +5191,42 @@ function renderImplications(basic,t){
   const grid=getEl('implRisksGrid');
   if(grid){
     grid.innerHTML='';
-    (impl.risks||[]).forEach(r=>{
+    const relevantLabel={ru:'\u26A1 \u0410\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u043e \u0434\u043b\u044f \u0432\u0430\u0441',en:'\u26A1 Relevant for you',uz:'\u26A1 Siz uchun dolzarb'}[currentLang];
+    (impl.risks||[]).forEach((r,i)=>{
       const card=document.createElement('div');
       card.className='risk-card';
+      card.dataset.riskIndex=String(i);
       card.innerHTML='<div class="risk-icon">'+r.icon+'</div><div class="risk-title">'+r.title+'</div><div class="risk-body">'+r.body+'</div>';
       grid.appendChild(card);
     });
+    // Tag relevant risk cards based on scan results (#23)
+    if(basic){
+      const vpnState=state.vpn||{};
+      const trackerResults=state.trackerResults||[];
+      const trackerBlocked=trackerResults.filter(function(r){return r.blocked;}).length;
+      const pct=state.uniquenessPct||0;
+      const tagCard=function(idx){
+        const c=grid.querySelector('[data-risk-index="'+idx+'"]');
+        if(c&&!c.querySelector('.relevant-badge')){
+          const badge=document.createElement('span');
+          badge.className='relevant-badge';
+          badge.style.cssText='display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:rgba(245,158,11,.15);color:var(--warning);font-weight:600;margin-top:6px';
+          badge.textContent=relevantLabel;
+          c.appendChild(badge);
+        }
+      };
+      if(vpnState.status!=='likely'){tagCard(0);tagCard(1);}
+      if(trackerBlocked<2){tagCard(1);}
+      if(pct>70){tagCard(4);}
+    }
   }
   const stepsTitleEl=getEl('implStepsTitle');
   if(stepsTitleEl) stepsTitleEl.textContent=impl.stepsTitle||'';
+  // Populate collapsible summary labels (#24)
+  const personalSummary=getEl('personalRecsSummaryText');
+  if(personalSummary) personalSummary.textContent=impl.personalTitle||{ru:'\u041d\u0430 \u043e\u0441\u043d\u043e\u0432\u0435 \u0432\u0430\u0448\u0435\u0433\u043e \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043a\u0430',en:'Based on your fingerprint',uz:'Barmoq izingiz asosida'}[currentLang];
+  const generalSummary=getEl('generalRecsSummaryText');
+  if(generalSummary) generalSummary.textContent=impl.generalTitle||{ru:'\u041e\u0431\u0449\u0438\u0435 \u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0430\u0446\u0438\u0438',en:'General recommendations',uz:'Umumiy tavsiyalar'}[currentLang];
   const altPrefix=impl.altPrefix||'';
   const personalEl=getEl('personalRecs');
   if(personalEl){
@@ -5233,10 +5285,7 @@ function renderImplications(basic,t){
         }
       }
       if(picks.length){
-        const heading=document.createElement('div');
-        heading.className='rec-section-title';
-        heading.textContent=impl.personalTitle||'';
-        personalEl.appendChild(heading);
+        // Heading now in <summary>, no duplicate needed
         picks.forEach(function(rec){
           if(rec) personalEl.appendChild(createRecCard(rec,impl.levelLabels||{},true,altPrefix));
         });
@@ -5247,10 +5296,7 @@ function renderImplications(basic,t){
   if(generalEl){
     generalEl.innerHTML='';
     if(impl.general&&impl.general.length){
-      const heading=document.createElement('div');
-      heading.className='rec-section-title';
-      heading.textContent=impl.generalTitle||'';
-      generalEl.appendChild(heading);
+      // Heading now in <summary>, no duplicate needed
       // Sort by weight: easy first (highest impact/effort ratio), then medium, then hard
       const sorted=[...impl.general].sort((a,b)=>{
         const order={easy:0,medium:1,hard:2};
@@ -5575,6 +5621,7 @@ const CONCLUSION_TEXTS={
 };
 
 function updateHeroVerdict(pct,t,animate){
+  state.uniquenessPct=pct;
   const level=uniquenessLevel(pct);
   const uniqCopy=t.uniqMeaning(pct,{level});
 
@@ -5719,6 +5766,12 @@ async function render(lang){
   const fpjsDescEl=getEl('fpjsDesc');if(fpjsDescEl)fpjsDescEl.textContent=t.fpjsDesc||'';
   const fpjsDisclEl=getEl('fpjsDisclaimer');if(fpjsDisclEl)fpjsDisclEl.textContent=t.fpjsDisclaimer||'';
   const fpjsBtnEl=getEl('fpjsBtn');if(fpjsBtnEl&&!fpjsBtnEl.disabled)fpjsBtnEl.textContent=t.fpjsButton||'Compare';
+  const fpjsHeroBtnEl=getEl('fpjsHeroBtn');
+  if(fpjsHeroBtnEl){
+    const fpjsHeroBtnLabel={ru:'\uD83D\uDD0D \u0421\u0440\u0430\u0432\u043d\u0438\u0442\u044c \u0441 \u0440\u0435\u0430\u043b\u044c\u043d\u044b\u043c\u0438 \u0434\u0430\u043d\u043d\u044b\u043c\u0438',en:'\uD83D\uDD0D Compare with real data',uz:'\uD83D\uDD0D Haqiqiy ma\'lumotlar bilan solishtirish'}[currentLang]||'\uD83D\uDD0D Compare with real data';
+    if(!fpjsHeroBtnEl.disabled) fpjsHeroBtnEl.textContent=fpjsHeroBtnLabel;
+    fpjsHeroBtnEl.style.display='';
+  }
   const methodBtn=getEl('methodologyBtn');
   if(methodBtn) methodBtn.textContent=t.methodologyButton||'How is the percentage calculated?';
   const footerEl=getEl('footerText');
@@ -5767,6 +5820,7 @@ async function render(lang){
     if(!_trackerTestResults){
       runTrackerTests().then(results=>{
         _trackerTestResults=results;
+        state.trackerResults=results;
         const tNow=I18N[currentLang]||I18N.ru;
         renderTrackerTests(results,tNow);
       });
@@ -6303,33 +6357,68 @@ async function fetchOsintReport(ip,t){
   }
 }
 function renderOsintReport(data,t){
-  const c=getEl('osintResults');if(!c)return;
+  // Merge OSINT data directly into groupNetwork (#14)
+  const groupNet=getEl('groupNetwork');
+  const osintContainer=getEl('osintResults');
+  if(osintContainer) osintContainer.style.display='none'; // hide separate container
+  if(!groupNet) return;
   const geo=data.geolocation;
   const rep=data.reputation;
-  const dns=data.dns;
-  const labels=t.osint||{title:'Network Intelligence',geo:'Geolocation',isp:'ISP',asn:'ASN',type:'Connection',rep:'Reputation',clean:'Clean',listed:'Blacklisted',ptr:'Reverse DNS',checks:'checks passed',duration:'Scan time'};
-  const rows=[];
+  const labels=t.osint||{};
+
+  function mkOsintRow(label,valueHtml){
+    const div=document.createElement('div');
+    div.className='data-row';
+    div.innerHTML='<span class="data-label">'+esc(label)+'</span><span class="data-value">'+valueHtml+'</span>';
+    return div;
+  }
+
+  // Skip geolocation — already shown in hero shock block (#15)
+  // Skip ISP if already shown in the group (#16) — check existing rows
+  const existingText=groupNet.textContent||'';
   if(geo){
-    if(geo.country) rows.push(makeOsintRow(labels.geo||'Geolocation',`${geo.city||''}, ${geo.region||''}, ${geo.country}`.replace(/^, |, $/g,'')));
-    if(geo.isp) rows.push(makeOsintRow(labels.isp||'ISP',geo.isp));
-    if(geo.asn) rows.push(makeOsintRow(labels.asn||'ASN','<code>'+esc(geo.asn)+'</code>'));
-    if(geo.connection_type) rows.push(makeOsintRow(labels.type||'Type','<span class="tag tag--'+(geo.connection_type==='residential'?'ok':'warn')+'">'+esc(geo.connection_type)+'</span>'));
+    if(geo.isp&&!existingText.includes(geo.isp)){
+      groupNet.appendChild(mkOsintRow(labels.isp||'ISP',esc(geo.isp)));
+    }
+    if(geo.asn){
+      groupNet.appendChild(mkOsintRow(labels.asn||'ASN','<code>'+esc(geo.asn)+'</code>'));
+    }
+    // Connection type with localized explanation (#17)
+    if(geo.connection_type){
+      const connTypeExplain={
+        residential:{ru:'\u0414\u043e\u043c\u0430\u0448\u043d\u0435\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435',en:'Home connection',uz:'Uy ulanishi'},
+        datacenter:{ru:'\u0414\u0430\u0442\u0430-\u0446\u0435\u043d\u0442\u0440 (\u043f\u043e\u0434\u043e\u0437\u0440\u0438\u0442\u0435\u043b\u044c\u043d\u043e)',en:'Data center (suspicious)',uz:'Data markaz (shubhali)'},
+        vpn:{ru:'VPN/\u041f\u0440\u043e\u043a\u0441\u0438',en:'VPN/Proxy',uz:'VPN/Proksi'},
+        mobile:{ru:'\u041c\u043e\u0431\u0438\u043b\u044c\u043d\u0430\u044f \u0441\u0435\u0442\u044c',en:'Mobile network',uz:'Mobil tarmoq'}
+      };
+      const ct=geo.connection_type.toLowerCase();
+      const ctLabel=connTypeExplain[ct]?.[currentLang]||geo.connection_type;
+      const tagClass=ct==='residential'?'tag--ok':ct==='datacenter'?'tag--danger':'tag--warn';
+      groupNet.appendChild(mkOsintRow(labels.type||{ru:'\u0422\u0438\u043f \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f',en:'Connection type',uz:'Ulanish turi'}[currentLang],'<span class="tag '+tagClass+'">'+esc(ctLabel)+'</span>'));
+    }
   }
-  if(dns&&dns.ptr) rows.push(makeOsintRow(labels.ptr||'PTR','<code>'+esc(dns.ptr)+'</code>'));
+  // PTR removed — not useful for most users (#18)
+  // Reputation with human-friendly text (#19)
   if(rep){
-    const isClean=!rep.blacklisted;
-    const repText=isClean
-      ?'<span class="tag tag--ok">\u2705 '+(labels.clean||'Clean')+'</span> ('+rep.blacklists_checked+' '+(labels.checks||'checks')+')'
-      :'<span class="tag tag--danger">\u26D4 '+(labels.listed||'Blacklisted')+'</span>: '+rep.blacklist_hits.join(', ');
-    rows.push(makeOsintRow(labels.rep||'Reputation',repText));
+    const repLabel=labels.rep||{ru:'\u0420\u0435\u043f\u0443\u0442\u0430\u0446\u0438\u044f IP',en:'IP reputation',uz:'IP obro\'si'}[currentLang];
+    if(!rep.blacklisted){
+      const cleanText={
+        ru:'\u2705 \u0412\u0430\u0448 IP \u0447\u0438\u0441\u0442 \u2014 \u043d\u0435 \u0447\u0438\u0441\u043b\u0438\u0442\u0441\u044f \u043d\u0438 \u0432 \u043e\u0434\u043d\u043e\u043c \u0447\u0451\u0440\u043d\u043e\u043c \u0441\u043f\u0438\u0441\u043a\u0435 (\u043f\u0440\u043e\u0432\u0435\u0440\u0435\u043d\u043e '+rep.blacklists_checked+' \u0431\u0430\u0437)',
+        en:'\u2705 Your IP is clean \u2014 not found in any blacklist ('+rep.blacklists_checked+' databases checked)',
+        uz:'\u2705 IP manzilingiz toza \u2014 hech qanday qora ro\'yxatda topilmadi ('+rep.blacklists_checked+' baza tekshirildi)'
+      }[currentLang];
+      groupNet.appendChild(mkOsintRow(repLabel,'<span class="tag tag--ok">'+esc(cleanText)+'</span>'));
+    }else{
+      const hits=(rep.blacklist_hits||[]).join(', ');
+      const listedText={
+        ru:'\u26A0\uFE0F \u0412\u0430\u0448 IP \u043d\u0430\u0439\u0434\u0435\u043d \u0432 \u0447\u0451\u0440\u043d\u044b\u0445 \u0441\u043f\u0438\u0441\u043a\u0430\u0445: '+hits+'. \u042d\u0442\u043e \u043c\u043e\u0436\u0435\u0442 \u043e\u0437\u043d\u0430\u0447\u0430\u0442\u044c, \u0447\u0442\u043e \u0432\u0430\u0448 IP \u0440\u0430\u043d\u0435\u0435 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043b\u0441\u044f \u0434\u043b\u044f \u0440\u0430\u0441\u0441\u044b\u043b\u043a\u0438 \u0441\u043f\u0430\u043c\u0430. \u041f\u043e\u0441\u043b\u0435\u0434\u0441\u0442\u0432\u0438\u044f: \u043d\u0435\u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0441\u0430\u0439\u0442\u044b \u043c\u043e\u0433\u0443\u0442 \u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0434\u043e\u0441\u0442\u0443\u043f.',
+        en:'\u26A0\uFE0F Your IP is found in blacklists: '+hits+'. This may mean your IP was previously used for spam. Some websites may block access, and emails from your address may land in spam.',
+        uz:'\u26A0\uFE0F IP manzilingiz qora ro\'yxatlarda topildi: '+hits+'. Bu IP manzilingiz avval spam uchun ishlatilgan bo\'lishi mumkinligini anglatadi.'
+      }[currentLang];
+      groupNet.appendChild(mkOsintRow(repLabel,'<span class="tag tag--danger" style="white-space:normal;text-align:left">'+esc(listedText)+'</span>'));
+    }
   }
-  rows.push(makeOsintRow(labels.duration||'Scan time',data.duration_ms+'ms \u2022 '+data.sources_ok.length+'/'+
-    (data.sources_ok.length+data.sources_failed.length)+' sources'));
-  c.innerHTML='<h3 style="font-size:15px;font-weight:700;margin:0 0 10px;">'+(labels.title||'Network Intelligence')+'</h3>'
-    +'<div class="data-group">'+rows.join('')+'</div>';
-}
-function makeOsintRow(label,value){
-  return '<div class="row"><span class="label">'+esc(label)+'</span><span class="value">'+value+'</span></div>';
+  // Scan time removed (#20)
 }
 
 /* ============== Server Fingerprint (Phase 2.1) ============== */
@@ -6801,6 +6890,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(netBtn) netBtn.addEventListener('click',handleNetworkCheck);
   const fpjsBtn=getEl('fpjsBtn');
   if(fpjsBtn) fpjsBtn.addEventListener('click',handleFpjsClick);
+  const fpjsHeroBtn=getEl('fpjsHeroBtn');
+  if(fpjsHeroBtn) fpjsHeroBtn.addEventListener('click',handleFpjsClick);
   render(lang);
 });
 </script>
