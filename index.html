@@ -241,6 +241,10 @@
     .status-badge--safe{background:var(--success-bg);color:var(--success)}
     .status-badge--danger{background:var(--danger-bg);color:var(--danger)}
     .status-badge--warning{background:var(--warning-bg);color:var(--warning)}
+    .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap}
+    .tag--ok{background:var(--success-bg);color:var(--success)}
+    .tag--warn{background:var(--warning-bg);color:var(--warning)}
+    .tag--danger{background:var(--danger-bg);color:var(--danger)}
     #detailsAccordion[open] summary svg{transform:rotate(180deg)}
     #detailsAccordion summary{display:flex;align-items:center;padding:8px 0;font-size:18px;font-weight:700}
     #detailsAccordion summary::-webkit-details-marker{display:none}
@@ -383,6 +387,7 @@
     <div id="networkResults" style="display:none;margin-top:16px">
       <div class="data-group" id="groupNetwork"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
+      <div id="osintResults" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"></div>
     </div>
   </section>
 
@@ -814,6 +819,8 @@ const I18N = {
     networkButton:'Проверить сеть',
     networkLoading:'Проверяем...',
     networkRecheck:'Проверить снова',
+    osintLoading:'Сканируем публичные базы данных...',
+    osint:{title:'Разведка по сети',geo:'Геолокация',isp:'Провайдер',asn:'ASN',type:'Тип подключения',rep:'Репутация IP',clean:'Чисто',listed:'В чёрном списке',ptr:'Обратный DNS',checks:'проверок пройдено',duration:'Время сканирования'},
     fpjsTitle:'Сравнение с глобальной базой',
     fpjsDesc:'Сравните ваш отпечаток с базой FingerprintJS Pro (миллиарды отпечатков). Это покажет, насколько вы реально идентифицируемы.',
     fpjsDisclaimer:'\u26A0 Данные будут отправлены на серверы FingerprintJS для сравнения. Мы используем бесплатный тариф (до 20\u00A0000 проверок/мес). FingerprintJS не получает ваши персональные данные.',
@@ -1482,6 +1489,8 @@ const I18N = {
     networkButton:'Check network',
     networkLoading:'Checking...',
     networkRecheck:'Re-check',
+    osintLoading:'Scanning public databases...',
+    osint:{title:'Network Intelligence',geo:'Geolocation',isp:'ISP',asn:'ASN',type:'Connection type',rep:'IP Reputation',clean:'Clean',listed:'Blacklisted',ptr:'Reverse DNS',checks:'checks passed',duration:'Scan time'},
     fpjsTitle:'Compare with global database',
     fpjsDesc:'Compare your fingerprint against FingerprintJS Pro\u2019s database (billions of fingerprints). This shows how identifiable you really are.',
     fpjsDisclaimer:'\u26A0 Data will be sent to FingerprintJS servers for comparison. We use the free tier (up to 20,000 checks/month). FingerprintJS does not receive your personal data.',
@@ -2117,6 +2126,8 @@ const I18N = {
     networkButton:"Tarmoqni tekshirish",
     networkLoading:"Tekshirilmoqda...",
     networkRecheck:"Qayta tekshirish",
+    osintLoading:"Ochiq bazalar tekshirilmoqda...",
+    osint:{title:"Tarmoq razvedkasi",geo:"Geolokatsiya",isp:"Provayder",asn:"ASN",type:"Ulanish turi",rep:"IP reputatsiyasi",clean:"Toza",listed:"Qora ro\u02BByxatda",ptr:"Teskari DNS",checks:"tekshiruv o\u02BBtdi",duration:"Skanerlash vaqti"},
     fpjsTitle:"Global baza bilan solishtirish",
     fpjsDesc:"Barmoq izingizni FingerprintJS Pro bazasi (milliardlab izlar) bilan solishtiring. Bu sizni qanchalik aniqlanishingizni ko\u02BBrsatadi.",
     fpjsDisclaimer:"\u26A0 Ma\u02BClumotlar solishtirish uchun FingerprintJS serverlariga yuboriladi. Bepul tarif (oyiga 20\u00A0000 tekshiruvgacha). FingerprintJS shaxsiy ma\u02BClumotlaringizni olmaydi.",
@@ -5986,6 +5997,9 @@ async function handleNetworkCheck(){
     }
     const resultsEl=getEl('networkResults');
     if(resultsEl) resultsEl.style.display='';
+    // Also call Worker OSINT API if we have an IP
+    const ip=state.ipData?.ip;
+    if(ip) fetchOsintReport(ip,t);
     if(btn){btn.textContent=t.networkRecheck||'Re-check';btn.disabled=false;}
   }catch(e){
     if(btn){btn.textContent=t.networkButton||'Check network';btn.disabled=false;}
@@ -5997,8 +6011,59 @@ async function handleNetworkCheck(){
   }
 }
 
+/* ============== OSINT Report via Cloudflare Worker ============== */
+let _osintCache=null;
+async function fetchOsintReport(ip,t){
+  const container=getEl('osintResults');
+  if(!container) return;
+  container.style.display='';
+  container.innerHTML='<p class="small" style="color:var(--muted);">'+(t.osintLoading||'Scanning public databases...')+'</p>';
+  if(_osintCache&&_osintCache.resolved_ip===ip){
+    renderOsintReport(_osintCache,t);return;
+  }
+  try{
+    const resp=await fetch(WORKER_API+'/api/scan?target='+encodeURIComponent(ip),{signal:AbortSignal.timeout(20000)});
+    if(!resp.ok) throw new Error('API '+resp.status);
+    const data=await resp.json();
+    _osintCache=data;
+    renderOsintReport(data,t);
+  }catch(e){
+    container.innerHTML='<p class="small" style="color:var(--danger);">OSINT scan failed: '+esc(e.message)+'</p>';
+  }
+}
+function renderOsintReport(data,t){
+  const c=getEl('osintResults');if(!c)return;
+  const geo=data.geolocation;
+  const rep=data.reputation;
+  const dns=data.dns;
+  const labels=t.osint||{title:'Network Intelligence',geo:'Geolocation',isp:'ISP',asn:'ASN',type:'Connection',rep:'Reputation',clean:'Clean',listed:'Blacklisted',ptr:'Reverse DNS',checks:'checks passed',duration:'Scan time'};
+  const rows=[];
+  if(geo){
+    if(geo.country) rows.push(makeOsintRow(labels.geo||'Geolocation',`${geo.city||''}, ${geo.region||''}, ${geo.country}`.replace(/^, |, $/g,'')));
+    if(geo.isp) rows.push(makeOsintRow(labels.isp||'ISP',geo.isp));
+    if(geo.asn) rows.push(makeOsintRow(labels.asn||'ASN','<code>'+esc(geo.asn)+'</code>'));
+    if(geo.connection_type) rows.push(makeOsintRow(labels.type||'Type','<span class="tag tag--'+(geo.connection_type==='residential'?'ok':'warn')+'">'+esc(geo.connection_type)+'</span>'));
+  }
+  if(dns&&dns.ptr) rows.push(makeOsintRow(labels.ptr||'PTR','<code>'+esc(dns.ptr)+'</code>'));
+  if(rep){
+    const isClean=!rep.blacklisted;
+    const repText=isClean
+      ?'<span class="tag tag--ok">\u2705 '+(labels.clean||'Clean')+'</span> ('+rep.blacklists_checked+' '+(labels.checks||'checks')+')'
+      :'<span class="tag tag--danger">\u26D4 '+(labels.listed||'Blacklisted')+'</span>: '+rep.blacklist_hits.join(', ');
+    rows.push(makeOsintRow(labels.rep||'Reputation',repText));
+  }
+  rows.push(makeOsintRow(labels.duration||'Scan time',data.duration_ms+'ms \u2022 '+data.sources_ok.length+'/'+
+    (data.sources_ok.length+data.sources_failed.length)+' sources'));
+  c.innerHTML='<h3 style="font-size:15px;font-weight:700;margin:0 0 10px;">'+(labels.title||'Network Intelligence')+'</h3>'
+    +'<div class="data-group">'+rows.join('')+'</div>';
+}
+function makeOsintRow(label,value){
+  return '<div class="row"><span class="label">'+esc(label)+'</span><span class="value">'+value+'</span></div>';
+}
+
 /* ============== FingerprintJS Pro (Advanced) ============== */
 let _fpjsPromise=null;
+const WORKER_API='https://fingerprint-api.xfxrrpkvr5.workers.dev';
 const FPJS_API_KEY='sE9LTvMdm0ITAz950nNQ';
 async function loadFingerprintJS(){
   if(_fpjsPromise) return _fpjsPromise;
