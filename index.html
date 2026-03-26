@@ -310,6 +310,49 @@
     .btn{min-height:44px;min-width:44px}
     .btn-link{min-height:44px;display:inline-flex;align-items:center}
     .menu-panel button{min-height:44px;min-width:44px}
+    /* === Story Mode === */
+    #storyMode{max-width:760px;margin:0 auto}
+    .story-stage{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:24px;margin:20px 0;position:relative;overflow:hidden}
+    .story-stage::before{content:attr(data-stage-num);position:absolute;top:0;right:0;font-size:72px;font-weight:900;color:var(--border);line-height:1;pointer-events:none;opacity:.3}
+    .story-stage-header{margin-bottom:16px}
+    .story-stage-num{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+    .story-stage-title{font-size:20px;font-weight:700;line-height:1.3;margin:0 0 4px}
+    .story-stage-subtitle{font-size:14px;color:var(--muted);margin:0}
+    .story-who-sees{font-size:12px;color:var(--text-muted);margin:8px 0 16px;padding:6px 10px;background:var(--bg-raised);border-radius:var(--radius-sm);display:inline-block}
+    .story-youtube-example{font-style:italic;color:var(--muted);font-size:13px;line-height:1.6;padding:12px 16px;margin:16px 0;border-left:3px solid var(--accent);background:var(--bg-raised);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+    .story-data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:16px 0}
+    .story-data-item{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:8px 12px;background:var(--bg-raised);border-radius:var(--radius-sm);font-size:13px}
+    .story-data-item .sdl{color:var(--muted);flex-shrink:0}
+    .story-data-item .sdv{font-weight:600;text-align:right;word-break:break-word}
+    .story-data-item .sdv code{font-family:var(--font-mono);font-size:12px;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+    .story-expand{margin-top:12px}
+    .story-expand details{border-radius:var(--radius-sm);overflow:hidden}
+    .story-expand summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;list-style:none;border-radius:var(--radius-sm)}
+    .story-expand summary::-webkit-details-marker{display:none}
+    .story-expand summary::marker{display:none;content:''}
+    .story-expand .expand-body{padding:12px 14px;font-size:13px;line-height:1.7}
+    .story-expand--danger summary{background:var(--danger-bg);color:var(--danger)}
+    .story-expand--danger .expand-body{background:var(--danger-bg)}
+    .story-expand--action summary{background:var(--success-bg);color:var(--success)}
+    .story-expand--action .expand-body{background:var(--success-bg)}
+    .story-expand--action .difficulty-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:8px}
+    .story-expand--action .diff-easy{background:var(--success-bg);color:var(--success)}
+    .story-expand--action .diff-medium{background:var(--warning-bg);color:var(--warning)}
+    .story-expand--action .diff-hard{background:var(--danger-bg);color:var(--danger)}
+    .story-verdict{background:var(--card);border:2px solid var(--accent);border-radius:var(--r);padding:24px;margin:24px 0;text-align:center}
+    .story-verdict .sv-pct{font-size:64px;font-weight:900;color:var(--accent);line-height:1}
+    .story-verdict .sv-text{font-size:18px;font-weight:700;margin:8px 0}
+    .story-verdict .sv-desc{font-size:14px;color:var(--muted);margin:12px 0}
+    .story-verdict-recs{margin-top:20px;text-align:left}
+    .story-verdict-recs h4{font-size:14px;margin:16px 0 8px;color:var(--accent)}
+    .story-verdict-recs ul{margin:0;padding-left:20px;font-size:13px;line-height:1.7}
+    .story-info-block{background:var(--bg-raised);border:1px dashed var(--border);border-radius:var(--r);padding:20px;margin:16px 0;font-size:13px;line-height:1.7;color:var(--muted)}
+    .story-info-block .info-icon{font-size:24px;margin-bottom:8px;display:block}
+    @media(max-width:640px){
+      .story-data-grid{grid-template-columns:1fr}
+      .story-stage::before{font-size:48px}
+    }
+    .view-mode-active{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(96,165,250,.12)!important}
   </style>
 </head>
 <body>
@@ -336,11 +379,13 @@
           <button type="button" data-theme="contrast" aria-label="High contrast"><span class="menu-icon" aria-hidden="true">◑</span></button>
         </div>
       </div>
+      <button class="btn" id="viewModeBtn" style="gap:4px">📖 <span id="viewModeBtnText">История</span></button>
     </div>
     </nav>
   </header>
 
   <main id="mainContent">
+<div id="reportMode">
   <!-- Block 1: Intro -->
   <section class="block">
     <h2 id="introTitle" class="section-title"></h2>
@@ -474,6 +519,10 @@
       <div class="cards" id="cards"></div>
     </details>
   </section>
+
+</div><!-- /reportMode -->
+<div id="storyMode" style="display:none">
+</div><!-- /storyMode -->
 
   </main>
   <footer class="small" style="text-align:center;color:var(--muted)" id="footerText">
@@ -1182,7 +1231,99 @@ const I18N = {
     errorMessage:msg=>`Ошибка: ${msg}`,
     units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
     labels:{touchPoints:'касания',pointer:'указатель',latency:'задержка',storage:{local:'Локальное хранилище',session:'Сессионное хранилище',idb:'IndexedDB (база)',cookies:'Cookie'}},
-    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% данных заполнено (${filled} из ~${total})`
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% данных заполнено (${filled} из ~${total})`,
+    story:{
+      toggleStory:'📖 История',
+      toggleReport:'📊 Отчёт',
+      stage:'Этап',
+      dangerTitle:'⚠️ Чем это опасно',
+      actionTitle:'🛡️ Что делать',
+      whoSees:'Кто это видит:',
+      difficulty:{easy:'Просто',medium:'Средне',hard:'Сложно'},
+      s0:{
+        title:'Вы открыли ноутбук',
+        subtitle:'Ещё до выхода в интернет ваше устройство уже уникально',
+        who:'Пока никто — но через минуту это увидит любой сайт',
+        youtube:function(dev,scr,gpu){return 'Вы ещё даже не открыли YouTube, но ваш '+dev+' с экраном '+scr+' уже выделяется среди большинства пользователей. YouTube это узнает через несколько секунд.';},
+        danger:'Комбинация характеристик устройства уже уникальна. Сайт не знает ваше имя — но знает, что вы владелец устройства определённой ценовой категории. Это используется для ценовой дискриминации: авиабилеты, отели, подписки могут стоить дороже на дорогом устройстве. Разрешение + pixel ratio + GPU — это почти серийный номер.',
+        action:'<ul><li>Включить режим «XLetterboxing» в Firefox (resistFingerprinting) — округляет разрешение</li><li>Рассмотреть Brave Browser — рандомизирует hardware-параметры</li><li>Chrome: расширение Canvas Blocker / Trace</li><li>Полностью скрыть устройство невозможно, но можно сделать его менее уникальным</li></ul>',
+        actionDiff:'medium'
+      },
+      s1:{
+        title:'Вы подключились к Wi-Fi',
+        subtitle:'Провайдер уже знает, что вы в сети',
+        who:'Ваш интернет-провайдер (ISP), владелец Wi-Fi-точки',
+        youtube:function(isp,ip){return 'Когда вы введёте youtube.com, провайдер '+isp+' запишет это в лог. Он не увидит видео, но будет знать, что в это время вы зашли на YouTube.';},
+        danger:'Провайдер ведёт полный лог доменов. Во многих странах он обязан хранить его от 6 месяцев до 3 лет. Владелец Wi-Fi видит то же самое. IP-адрес позволяет связать действия на разных сайтах. Гео-блокировка: контент и цены меняются в зависимости от страны.',
+        action:'<ul><li>VPN от проверенного провайдера (Mullvad, ProtonVPN, IVPN)</li><li>Tor Browser — максимальная анонимизация</li><li>Encrypted DNS (DNS-over-HTTPS) — скрывает домены от провайдера</li><li>Не использовать публичный Wi-Fi без VPN</li></ul>',
+        actionDiff:'easy'
+      },
+      s2:{
+        title:'Вы открыли браузер',
+        subtitle:'Браузер уже несёт набор уникальных характеристик',
+        who:'Пока только браузер — но всё будет передано первому же сайту',
+        youtube:function(br,ext,dnt,gpc){return 'Вы ещё не набрали youtube.com, но браузер '+br+' уже знает: '+ext+' расширений'+(dnt?', включён Do Not Track':'')+(gpc?', включён GPC':'')+'. Эта комбинация — как отпечаток пальца.';},
+        danger:'Комбинация из 3–5 расширений может быть уникальной среди миллионов пользователей. Включённый Do Not Track парадоксально делает вас заметнее: его включают менее 7% пользователей. Выданные разрешения (камера, геолокация) говорят о привычках.',
+        action:'<ul><li>Минимизировать количество расширений</li><li>Использовать популярные расширения (uBlock Origin, Bitwarden)</li><li>Отозвать ненужные разрешения в настройках</li><li>Рассмотреть отдельный профиль браузера для чувствительных задач</li></ul>',
+        actionDiff:'easy'
+      },
+      s3:{
+        title:'Вы набрали youtube.com',
+        subtitle:'Кто-то узнал, что вы хотите открыть YouTube',
+        who:'DNS-провайдер — тот, кто переводит домен в IP-адрес. По умолчанию — ваш ISP',
+        youtube:'Вы набрали youtube.com и нажали Enter. В этот момент DNS-сервер получил запрос: «покажи IP-адрес YouTube». Он не узнает, какое видео вы будете смотреть, но в его логах появилась запись с вашим IP и временем.',
+        danger:'DNS-лог — полная карта интересов. youtube.com → webmd.com → hh.ru → avito.ru/kvartiry — DNS-сервер видит цепочку и понимает: человек отвлёкся от видео, загуглил симптомы, ищет работу и думает о переезде. В некоторых юрисдикциях DNS-логи используются для цензуры.',
+        action:'<ul><li>Включить DNS-over-HTTPS: Chrome → Настройки → Безопасность → «Безопасный DNS»</li><li>DNS-провайдер без логирования: Cloudflare (1.1.1.1), Quad9 (9.9.9.9), NextDNS</li><li>VPN решает эту проблему автоматически</li></ul>',
+        actionDiff:'easy',
+        isInfo:true
+      },
+      s4:{
+        title:'Браузер подключается к серверу YouTube',
+        subtitle:'Сервер узнал ваш почерк ещё до загрузки страницы',
+        who:'Сервер YouTube и любой посредник — корпоративный прокси, DPI провайдера',
+        youtube:function(tls,cipher){return 'Браузер «здоровается» с сервером YouTube через '+tls+' — и способ рукопожатия уникален, как почерк. Смените IP, очистите cookies — TLS-отпечаток останется прежним.';},
+        danger:'TLS-отпечаток не меняется при смене IP, VPN и очистке cookies. Утром с домашнего Wi-Fi, вечером через VPN — отпечаток совпал, сервер связал сессии. DPI-системы используют TLS fingerprinting для идентификации и блокировки VPN-протоколов.',
+        action:'<ul><li>Tor Browser стандартизирует TLS-отпечаток</li><li>Firefox + privacy.resistFingerprinting частично нормализует</li><li>Регулярно обновлять браузер — отпечаток меняется между версиями</li><li>В обычном Chrome/Safari/Edge контроля нет</li></ul>',
+        actionDiff:'hard'
+      },
+      s5:{
+        title:'YouTube получил ваш запрос',
+        subtitle:'Сервер уже знает ваш язык, ОС и откуда вы пришли',
+        who:'Владелец сайта — в серверных логах. Это видит ЛЮБОЙ владелец ЛЮБОГО сайта',
+        youtube:function(langs){return 'YouTube прочитал: «Accept-Language: '+langs+'». Теперь он знает ваш языковой профиль. Вы не вводили это — браузер отправил сам.';},
+        danger:'Accept-Language раскрывает национальность. Referer рассказывает, откуда пришли. Порядок заголовков — неочевидный, но мощный идентификатор: его нельзя подменить расширением. Если подменили User-Agent, но Client Hints выдают реальный браузер — расхождение обнаруживается.',
+        action:'<ul><li>Минимизировать список языков — оставить 1–2 (en-US, en)</li><li>Контроль Referer: Firefox — network.http.referer.XOriginPolicy = 2</li><li>Tor Browser стандартизирует заголовки</li><li>Порядок заголовков невозможно контролировать расширениями</li></ul>',
+        actionDiff:'medium'
+      },
+      s6:{
+        title:'YouTube загрузился и запустил скрипты',
+        subtitle:'Невидимые тесты уже начались — прямо сейчас',
+        who:'YouTube (Google) и любой сайт со скриптами',
+        youtube:function(canvas,audio){return 'Пока вы смотрите видео, YouTube в фоне рисует невидимую картинку (Canvas: '+canvas+'), проигрывает беззвучный звук (Audio: '+audio+') и рендерит скрытый 3D-объект. Приватный режим? Canvas fingerprint остался тем же.';},
+        danger:'Canvas/Audio/WebGL fingerprint — главный инструмент трекинга без cookies. Очистили историю, сменили аккаунт — отпечаток прежний, потому что зависит от железа. WebRTC-утечка: сайт получает реальный IP в обход VPN. Battery API: точный уровень заряда = идентификатор сессии.',
+        action:'<ul><li><b>Canvas</b>: CanvasBlocker (Firefox), Brave — встроенно, Chrome — Trace</li><li><b>Audio</b>: Firefox + resistFingerprinting блокирует</li><li><b>WebGL</b>: можно отключить (webgl.disabled = true), но сломает часть сайтов</li><li><b>WebRTC</b>: Firefox — media.peerconnection.enabled = false. Критично при VPN</li><li><b>Battery</b>: Firefox и Brave ограничивают API</li></ul>',
+        actionDiff:'medium'
+      },
+      s7:{
+        title:'За вами наблюдают ещё 10+ компаний',
+        subtitle:'Рекламные сети видят вас не только на YouTube — а на тысячах сайтов',
+        who:'Рекламные сети (Google Ads, Meta Pixel, Criteo), аналитика, соцвиджеты',
+        youtube:function(blocked,total){return 'YouTube — это Google. Но скрипты Google стоят на большинстве сайтов. Утром — видео о ремонте. Днём — строительный магазин. Вечером — ипотечный калькулятор. Три сайта — один пиксель.'+(blocked>0?' Ваш блокировщик заблокировал '+blocked+' из '+total+' проверок.':' Ваш браузер не заблокировал ни одного трекера.');},
+        danger:'На типичной странице десятки чужих скриптов. Каждый собирает отпечаток. Утром статья о симптомах, днём поиск юриста, вечером цены на квартиры — один пиксель, полная картина жизни. В утечках брокеров находили профили с тегами «финансовые трудности», «проблемы со здоровьем».',
+        action:'<ul><li><b>uBlock Origin</b> — золотой стандарт. Обязателен</li><li>Доп. списки в uBlock: «Annoyances» и «Privacy»</li><li>Firefox: Enhanced Tracking Protection → Strict</li><li>Brave: блокировщик встроен</li><li>Firefox Multi-Account Containers — изолирует сайты друг от друга</li></ul>',
+        actionDiff:'easy'
+      },
+      verdict:{
+        title:'Полная картина',
+        subtitle:'Ваш цифровой отпечаток — от включения устройства до просмотра видео',
+        now:'Прямо сейчас (5 минут):',
+        nowList:['Установить uBlock Origin','Включить DNS-over-HTTPS в настройках браузера','Отозвать камеру/микрофон/гео у ненужных сайтов'],
+        weekend:'На выходных (30 минут):',
+        weekendList:['Настроить VPN (Mullvad / ProtonVPN)','Отключить WebRTC leak','Установить CanvasBlocker или перейти на Brave'],
+        advanced:'Для продвинутых:',
+        advancedList:['Tor Browser для чувствительных задач','Firefox + resistFingerprinting','Раздельные браузеры для разных задач']
+      }
+    }
   },
   en: {
     langOption:'🇬🇧 English',
@@ -1836,7 +1977,99 @@ const I18N = {
     errorMessage:msg=>`Error: ${msg}`,
     units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
     labels:{touchPoints:'touch points',pointer:'pointer',latency:'latency',storage:{local:'Local storage',session:'Session storage',idb:'IndexedDB',cookies:'Cookies'}},
-    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% of data filled (${filled} of ~${total})`
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% of data filled (${filled} of ~${total})`,
+    story:{
+      toggleStory:'📖 Story',
+      toggleReport:'📊 Report',
+      stage:'Stage',
+      dangerTitle:'⚠️ Why this is dangerous',
+      actionTitle:'🛡️ What to do',
+      whoSees:'Who sees this:',
+      difficulty:{easy:'Easy',medium:'Medium',hard:'Hard'},
+      s0:{
+        title:'You opened your laptop',
+        subtitle:'Before you even touch the internet, your device is already unique',
+        who:'No one yet — but in a minute, any website will know',
+        youtube:function(dev,scr,gpu){return 'You haven\'t even opened YouTube yet, but your '+dev+' with a '+scr+' screen already stands out among most users. YouTube will know this within seconds.';},
+        danger:'The combination of device specs is already unique. The site doesn\'t know your name — but it knows you own a device in a certain price range. This is used for price discrimination: flights, hotels, subscriptions may cost more on an expensive device. Resolution + pixel ratio + GPU is almost a serial number.',
+        action:'<ul><li>Enable "Letterboxing" mode in Firefox (resistFingerprinting) — rounds screen resolution</li><li>Consider Brave Browser — randomizes hardware parameters</li><li>Chrome: Canvas Blocker / Trace extension</li><li>Fully hiding your device is impossible, but you can make it less unique</li></ul>',
+        actionDiff:'medium'
+      },
+      s1:{
+        title:'You connected to Wi-Fi',
+        subtitle:'Your ISP already knows you\'re online',
+        who:'Your internet provider (ISP), the Wi-Fi hotspot owner',
+        youtube:function(isp,ip){return 'When you type youtube.com, your ISP '+isp+' will log it. They won\'t see the video, but will know you visited YouTube at that time.';},
+        danger:'Your ISP keeps a full log of domains. In many countries it\'s required to store them for 6 months to 3 years. The Wi-Fi owner sees the same. Your IP address links activity across different sites. Geo-blocking: content and prices change depending on your country.',
+        action:'<ul><li>VPN from a trusted provider (Mullvad, ProtonVPN, IVPN)</li><li>Tor Browser — maximum anonymization</li><li>Encrypted DNS (DNS-over-HTTPS) — hides domains from your ISP</li><li>Don\'t use public Wi-Fi without a VPN</li></ul>',
+        actionDiff:'easy'
+      },
+      s2:{
+        title:'You opened your browser',
+        subtitle:'Your browser already carries a set of unique characteristics',
+        who:'Only your browser for now — but everything will be sent to the first site you visit',
+        youtube:function(br,ext,dnt,gpc){return 'You haven\'t typed youtube.com yet, but your '+br+' browser already exposes: '+ext+' extensions'+(dnt?', Do Not Track enabled':'')+(gpc?', GPC enabled':'')+'. This combination is like a fingerprint.';},
+        danger:'A combination of 3–5 extensions can be unique among millions of users. Enabling Do Not Track paradoxically makes you more visible: less than 7% of users turn it on. Granted permissions (camera, location) reveal your habits.',
+        action:'<ul><li>Minimize the number of extensions</li><li>Use popular extensions (uBlock Origin, Bitwarden)</li><li>Revoke unnecessary permissions in settings</li><li>Consider a separate browser profile for sensitive tasks</li></ul>',
+        actionDiff:'easy'
+      },
+      s3:{
+        title:'You typed youtube.com',
+        subtitle:'Someone learned you want to open YouTube',
+        who:'Your DNS provider — the one who translates domains to IP. By default — your ISP',
+        youtube:'You typed youtube.com and pressed Enter. At that moment the DNS server received a request: give me YouTube\'s IP address. It won\'t know which video you\'ll watch, but its logs now have your IP and a timestamp.',
+        danger:'A DNS log is a complete map of your interests. youtube.com → webmd.com → linkedin.com → zillow.com — the DNS server sees the chain and understands: this person got distracted from video, googled symptoms, is looking for a job, and is thinking about moving. In some jurisdictions DNS logs are used for censorship.',
+        action:'<ul><li>Enable DNS-over-HTTPS: Chrome → Settings → Security → "Use secure DNS"</li><li>No-log DNS providers: Cloudflare (1.1.1.1), Quad9 (9.9.9.9), NextDNS</li><li>A VPN solves this automatically</li></ul>',
+        actionDiff:'easy',
+        isInfo:true
+      },
+      s4:{
+        title:'Your browser connects to YouTube\'s server',
+        subtitle:'The server recognized your handwriting before the page even loaded',
+        who:'YouTube\'s server and any intermediary — corporate proxy, ISP deep packet inspection',
+        youtube:function(tls,cipher){return 'Your browser shakes hands with YouTube\'s server via '+tls+' — and the way it does it is unique, like handwriting. Change your IP, clear cookies — the TLS fingerprint stays the same.';},
+        danger:'The TLS fingerprint doesn\'t change when you change IP, VPN, or clear cookies. Morning from home Wi-Fi, evening through VPN — fingerprint matched, sessions linked. DPI systems use TLS fingerprinting to identify and block VPN protocols.',
+        action:'<ul><li>Tor Browser standardizes the TLS fingerprint</li><li>Firefox + privacy.resistFingerprinting partially normalizes</li><li>Keep your browser updated — the fingerprint changes between versions</li><li>In regular Chrome/Safari/Edge there\'s no control</li></ul>',
+        actionDiff:'hard'
+      },
+      s5:{
+        title:'YouTube received your request',
+        subtitle:'The server already knows your language, OS, and where you came from',
+        who:'The site owner — in server logs. ANY owner of ANY website sees this',
+        youtube:function(langs){return 'YouTube read: Accept-Language: '+langs+'. Now it knows your language profile. You didn\'t enter this — your browser sent it automatically.';},
+        danger:'Accept-Language reveals nationality. Referer tells where you came from. The order of headers is a subtle but powerful identifier: it can\'t be spoofed by an extension. If you spoofed the User-Agent but Client Hints reveal the real browser — the mismatch is detected.',
+        action:'<ul><li>Minimize your language list — keep 1–2 (en-US, en)</li><li>Referer control: Firefox — network.http.referer.XOriginPolicy = 2</li><li>Tor Browser standardizes headers</li><li>Header order cannot be controlled with extensions</li></ul>',
+        actionDiff:'medium'
+      },
+      s6:{
+        title:'YouTube loaded and ran its scripts',
+        subtitle:'Invisible tests have already started — right now',
+        who:'YouTube (Google) and any site with scripts',
+        youtube:function(canvas,audio){return 'While you watch the video, YouTube draws an invisible image in the background (Canvas: '+canvas+'), plays a silent sound (Audio: '+audio+'), and renders a hidden 3D object. Private mode? The Canvas fingerprint stayed the same.';},
+        danger:'Canvas/Audio/WebGL fingerprint — the primary tracking tool without cookies. Cleared history, changed account — fingerprint is the same because it depends on hardware. WebRTC leak: the site gets your real IP bypassing the VPN. Battery API: exact charge level = session identifier.',
+        action:'<ul><li><b>Canvas</b>: CanvasBlocker (Firefox), Brave — built-in, Chrome — Trace</li><li><b>Audio</b>: Firefox + resistFingerprinting blocks it</li><li><b>WebGL</b>: can be disabled (webgl.disabled = true), but breaks some sites</li><li><b>WebRTC</b>: Firefox — media.peerconnection.enabled = false. Critical when using VPN</li><li><b>Battery</b>: Firefox and Brave restrict the API</li></ul>',
+        actionDiff:'medium'
+      },
+      s7:{
+        title:'10+ more companies are watching you',
+        subtitle:'Ad networks see you not just on YouTube — but on thousands of sites',
+        who:'Ad networks (Google Ads, Meta Pixel, Criteo), analytics, social widgets',
+        youtube:function(blocked,total){return 'YouTube is Google. But Google\'s scripts run on most sites. Morning — repair video. Afternoon — hardware store. Evening — mortgage calculator. Three sites — one pixel.'+(blocked>0?' Your blocker blocked '+blocked+' of '+total+' checks.':' Your browser didn\'t block a single tracker.');},
+        danger:'A typical page has dozens of third-party scripts. Each collects a fingerprint. Morning health article, afternoon lawyer search, evening apartment prices — one pixel, full picture of your life. Data broker leaks have found profiles tagged financial difficulties and health issues.',
+        action:'<ul><li><b>uBlock Origin</b> — the gold standard. Essential</li><li>Extra lists in uBlock: "Annoyances" and "Privacy"</li><li>Firefox: Enhanced Tracking Protection → Strict</li><li>Brave: blocker is built-in</li><li>Firefox Multi-Account Containers — isolates sites from each other</li></ul>',
+        actionDiff:'easy'
+      },
+      verdict:{
+        title:'The full picture',
+        subtitle:'Your digital fingerprint — from turning on your device to watching a video',
+        now:'Right now (5 minutes):',
+        nowList:['Install uBlock Origin','Enable DNS-over-HTTPS in browser settings','Revoke camera/mic/location from sites that don\'t need it'],
+        weekend:'This weekend (30 minutes):',
+        weekendList:['Set up a VPN (Mullvad / ProtonVPN)','Disable WebRTC leak','Install CanvasBlocker or switch to Brave'],
+        advanced:'For advanced users:',
+        advancedList:['Tor Browser for sensitive tasks','Firefox + resistFingerprinting','Separate browsers for different tasks']
+      }
+    }
   },
   uz: {
     langOption:'🇺🇿 Oʻzbekcha',
@@ -2513,7 +2746,99 @@ const I18N = {
     errorMessage:msg=>`Xatolik: ${msg}`,
     units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
     labels:{touchPoints:'sensor nuqtalari',pointer:'ko‘rsatkich',latency:'kechikish',storage:{local:'Mahalliy saqlash',session:'Sessiya saqlashi',idb:'IndexedDB',cookies:'Cookie'}},
-    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% maʼlumot to‘ldirilган (${filled} / ~${total})`
+    formatFullness:(filled,total)=>`${Math.round(100*filled/Math.max(1,total))}% maʼlumot to‘ldirilган (${filled} / ~${total})`,
+    story:{
+      toggleStory:'📖 Hikoya',
+      toggleReport:'📊 Hisobot',
+      stage:'Bosqich',
+      dangerTitle:'⚠️ Bu nima uchun xavfli',
+      actionTitle:'🛡️ Nima qilish kerak',
+      whoSees:'Buni kim ko‘rinadi:',
+      difficulty:{easy:'Oson',medium:'O‘rtacha',hard:'Qiyin'},
+      s0:{
+        title:'Siz noutbukni ochdingiz',
+        subtitle:'Internetga chiqmasdan oldin qurilmangiz allaqachon noyobdir',
+        who:'Hali hech kim — lekin bir daqiqadan so‘ng har qanday sayt buni biladi',
+        youtube:function(dev,scr,gpu){return 'Siz hali YouTubeʻni ham ochmadingiz, lekin '+dev+' qurilmangiz '+scr+' ekran bilan allaqachon ko‘pchilik foydalanuvchilar orasida ajralib turadi.';},
+        danger:'Qurilma xususiyatlari kombinatsiyasi allaqachon noyobdir. Sayt ismingizni bilmaydi, lekin siz ma‘lum narx toifasidagi qurilma egasi ekanligingizni biladi. Bu narx diskriminatsiyasi uchun ishlatiladi: aviachiptalar, mehmonxonalar, obunalar qimmat qurilmada qimmatroq bo‘lishi mumkin.',
+        action:'<ul><li>Firefoxʻda Letterboxing rejimini yoqing (resistFingerprinting)</li><li>Brave Browserʻni ko‘rib chiqing — hardware parametrlarini tasodifiy qiladi</li><li>Chrome: Canvas Blocker / Trace kengaytmasi</li><li>Qurilmani to‘liq yashirish mumkin emas, lekin kamroq noyob qilish mumkin</li></ul>',
+        actionDiff:'medium'
+      },
+      s1:{
+        title:'Siz Wi-Fiʻga ulandingiz',
+        subtitle:'Provayder siz tarmoqda ekanligingizni allaqachon biladi',
+        who:'Internet provayder (ISP), Wi-Fi nuqtasi egasi',
+        youtube:function(isp,ip){return 'Siz youtube.comʻni kiritganingizda, '+isp+' provayderi buni loglarga yozadi. U videoni ko‘rmaidi, lekin siz o‘sha vaqtda YouTubeʻga kirganingizni biladi.';},
+        danger:'Provayder domenlarning to‘liq logini saqlaydi. Ko‘p mamlakatlarda uni 6 oydan 3 yilgacha saqlash shart. Wi-Fi egasi ham xuddi shunini ko‘radi. IP-manzil turli saytlardagi harakatlarni bog‘laydi.',
+        action:'<ul><li>Ishonchli provayderdan VPN (Mullvad, ProtonVPN, IVPN)</li><li>Tor Browser — maksimal anonimlashtirish</li><li>DNS-over-HTTPS — domenlarni provayderdan yashiradi</li><li>VPNsiz jamoat Wi-Fiʻidan foydalanmang</li></ul>',
+        actionDiff:'easy'
+      },
+      s2:{
+        title:'Siz brauzerni ochdingiz',
+        subtitle:'Brauzer allaqachon noyob xususiyatlar to‘plamini o‘zida saqlaydi',
+        who:'Hozircha faqat brauzer — lekin hammasi birinchi saytga uzatiladi',
+        youtube:function(br,ext,dnt,gpc){return 'Siz hali youtube.comʻni kiritmadingiz, lekin '+br+' brauzeri allaqachon ma‘lum: '+ext+' kengaytma'+(dnt?', Do Not Track yoqilgan':'')+(gpc?', GPC yoqilgan':'')+'. Bu kombinatsiya barmoq izi kabidir.';},
+        danger:'3-5 ta kengaytma kombinatsiyasi millionlab foydalanuvchilar orasida noyob bo‘lishi mumkin. Do Not Trackʻni yoqish paradoksal ravishda sizni ko‘zga ko‘rinarliroq qiladi.',
+        action:'<ul><li>Kengaytmalar sonini minimallashtiring</li><li>Mashhur kengaytmalardan foydalaning (uBlock Origin, Bitwarden)</li><li>Sozlamalarda keraksiz ruxsatlarni bekor qiling</li><li>Maxfiy vazifalar uchun alohida brauzer profilini ko‘rib chiqing</li></ul>',
+        actionDiff:'easy'
+      },
+      s3:{
+        title:'Siz youtube.comʻni kiritdingiz',
+        subtitle:'Kimdir siz YouTubeʻni ochmoqchi ekanligingizni bildi',
+        who:'DNS-provayder — domenni IP-manzilga tarjima qiluvchi. Standart bo‘yicha — ISP',
+        youtube:'Siz youtube.comʻni kiritdingiz va Enterʻni bosdingiz. O‘sha zahoti DNS-server so‘rov oldi: YouTube IP-manzilini ko‘rsat. U qaysi videoni tomosha qilishingizni bilmaydi, lekin loglarida IP va vaqt yozuvi paydo bo‘ldi.',
+        danger:'DNS-log — manfaatlarning to‘liq xaritasi. youtube.com → webmd.com → linkedin.com — DNS-server zanjirni ko‘radi. Ba‘zi jurisdiktsiyalarda DNS-loglar senzura uchun ishlatiladi.',
+        action:'<ul><li>DNS-over-HTTPSʻni yoqing: Chrome → Sozlamalar → Xavfsizlik</li><li>Logsiz DNS-provayder: Cloudflare (1.1.1.1), Quad9 (9.9.9.9), NextDNS</li><li>VPN bu muammoni avtomatik hal qiladi</li></ul>',
+        actionDiff:'easy',
+        isInfo:true
+      },
+      s4:{
+        title:'Brauzer YouTube serveriga ulanmoqda',
+        subtitle:'Server sahifa yuklanishidan oldin sizning uslubingizni bildi',
+        who:'YouTube serveri va har qanday vositachi — korporativ proksi, provayder DPI',
+        youtube:function(tls,cipher){return 'Brauzer YouTube serveri bilan '+tls+' orqali ulanadi — va bu salomlashish usuli xat yozish uslubi kabi noyobdir. IPʻni o‘zgartiring, cookieʻlarni tozalang — TLS-izi bir xil qoladi.';},
+        danger:'TLS-izi IP, VPN o‘zgartirilganda yoki cookieʻlar tozalanganda o‘zgarmaydi. DPI-tizimlari VPN-protokollarni aniqlash va bloklash uchun TLS fingerprintingʻdan foydalanadi.',
+        action:'<ul><li>Tor Browser TLS-izini standartlashtiradi</li><li>Firefox + privacy.resistFingerprinting qisman normallashtiradi</li><li>Brauzerni muntazam yangilab turing</li><li>Oddiy Chrome/Safari/Edgeʻda nazorat yo‘q</li></ul>',
+        actionDiff:'hard'
+      },
+      s5:{
+        title:'YouTube so‘rovingizni oldi',
+        subtitle:'Server allaqachon tilingizni, OTʻni va qayerdan kelganingizni biladi',
+        who:'Sayt egasi — server loglarida. Bu ISTALGAN saytning ISTALGAN egasi ko‘radi',
+        youtube:function(langs){return 'YouTube o‘qidi: Accept-Language: '+langs+'. Endi u til profilingizni biladi. Siz buni kiritmadingiz — brauzer o‘zi yubordi.';},
+        danger:'Accept-Language milliyatni oshkor qiladi. Referer qayerdan kelganingizni aytadi. Sarlavhalar tartibi — noaniq, lekin kuchli identifikator.',
+        action:'<ul><li>Tillar ro‘xatini minimallashtiring — 1-2 ta qoldiring (en-US, en)</li><li>Referer nazorati: Firefox — network.http.referer.XOriginPolicy = 2</li><li>Tor Browser sarlavhalarni standartlashtiradi</li></ul>',
+        actionDiff:'medium'
+      },
+      s6:{
+        title:'YouTube yuklandi va skriptlarni ishga tushirdi',
+        subtitle:'Ko‘rinmas testlar allaqachon boshlandi — ayni hozir',
+        who:'YouTube (Google) va skriptli har qanday sayt',
+        youtube:function(canvas,audio){return 'Siz video tomosha qilayotganingizda, YouTube fonda ko‘rinmas rasm chizadi (Canvas: '+canvas+'), ovozisiz tovush ijro etadi (Audio: '+audio+') va yashirin 3D-obyekt renderlaydi.';},
+        danger:'Canvas/Audio/WebGL barmoq izi — cookieʻsiz kuzatishning asosiy vositasi. Tarixni tozaladingiz, hisobni o‘zgartirdingiz — iz avvalgidek. WebRTC-sizintisi: sayt VPNʻni chetlab o‘tib haqiqiy IP-ni oladi.',
+        action:'<ul><li><b>Canvas</b>: CanvasBlocker (Firefox), Brave — o‘zida mavjud</li><li><b>Audio</b>: Firefox + resistFingerprinting bloklaydi</li><li><b>WebGL</b>: o‘chirish mumkin (webgl.disabled = true)</li><li><b>WebRTC</b>: Firefox — media.peerconnection.enabled = false</li><li><b>Battery</b>: Firefox va Brave APIʻni cheklaydi</li></ul>',
+        actionDiff:'medium'
+      },
+      s7:{
+        title:'Sizni yana 10+ kompaniya kuzatyapti',
+        subtitle:'Reklama tarmoqlari sizni faqat YouTubeʻda emas — minglab saytlarda ko‘radi',
+        who:'Reklama tarmoqlari (Google Ads, Meta Pixel, Criteo), analitika, ijtimoiy vidjetlar',
+        youtube:function(blocked,total){return 'YouTube — bu Google. Lekin Google skriptlari aksariyat saytlarda mavjud. Ertalab — ta‘mirlash videosi. Kunduz — qurilish do‘koni. Kechqurun — ipoteka kalkulyatori.'+(blocked>0?' Blokeringiz '+blocked+' ta tekshirishni bloklaidi.':' Brauzeringiz birorta kuzatuvchini bloklamadi.');},
+        danger:'Odatiy sahifada o‘nlab begona skriptlar mavjud. Har biri iz yig‘adi. Broker sizib chiqishlarida moliyaviy qiyinchiliklar va sog‘liq muammolari teglari bilan profillar topilgan.',
+        action:'<ul><li><b>uBlock Origin</b> — oltin standart. Majburiy</li><li>uBlockʻda qo‘shimcha ro‘xatlar: Annoyances va Privacy</li><li>Firefox: Enhanced Tracking Protection → Strict</li><li>Brave: bloker o‘zida mavjud</li><li>Firefox Multi-Account Containers — saytlarni ajratadi</li></ul>',
+        actionDiff:'easy'
+      },
+      verdict:{
+        title:'To‘liq rasm',
+        subtitle:'Raqamli barmoq izingiz — qurilmani yoqishdan video tomosha qilishgacha',
+        now:'Hoziroq (5 daqiqa):',
+        nowList:['uBlock Originʻni o‘rnatish','Brauzerni sozlamalarida DNS-over-HTTPSʻni yoqish','Keraksiz saytlardan kamera/mikrofon/joylashuvni bekor qilish'],
+        weekend:'Dam olish kuni (30 daqiqa):',
+        weekendList:['VPN sozlash (Mullvad / ProtonVPN)','WebRTC sizintisini o‘chirish','CanvasBlocker o‘rnatish yoki Braveʻga o‘tish'],
+        advanced:'Rivojlangan foydalanuvchilar uchun:',
+        advancedList:['Muhim vazifalar uchun Tor Browser','Firefox + resistFingerprinting','Turli vazifalar uchun alohida brauzerlar']
+      }
+    }
   }
 };
 
@@ -5326,6 +5651,174 @@ function renderImplications(basic,t){
   }
 }
 
+function renderStoryMode(basic, t, snapshot) {
+  const container = getEl('storyMode');
+  if (!container || !t || !t.story) return;
+  const st = t.story;
+  container.innerHTML = '';
+
+  function diffBadge(diff) {
+    const map = st.difficulty || {easy:'Easy',medium:'Medium',hard:'Hard'};
+    const cls = diff === 'easy' ? 'diff-easy' : diff === 'medium' ? 'diff-medium' : 'diff-hard';
+    return '<span class="difficulty-badge ' + cls + '">' + esc(map[diff] || diff) + '</span>';
+  }
+
+  function mkStage(num, cfg, dataRows, youtubeText) {
+    if (!cfg) return '';
+    const isInfo = cfg.isInfo;
+    const div = document.createElement('div');
+    div.className = 'story-stage';
+    div.setAttribute('data-stage-num', num);
+    let html = '<div class="story-stage-header">';
+    html += '<div class="story-stage-num">' + esc(st.stage || 'Stage') + ' ' + num + '</div>';
+    html += '<h2 class="story-stage-title">' + esc(cfg.title || '') + '</h2>';
+    html += '<p class="story-stage-subtitle">' + esc(cfg.subtitle || '') + '</p>';
+    html += '</div>';
+    if (cfg.who) {
+      html += '<div class="story-who-sees"><b>' + esc(st.whoSees || 'Who sees this:') + '</b> ' + esc(cfg.who) + '</div>';
+    }
+    if (youtubeText) {
+      html += '<div class="story-youtube-example">' + esc(youtubeText) + '</div>';
+    }
+    if (dataRows && dataRows.length) {
+      html += '<div class="story-data-grid">';
+      for (const row of dataRows) {
+        html += '<div class="story-data-item"><span class="sdl">' + esc(row[0]) + '</span><span class="sdv">' + (row[2] ? '<code>' + esc(row[1]) + '</code>' : esc(row[1])) + '</span></div>';
+      }
+      html += '</div>';
+    }
+    if (isInfo) {
+      html += '<div class="story-info-block"><span class="info-icon">ℹ️</span>' + (cfg.danger || '') + '</div>';
+    } else {
+      if (cfg.danger) {
+        html += '<div class="story-expand story-expand--danger"><details><summary>' + esc(st.dangerTitle || '⚠️ Why this is dangerous') + '</summary><div class="expand-body">' + esc(cfg.danger) + '</div></details></div>';
+      }
+    }
+    if (cfg.action) {
+      html += '<div class="story-expand story-expand--action"><details><summary>' + esc(st.actionTitle || '🛡️ What to do') + diffBadge(cfg.actionDiff) + '</summary><div class="expand-body">' + cfg.action + '</div></details></div>';
+    }
+    div.innerHTML = html;
+    return div;
+  }
+
+  const fp = snapshot && snapshot.fp || {};
+  const H = snapshot && snapshot.H || {};
+  const pct = snapshot && snapshot.pct;
+  const lang = currentLang;
+
+  // Stage 0: Device
+  const dev = basic ? localizeDeviceName(guessDevice(basic), lang) : '?';
+  const scr = basic ? (basic.screenW + 'x' + basic.screenH) : '?';
+  const gpu = basic && basic.gpuVendor ? basic.gpuVendor : '?';
+  const yt0 = typeof st.s0.youtube === 'function' ? st.s0.youtube(dev, scr, gpu) : st.s0.youtube;
+  const rows0 = basic ? [
+    [t.labels && t.labels.pointer || 'device', dev],
+    ['screen', scr],
+    ['GPU', gpu],
+    ['DPR', String(basic.dpr || '?')]
+  ] : [];
+  container.appendChild(mkStage(0, st.s0, rows0, yt0));
+
+  // Stage 1: Network
+  const isp = (basic && basic.isp) ? basic.isp : ((snapshot && snapshot.basic && snapshot.basic.isp) ? snapshot.basic.isp : '?');
+  const ip = (basic && basic.ip) ? basic.ip : '?.?.?.?';
+  const yt1 = typeof st.s1.youtube === 'function' ? st.s1.youtube(isp, ip) : st.s1.youtube;
+  const rows1 = [
+    ['IP', ip],
+    ['ISP', isp],
+    ['VPN/Proxy', (basic && (basic.vpn || basic.proxy)) ? '⚠️ yes' : 'no']
+  ];
+  container.appendChild(mkStage(1, st.s1, rows1, yt1));
+
+  // Stage 2: Browser
+  const br = basic ? browserDisplayName(basic) : '?';
+  const extCount = H.extensionCount != null ? String(H.extensionCount) : '?';
+  const dnt = basic && basic.dnt;
+  const gpc = basic && basic.gpc;
+  const yt2 = typeof st.s2.youtube === 'function' ? st.s2.youtube(br, extCount, dnt, gpc) : st.s2.youtube;
+  const rows2 = [
+    [t.ua && t.ua.label || 'browser', br],
+    ['extensions', extCount],
+    ['DNT', dnt ? 'on' : 'off'],
+    ['GPC', gpc ? 'on' : 'off']
+  ];
+  container.appendChild(mkStage(2, st.s2, rows2, yt2));
+
+  // Stage 3: DNS (info stage)
+  const rows3 = [
+    ['DNS', (basic && basic.dnsLeaks) || 'default ISP']
+  ];
+  container.appendChild(mkStage(3, st.s3, rows3, st.s3.youtube));
+
+  // Stage 4: TLS
+  const tls = (basic && basic.tlsVersion) ? basic.tlsVersion : 'TLS 1.3';
+  const cipher = (basic && basic.tlsCipher) ? basic.tlsCipher : '';
+  const yt4 = typeof st.s4.youtube === 'function' ? st.s4.youtube(tls, cipher) : st.s4.youtube;
+  const rows4 = [
+    ['TLS', tls],
+    ['JA3/JA4', (fp && fp.tls) ? fp.tls.slice(0,12) + '…' : '—']
+  ];
+  container.appendChild(mkStage(4, st.s4, rows4, yt4));
+
+  // Stage 5: HTTP headers
+  const langs = basic ? (basic.languages || []).join(', ') : '?';
+  const yt5 = typeof st.s5.youtube === 'function' ? st.s5.youtube(langs) : st.s5.youtube;
+  const rows5 = [
+    ['Accept-Language', langs || '?'],
+    ['UA', br]
+  ];
+  container.appendChild(mkStage(5, st.s5, rows5, yt5));
+
+  // Stage 6: Canvas/Audio/WebGL
+  const canvasHash = fp && fp.canvas ? fp.canvas.slice(0,8) + '…' : '—';
+  const audioHash = fp && fp.audio ? fp.audio.slice(0,8) + '…' : '—';
+  const yt6 = typeof st.s6.youtube === 'function' ? st.s6.youtube(canvasHash, audioHash) : st.s6.youtube;
+  const rows6 = [
+    ['Canvas', canvasHash, true],
+    ['Audio', audioHash, true],
+    ['WebGL', fp && fp.webgl ? fp.webgl.slice(0,8) + '…' : '—', true],
+    ['WebRTC leak', (basic && basic.webrtcLeak) ? '⚠️ yes' : 'no']
+  ];
+  container.appendChild(mkStage(6, st.s6, rows6, yt6));
+
+  // Stage 7: Trackers
+  const blocked = H.blocked || 0;
+  const total = H.trackerTotal || 0;
+  const yt7 = typeof st.s7.youtube === 'function' ? st.s7.youtube(blocked, total) : st.s7.youtube;
+  const rows7 = [
+    ['trackers blocked', String(blocked) + ' / ' + String(total)]
+  ];
+  container.appendChild(mkStage(7, st.s7, rows7, yt7));
+
+  // Verdict
+  const vd = st.verdict;
+  if (vd) {
+    const score = pct != null ? Math.round(pct) : null;
+    const vDiv = document.createElement('div');
+    vDiv.className = 'story-verdict';
+    let vHtml = '';
+    if (score != null) {
+      vHtml += '<div class="sv-pct">' + score + '%</div>';
+    }
+    vHtml += '<div class="sv-text">' + esc(vd.title || '') + '</div>';
+    vHtml += '<p class="sv-desc">' + esc(vd.subtitle || '') + '</p>';
+    vHtml += '<div class="story-verdict-recs">';
+    if (vd.now) {
+      vHtml += '<h4>' + esc(vd.now) + '</h4><ul>' + (vd.nowList || []).map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>';
+    }
+    if (vd.weekend) {
+      vHtml += '<h4>' + esc(vd.weekend) + '</h4><ul>' + (vd.weekendList || []).map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>';
+    }
+    if (vd.advanced) {
+      vHtml += '<h4>' + esc(vd.advanced) + '</h4><ul>' + (vd.advancedList || []).map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>';
+    }
+    vHtml += '</div>';
+    vDiv.innerHTML = vHtml;
+    container.appendChild(vDiv);
+  }
+}
+
+
 function buildPersonalizedAdvice({basic,state,pct,level},t){
   const adv=t.uniqAdvice||{};
   const fallback=t.uniqAdviceFallback||[];
@@ -5586,6 +6079,7 @@ async function renderProfilingSection(basic,t){
     state.profilingContext=context;
     renderShockBullets(basic,t,snapshotCache);
     renderImplications(basic,t);
+    if(currentViewMode==='story') renderStoryMode(basic,t,snapshotCache);
     syncShockVisibility();
   }catch(err){
     if(runId!==profilingSequence) return;
@@ -5593,11 +6087,13 @@ async function renderProfilingSection(basic,t){
     console.error('Profiling error',err);
     renderShockBullets(basic,t,snapshotCache);
     renderImplications(basic,t);
+    if(currentViewMode==='story') renderStoryMode(basic,t,snapshotCache);
     syncShockVisibility();
   }
 }
 
 let currentLang='ru';
+let currentViewMode='report';
 const cacheEls={};
 const getEl=id=>cacheEls[id]||(cacheEls[id]=document.getElementById(id));
 let renderToken=0;
@@ -5816,6 +6312,7 @@ async function render(lang){
 
     renderShockBullets(basic,t,{fp,H,pct});
     renderImplications(basic,t);
+    if(currentViewMode==='story') renderStoryMode(basic,t,snapshotCache);
     // Run tracker tests in parallel with other profiling
     if(!_trackerTestResults){
       runTrackerTests().then(results=>{
@@ -6314,6 +6811,7 @@ async function handleNetworkCheck(){
     if(snapshotCache){
       renderShockBullets(snapshotCache.basic,t,snapshotCache);
       renderImplications(snapshotCache.basic,t);
+      if(currentViewMode==='story') renderStoryMode(snapshotCache.basic,t,snapshotCache);
       renderProfilingSection(snapshotCache.basic,t);
     }
 
@@ -6892,6 +7390,40 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(fpjsBtn) fpjsBtn.addEventListener('click',handleFpjsClick);
   const fpjsHeroBtn=getEl('fpjsHeroBtn');
   if(fpjsHeroBtn) fpjsHeroBtn.addEventListener('click',handleFpjsClick);
+  const viewModeBtn=getEl('viewModeBtn');
+  const reportModeEl=getEl('reportMode');
+  const storyModeEl=getEl('storyMode');
+  try{const saved=localStorage.getItem('fprint_view_mode');if(saved==='story'||saved==='report') currentViewMode=saved;}catch(_){}
+  if(new URLSearchParams(window.location.search).get('mode')==='story'){
+    currentViewMode='story';
+  }
+  function setViewMode(mode){
+    currentViewMode=mode;
+    try{localStorage.setItem('fprint_view_mode',mode);}catch(_){}
+    if(reportModeEl) reportModeEl.style.display=mode==='report'?'':'none';
+    if(storyModeEl) storyModeEl.style.display=mode==='story'?'':'none';
+    const tl=I18N[currentLang];
+    const storyLabel=tl&&tl.story?tl.story.toggleStory:'📖 Story';
+    const reportLabel=tl&&tl.story?tl.story.toggleReport:'📊 Report';
+    if(viewModeBtn){
+      if(mode==='report'){
+        viewModeBtn.innerHTML='📖 <span id="viewModeBtnText">'+esc((storyLabel.replace(/^📖\s*/,'')||'Story'))+'</span>';
+        viewModeBtn.classList.remove('view-mode-active');
+      }else{
+        viewModeBtn.innerHTML='📊 <span id="viewModeBtnText">'+esc((reportLabel.replace(/^📊\s*/,'')||'Report'))+'</span>';
+        viewModeBtn.classList.add('view-mode-active');
+      }
+    }
+    if(mode==='story'&&snapshotCache&&snapshotCache.basic){
+      renderStoryMode(snapshotCache.basic,I18N[currentLang],snapshotCache);
+    }
+  }
+  if(viewModeBtn){
+    viewModeBtn.addEventListener('click',function(){
+      setViewMode(currentViewMode==='report'?'story':'report');
+    });
+  }
+  setViewMode(currentViewMode);
   render(lang);
 });
 </script>
