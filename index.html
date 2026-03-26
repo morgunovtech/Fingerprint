@@ -5308,6 +5308,79 @@ const cacheEls={};
 const getEl=id=>cacheEls[id]||(cacheEls[id]=document.getElementById(id));
 let renderToken=0;
 
+const CONCLUSION_TEXTS={
+  high:{
+    ru:'Вас легко узнать. Сайты, на которые вы заходите, могут понять, что это именно вы — даже без регистрации и cookies. Ниже — простые шаги, которые это изменят.',
+    en:'You are easy to identify. Websites you visit can tell it is you \u2014 even without signing in or using cookies. Below are simple steps that will change this.',
+    uz:'Sizni oson tanish mumkin. Siz kirgan saytlar ro\u02BByxatdan o\u02BBtmasdan ham sizni aniqlashi mumkin. Pastda buni o\u02BBzgartiradigan oddiy qadamlar bor.'
+  },
+  med:{
+    ru:'Вас можно узнать, но не сразу. Ваш браузер выделяется среди других, хотя и не уникален. Несколько простых шагов помогут стать незаметнее.',
+    en:'You can be identified, but not immediately. Your browser stands out, though it is not unique. A few simple steps will help you blend in.',
+    uz:'Sizni aniqlash mumkin, lekin darhol emas. Brauzeringiz ajralib turadi, lekin noyob emas. Bir necha oddiy qadam ko\u02BBrinmasroq bo\u02BBlishga yordam beradi.'
+  },
+  low:{
+    ru:'Вас сложно узнать. Ваш браузер похож на многие другие — сайтам трудно выделить именно вас. Хороший результат.',
+    en:'You are hard to identify. Your browser looks like many others \u2014 websites have difficulty singling you out. Good result.',
+    uz:'Sizni tanish qiyin. Brauzeringiz boshqalarga o\u02BBxshaydi \u2014 saytlar sizni ajrata olmaydi. Yaxshi natija.'
+  }
+};
+
+function updateHeroVerdict(pct,t,animate){
+  const level=uniquenessLevel(pct);
+  const uniqCopy=t.uniqMeaning(pct,{level});
+
+  // Legacy uniqLine
+  const uniqLineEl=getEl('uniqLine');
+  if(uniqLineEl){
+    uniqLineEl.dataset.level=level;
+    uniqLineEl.textContent='';
+    const headSpan=document.createElement('span');
+    const codeSpan=document.createElement('span');
+    codeSpan.className='code-pill';
+    codeSpan.textContent=uniqCopy.headline;
+    headSpan.appendChild(codeSpan);
+    uniqLineEl.appendChild(headSpan);
+  }
+
+  // Conclusion
+  const conclusionEl=getEl('heroConclusion');
+  if(conclusionEl){
+    conclusionEl.textContent=CONCLUSION_TEXTS[level]?.[currentLang]||CONCLUSION_TEXTS[level]?.ru||'';
+  }
+
+  // Hero number + subtitle
+  const heroEl=getEl('heroVerdict');
+  const heroNumEl=getEl('heroNumber');
+  const heroSubEl=getEl('heroSubtitle');
+  if(heroEl&&heroNumEl){
+    heroEl.style.display='block';
+    const skelEl=document.getElementById('heroSkeleton');
+    if(skelEl) skelEl.style.display='none';
+    heroNumEl.dataset.level=level;
+    heroNumEl.textContent=pct+'%';
+
+    if(animate&&typeof window.matchMedia==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      let current=0;
+      const duration=1200;
+      const start=performance.now();
+      function animateCount(now2){
+        const elapsed=now2-start;
+        const progress=Math.min(elapsed/duration,1);
+        const eased=1-Math.pow(1-progress,3);
+        current=Math.round(eased*pct);
+        heroNumEl.textContent=current+'%';
+        if(progress<1&&typeof requestAnimationFrame==='function') requestAnimationFrame(animateCount);
+      }
+      if(typeof requestAnimationFrame==='function') requestAnimationFrame(animateCount);
+    }
+
+    if(heroSubEl) heroSubEl.textContent=uniqCopy.headline||'';
+  }
+
+  return {level,uniqCopy};
+}
+
 async function render(lang){
   const token=++renderToken;
   const prevLang=currentLang;
@@ -5396,69 +5469,7 @@ async function render(lang){
     const {basic,fp,H,pct}=await getSnapshot();
     if(token!==renderToken) return;
 
-    const level=uniquenessLevel(pct);
-    const uniqCopy=t.uniqMeaning(pct,{level});
-    const uniqLineEl=getEl('uniqLine');
-    uniqLineEl.dataset.level=level;
-    uniqLineEl.textContent='';
-    const headSpan=document.createElement('span');
-    const codeSpan=document.createElement('span');
-    codeSpan.className='code-pill';
-    codeSpan.textContent=uniqCopy.headline;
-    headSpan.appendChild(codeSpan);
-    uniqLineEl.appendChild(headSpan);
-
-    const conclusionEl=getEl('heroConclusion');
-    if(conclusionEl){
-      const conclusionTexts={
-        high:{
-          ru:'Вас легко узнать. Сайты, на которые вы заходите, могут понять, что это именно вы — даже без регистрации и cookies. Ниже — простые шаги, которые это изменят.',
-          en:'You are easy to identify. Websites you visit can tell it is you \u2014 even without signing in or using cookies. Below are simple steps that will change this.',
-          uz:'Sizni oson tanish mumkin. Siz kirgan saytlar ro\u02BByxatdan o\u02BBtmasdan ham sizni aniqlashi mumkin. Pastda buni o\u02BBzgartiradigan oddiy qadamlar bor.'
-        },
-        med:{
-          ru:'Вас можно узнать, но не сразу. Ваш браузер выделяется среди других, хотя и не уникален. Несколько простых шагов помогут стать незаметнее.',
-          en:'You can be identified, but not immediately. Your browser stands out, though it is not unique. A few simple steps will help you blend in.',
-          uz:'Sizni aniqlash mumkin, lekin darhol emas. Brauzeringiz ajralib turadi, lekin noyob emas. Bir necha oddiy qadam ko\u02BBrinmasroq bo\u02BBlishga yordam beradi.'
-        },
-        low:{
-          ru:'Вас сложно узнать. Ваш браузер похож на многие другие — сайтам трудно выделить именно вас. Хороший результат.',
-          en:'You are hard to identify. Your browser looks like many others \u2014 websites have difficulty singling you out. Good result.',
-          uz:'Sizni tanish qiyin. Brauzeringiz boshqalarga o\u02BBxshaydi \u2014 saytlar sizni ajrata olmaydi. Yaxshi natija.'
-        }
-      };
-      conclusionEl.textContent=conclusionTexts[level]?.[currentLang]||conclusionTexts[level]?.ru||'';
-    }
-
-    // === HERO VERDICT (new redesign) ===
-    const heroEl=getEl('heroVerdict');
-    const heroNumEl=getEl('heroNumber');
-    const heroSubEl=getEl('heroSubtitle');
-
-    if(heroEl&&heroNumEl){
-      heroEl.style.display='block';
-      const skelEl=document.getElementById('heroSkeleton');
-      if(skelEl) skelEl.style.display='none';
-      heroNumEl.dataset.level=level;
-      heroNumEl.textContent=pct+'%';
-
-      if(typeof window.matchMedia==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-        let current=0;
-        const duration=1200;
-        const start=performance.now();
-        function animateCount(now2){
-          const elapsed=now2-start;
-          const progress=Math.min(elapsed/duration,1);
-          const eased=1-Math.pow(1-progress,3);
-          current=Math.round(eased*pct);
-          heroNumEl.textContent=current+'%';
-          if(progress<1&&typeof requestAnimationFrame==='function') requestAnimationFrame(animateCount);
-        }
-        if(typeof requestAnimationFrame==='function') requestAnimationFrame(animateCount);
-      }
-
-      if(heroSubEl) heroSubEl.textContent=uniqCopy.headline||'';
-    }
+    const {level,uniqCopy}=updateHeroVerdict(pct,t,true);
 
     // Hero summary
 
@@ -5493,6 +5504,7 @@ async function render(lang){
         invalidateSnapshot();
         const t2=I18N[currentLang];
         getSnapshot().then(snap=>{
+          updateHeroVerdict(snap.pct,t2,false);
           renderShockBullets(snap.basic,t2,snap);
           renderImplications(snap.basic,t2);
           renderProfilingSection(snap.basic,t2);
@@ -5507,6 +5519,7 @@ async function render(lang){
             invalidateSnapshot();
             const t3=I18N[currentLang];
             getSnapshot().then(snap=>{
+              updateHeroVerdict(snap.pct,t3,false);
               renderShockBullets(snap.basic,t3,snap);
               renderImplications(snap.basic,t3);
             });
