@@ -2,11 +2,9 @@ name = "fingerprint-api"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
 
-# KV namespace for caching (create via: wrangler kv namespace create CACHE)
-# Uncomment after creating:
-# [[kv_namespaces]]
-# binding = "CACHE"
-# id = "YOUR_KV_NAMESPACE_ID"
+[[kv_namespaces]]
+binding = "CACHE"
+id = "8451daf9f5af49c9bbf730f95460697b"
 
 [vars]
 ALLOWED_ORIGINS = "https://fprint.morgunov.tech,http://localhost:3000"

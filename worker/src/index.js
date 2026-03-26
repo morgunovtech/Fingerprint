@@ -198,6 +198,40 @@ async function buildWhoamiAsync(request) {
   return result;
 }
 
+/* ============ Anonymous visit stats (Phase 3.2) ============ */
+async function trackVisitStats(whoami, env) {
+  if (!env.CACHE) return;
+  try {
+    const stats = await env.CACHE.get('stats', 'json') || {
+      total_visits: 0,
+      browsers: {},
+      os: {},
+      countries: {},
+      tls_versions: {},
+    };
+    stats.total_visits++;
+    // Browser (e.g., "Chrome 134")
+    const br = whoami.ua_parsed?.browser;
+    const brVer = whoami.ua_parsed?.version;
+    if (br) {
+      const brKey = brVer ? `${br} ${brVer}` : br;
+      stats.browsers[brKey] = (stats.browsers[brKey] || 0) + 1;
+    }
+    // OS
+    const os = whoami.ua_parsed?.os;
+    if (os) stats.os[os] = (stats.os[os] || 0) + 1;
+    // Country
+    const cc = whoami.geo?.country;
+    if (cc) stats.countries[cc] = (stats.countries[cc] || 0) + 1;
+    // TLS
+    const tls = whoami.network?.tlsVersion;
+    if (tls) stats.tls_versions[tls] = (stats.tls_versions[tls] || 0) + 1;
+    await env.CACHE.put('stats', JSON.stringify(stats));
+  } catch (e) {
+    console.warn('stats tracking error:', e.message);
+  }
+}
+
 function corsHeaders(request, env) {
   const origin = request.headers.get('Origin') || '';
   const allowed = (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim());
@@ -225,6 +259,20 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // Rate limiting (60 req/min per IP, skip OPTIONS and static)
+    if (env.CACHE && request.method !== 'OPTIONS' && url.pathname.startsWith('/api/')) {
+      const clientIp = request.headers.get('cf-connecting-ip') || '0.0.0.0';
+      const rlKey = `rl:${clientIp}`;
+      const rlVal = parseInt(await env.CACHE.get(rlKey) || '0', 10);
+      if (rlVal >= 60) {
+        return jsonResponse(
+          { error: 'Rate limit exceeded', retry_after: 60 },
+          429, request, env
+        );
+      }
+      ctx.waitUntil(env.CACHE.put(rlKey, String(rlVal + 1), { expirationTtl: 60 }));
+    }
+
     // CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
@@ -237,16 +285,29 @@ export default {
     if (url.pathname === '/api/health') {
       return jsonResponse({
         status: 'ok',
-        version: '1.0.0',
+        version: '2.0.0',
         timestamp: new Date().toISOString(),
-        kv_available: !!env.CACHE,
+        kv_status: env.CACHE ? 'connected' : 'not configured',
       }, 200, request, env);
     }
 
     // === /api/whoami — visitor's own fingerprint from request metadata ===
     if (url.pathname === '/api/whoami') {
       const w = await buildWhoamiAsync(request);
+      // Track anonymous stats in background (don't await — fire and forget)
+      if (env.CACHE) ctx.waitUntil(trackVisitStats(w, env));
       return jsonResponse(w, 200, request, env);
+    }
+
+    // === /api/stats — anonymous aggregate statistics ===
+    if (url.pathname === '/api/stats') {
+      if (!env.CACHE) return jsonResponse({ error: 'KV not configured' }, 503, request, env);
+      try {
+        const stats = await env.CACHE.get('stats', 'json');
+        return jsonResponse(stats || { total_visits: 0 }, 200, request, env);
+      } catch (e) {
+        return jsonResponse({ error: e.message }, 500, request, env);
+      }
     }
 
     // === /api/check — same as whoami, with content negotiation ===
