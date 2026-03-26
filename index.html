@@ -3969,6 +3969,40 @@ function ipFromHeaders(headers){
   return get('cf-connecting-ip')||get('x-real-ip')||get('client-ip')||get('remote-addr')||null;
 }
 
+async function fetchIpFromWorker(){
+  const resp=await fetchWithTimeout(WORKER_API+'/api/whoami',{timeout:8000,mode:'cors',cache:'no-store'});
+  const data=await resp.json();
+  if(!data||!data.ip) throw new Error('empty whoami');
+  const geo={city:data.geo?.city||'',country:data.geo?.country||''};
+  // Map to the canonical format expected by state.serverData
+  const raw={
+    ip:data.ip,
+    country_code:data.geo?.country||'',
+    country_name:data.geo?.country||'',
+    region:data.geo?.region||'',
+    city:data.geo?.city||'',
+    timezone:data.geo?.timezone||'',
+    org:data.network?.asOrganization||'',
+    asn:data.network?.asn?('AS'+data.network.asn):'',
+    latitude:data.geo?.latitude||null,
+    longitude:data.geo?.longitude||null,
+    continent_code:data.geo?.continent||'',
+  };
+  const details={
+    region:data.geo?.region||'',
+    country_name:data.geo?.country||'',
+    country_code:data.geo?.country||'',
+    timezone:data.geo?.timezone||'',
+    country_calling_code:null,
+    org:data.network?.asOrganization||'',
+    city:data.geo?.city||'',
+    ip:data.ip,
+  };
+  // Store whoami extras for server fingerprint section
+  state.whoamiData=data;
+  return {ip:data.ip,geo,raw,source:'worker',headers:null,details,detailSource:'worker'};
+}
+
 async function fetchIpFromHeaders(){
   const resp=await fetchWithTimeout('/headers',{timeout:4000,credentials:'omit'});
   const data=await resp.json();
@@ -4019,14 +4053,20 @@ async function fetchIpFromMyip(){
 }
 
 async function fetchIpData(){
-  // Race the two fastest public APIs in parallel, then fall back sequentially
+  // Primary: own Worker (/api/whoami) — zero third-party deps
+  // Fallback: public APIs if Worker is unreachable
   let raceResult=null;
   try{
-    raceResult=await Promise.any([fetchIpFromIpapi(),fetchIpFromIpwho()]);
-  }catch(_){/* both failed, continue to sequential fallback */}
+    raceResult=await fetchIpFromWorker();
+  }catch(_){
+    // Worker failed, try public APIs
+    try{
+      raceResult=await Promise.any([fetchIpFromIpapi(),fetchIpFromIpwho()]);
+    }catch(__){/* both failed */}
+  }
   const attempts=raceResult
-    ?[fetchIpFromHeaders,fetchIpFromIpify,fetchIpFromMyip]
-    :[fetchIpFromHeaders,fetchIpFromIpapi,fetchIpFromIpwho,fetchIpFromIpify,fetchIpFromMyip];
+    ?[fetchIpFromIpify,fetchIpFromMyip]
+    :[fetchIpFromIpapi,fetchIpFromIpwho,fetchIpFromIpify,fetchIpFromMyip];
   const errors=[];
   let aggregated=null;
   let details=null;
