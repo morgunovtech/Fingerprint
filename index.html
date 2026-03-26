@@ -3,18 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fingerprint — by morgunov.tech</title>
-  <meta name="description" content="Fingerprint показывает, какие данные о вас сразу получает сайт, как они влияют на приватность и какие шаги помогут защититься. Все расчеты выполняются локально." />
-  <link rel="canonical" href="https://morgunov.tech/fingerprint" />
-  <meta property="og:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
-  <meta property="og:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
+  <title id="pageTitle">Fingerprint — by morgunov.tech</title>
+  <meta id="metaDescription" name="description" content="Fingerprint показывает, какие данные о вас сразу получает сайт, как они влияют на приватность и какие шаги помогут защититься. Все расчеты выполняются локально." />
+  <link rel="canonical" href="https://fprint.morgunov.tech" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
+  <meta name="robots" content="index, follow" />
+  <meta id="ogTitle" property="og:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
+  <meta id="ogDescription" property="og:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://morgunov.tech/fingerprint" />
-  <meta property="og:image" content="https://morgunov.tech/fingerprint/share-card.svg" />
+  <meta property="og:url" content="https://fprint.morgunov.tech" />
+  <meta property="og:image" content="https://fprint.morgunov.tech/share-card.svg" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
-  <meta name="twitter:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
-  <meta name="twitter:image" content="https://morgunov.tech/fingerprint/share-card.svg" />
+  <meta id="twTitle" name="twitter:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
+  <meta id="twDescription" name="twitter:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
+  <meta name="twitter:image" content="https://fprint.morgunov.tech/share-card.svg" />
   <style>
     :root{
       color-scheme: light dark;
@@ -289,12 +291,20 @@
     .methodology-content .small p{margin:0 0 10px}
     .methodology-content .small p:last-child{margin-bottom:0}
     .methodology-content .small b{display:inline-block;margin-top:4px}
+    /* === a11y: skip-to-content === */
+    .skip-link{position:absolute;top:-40px;left:0;background:var(--accent);color:#fff;padding:8px 16px;z-index:200;font-size:14px;border-radius:0 0 8px 0;transition:top .2s}
+    .skip-link:focus{top:0}
+    /* === a11y: minimum touch targets === */
+    .btn{min-height:44px;min-width:44px}
+    .btn-link{min-height:44px;display:inline-flex;align-items:center}
+    .menu-panel button{min-height:44px;min-width:44px}
   </style>
 </head>
 <body>
+<a href="#shockSection" class="skip-link">Skip to content</a>
 <div class="wrap">
   <header>
-    <h1>Fingerprint</h1><span class="sub">by <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a></span>
+    <h1 id="siteTitle">Fingerprint</h1><span class="sub">by <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a></span>
     <div class="toolbar">
       <div class="lang-switcher menu">
         <button class="btn" id="langBtn" aria-haspopup="true" aria-expanded="false">Язык</button>
@@ -462,7 +472,7 @@ const I18N = {
       'Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток. Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать все прошлые визиты с вашим именем и продать этот профиль.',
       'Магазины повышают цены, зная ваше устройство и платёжеспособность. Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее. Страховые компании и работодатели покупают профили у брокеров данных. После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.',
       'Показывает, что видно о вас прямо сейчас, и объясняет, как снизить риски — без технических знаний.',
-      'Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём. Сервис полностью бесплатный, без рекламы и регистрации. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — ipwho.is, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет — ни сторонних шрифтов, ни трекеров, ни скрытых скриптов.'
+      'Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём. Сервис полностью бесплатный, без рекламы и регистрации. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — ip-api.com, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет — ни сторонних шрифтов, ни трекеров, ни скрытых скриптов.'
     ],
     uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
     uniqPracticeTitle:'Что это значит на практике:',
@@ -1068,7 +1078,7 @@ const I18N = {
     methodSummary:'<b>Как считаем результат</b>',
     methodText:'<p><b>Что мы измеряем</b></p><p>Ваш браузер передаёт сайтам 21\u00A0параметр: тип браузера, ОС, разрешение экрана, видеокарту, число ядер процессора, объём памяти, языки, расширения, графический и аудио\u2011отпечатки, шрифты и другие.</p><p><b>Как считаем</b></p><p>Для каждого параметра мы смотрим, насколько он редкий. Например, Chrome на Windows\u00A0\u2014 массовая комбинация. А старый Firefox с необычным GPU\u00A0\u2014 редкость, которая выделяет вас из толпы.</p><p>Чем больше редких параметров совпало\u00A0\u2014 тем выше итоговый балл.</p><p><b>Откуда берутся данные</b></p><p>Вероятности основаны на открытых исследованиях EFF\u00A0Panopticlick и FingerprintJS. Мы также учитываем зависимости между параметрами (Safari всегда работает с Apple\u00A0GPU, поэтому эта пара не удваивает счёт).</p><p><b>Что означает процент</b></p><p>Мы моделируем 25\u00A0000\u00A0виртуальных браузеров и сравниваем ваш результат с ними. Если вы набрали 85%\u00A0\u2014 значит ваш отпечаток уникальнее, чем у 85% смоделированных пользователей.</p><p style="opacity:.7;font-size:13px">Все вычисления происходят в вашем браузере и никуда не отправляются.</p>',
     policySummary:'<b>Как обращаемся с данными</b>',
-    policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — ipwho.is, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
+    policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — ip-api.com, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     batteryUnavailable:'Недоступно в этом браузере',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button>`,
     entropyUnit:'бит',
@@ -1119,7 +1129,7 @@ const I18N = {
       'You visited dozens of websites without signing up — leaving the same fingerprint everywhere. Then you created an account on one of them. Now ad networks can link all your past visits to your name and sell that profile.',
       'Stores raise prices based on your device and perceived spending power. Scammers know your city, ISP, and device — phishing becomes more precise. Insurance companies and employers buy profiles from data brokers. Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.',
       'It shows what is visible about you right now and explains how to reduce the risks — no technical knowledge required.',
-      'All calculations happen only in your browser. We do not store or transmit anything. The service is completely free, ad-free, and requires no registration. On page load, the browser queries your IP data via ipapi.co (with fallbacks to ipwho.is, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests — no third-party fonts, trackers, or hidden scripts.'
+      'All calculations happen only in your browser. We do not store or transmit anything. The service is completely free, ad-free, and requires no registration. On page load, the browser queries your IP data via ipapi.co (with fallbacks to ip-api.com, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests — no third-party fonts, trackers, or hidden scripts.'
     ],
     uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
     uniqPracticeTitle:'What this means in practice:',
@@ -1691,7 +1701,7 @@ const I18N = {
     methodSummary:'<b>How we calculate it</b>',
     methodText:'<p><b>What we measure</b></p><p>Your browser reveals 21\u00A0parameters to every website: browser type, OS, screen resolution, GPU, CPU cores, memory, languages, extensions, graphics and audio fingerprints, fonts, and more.</p><p><b>How we score</b></p><p>For each parameter we check how common it is. Chrome on Windows is extremely common. An older Firefox with an unusual GPU is rare\u00A0\u2014 and that rarity makes you stand out.</p><p>The more rare parameters match\u00A0\u2014 the higher your score.</p><p><b>Where the data comes from</b></p><p>Probabilities are based on public research by EFF\u00A0Panopticlick and FingerprintJS. We also account for correlations between signals (Safari always runs on Apple\u00A0GPU, so that pair doesn\u2019t double-count).</p><p><b>What the percentage means</b></p><p>We simulate 25,000\u00A0virtual browsers and compare your result against them. If you scored 85%\u00A0\u2014 your fingerprint is more unique than 85% of simulated users.</p><p style="opacity:.7;font-size:13px">All calculations happen in your browser and nothing is uploaded.</p>',
     policySummary:'<b>How we handle data</b>',
-    policyText:'All processing happens in your browser. On page load, the browser queries your IP data via ipapi.co (with fallbacks to ipwho.is, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
+    policyText:'All processing happens in your browser. On page load, the browser queries your IP data via ipapi.co (with fallbacks to ip-api.com, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
     batteryUnavailable:'Not available in this browser',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button>`,
     entropyUnit:'bits',
@@ -1742,7 +1752,7 @@ const I18N = {
       'Siz o\u02BBnlab saytlarga ro\u02BByxatdan o\u02BBtmasdan kirdingiz — hammada bir xil iz qoldirdingiz. Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari barcha oldingi tashriflarni ismingiz bilan bog\u02BBlab, bu profilni sotishi mumkin.',
       'Do\u02BBkonlar qurilma va to\u02BBlov qobiliyatingizni bilib narxlarni oshiradi. Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq bo\u02BBladi. Sug\u02BBurta kompaniyalari va ish beruvchilar ma\u02BClumot brokerlaridan profillar sotib oladi. Ma\u02BClumotlar bazasi sizib chiqqandan keyin profilni «o\u02BBchirish» mumkin emas.',
       'Hozir siz haqingizda nimalar ko\u02BBrinishini ko\u02BBrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.',
-      'Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz. Xizmat to\u02BBliq bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa ipwho.is, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq — uchinchi tomon shriftlar, trekerlar yoki yashirin skriptlar yo\u02BBq.'
+      'Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz. Xizmat to\u02BBliq bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa ip-api.com, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq — uchinchi tomon shriftlar, trekerlar yoki yashirin skriptlar yo\u02BBq.'
     ],
     uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
     uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
@@ -2337,7 +2347,7 @@ const I18N = {
     methodSummary:'<b>Natija qanday olinadi</b>',
     methodText:'<p><b>Nimani o\u02BBlchaymiz</b></p><p>Brauzeringiz har bir saytga 21\u00A0ta parametrni uzatadi: brauzer turi, OT, ekran o\u02BBlchami, videokarta, protsessor yadrolari, xotira, tillar, kengaytmalar, grafik va audio izlar, shriftlar va boshqalar.</p><p><b>Qanday baholaymiz</b></p><p>Har bir parametr uchun uning qanchalik kam uchraydigani tekshiriladi. Windows\u2019da Chrome\u00A0\u2014 juda keng tarqalgan. Noodatiy GPU bilan eski Firefox\u00A0\u2014 noyoblik, siz ajralib turasiz.</p><p>Noyob parametrlar qancha ko\u02BBp bo\u02BBlsa\u00A0\u2014 ball shuncha yuqori.</p><p><b>Ma\u02BClumot qayerdan</b></p><p>Ehtimolliklar EFF\u00A0Panopticlick va FingerprintJS ochiq tadqiqotlariga asoslangan. Signallar orasidagi bog\u02BBliqliklar ham hisobga olinadi.</p><p><b>Foiz nimani anglatadi</b></p><p>25\u00A0000\u00A0ta virtual brauzer modellashtiriladi va sizning natijangiz ular bilan taqqoslanadi. Agar 85% bo\u02BBlsa\u00A0\u2014 sizning izingiz modellashtirilgan foydalanuvchilarning 85% dan noyobroq.</p><p style="opacity:.7;font-size:13px">Barcha hisob-kitoblar brauzeringizda amalga oshiriladi va hech qayerga yuborilmaydi.</p>',
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
-    policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa ipwho.is, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
+    policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa ip-api.com, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
     batteryUnavailable:'Bu brauzerda mavjud emas',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="O\u02BBzgarishlar tarixi">v${version}</button>`,
     entropyUnit:'bit',
@@ -3891,13 +3901,16 @@ async function fetchIpFromIpapi(){
 }
 
 async function fetchIpFromIpwho(){
-  const resp=await fetchWithTimeout('https://ipwho.is/?lang=en',{timeout:6000,mode:'cors',cache:'no-store'});
+  // ip-api.com as replacement for ip-api.com (which returns 403)
+  const resp=await fetchWithTimeout('http://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query',{timeout:6000,cache:'no-store'});
   const data=await resp.json();
-  if(!data || typeof data!=='object' || data.success===false) throw new Error(data.message||'empty');
-  const ip=data.ip||null;
+  if(!data || typeof data!=='object' || data.status==='fail') throw new Error(data.message||'empty');
+  const ip=data.query||null;
   if(!ip) throw new Error('empty');
-  const geo={city:data.city||'',country:data.country||data.country_code||''};
-  return {ip,geo,raw:data,source:'ipwho',headers:null};
+  const geo={city:data.city||'',country:data.country||data.countryCode||''};
+  // Map ip-api fields to canonical format
+  const mapped={...data,ip,country_name:data.country,country_code:data.countryCode,region:data.regionName||data.region,country_calling_code:null};
+  return {ip,geo,raw:mapped,source:'ip-api',headers:null};
 }
 
 async function fetchIpFromIpify(){
@@ -5387,6 +5400,17 @@ async function render(lang){
   currentLang=(lang in I18N)?lang:'ru';
   const t=I18N[currentLang];
   document.documentElement.lang=currentLang;
+  // Update page title and meta tags per language
+  const metaTitles={ru:'Fingerprint \u2014 \u0443\u0437\u043d\u0430\u0439, \u043d\u0430\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0442\u044b \u0430\u043d\u043e\u043d\u0438\u043c\u0435\u043d \u0432 \u0441\u0435\u0442\u0438',en:'Fingerprint \u2014 how anonymous are you online',uz:'Fingerprint \u2014 internetda qanchalik anonimsiz'};
+  const metaDescs={ru:'\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u043c, \u043a\u0430\u043a\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 \u0441\u0430\u0439\u0442\u044b \u0432\u0438\u0434\u044f\u0442 \u0443\u0436\u0435 \u0441\u0435\u0439\u0447\u0430\u0441, \u043e\u0446\u0435\u043d\u0438\u0432\u0430\u0435\u043c \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043a\u0430 \u0438 \u0434\u0430\u0451\u043c \u043f\u043e\u043d\u044f\u0442\u043d\u044b\u0435 \u0441\u043e\u0432\u0435\u0442\u044b \u043f\u043e \u0437\u0430\u0449\u0438\u0442\u0435 \u043f\u0440\u0438\u0432\u0430\u0442\u043d\u043e\u0441\u0442\u0438.',en:'See what data websites already know about you, measure your fingerprint uniqueness, and get actionable privacy tips.',uz:"Saytlar hozir sizning qanday ma\u02BClumotlaringizni ko\u02BBrayotganini ko\u02BBrsatamiz, barmoq izingiz noyobligini baholaymiz va maxfiylik bo\u02BByicha maslahatlar beramiz."};
+  const mTitle=metaTitles[currentLang]||metaTitles.ru;
+  const mDesc=metaDescs[currentLang]||metaDescs.ru;
+  document.title=mTitle+' \u2014 morgunov.tech';
+  const dMeta=document.getElementById('metaDescription');if(dMeta)dMeta.content=mDesc;
+  const dOgT=document.getElementById('ogTitle');if(dOgT)dOgT.content=mTitle;
+  const dOgD=document.getElementById('ogDescription');if(dOgD)dOgD.content=mDesc;
+  const dTwT=document.getElementById('twTitle');if(dTwT)dTwT.content=mTitle;
+  const dTwD=document.getElementById('twDescription');if(dTwD)dTwD.content=mDesc;
   if(prevLang!==currentLang){
     langMenuIsOpen=false;
     setLangMenu(false);
