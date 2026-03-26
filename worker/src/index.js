@@ -17,7 +17,7 @@ function corsHeaders(request, env) {
   const isAllowed = allowed.includes(origin) || allowed.includes('*');
   return {
     'Access-Control-Allow-Origin': isAllowed ? origin : allowed[0] || '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
   };
@@ -53,6 +53,62 @@ export default {
         timestamp: new Date().toISOString(),
         kv_available: !!env.CACHE,
       }, 200, request, env);
+    }
+
+    // Speed test — download endpoint (serves random bytes for measuring throughput)
+    if (url.pathname === '/api/speedtest/download' && request.method === 'GET') {
+      const sizeParam = parseInt(url.searchParams.get('size') || '2000000', 10);
+      // Clamp between 100KB and 25MB
+      const size = Math.min(25_000_000, Math.max(100_000, sizeParam));
+      // crypto.getRandomValues has 65536 byte limit per call — stream chunks
+      const stream = new ReadableStream({
+        start(controller) {
+          const CHUNK = 65536;
+          let remaining = size;
+          while (remaining > 0) {
+            const len = Math.min(CHUNK, remaining);
+            const buf = new Uint8Array(len);
+            crypto.getRandomValues(buf);
+            controller.enqueue(buf);
+            remaining -= len;
+          }
+          controller.close();
+        }
+      });
+      return new Response(stream, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': String(size),
+          'Cache-Control': 'no-store',
+          'X-Payload-Size': String(size),
+          ...corsHeaders(request, env),
+        },
+      });
+    }
+
+    // Speed test — upload endpoint (accepts POST body, returns timing)
+    if (url.pathname === '/api/speedtest/upload' && request.method === 'POST') {
+      const start = Date.now();
+      const body = await request.arrayBuffer();
+      const elapsed = Date.now() - start;
+      return jsonResponse({
+        bytes: body.byteLength,
+        server_elapsed_ms: elapsed,
+        timestamp: new Date().toISOString(),
+      }, 200, request, env);
+    }
+
+    // Speed test — ping (minimal response for latency measurement)
+    if (url.pathname === '/api/speedtest/ping') {
+      return new Response('pong', {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-store',
+          ...corsHeaders(request, env),
+        },
+      });
     }
 
     // Main scan endpoint

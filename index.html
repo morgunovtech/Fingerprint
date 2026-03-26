@@ -6052,35 +6052,100 @@ function animateSpeedHero(targetMbps,latency,t){
   requestAnimationFrame(step);
 }
 
+/* ============== Real Speed Test via Worker ============== */
+async function measureLatency(){
+  const pings=[];
+  for(let i=0;i<3;i++){
+    const t0=performance.now();
+    await fetch(WORKER_API+'/api/speedtest/ping',{cache:'no-store',signal:AbortSignal.timeout(5000)});
+    pings.push(performance.now()-t0);
+  }
+  pings.sort((a,b)=>a-b);
+  return Math.round(pings[0]); // best of 3
+}
+
+async function measureDownload(onProgress){
+  // 3 rounds: 500KB warm-up, then 2MB, then 5MB
+  const rounds=[{size:500000,label:'warming'},{size:2000000},{size:5000000}];
+  let bestMbps=0;
+  for(const round of rounds){
+    const t0=performance.now();
+    const resp=await fetch(WORKER_API+'/api/speedtest/download?size='+round.size,{cache:'no-store',signal:AbortSignal.timeout(30000)});
+    const data=await resp.arrayBuffer();
+    const elapsed=(performance.now()-t0)/1000; // seconds
+    const mbps=(data.byteLength*8)/(elapsed*1000000);
+    if(mbps>bestMbps) bestMbps=mbps;
+    if(!round.label&&onProgress) onProgress(mbps);
+  }
+  return Number(bestMbps.toFixed(1));
+}
+
+async function runRealSpeedTest(t){
+  const heroArea=getEl('speedHeroArea');
+  const heroNumber=getEl('speedHeroNumber');
+  const heroLabel=getEl('speedHeroLabel');
+  const heroLatency=getEl('speedHeroLatency');
+  if(!heroArea||!heroNumber) return;
+  heroArea.style.display='';
+  const mbpsLabel={ru:'Мбит/с',en:'Mbps',uz:'Mbps'}[currentLang]||'Mbps';
+  const testingLabel={ru:'Измеряем...',en:'Testing...',uz:'Tekshirilmoqda...'}[currentLang];
+  heroNumber.textContent='...';
+  heroNumber.style.opacity='0.5';
+  if(heroLabel) heroLabel.textContent=testingLabel;
+  if(heroLatency) heroLatency.textContent='';
+
+  try{
+    // Step 1: Latency
+    const latencyLabel={ru:'Задержка',en:'Latency',uz:'Kechikish'}[currentLang]||'Latency';
+    const latency=await measureLatency();
+    if(heroLatency) heroLatency.textContent=latencyLabel+': '+latency+' ms';
+
+    // Step 2: Download speed (with live updates)
+    const mbps=await measureDownload(function(currentMbps){
+      heroNumber.textContent=currentMbps.toFixed(1);
+    });
+
+    // Final animation
+    heroNumber.style.opacity='1';
+    if(heroLabel) heroLabel.textContent=mbpsLabel;
+    animateSpeedHero(mbps,latency,t);
+
+    state.speed={status:'done',mbps,latency,error:null,note:'measured'};
+    state.speedResult={mbps,latency,note:'measured'};
+  }catch(e){
+    heroNumber.textContent='—';
+    heroNumber.style.opacity='1';
+    if(heroLabel) heroLabel.textContent={ru:'Ошибка замера',en:'Test failed',uz:'Xatolik'}[currentLang]||'Error';
+    console.warn('speedtest failed:',e);
+  }
+}
+
 /* ============== Network Check (on-demand) ============== */
 async function handleNetworkCheck(){
   const btn=getEl('networkBtn');
   const t=I18N[currentLang]||I18N.ru;
   if(btn){btn.disabled=true;btn.textContent=t.networkLoading||'Checking...';}
   try{
-    await autoFetchIp();
+    const resultsEl=getEl('networkResults');
+    if(resultsEl) resultsEl.style.display='';
+
+    // Run IP fetch and speed test in parallel
+    const ipPromise=autoFetchIp();
+    const speedPromise=runRealSpeedTest(t);
+    await ipPromise;
     state.ipFetchDone=true;
-    const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-    if(conn?.downlink){
-      const downlink=Number(conn.downlink||0);
-      if(downlink>0){
-        state.speed={status:'done',mbps:Number(downlink.toFixed(2)),latency:Math.max(1,Math.round(conn.rtt||100)),error:null,note:'approx'};
-        state.speedResult={mbps:state.speed.mbps,latency:state.speed.latency,note:'approx'};
-      }
-    }
-    // Show speed hero if we have speed data
-    if(state.speedResult?.mbps){
-      animateSpeedHero(state.speedResult.mbps,state.speedResult.latency,t);
-    }
+
     refreshSnapshotServerData();
     if(snapshotCache){
       renderShockBullets(snapshotCache.basic,t,snapshotCache);
       renderImplications(snapshotCache.basic,t);
       renderProfilingSection(snapshotCache.basic,t);
     }
-    const resultsEl=getEl('networkResults');
-    if(resultsEl) resultsEl.style.display='';
-    // Also call Worker OSINT API if we have an IP
+
+    // Wait for speed test to finish
+    await speedPromise;
+
+    // Call Worker OSINT API if we have an IP
     const ip=state.serverData?.ip||state.serverData?.details?.ip||null;
     if(ip) fetchOsintReport(ip,t);
     if(btn){btn.textContent=t.networkRecheck||'Re-check';btn.disabled=false;}
