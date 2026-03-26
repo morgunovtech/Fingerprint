@@ -1118,7 +1118,7 @@ const I18N = {
     policySummary:'<b>Как обращаемся с данными</b>',
     policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — freeipapi.com, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
     batteryUnavailable:'Недоступно в этом браузере',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button><br><span style="opacity:.5;font-size:12px">Сервис размещён на Cloudflare. Cloudflare Web Analytics собирает анонимную статистику посещений (без cookies и персональных данных).</span>`,
     entropyUnit:'бит',
     errorMessage:msg=>`Ошибка: ${msg}`,
     units:{cores:'ядра',gb:'ГБ',mbps:'Мбит/с',ms:'мс',yes:'да',no:'нет'},
@@ -1753,7 +1753,7 @@ const I18N = {
     policySummary:'<b>How we handle data</b>',
     policyText:'All processing happens in your browser. On page load, the browser queries your IP data via ipapi.co (with fallbacks to freeipapi.com, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
     batteryUnavailable:'Not available in this browser',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button><br><span style="opacity:.5;font-size:12px">Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics (no cookies, no personal data).</span>`,
     entropyUnit:'bits',
     errorMessage:msg=>`Error: ${msg}`,
     units:{cores:'cores',gb:'GB',mbps:'Mbps',ms:'ms',yes:'yes',no:'no'},
@@ -2411,7 +2411,7 @@ const I18N = {
     policySummary:'<b>Maʼlumotlardan foydalanish</b>',
     policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa freeipapi.com, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
     batteryUnavailable:'Bu brauzerda mavjud emas',
-    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="O\u02BBzgarishlar tarixi">v${version}</button>`,
+    footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="O\u02BBzgarishlar tarixi">v${version}</button><br><span style="opacity:.5;font-size:12px">Cloudflare\u2019da joylashtirilgan. Cloudflare Web Analytics anonim tashrif statistikasini yig\u02BBadi (cookie va shaxsiy ma\u02BClumotlarsiz).</span>`,
     entropyUnit:'bit',
     errorMessage:msg=>`Xatolik: ${msg}`,
     units:{cores:'yadro',gb:'GB',mbps:'Mbit/s',ms:'ms',yes:'ha',no:'yo‘q'},
@@ -5999,7 +5999,7 @@ async function handleNetworkCheck(){
 
 /* ============== FingerprintJS Pro (Advanced) ============== */
 let _fpjsPromise=null;
-const FPJS_API_KEY='API_KEY_PLACEHOLDER';
+const FPJS_API_KEY='sE9LTvMdm0ITAz950nNQ';
 async function loadFingerprintJS(){
   if(_fpjsPromise) return _fpjsPromise;
   _fpjsPromise=new Promise((resolve,reject)=>{
