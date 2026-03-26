@@ -297,6 +297,12 @@
     .methodology-content .small b{display:inline-block;margin-top:4px}
     /* === FingerprintJS Pro disclaimer === */
     .fpjs-disclaimer{background:var(--warning-bg);border:1px solid var(--warning);border-radius:var(--radius-md);padding:12px 16px;margin:12px 0;font-size:13px;line-height:1.5}
+    /* === Speed hero display (fast.com style) === */
+    .speed-hero{font-size:56px;font-weight:800;letter-spacing:-2px;line-height:1;color:var(--text)}
+    .speed-hero-label{font-size:14px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:1px}
+    @media(max-width:640px){.speed-hero{font-size:40px}}
+    /* === Live clock tick === */
+    .live-clock{font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
     /* === a11y: skip-to-content === */
     .skip-link{position:absolute;top:-40px;left:0;background:var(--accent);color:#fff;padding:8px 16px;z-index:200;font-size:14px;border-radius:0 0 8px 0;transition:top .2s}
     .skip-link:focus{top:0}
@@ -356,6 +362,7 @@
         <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn" id="printBtn"></button>
       </div>
+      <div id="heroBadgeFpjs" style="display:none;margin-top:12px;font-size:13px;color:var(--muted);line-height:1.5"></div>
       <div id="methodologyModal" class="methodology-modal" role="dialog" aria-modal="true" aria-labelledby="methodologyTitle" style="display:none">
         <div class="methodology-content">
           <button class="methodology-close" id="methodologyClose">&times;</button>
@@ -372,9 +379,8 @@
     <h2 class="section-heading" id="shockTitle"></h2>
     <div id="shock" style="display:none">
       <ul id="shockList" class="shock-insights" style="display:none"></ul>
-      <div class="data-groups" id="dataGroups" style="grid-template-columns:repeat(2,1fr)">
+      <div class="data-groups" id="dataGroups" style="grid-template-columns:1fr">
         <div class="data-group" id="groupIdentity"></div>
-        <div class="data-group" id="groupDevice"></div>
       </div>
     </div>
   </section>
@@ -385,14 +391,20 @@
     <p id="networkDesc" class="small" style="margin-bottom:12px"></p>
     <button class="btn btn-primary" id="networkBtn" style="gap:8px"></button>
     <div id="networkResults" style="display:none;margin-top:16px">
+      <div id="speedHeroArea" style="display:none;text-align:center;padding:16px 0 8px;border-bottom:1px solid var(--border-subtle);margin-bottom:16px">
+        <div class="speed-hero" id="speedHeroNumber">—</div>
+        <div class="speed-hero-label" id="speedHeroLabel"></div>
+        <div class="speed-hero-latency" id="speedHeroLatency" style="color:var(--muted);font-size:13px;margin-top:4px"></div>
+      </div>
+      <div id="ipRow" style="display:none;margin-bottom:8px"></div>
       <div class="data-group" id="groupNetwork"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
       <div id="osintResults" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"></div>
     </div>
   </section>
 
-  <!-- Advanced: FingerprintJS Pro -->
-  <section class="block" id="fpjsSection">
+  <!-- Advanced: FingerprintJS Pro (hidden – auto-runs after scan, results shown in hero badge) -->
+  <section class="block" id="fpjsSection" style="display:none">
     <h2 class="section-heading" id="fpjsTitle"></h2>
     <p id="fpjsDesc" class="small" style="margin-bottom:8px"></p>
     <div id="fpjsDisclaimer" class="fpjs-disclaimer"></div>
@@ -4526,7 +4538,6 @@ function renderShockBullets(basic,t,snapshot){
   const ul=getEl('shockList');
   const groups={
     identity:getEl('groupIdentity'),
-    device:getEl('groupDevice'),
     network:getEl('groupNetwork'),
     fingerprint:getEl('groupFingerprint')
   };
@@ -4545,11 +4556,24 @@ function renderShockBullets(basic,t,snapshot){
   const lines=[];
 
   const groupTitles={
-    identity:{ru:'\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f',en:'Identification',uz:'Identifikatsiya'},
-    device:{ru:'\u0423\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e',en:'Device',uz:'Qurilma'},
+    identity:{ru:'\u041e \u0432\u0430\u0441',en:'About you',uz:'Siz haqingizda'},
     network:{ru:'\u0421\u0435\u0442\u044c',en:'Network',uz:'Tarmoq'},
     fingerprint:{ru:'\u0426\u0438\u0444\u0440\u043e\u0432\u043e\u0439 \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043e\u043a',en:'Digital fingerprint',uz:'Raqamli barmoq izi'}
   };
+
+  // Brand icons for device and browser
+  const deviceIcons={'apple':'\uD83C\uDF4E','mac':'\uD83C\uDF4E','iphone':'\uD83D\uDCF1','ipad':'\uD83D\uDCF1','samsung':'\uD83D\uDCF1','windows':'\uD83D\uDDA5\uFE0F','linux':'\uD83D\uDC27'};
+  const browserIcons={'chrome':'\uD83C\uDF10','firefox':'\uD83E\uDD8A','safari':'\uD83E\uDDED','edge':'\uD83C\uDF10','arc':'\uD83C\uDF10','opera':'\uD83C\uDF10','brave':'\uD83E\uDD81'};
+  function getDeviceIcon(name){
+    const lower=(name||'').toLowerCase();
+    for(const k of Object.keys(deviceIcons)){if(lower.includes(k))return deviceIcons[k]+' ';}
+    return '';
+  }
+  function getBrowserIcon(name){
+    const lower=(name||'').toLowerCase();
+    for(const k of Object.keys(browserIcons)){if(lower.includes(k))return browserIcons[k]+' ';}
+    return '';
+  }
 
   function mkRow(label,value,opts){
     opts=opts||{};
@@ -4576,7 +4600,10 @@ function renderShockBullets(basic,t,snapshot){
   const hasIp=!!state.serverData;
   let totalRows=0;
 
-  // === IDENTITY GROUP ===
+  // Collect IP for network section display
+  const ipForNetwork=state.serverData?.ip||'';
+
+  // === IDENTITY GROUP (merged: identity + device) ===
   if(groups.identity){
     if(hasIp){
       const rawCity=details.city||state.serverData?.geo?.city||'';
@@ -4585,35 +4612,54 @@ function renderShockBullets(basic,t,snapshot){
       const localCity=CITY_NAMES[rawCity]?.[currentLang]||rawCity;
       const localCountry=COUNTRY_NAMES[countryCode.toUpperCase()]?.[currentLang]||rawCountry;
       const flag=countryCode?countryCodeToFlag(countryCode):'';
-      const ip=state.serverData?.ip||'';
       const locLabel={ru:'\u0413\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044f',en:'Location',uz:'Joylashuv'}[currentLang];
       if(localCity||localCountry){
         const locValue=flag+' '+esc(localCity)+(localCity&&localCountry?', ':'')+esc(localCountry);
         groups.identity.appendChild(mkRow(locLabel,locValue));
         totalRows++;
-        if(ip){
-          groups.identity.appendChild(mkRow('IP',esc(ip),{code:true}));
-          totalRows++;
-        }
         // Also push to old lines for selftest
-        lines.push(t.shock.location(flag,esc(localCity||localCountry),esc(localCity?localCountry:''),esc(ip)));
+        lines.push(t.shock.location(flag,esc(localCity||localCountry),esc(localCity?localCountry:''),esc(ipForNetwork)));
       }
     }else if(!state.ipFetchDone){
       lines.push(t.shock.locationLoading);
     }
 
+    // Date row (static)
     const now=new Date();
     const dtLocale=currentLang==='uz'?'uz-UZ':currentLang==='en'?'en-US':'ru-RU';
     const dateStr=now.toLocaleDateString(dtLocale,{day:'numeric',month:'long',year:'numeric'});
-    const timeStr=now.toLocaleTimeString(dtLocale,{hour:'2-digit',minute:'2-digit'});
+    const dateLabel={ru:'\u0414\u0430\u0442\u0430',en:'Date',uz:'Sana'}[currentLang];
+    groups.identity.appendChild(mkRow(dateLabel,esc(dateStr)));
+    totalRows++;
+
+    // Time row (live, updates every second)
     const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
     const timeLabel={ru:'\u0412\u0440\u0435\u043c\u044f',en:'Time',uz:'Vaqt'}[currentLang];
-    groups.identity.appendChild(mkRow(timeLabel,esc(dateStr)+', '+esc(timeStr)));
+    const timeRowDiv=document.createElement('div');
+    timeRowDiv.className='data-row';
+    const timeLabelSpan=document.createElement('span');
+    timeLabelSpan.className='data-label';
+    timeLabelSpan.textContent=timeLabel;
+    const timeValueSpan=document.createElement('span');
+    timeValueSpan.className='data-value live-clock';
+    timeValueSpan.id='liveClockValue';
+    const updateClock=()=>{
+      const n=new Date();
+      timeValueSpan.textContent=n.toLocaleTimeString(dtLocale,{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    };
+    updateClock();
+    const clockId=window.setInterval(updateClock,1000);
+    clockIntervals.set(timeValueSpan,clockId);
+    timeRowDiv.appendChild(timeLabelSpan);
+    timeRowDiv.appendChild(timeValueSpan);
+    groups.identity.appendChild(timeRowDiv);
+    totalRows++;
+
     if(tz){
       const tzLabel={ru:'\u0427\u0430\u0441\u043e\u0432\u043e\u0439 \u043f\u043e\u044f\u0441',en:'Timezone',uz:'Vaqt zonasi'}[currentLang];
       groups.identity.appendChild(mkRow(tzLabel,esc(tz),{code:true}));
     }
-    totalRows+=2;
+    const timeStr=now.toLocaleTimeString(dtLocale,{hour:'2-digit',minute:'2-digit'});
     lines.push(t.shock.datetime(esc(timeStr),esc(dateStr),esc(tz)));
 
     if(basic.languages&&basic.languages.length>0){
@@ -4650,16 +4696,14 @@ function renderShockBullets(basic,t,snapshot){
       }
       lines.push(t.shock.languages(flags,fullInference));
     }
-  }
 
-  // === DEVICE GROUP ===
-  if(groups.device){
+    // === Device rows merged into identity group ===
     const deviceObj=guessDevice(basic);
     const localDevice=localizeDeviceName(deviceObj,currentLang);
     if(localDevice){
       const devLabel={ru:'\u0423\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e',en:'Device',uz:'Qurilma'}[currentLang];
-      let devValue=esc(localDevice.name);
-      groups.device.appendChild(mkRow(devLabel,devValue));
+      const devIcon=getDeviceIcon(localDevice.name);
+      groups.identity.appendChild(mkRow(devLabel,devIcon+esc(localDevice.name)));
       totalRows++;
       lines.push(t.shock.device(esc(localDevice.name)));
     }
@@ -4667,19 +4711,13 @@ function renderShockBullets(basic,t,snapshot){
     const browserStr=browserDisplayName(basic);
     if(browserStr&&browserStr!=='\u2014'){
       const brLabel={ru:'\u0411\u0440\u0430\u0443\u0437\u0435\u0440',en:'Browser',uz:'Brauzer'}[currentLang];
-      groups.device.appendChild(mkRow(brLabel,esc(browserStr),{code:true}));
+      const brIcon=getBrowserIcon(browserStr);
+      groups.identity.appendChild(mkRow(brLabel,brIcon+esc(browserStr),{code:true}));
       totalRows++;
 
-      const pluginCount=(basic.plugins||[]).length;
-      if(pluginCount>0){
-        const extLabel={ru:'\u0420\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u044f',en:'Extensions',uz:'Kengaytmalar'}[currentLang];
-        groups.device.appendChild(mkRow(extLabel,String(pluginCount)));
-        totalRows++;
-      }
-
-      // Build old-style line for selftest compat
-      const permParts=[];
+      // Build old-style line for selftest compat (no extension count row)
       const perms=basic.perms||{};
+      const permParts=[];
       if(perms.camera==='granted') permParts.push({ru:'\u043a\u0430\u043c\u0435\u0440\u0430',en:'camera',uz:'kamera'}[currentLang]);
       if(perms.microphone==='granted') permParts.push({ru:'\u043c\u0438\u043a\u0440\u043e\u0444\u043e\u043d',en:'mic',uz:'mikrofon'}[currentLang]);
       if(perms.geolocation==='granted') permParts.push({ru:'\u0433\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044f',en:'geolocation',uz:'geolokatsiya'}[currentLang]);
@@ -4689,19 +4727,16 @@ function renderShockBullets(basic,t,snapshot){
         const granted={ru:'\u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u043e',en:'granted',uz:'ruxsat berilgan'}[currentLang];
         permStr=granted+': '+permParts.join(', ');
       }
-      const extParts=[];
-      if(pluginCount>0) extParts.push({ru:pluginCount+' \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u0439',en:pluginCount+' extensions',uz:pluginCount+' ta kengaytma'}[currentLang]);
-      const extraInfo=[...(permStr?[permStr]:[]),...extParts].join('; ');
-      lines.push(t.shock.browser(esc(browserStr),extraInfo?esc(extraInfo):''));
+      lines.push(t.shock.browser(esc(browserStr),permStr?esc(permStr):''));
 
-      // Permissions in new groups
+      // Permissions row
       const grantedPerms=[];
       if(perms.camera==='granted') grantedPerms.push({ru:'\u043a\u0430\u043c\u0435\u0440\u0430',en:'camera',uz:'kamera'}[currentLang]);
       if(perms.microphone==='granted') grantedPerms.push({ru:'\u043c\u0438\u043a\u0440\u043e\u0444\u043e\u043d',en:'mic',uz:'mikrofon'}[currentLang]);
       if(perms.geolocation==='granted') grantedPerms.push({ru:'\u0433\u0435\u043e\u043b\u043e\u043a\u0430\u0446\u0438\u044f',en:'geolocation',uz:'geolokatsiya'}[currentLang]);
       if(grantedPerms.length>0){
         const permLabel={ru:'\u0420\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u0438\u044f',en:'Permissions',uz:'Ruxsatlar'}[currentLang];
-        groups.device.appendChild(mkRow(permLabel,grantedPerms.join(', '),{badge:'warning'}));
+        groups.identity.appendChild(mkRow(permLabel,grantedPerms.join(', '),{badge:'warning'}));
         totalRows++;
       }
     }
@@ -4709,6 +4744,18 @@ function renderShockBullets(basic,t,snapshot){
 
   // === NETWORK GROUP ===
   if(groups.network){
+    // Show IP as first row in network group
+    if(ipForNetwork){
+      groups.network.appendChild(mkRow('IP',esc(ipForNetwork),{code:true}));
+      totalRows++;
+    }
+    // Update ipRow element in networkResults
+    const ipRowEl=getEl('ipRow');
+    if(ipRowEl&&ipForNetwork){
+      ipRowEl.innerHTML='<span class="data-label">IP</span> <code class="mono">'+esc(ipForNetwork)+'</code>';
+      ipRowEl.style.display='';
+    }
+
     const parts=[];
     if(hasIp&&details.org) parts.push(esc(details.org));
     const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
@@ -5690,6 +5737,9 @@ async function render(lang){
     addCard(frag,'fullness',t.formatFullness(filled,total),t);
     addHashCard(frag,'fp',fp,t);
     cards.appendChild(frag);
+
+    // Auto-run FingerprintJS Pro after main scan completes (show badge in hero)
+    autoRunFingerprintJS();
   }catch(e){
     if(token!==renderToken)return;
     console.error(e);
@@ -5973,6 +6023,35 @@ function closeChangelog(){
   }
 }
 
+/* ============== Speed hero animation ============== */
+function animateSpeedHero(targetMbps,latency,t){
+  const heroArea=getEl('speedHeroArea');
+  const heroNumber=getEl('speedHeroNumber');
+  const heroLabel=getEl('speedHeroLabel');
+  const heroLatency=getEl('speedHeroLatency');
+  if(!heroArea||!heroNumber) return;
+  heroArea.style.display='';
+  const mbpsLabel={ru:'Мбит/с',en:'Mbps',uz:'Mbps'}[currentLang]||'Mbps';
+  const latencyLabel={ru:'Задержка',en:'Latency',uz:'Kechikish'}[currentLang]||'Latency';
+  if(heroLabel) heroLabel.textContent=mbpsLabel;
+  if(heroLatency&&latency) heroLatency.textContent=latencyLabel+': '+latency+' ms';
+  // Count-up animation
+  const duration=800;
+  const start=performance.now();
+  const from=0;
+  const to=targetMbps;
+  function step(now){
+    const elapsed=now-start;
+    const progress=Math.min(elapsed/duration,1);
+    const eased=1-Math.pow(1-progress,3);
+    const current=from+(to-from)*eased;
+    heroNumber.textContent=current.toFixed(1);
+    if(progress<1) requestAnimationFrame(step);
+    else heroNumber.textContent=to.toFixed(1);
+  }
+  requestAnimationFrame(step);
+}
+
 /* ============== Network Check (on-demand) ============== */
 async function handleNetworkCheck(){
   const btn=getEl('networkBtn');
@@ -5989,6 +6068,10 @@ async function handleNetworkCheck(){
         state.speedResult={mbps:state.speed.mbps,latency:state.speed.latency,note:'approx'};
       }
     }
+    // Show speed hero if we have speed data
+    if(state.speedResult?.mbps){
+      animateSpeedHero(state.speedResult.mbps,state.speedResult.latency,t);
+    }
     refreshSnapshotServerData();
     if(snapshotCache){
       renderShockBullets(snapshotCache.basic,t,snapshotCache);
@@ -5998,7 +6081,7 @@ async function handleNetworkCheck(){
     const resultsEl=getEl('networkResults');
     if(resultsEl) resultsEl.style.display='';
     // Also call Worker OSINT API if we have an IP
-    const ip=state.ipData?.ip;
+    const ip=state.serverData?.ip||state.serverData?.details?.ip||null;
     if(ip) fetchOsintReport(ip,t);
     if(btn){btn.textContent=t.networkRecheck||'Re-check';btn.disabled=false;}
   }catch(e){
@@ -6077,6 +6160,22 @@ async function loadFingerprintJS(){
   return _fpjsPromise;
 }
 
+function showFpjsHeroBadge(result,t){
+  const badge=getEl('heroBadgeFpjs');
+  if(!badge) return;
+  const labels=t.fpjs||{};
+  const vid=result.visitorId||'—';
+  const conf=result.confidence?.score?Math.round(result.confidence.score*100):0;
+  const confBadgeClass=conf>=90?'status-badge--danger':conf>=50?'status-badge--warning':'status-badge--safe';
+  const disclaimer=t.fpjsDisclaimer||'';
+  badge.innerHTML=
+    '<span style="font-weight:600">FingerprintJS Pro:</span> '+
+    '<code style="font-size:12px;background:var(--code-bg);padding:1px 6px;border-radius:4px">'+esc(vid.substring(0,12))+'…</code> '+
+    '<span class="status-badge '+confBadgeClass+'" style="font-size:11px">'+esc(conf+'%')+'</span>'+
+    (disclaimer?'<br><span style="font-size:11px;color:var(--muted)">'+esc(disclaimer)+'</span>':'');
+  badge.style.display='';
+}
+
 async function handleFpjsClick(){
   const btn=getEl('fpjsBtn');
   const t=I18N[currentLang]||I18N.ru;
@@ -6109,6 +6208,8 @@ async function handleFpjsClick(){
     }
     const resultsEl=getEl('fpjsResults');
     if(resultsEl) resultsEl.style.display='';
+    // Show result in hero badge
+    showFpjsHeroBadge(result,t);
     if(btn){btn.textContent=t.fpjsRecheck||'Re-check';btn.disabled=false;}
   }catch(e){
     if(btn){btn.textContent=t.fpjsButton||'Compare';btn.disabled=false;}
@@ -6117,6 +6218,18 @@ async function handleFpjsClick(){
       resultsEl.style.display='';
       resultsEl.innerHTML='<p class="small" style="color:var(--danger)">'+esc(e.message||'FingerprintJS error')+'</p>';
     }
+  }
+}
+
+async function autoRunFingerprintJS(){
+  try{
+    const t=I18N[currentLang]||I18N.ru;
+    const FpJS=await loadFingerprintJS();
+    const fp=await FpJS.load();
+    const result=await fp.get();
+    showFpjsHeroBadge(result,t);
+  }catch(e){
+    // Silently fail - FingerprintJS is optional enhancement
   }
 }
 
