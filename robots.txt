@@ -1,0 +1,31 @@
+# Fingerprint — what a website sees about you
+# https://fprint.morgunov.tech/
+
+User-agent: *
+Allow: /
+Sitemap: https://fprint.morgunov.tech/sitemap.xml
+
+# AI / agentic search crawlers — explicitly allowed, the same stance as foundyou.morgunov.tech
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
