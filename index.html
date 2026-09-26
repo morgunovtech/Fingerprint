@@ -385,8 +385,42 @@
 <div id="reportMode">
   <!-- Block 1: Intro -->
   <section class="block">
-    <h2 id="introTitle" class="section-title"></h2>
-    <div id="introText" class="small"></div>
+    <h2 id="introTitle" class="section-title sr-only">«Цифровой отпечаток»: что о вас знают сайты</h2>
+    <!-- The Russian intro is in the markup rather than only in the I18N table below: a reader that
+         runs no JavaScript — an AI assistant, a text-only crawler — used to get 123 characters of
+         visible text on this page, the chrome. applyLang() reads this block as I18N.ru.introRichHtml
+         and swaps in another language when the visitor's is not Russian. -->
+    <div id="introText" class="small intro-content--rich">
+      <section class="fp-section" lang="ru" aria-labelledby="fp-title">
+        <p>
+          Каждый браузер оставляет уникальный след — набор технических характеристик,
+          который сайты читают молча, без запроса и без вашего разрешения.
+          Это называется цифровым отпечатком. Сервис показывает, что видно о вас прямо сейчас,
+          и объясняет, как снизить риски.
+        </p>
+        <details>
+          <summary style="cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0">Подробнее о слежке и рисках ▾</summary>
+          <h3>Как работает слежка без cookies</h3>
+          <p>
+            Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток.
+            Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать
+            все прошлые визиты с вашим именем и продать этот профиль.
+          </p>
+          <h3>Чем это опасно</h3>
+          <ul class="fp-list">
+            <li>Магазины повышают цены, зная ваше устройство и платёжеспособность.</li>
+            <li>Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее.</li>
+            <li>Страховые компании и работодатели покупают профили у брокеров данных.</li>
+            <li>После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.</li>
+          </ul>
+          <h3>Как мы обрабатываем данные</h3>
+          <p>
+            Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём.
+            Сервис полностью бесплатный, без рекламы и регистрации.
+          </p>
+        </details>
+      </section>
+    </div>
   </section>
 
   <!-- Block 2: Shock findings + uniqueness verdict -->
@@ -549,37 +583,9 @@ const I18N = {
     langLabels:{ru:'Русский',en:'Английский',uz:'Узбекский'},
     theme:{label:'Тема',modes:{auto:'Авто',light:'Светлая',dark:'Тёмная',contrast:'Контраст'}},
     introTitle:'«Цифровой отпечаток»: что о вас знают сайты',
-    introRichHtml:/* html */`
-      <section class="fp-section" lang="ru" aria-labelledby="fp-title">
-        <p>
-          Каждый браузер оставляет уникальный след — набор технических характеристик,
-          который сайты читают молча, без запроса и без вашего разрешения.
-          Это называется цифровым отпечатком. Сервис показывает, что видно о вас прямо сейчас,
-          и объясняет, как снизить риски.
-        </p>
-        <details>
-          <summary style="cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0">Подробнее о слежке и рисках ▾</summary>
-          <h3>Как работает слежка без cookies</h3>
-          <p>
-            Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток.
-            Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать
-            все прошлые визиты с вашим именем и продать этот профиль.
-          </p>
-          <h3>Чем это опасно</h3>
-          <ul class="fp-list">
-            <li>Магазины повышают цены, зная ваше устройство и платёжеспособность.</li>
-            <li>Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее.</li>
-            <li>Страховые компании и работодатели покупают профили у брокеров данных.</li>
-            <li>После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.</li>
-          </ul>
-          <h3>Как мы обрабатываем данные</h3>
-          <p>
-            Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём.
-            Сервис полностью бесплатный, без рекламы и регистрации.
-          </p>
-        </details>
-      </section>
-    `,
+    // The Russian intro lives in the markup (#introText — the copy a reader without JavaScript
+    // sees: an AI assistant, a text-only crawler); it is read from there so there is one copy.
+    introRichHtml:(document.getElementById('introText')||{}).innerHTML||'',
     introParagraphs:[
       'Каждый браузер оставляет уникальный след — набор технических характеристик, который сайты читают молча, без запроса и без вашего разрешения. Это называется цифровым отпечатком.',
       'Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток. Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать все прошлые визиты с вашим именем и продать этот профиль.',
@@ -1329,7 +1335,7 @@ const I18N = {
     theme:{label:'Theme',modes:{auto:'Auto',light:'Light',dark:'Dark',contrast:'Contrast'}},
     introTitle:'”Digital fingerprint”: what websites know about you',
     introRichHtml:/* html */`
-      <section class=”fp-section” lang=”en” aria-labelledby=”fp-title”>
+      <section class="fp-section" lang="en" aria-labelledby="fp-title">
         <p>
           Every browser leaves a unique trail — a set of technical characteristics
           that websites read silently, without asking and without your permission.
@@ -2075,7 +2081,7 @@ const I18N = {
     theme:{label:'Mavzu',modes:{auto:'Avto',light:'Yorugʻ',dark:'Tungi',contrast:'Kontrast'}},
     introTitle:'”Raqamli barmoq izi”: saytlar siz haqingizda nimalarni biladi',
     introRichHtml:/* html */`
-      <section class=”fp-section” lang=”uz” aria-labelledby=”fp-title”>
+      <section class="fp-section" lang="uz" aria-labelledby="fp-title">
         <p>
           Har bir brauzer noyob iz qoldiradi — texnik xususiyatlar toʻplami,
           saytlar uni jimgina, soʻramasdan va ruxsatingizsiz oʻqiydi.
