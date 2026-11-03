@@ -423,12 +423,11 @@ documentStub.body.removeChild = function removeChild(child) {
 
 documentStub.createComment = () => ({ nodeType: 8, textContent: '' });
 
-// Records the scripts the page adds; a script "loads" on the next tick.
+// Records any script the page adds to <head>; it should add none (no third-party scripts).
 const headScripts = [];
 documentStub.head = {
   appendChild(child) {
     headScripts.push(child.src || '');
-    setTimeout(() => child.onload && child.onload(), 0);
     return child;
   }
 };
@@ -580,17 +579,6 @@ function makeBinaryResponse(size = BYTES) {
 async function fetchStub(url, options = {}) {
   const target = typeof url === 'string' ? url : String(url);
   fetchLog.push({ url: target, options });
-  if (target === '/headers') {
-    return makeJsonResponse({
-      ip: '198.51.100.2',
-      headers: {
-        'CF-IPCountry': 'UZ',
-        'CF-IPCity': 'Tashkent',
-        'CF-Timezone': 'Asia/Tashkent',
-        'CF-Connecting-IP': '198.51.100.2'
-      }
-    });
-  }
   if (target.endsWith('/api/whoami')) {
     if (!workerWhoami) throw new Error('Worker unreachable');
     return makeJsonResponse(workerWhoami);
@@ -605,24 +593,11 @@ async function fetchStub(url, options = {}) {
       org: 'Uzbektelekom Joint Stock Company'
     });
   }
-  if (target.startsWith('https://ipwho.is')) {
-    return makeJsonResponse({
-      success: true,
-      ip: '198.51.100.2',
-      city: 'Tashkent',
-      country: 'Uzbekistan',
-      connection: { org: 'Uzbektelekom Joint Stock Company', isp: 'Uzbektelekom' },
-      timezone: { id: 'Asia/Tashkent' }
-    });
-  }
   if (target.startsWith('https://api64.ipify.org')) {
     return makeJsonResponse({ ip: '198.51.100.2' });
   }
   if (target.startsWith('https://api.myip.com')) {
     return makeJsonResponse({ ip: '198.51.100.2', country: 'Uzbekistan', cc: 'UZ' });
-  }
-  if (target.startsWith('https://speed.cloudflare.com') || target.startsWith('https://httpbin.org/bytes')) {
-    return makeBinaryResponse();
   }
   if (target.includes('share-card.svg')) {
     return makeBinaryResponse(4096);
@@ -789,6 +764,76 @@ const I18N = vm.runInContext('I18N', sandbox);
   const profilerModule = await import(new URL('./site/src/profiler.js', `file://${__dirname}/`).href);
   sandbox.__profilerModule = profilerModule;
   sandbox.window.__profilerModule = profilerModule;
+
+  // Worker geolocation: ipquery.io, then ipinfo.io when it fails; HTTPS only.
+  const { fetchGeolocation } = await import(new URL('./worker/src/providers/geolocation.js', `file://${__dirname}/`).href);
+  const geoUrls = [];
+  let ipqueryUp = true;
+  const realFetch = globalThis.fetch;
+  const realWarn = console.warn;
+  globalThis.fetch = async url => {
+    const target = String(url);
+    geoUrls.push(target);
+    if (target.startsWith('https://api.ipquery.io/')) {
+      if (!ipqueryUp) return { ok: false, status: 503, json: async () => ({}) };
+      return makeJsonResponse({
+        ip: '198.51.100.2',
+        isp: { asn: 'AS8193', org: 'Uzbektelekom', isp: 'Uzbektelekom' },
+        location: { country: 'Uzbekistan', country_code: 'UZ', city: 'Tashkent', state: 'Tashkent', latitude: 41.3, longitude: 69.2 },
+        risk: { is_mobile: true, is_vpn: false, is_tor: false, is_proxy: false, is_datacenter: false }
+      });
+    }
+    if (target.startsWith('https://ipinfo.io/')) {
+      return makeJsonResponse({ ip: '198.51.100.2', city: 'Tashkent', region: 'Tashkent', country: 'UZ', loc: '41.3,69.2', org: 'AS8193 Uzbektelekom' });
+    }
+    throw new Error(`Unexpected Worker fetch: ${target}`);
+  };
+  console.warn = () => {};
+  try {
+    const fromIpquery = await fetchGeolocation('198.51.100.2');
+    assert.equal(fromIpquery.asn, 'AS8193');
+    assert.equal(fromIpquery.region, 'Tashkent');
+    assert.equal(fromIpquery.connection_type, 'mobile');
+    ipqueryUp = false;
+    const fromIpinfo = await fetchGeolocation('198.51.100.2');
+    assert.equal(fromIpinfo.asn, 'AS8193');
+    assert.equal(fromIpinfo.org, 'Uzbektelekom');
+    assert.equal(fromIpinfo.connection_type, null);
+    assert.ok(geoUrls.length === 3 && geoUrls.every(url => url.startsWith('https://')), geoUrls.join(' '));
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = realWarn;
+  }
+
+  // Worker reputation: only 127.0.0.2–127.0.0.255 is a listing; 127.255.255.x is an error code
+  // (Spamhaus refusing a public resolver) and the list is then not counted as checked.
+  const { DNSBLS, checkDnsbl, fetchReputation } = await import(new URL('./worker/src/providers/reputation.js', `file://${__dirname}/`).href);
+  let dnsblAnswers = {};
+  globalThis.fetch = async url => {
+    const name = new URL(String(url)).searchParams.get('name');
+    const list = DNSBLS.find(dnsbl => name.endsWith('.' + dnsbl));
+    const answer = dnsblAnswers[list];
+    if (answer === 'down') throw new Error('DoH unreachable');
+    if (answer === 'nxdomain') return makeJsonResponse({ Status: 3 });
+    return makeJsonResponse({ Status: 0, Answer: [{ name, type: 1, data: answer }] });
+  };
+  try {
+    dnsblAnswers = { [DNSBLS[0]]: '127.0.0.2', [DNSBLS[1]]: '127.255.255.254' };
+    assert.equal(await checkDnsbl('198.51.100.2', DNSBLS[0]), 'listed');
+    assert.equal(await checkDnsbl('198.51.100.2', DNSBLS[1]), 'error');
+    dnsblAnswers = { [DNSBLS[0]]: '127.0.0.2', [DNSBLS[1]]: '127.255.255.254', [DNSBLS[2]]: 'nxdomain', [DNSBLS[3]]: 'down' };
+    const listed = await fetchReputation('198.51.100.2');
+    assert.deepEqual([listed.blacklisted, listed.blacklist_hits, listed.blacklists_checked], [true, [DNSBLS[0]], 2]);
+    dnsblAnswers = Object.fromEntries(DNSBLS.map(dnsbl => [dnsbl, '127.255.255.254']));
+    assert.equal(await fetchReputation('198.51.100.2'), null);
+    dnsblAnswers = Object.fromEntries(DNSBLS.map(dnsbl => [dnsbl, 'nxdomain']));
+    const clean = await fetchReputation('198.51.100.2');
+    assert.deepEqual([clean.blacklisted, clean.blacklists_checked], [false, DNSBLS.length]);
+    assert.equal(await fetchReputation('2001:db8::1'), null);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+
   assert.equal(typeof sandbox.detectPointerType, 'function');
   assert.equal(sandbox.detectPointerType(), 'none');
   assert.deepEqual(sandbox.getLanguages(), ['ru-RU', 'en-US']);
@@ -939,21 +984,6 @@ const I18N = vm.runInContext('I18N', sandbox);
   const initialShare = stateRef.sharePayload;
   assert.ok(initialShare);
   assert.equal(elements.get('shareBtn').dataset.ready, '1');
-
-  // FingerprintJS Pro is opt-in: nothing loads before the click, the badge says what the click sends.
-  const fpjsScripts = () => headScripts.filter(src => src.includes('fpjscdn.net'));
-  assert.deepEqual(fpjsScripts(), []);
-  const fpjsBadgeEl = elements.get('heroBadgeFpjs');
-  assert.equal(fpjsBadgeEl.textContent, I18N.ru.fpjsDisclaimer);
-  sandbox.window.FingerprintJS = {
-    load: async () => ({ get: async () => ({ visitorId: 'abcdef1234567890', confidence: { score: 0.99 } }) })
-  };
-  await sandbox.handleFpjsClick();
-  assert.equal(fpjsScripts().length, 1);
-  assert.ok(fpjsBadgeEl.innerHTML.includes('abcdef123456'));
-  const fpjsHeroBtnEl = elements.get('fpjsHeroBtn');
-  assert.equal(fpjsHeroBtnEl.disabled, false);
-  assert.equal(fpjsHeroBtnEl.textContent, fpjsHeroBtnEl.dataset.label);
   await sandbox.handleShareClick();
   assert.equal(sharePayloads.length, 1);
   await sandbox.handleSaveClick();
@@ -992,6 +1022,7 @@ const I18N = vm.runInContext('I18N', sandbox);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
   assert.ok(/Tashkent|\u0422\u0430\u0448\u043a\u0435\u043d\u0442|Uzbekistan|\u0423\u0437\u0431\u0435\u043a\u0438\u0441\u0442\u0430\u043d/i.test(collectShockText().join(' ')), 'exposure list should mention updated region');
   assert.ok(stateRef.sharePayload);
+  assert.deepEqual(headScripts, []);
 
   console.log('Self-test completed successfully');
 })();
