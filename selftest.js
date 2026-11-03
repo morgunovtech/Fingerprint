@@ -526,6 +526,8 @@ class RTCPeerConnectionStub {
 }
 
 const fetchLog = [];
+// A /api/whoami body while the Worker is up; null makes the Worker unreachable.
+let workerWhoami = null;
 const BYTES = 2_000_000;
 function makeHeaders(map) {
   const lower = {};
@@ -578,6 +580,10 @@ async function fetchStub(url, options = {}) {
         'CF-Connecting-IP': '198.51.100.2'
       }
     });
+  }
+  if (target.endsWith('/api/whoami')) {
+    if (!workerWhoami) throw new Error('Worker unreachable');
+    return makeJsonResponse(workerWhoami);
   }
   if (target.startsWith('https://ipapi.co')) {
     return makeJsonResponse({
@@ -796,6 +802,27 @@ const I18N = vm.runInContext('I18N', sandbox);
   });
   assert.equal(details.org, 'Uzbektelekom Joint Stock Company');
   assert.equal(sandbox.categorizeIpDetail(details), 'rich');
+
+  // "Check network": a Worker answer is final; public IP services are only the fallback.
+  const publicIpServices = /ipapi\.co|freeipapi\.com|ipify\.org|myip\.com/;
+  const publicIpCalls = from => fetchLog.slice(from).map(entry => entry.url).filter(url => publicIpServices.test(url));
+  workerWhoami = {
+    ip: '198.51.100.2',
+    geo: { country: 'UZ', region: 'Tashkent', city: 'Tashkent', timezone: 'Asia/Tashkent' },
+    network: { asn: 8193, asOrganization: 'Uzbektelekom' }
+  };
+  let logStart = fetchLog.length;
+  const fromWorker = await sandbox.fetchIpData();
+  assert.equal(fromWorker.source, 'worker');
+  assert.equal(fromWorker.details.region, 'Tashkent');
+  assert.deepEqual(publicIpCalls(logStart), []);
+  workerWhoami = null;
+  stateRef.whoamiData = null;
+  logStart = fetchLog.length;
+  const fromFallback = await sandbox.fetchIpData();
+  assert.equal(fromFallback.source, 'ipapi');
+  assert.equal(fromFallback.details.country_calling_code, '+998');
+  assert.ok(publicIpCalls(logStart).some(url => url.startsWith('https://ipapi.co')));
   const H = sandbox.entropyFromFeatures({
     browser: 'Safari',
     osFamily: 'macOS',

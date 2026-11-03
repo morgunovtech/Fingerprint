@@ -4469,8 +4469,10 @@ async function fetchIpData(){
       raceResult=await Promise.any([fetchIpFromIpapi(),fetchIpFromIpwho()]);
     }catch(__){/* both failed */}
   }
+  // ipify and myip give only an IP and a country, which any answer above already has
+  // (none of them has the calling code), so they run only when nothing above answered.
   const attempts=raceResult
-    ?[fetchIpFromIpify,fetchIpFromMyip]
+    ?[]
     :[fetchIpFromIpapi,fetchIpFromIpwho,fetchIpFromIpify,fetchIpFromMyip];
   const errors=[];
   let aggregated=null;
