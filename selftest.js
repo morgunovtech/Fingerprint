@@ -289,7 +289,7 @@ const availableFonts = new Set(['Arial', 'Roboto', 'Times New Roman']);
 
 const elements = new Map();
 const elementIds = [
-  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqPracticeTitle','uniqPracticeList','uniqRisksTitle','uniqRisksList','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
+  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqPracticeTitle','uniqPracticeList','uniqRisksTitle','uniqRisksList','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
 ];
 
 for (const id of elementIds) {
@@ -423,6 +423,16 @@ documentStub.body.removeChild = function removeChild(child) {
 
 documentStub.createComment = () => ({ nodeType: 8, textContent: '' });
 
+// Records the scripts the page adds; a script "loads" on the next tick.
+const headScripts = [];
+documentStub.head = {
+  appendChild(child) {
+    headScripts.push(child.src || '');
+    setTimeout(() => child.onload && child.onload(), 0);
+    return child;
+  }
+};
+
 documentStub.createRange = () => ({ createContextualFragment: () => new DocumentFragment() });
 
 documentStub.documentElement = documentElement;
@@ -526,6 +536,8 @@ class RTCPeerConnectionStub {
 }
 
 const fetchLog = [];
+// A /api/whoami body while the Worker is up; null makes the Worker unreachable.
+let workerWhoami = null;
 const BYTES = 2_000_000;
 function makeHeaders(map) {
   const lower = {};
@@ -578,6 +590,10 @@ async function fetchStub(url, options = {}) {
         'CF-Connecting-IP': '198.51.100.2'
       }
     });
+  }
+  if (target.endsWith('/api/whoami')) {
+    if (!workerWhoami) throw new Error('Worker unreachable');
+    return makeJsonResponse(workerWhoami);
   }
   if (target.startsWith('https://ipapi.co')) {
     return makeJsonResponse({
@@ -796,6 +812,27 @@ const I18N = vm.runInContext('I18N', sandbox);
   });
   assert.equal(details.org, 'Uzbektelekom Joint Stock Company');
   assert.equal(sandbox.categorizeIpDetail(details), 'rich');
+
+  // "Check network": a Worker answer is final; public IP services are only the fallback.
+  const publicIpServices = /ipapi\.co|freeipapi\.com|ipify\.org|myip\.com/;
+  const publicIpCalls = from => fetchLog.slice(from).map(entry => entry.url).filter(url => publicIpServices.test(url));
+  workerWhoami = {
+    ip: '198.51.100.2',
+    geo: { country: 'UZ', region: 'Tashkent', city: 'Tashkent', timezone: 'Asia/Tashkent' },
+    network: { asn: 8193, asOrganization: 'Uzbektelekom' }
+  };
+  let logStart = fetchLog.length;
+  const fromWorker = await sandbox.fetchIpData();
+  assert.equal(fromWorker.source, 'worker');
+  assert.equal(fromWorker.details.region, 'Tashkent');
+  assert.deepEqual(publicIpCalls(logStart), []);
+  workerWhoami = null;
+  stateRef.whoamiData = null;
+  logStart = fetchLog.length;
+  const fromFallback = await sandbox.fetchIpData();
+  assert.equal(fromFallback.source, 'ipapi');
+  assert.equal(fromFallback.details.country_calling_code, '+998');
+  assert.ok(publicIpCalls(logStart).some(url => url.startsWith('https://ipapi.co')));
   const H = sandbox.entropyFromFeatures({
     browser: 'Safari',
     osFamily: 'macOS',
@@ -902,6 +939,21 @@ const I18N = vm.runInContext('I18N', sandbox);
   const initialShare = stateRef.sharePayload;
   assert.ok(initialShare);
   assert.equal(elements.get('shareBtn').dataset.ready, '1');
+
+  // FingerprintJS Pro is opt-in: nothing loads before the click, the badge says what the click sends.
+  const fpjsScripts = () => headScripts.filter(src => src.includes('fpjscdn.net'));
+  assert.deepEqual(fpjsScripts(), []);
+  const fpjsBadgeEl = elements.get('heroBadgeFpjs');
+  assert.equal(fpjsBadgeEl.textContent, I18N.ru.fpjsDisclaimer);
+  sandbox.window.FingerprintJS = {
+    load: async () => ({ get: async () => ({ visitorId: 'abcdef1234567890', confidence: { score: 0.99 } }) })
+  };
+  await sandbox.handleFpjsClick();
+  assert.equal(fpjsScripts().length, 1);
+  assert.ok(fpjsBadgeEl.innerHTML.includes('abcdef123456'));
+  const fpjsHeroBtnEl = elements.get('fpjsHeroBtn');
+  assert.equal(fpjsHeroBtnEl.disabled, false);
+  assert.equal(fpjsHeroBtnEl.textContent, fpjsHeroBtnEl.dataset.label);
   await sandbox.handleShareClick();
   assert.equal(sharePayloads.length, 1);
   await sandbox.handleSaveClick();

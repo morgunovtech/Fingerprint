@@ -911,11 +911,11 @@ function buildGuaranteeFinding() {
   return {
     key: 'privacy.local',
     label: 'Privacy guarantee',
-    value: 'All computations stay local in your browser.',
+    value: 'The profile is built locally in your browser.',
     confidence: 1,
     evidence: ['No outbound requests other than optional IP lookup passed by caller'],
     method: 'rule',
-    limitations: 'Reload clears the in-memory profile. No data is uploaded unless you explicitly share it.',
+    limitations: 'Reload clears the in-memory profile. The profile itself is never uploaded.',
   };
 }
 function buildPermissionFinding() {
