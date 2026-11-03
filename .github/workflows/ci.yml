@@ -16,7 +16,7 @@ jobs:
           node-version: lts/*
           cache: npm
           cache-dependency-path: worker/package-lock.json
-      # Runs the page's inline script and src/profiler.js in a vm sandbox.
+      # Runs the page's inline script and site/src/profiler.js in a vm sandbox.
       - run: node selftest.js
       - run: npm ci
         working-directory: worker
@@ -25,3 +25,21 @@ jobs:
         working-directory: worker
       - run: npm audit --audit-level=high
         working-directory: worker
+
+  # Private repos on the free plan get no GitHub secret scanning; gitleaks
+  # scans the whole history instead (.gitleaksignore lists the one public key).
+  secrets:
+    name: secrets
+    # The action lists the PR's commits through the API; the default token
+    # cannot read pull requests.
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

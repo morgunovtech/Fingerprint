@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const path = require('node:path');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const { performance } = require('node:perf_hooks');
@@ -17,8 +18,9 @@ function assertNoMergeMarkers(text, label) {
   });
 }
 
-const html = fs.readFileSync('index.html', 'utf8');
-assertNoMergeMarkers(html, 'index.html');
+// The site Pages serves lives in site/ (wrangler.toml → pages_build_output_dir).
+const html = fs.readFileSync(path.join(__dirname, 'site', 'index.html'), 'utf8');
+assertNoMergeMarkers(html, 'site/index.html');
 const match = html.match(/<script>([\s\S]*)<\/script>/);
 if (!match) {
   throw new Error('Failed to extract inline script');
@@ -768,7 +770,7 @@ const invalidateSnapshot = () => vm.runInContext('snapshotCache = null; snapshot
 const I18N = vm.runInContext('I18N', sandbox);
 
 (async () => {
-  const profilerModule = await import(new URL('./src/profiler.js', `file://${__dirname}/`).href);
+  const profilerModule = await import(new URL('./site/src/profiler.js', `file://${__dirname}/`).href);
   sandbox.__profilerModule = profilerModule;
   sandbox.window.__profilerModule = profilerModule;
   assert.equal(typeof sandbox.detectPointerType, 'function');

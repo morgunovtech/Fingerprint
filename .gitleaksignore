@@ -1,0 +1,4 @@
+# Public FingerprintJS Pro browser key: the page loads it from a public
+# fpjscdn.net URL, so it is not a secret. This is its historical finding in
+# index.html (before the move to site/); the current line carries gitleaks:allow.
+92055573a3a4c470a9a0ed12f0561ef556d4e67d:index.html:generic-api-key:6002
