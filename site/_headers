@@ -8,11 +8,3 @@
 
 /404.html
   X-Robots-Tag: noindex
-
-# Pages serves the repo root, so the Worker source and the test harness are
-# public files too; keep them out of search results.
-/worker/*
-  X-Robots-Tag: noindex
-
-/selftest.js
-  X-Robots-Tag: noindex

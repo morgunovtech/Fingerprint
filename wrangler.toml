@@ -1,0 +1,5 @@
+# Cloudflare Pages config for the site; the Worker has its own worker/wrangler.toml.
+# Pages serves only site/, so the Worker source and selftest.js are not public.
+name = "fingerprint"
+pages_build_output_dir = "site"
+compatibility_date = "2024-11-01"
