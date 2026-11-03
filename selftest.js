@@ -805,6 +805,35 @@ const I18N = vm.runInContext('I18N', sandbox);
     console.warn = realWarn;
   }
 
+  // Worker reputation: only 127.0.0.2–127.0.0.255 is a listing; 127.255.255.x is an error code
+  // (Spamhaus refusing a public resolver) and the list is then not counted as checked.
+  const { DNSBLS, checkDnsbl, fetchReputation } = await import(new URL('./worker/src/providers/reputation.js', `file://${__dirname}/`).href);
+  let dnsblAnswers = {};
+  globalThis.fetch = async url => {
+    const name = new URL(String(url)).searchParams.get('name');
+    const list = DNSBLS.find(dnsbl => name.endsWith('.' + dnsbl));
+    const answer = dnsblAnswers[list];
+    if (answer === 'down') throw new Error('DoH unreachable');
+    if (answer === 'nxdomain') return makeJsonResponse({ Status: 3 });
+    return makeJsonResponse({ Status: 0, Answer: [{ name, type: 1, data: answer }] });
+  };
+  try {
+    dnsblAnswers = { [DNSBLS[0]]: '127.0.0.2', [DNSBLS[1]]: '127.255.255.254' };
+    assert.equal(await checkDnsbl('198.51.100.2', DNSBLS[0]), 'listed');
+    assert.equal(await checkDnsbl('198.51.100.2', DNSBLS[1]), 'error');
+    dnsblAnswers = { [DNSBLS[0]]: '127.0.0.2', [DNSBLS[1]]: '127.255.255.254', [DNSBLS[2]]: 'nxdomain', [DNSBLS[3]]: 'down' };
+    const listed = await fetchReputation('198.51.100.2');
+    assert.deepEqual([listed.blacklisted, listed.blacklist_hits, listed.blacklists_checked], [true, [DNSBLS[0]], 2]);
+    dnsblAnswers = Object.fromEntries(DNSBLS.map(dnsbl => [dnsbl, '127.255.255.254']));
+    assert.equal(await fetchReputation('198.51.100.2'), null);
+    dnsblAnswers = Object.fromEntries(DNSBLS.map(dnsbl => [dnsbl, 'nxdomain']));
+    const clean = await fetchReputation('198.51.100.2');
+    assert.deepEqual([clean.blacklisted, clean.blacklists_checked], [false, DNSBLS.length]);
+    assert.equal(await fetchReputation('2001:db8::1'), null);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+
   assert.equal(typeof sandbox.detectPointerType, 'function');
   assert.equal(sandbox.detectPointerType(), 'none');
   assert.deepEqual(sandbox.getLanguages(), ['ru-RU', 'en-US']);
