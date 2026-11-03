@@ -16,7 +16,7 @@ A privacy check for everyday users: it shows what any website learns about your 
 
 ## Privacy
 
-- **Computed in your browser:** all fingerprint signals, the uniqueness score, the profile and the tracker checks. The page does not upload them, and no third party sees your fingerprint: the page loads no third-party scripts.
+- **Computed in your browser:** all fingerprint signals, the uniqueness score, the profile and the tracker checks. The page does not upload them, and no third party sees your fingerprint. The only outside script is Cloudflare's page-view counter (below), which Pages adds.
 - **The Worker** gets your IP and request headers, as any server does. On page load the page only reads aggregate stats from it. A per-IP rate-limit counter lives in Workers KV and expires after 60 seconds.
 - **"Check network"** calls `/api/whoami` (your IP, Cloudflare's location and ASN for it, your headers; returned to you, not stored), the speed test, and `/api/scan` for your IP. The scan queries ipquery.io (ipinfo.io as fallback), whoisjson.com and Google DNS (records and blocklists); the report is cached in KV under your IP for one hour. Only if the Worker is down does the browser ask public IP services directly: ipapi.co and freeipapi.com, then ipify.org and myip.com if those fail too.
 - **Anonymous stats:** each `/api/whoami` call adds one to aggregate counters: total checks, browser and major version, OS, country, TLS version. No IP, no ID, no timestamps. The page uses them for the "fingerprints checked" footer and the "X% of visitors" hints (after 100 checks). Anyone can read them at `/api/stats`.
