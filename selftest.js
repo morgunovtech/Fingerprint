@@ -289,7 +289,7 @@ const availableFonts = new Set(['Arial', 'Roboto', 'Times New Roman']);
 
 const elements = new Map();
 const elementIds = [
-  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqPracticeTitle','uniqPracticeList','uniqRisksTitle','uniqRisksList','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','policySummary','policyText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
+  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqPracticeTitle','uniqPracticeList','uniqRisksTitle','uniqRisksList','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
 ];
 
 for (const id of elementIds) {
@@ -422,6 +422,16 @@ documentStub.body.removeChild = function removeChild(child) {
 };
 
 documentStub.createComment = () => ({ nodeType: 8, textContent: '' });
+
+// Records the scripts the page adds; a script "loads" on the next tick.
+const headScripts = [];
+documentStub.head = {
+  appendChild(child) {
+    headScripts.push(child.src || '');
+    setTimeout(() => child.onload && child.onload(), 0);
+    return child;
+  }
+};
 
 documentStub.createRange = () => ({ createContextualFragment: () => new DocumentFragment() });
 
@@ -929,6 +939,21 @@ const I18N = vm.runInContext('I18N', sandbox);
   const initialShare = stateRef.sharePayload;
   assert.ok(initialShare);
   assert.equal(elements.get('shareBtn').dataset.ready, '1');
+
+  // FingerprintJS Pro is opt-in: nothing loads before the click, the badge says what the click sends.
+  const fpjsScripts = () => headScripts.filter(src => src.includes('fpjscdn.net'));
+  assert.deepEqual(fpjsScripts(), []);
+  const fpjsBadgeEl = elements.get('heroBadgeFpjs');
+  assert.equal(fpjsBadgeEl.textContent, I18N.ru.fpjsDisclaimer);
+  sandbox.window.FingerprintJS = {
+    load: async () => ({ get: async () => ({ visitorId: 'abcdef1234567890', confidence: { score: 0.99 } }) })
+  };
+  await sandbox.handleFpjsClick();
+  assert.equal(fpjsScripts().length, 1);
+  assert.ok(fpjsBadgeEl.innerHTML.includes('abcdef123456'));
+  const fpjsHeroBtnEl = elements.get('fpjsHeroBtn');
+  assert.equal(fpjsHeroBtnEl.disabled, false);
+  assert.equal(fpjsHeroBtnEl.textContent, fpjsHeroBtnEl.dataset.label);
   await sandbox.handleShareClick();
   assert.equal(sharePayloads.length, 1);
   await sandbox.handleSaveClick();

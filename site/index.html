@@ -415,9 +415,20 @@
           </ul>
           <h3>Как мы обрабатываем данные</h3>
           <p>
-            Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём.
-            Сервис полностью бесплатный, без рекламы и регистрации.
+            Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет.
+            Сервис бесплатный, без рекламы и регистрации. Что всё-таки уходит в сеть:
           </p>
+          <ul class="fp-list">
+            <li>При открытии страницы — запрос общей статистики к нашему серверу на Cloudflare и подсчёт
+              просмотра Cloudflare Web Analytics без cookie. Как любой сервер, они видят ваш IP-адрес и браузер.</li>
+            <li>По кнопке «Проверить сеть» — запросы к нашему серверу. Он показывает ваш IP, провайдера и заголовки,
+              измеряет скорость и проверяет IP через ip-api.com (запасной — ipinfo.io), whoisjson.com и Google DNS.
+              Отчёт хранится под вашим IP один час; в анонимную статистику (браузер, ОС, страна) IP не попадает.
+              Если наш сервер недоступен, браузер спрашивает публичные сервисы IP напрямую
+              (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
+            <li>По кнопке «Сравнить с реальными данными» — FingerprintJS Pro: его скрипт отправляет сигналы вашего
+              браузера и IP-адрес на серверы FingerprintJS и возвращает ID посетителя. Без нажатия он не загружается.</li>
+          </ul>
         </details>
       </section>
     </div>
@@ -591,7 +602,7 @@ const I18N = {
       'Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток. Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать все прошлые визиты с вашим именем и продать этот профиль.',
       'Магазины повышают цены, зная ваше устройство и платёжеспособность. Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее. Страховые компании и работодатели покупают профили у брокеров данных. После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.',
       'Показывает, что видно о вас прямо сейчас, и объясняет, как снизить риски — без технических знаний.',
-      'Все вычисления — только в вашем браузере. Мы ничего не сохраняем и не передаём. Сервис полностью бесплатный, без рекламы и регистрации. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — freeipapi.com, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет — ни сторонних шрифтов, ни трекеров, ни скрытых скриптов.'
+      'Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет. Сервис бесплатный, без рекламы и регистрации. При открытии страница запрашивает общую статистику у нашего сервера на Cloudflare, а Cloudflare Web Analytics считает просмотр без cookie. IP проверяется только по кнопке «Проверить сеть» (наш сервер, ip-api.com, whoisjson.com, Google DNS), а FingerprintJS Pro загружается только по кнопке «Сравнить с реальными данными».'
     ],
     uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
     uniqPracticeTitle:'Что это значит на практике:',
@@ -903,7 +914,7 @@ const I18N = {
     },
     detailTitle:'Подробности для профессионалов',
     networkTitle:'Анализ сети',
-    networkDesc:'Определим ваш IP-адрес, провайдера, наличие VPN и скорость соединения. Данные запрашиваются только по вашему нажатию.',
+    networkDesc:'Определим ваш IP-адрес, провайдера, наличие VPN и скорость соединения. Запросы уходят только по нажатию: нашему серверу, а от него — ip-api.com, whoisjson.com и Google DNS.',
     networkButton:'Проверить сеть',
     networkLoading:'Проверяем...',
     networkRecheck:'Проверить снова',
@@ -928,7 +939,7 @@ const I18N = {
     },
     fpjsTitle:'Сравнение с глобальной базой',
     fpjsDesc:'Сравните ваш отпечаток с базой FingerprintJS Pro (миллиарды отпечатков). Это покажет, насколько вы реально идентифицируемы.',
-    fpjsDisclaimer:'\u26A0 Данные будут отправлены на серверы FingerprintJS для сравнения. Мы используем бесплатный тариф (до 20\u00A0000 проверок/мес). FingerprintJS не получает ваши персональные данные.',
+    fpjsDisclaimer:'\u26A0 Кнопка загружает FingerprintJS Pro: он отправляет сигналы вашего браузера и IP-адрес на серверы FingerprintJS и возвращает ID посетителя.',
     fpjsButton:'Сравнить с глобальной базой',
     fpjsLoading:'Загрузка...',
     fpjsRecheck:'Проверить снова',
@@ -1044,7 +1055,7 @@ const I18N = {
           if(String(finding.value||'').toLowerCase().includes('medium')) return 'Средняя отслеживаемость без куки';
           return 'Низкая отслеживаемость без куки';
         },
-        'privacy.local':()=> 'Все вычисления выполняются локально в вашем браузере.',
+        'privacy.local':()=> 'Профиль строится локально в вашем браузере.',
         'privacy.permissions':()=> 'Дополнительные сигналы собираются только после явного разрешения пользователя.',
         'browser.uaCh':finding=>finding.value,
         'network.profile':finding=>String(finding.value||'')
@@ -1124,7 +1135,7 @@ const I18N = {
         'storage.quota':'Большие квоты позволяют хранить больше идентификаторов.',
         'fingerprint.trackability':'Сильные сигналы упрощают повторное распознавание.',
         'browser.uaCh':'UA-CH раскрывает точные версии для таргетинга и совместимости.',
-        'privacy.local':'Данные не покидают браузер, пока вы сами ими не поделитесь.',
+        'privacy.local':'Профиль не отправляется на сервер; сеть и FingerprintJS Pro проверяются только по кнопкам.',
         'privacy.permissions':'Выданные ранее разрешения автоматически доступны сайтам.',
         'fingerprint.fonts':'Наборы шрифтов помогают сайтам отличать вас от других посетителей.',
         'privacy.cookies':'Cookie позволяют сайтам узнавать вас и восстанавливать сессии.',
@@ -1225,9 +1236,7 @@ const I18N = {
     advicePrefix:'💡 Совет:',
     methodologyButton:'Как рассчитывается процент?',
     methodSummary:'<b>Как считаем результат</b>',
-    methodText:'<p><b>Что мы измеряем</b></p><p>Ваш браузер передаёт сайтам 21\u00A0параметр: тип браузера, ОС, разрешение экрана, видеокарту, число ядер процессора, объём памяти, языки, расширения, графический и аудио\u2011отпечатки, шрифты и другие.</p><p><b>Как считаем</b></p><p>Для каждого параметра мы смотрим, насколько он редкий. Например, Chrome на Windows\u00A0\u2014 массовая комбинация. А старый Firefox с необычным GPU\u00A0\u2014 редкость, которая выделяет вас из толпы.</p><p>Чем больше редких параметров совпало\u00A0\u2014 тем выше итоговый балл.</p><p><b>Откуда берутся данные</b></p><p>Вероятности основаны на открытых исследованиях EFF\u00A0Panopticlick и FingerprintJS. Мы также учитываем зависимости между параметрами (Safari всегда работает с Apple\u00A0GPU, поэтому эта пара не удваивает счёт).</p><p><b>Что означает процент</b></p><p>Мы моделируем 25\u00A0000\u00A0виртуальных браузеров и сравниваем ваш результат с ними. Если вы набрали 85%\u00A0\u2014 значит ваш отпечаток уникальнее, чем у 85% смоделированных пользователей.</p><p style="opacity:.7;font-size:13px">Все вычисления происходят в вашем браузере и никуда не отправляются.</p>',
-    policySummary:'<b>Как обращаемся с данными</b>',
-    policyText:'Все вычисления выполняет ваш браузер. При загрузке страницы браузер запрашивает данные о вашем IP через ipapi.co (при недоступности — freeipapi.com, ipify.org или myip.com). Мы показываем весь ответ в интерфейсе. Других внешних запросов нет. Сторонние шрифты, трекеры и скрытые запросы не подключаются.',
+    methodText:'<p><b>Что мы измеряем</b></p><p>Ваш браузер передаёт сайтам 21\u00A0параметр: тип браузера, ОС, разрешение экрана, видеокарту, число ядер процессора, объём памяти, языки, расширения, графический и аудио\u2011отпечатки, шрифты и другие.</p><p><b>Как считаем</b></p><p>Для каждого параметра мы смотрим, насколько он редкий. Например, Chrome на Windows\u00A0\u2014 массовая комбинация. А старый Firefox с необычным GPU\u00A0\u2014 редкость, которая выделяет вас из толпы.</p><p>Чем больше редких параметров совпало\u00A0\u2014 тем выше итоговый балл.</p><p><b>Откуда берутся данные</b></p><p>Вероятности основаны на открытых исследованиях EFF\u00A0Panopticlick и FingerprintJS. Мы также учитываем зависимости между параметрами (Safari всегда работает с Apple\u00A0GPU, поэтому эта пара не удваивает счёт).</p><p><b>Что означает процент</b></p><p>Мы моделируем 25\u00A0000\u00A0виртуальных браузеров и сравниваем ваш результат с ними. Если вы набрали 85%\u00A0\u2014 значит ваш отпечаток уникальнее, чем у 85% смоделированных пользователей.</p><p style="opacity:.7;font-size:13px">Балл считается в вашем браузере: параметры для него никуда не отправляются.</p>',
     batteryUnavailable:'Недоступно в этом браузере',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Локальный аудит отпечатка • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="История изменений">v${version}</button><br><span style="opacity:.5;font-size:12px">Сервис размещён на Cloudflare. Cloudflare Web Analytics собирает анонимную статистику посещений (без cookies и персональных данных).</span><br><span id="footerVisitCount" style="display:none;opacity:.5;font-size:12px"></span>`,
     entropyUnit:'бит',
@@ -1359,9 +1368,20 @@ const I18N = {
           </ul>
           <h3>How we process data</h3>
           <p>
-            All calculations happen only in your browser. We do not store or transmit anything.
-            The service is completely free, ad-free, and requires no registration.
+            Your fingerprint, uniqueness score and profile are computed in your browser; the page does not upload them.
+            The service is free, with no ads and no sign-up. What does go over the network:
           </p>
+          <ul class="fp-list">
+            <li>When the page opens: a request for aggregate stats to our server on Cloudflare, and a cookieless
+              page view count by Cloudflare Web Analytics. Like any server, they see your IP address and browser.</li>
+            <li>When you click “Check network”: requests to our server. It shows you your IP, ISP and headers,
+              measures your speed and checks your IP with ip-api.com (ipinfo.io as fallback), whoisjson.com and Google DNS.
+              The report is cached under your IP for one hour; the anonymous stats (browser, OS, country) never get your IP.
+              If our server is down, the browser asks public IP services directly
+              (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
+            <li>When you click “Compare with real data”: FingerprintJS Pro. Its script sends your browser’s signals
+              and IP address to FingerprintJS servers and returns a visitor ID. It does not load until you click.</li>
+          </ul>
         </details>
       </section>
     `,
@@ -1370,7 +1390,7 @@ const I18N = {
       'You visited dozens of websites without signing up — leaving the same fingerprint everywhere. Then you created an account on one of them. Now ad networks can link all your past visits to your name and sell that profile.',
       'Stores raise prices based on your device and perceived spending power. Scammers know your city, ISP, and device — phishing becomes more precise. Insurance companies and employers buy profiles from data brokers. Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.',
       'It shows what is visible about you right now and explains how to reduce the risks — no technical knowledge required.',
-      'All calculations happen only in your browser. We do not store or transmit anything. The service is completely free, ad-free, and requires no registration. On page load, the browser queries your IP data via ipapi.co (with fallbacks to freeipapi.com, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests — no third-party fonts, trackers, or hidden scripts.'
+      'Your fingerprint, uniqueness score and profile are computed in your browser; the page does not upload them. The service is free, with no ads and no sign-up. When it opens, the page asks our server on Cloudflare for aggregate stats, and Cloudflare Web Analytics counts the view without cookies. Your IP is checked only when you click “Check network” (our server, ip-api.com, whoisjson.com, Google DNS), and FingerprintJS Pro loads only when you click “Compare with real data”.'
     ],
     uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
     uniqPracticeTitle:'What this means in practice:',
@@ -1682,7 +1702,7 @@ const I18N = {
     },
     detailTitle:'Details for professionals',
     networkTitle:'Network Analysis',
-    networkDesc:'We\u2019ll detect your IP address, ISP, VPN status, and connection speed. Data is fetched only when you click.',
+    networkDesc:'We\u2019ll detect your IP address, ISP, VPN status, and connection speed. Requests go out only when you click: to our server, which then asks ip-api.com, whoisjson.com and Google DNS.',
     networkButton:'Check network',
     networkLoading:'Checking...',
     networkRecheck:'Re-check',
@@ -1707,7 +1727,7 @@ const I18N = {
     },
     fpjsTitle:'Compare with global database',
     fpjsDesc:'Compare your fingerprint against FingerprintJS Pro\u2019s database (billions of fingerprints). This shows how identifiable you really are.',
-    fpjsDisclaimer:'\u26A0 Data will be sent to FingerprintJS servers for comparison. We use the free tier (up to 20,000 checks/month). FingerprintJS does not receive your personal data.',
+    fpjsDisclaimer:'\u26A0 The button loads FingerprintJS Pro: it sends your browser\u2019s signals and IP address to FingerprintJS servers and returns a visitor ID.',
     fpjsButton:'Compare with global database',
     fpjsLoading:'Loading...',
     fpjsRecheck:'Re-check',
@@ -1822,7 +1842,7 @@ const I18N = {
           if(String(finding.value||'').toLowerCase().includes('medium')) return 'Medium trackability without cookies';
           return 'Low trackability without cookies';
         },
-        'privacy.local':()=> 'All computations stay inside your browser.',
+        'privacy.local':()=> 'The profile is built locally in your browser.',
         'privacy.permissions':()=> 'Advanced insights run only after you explicitly grant permission.',
         'browser.uaCh':finding=>finding.value,
         'network.profile':finding=>String(finding.value||'')
@@ -1875,7 +1895,7 @@ const I18N = {
         'storage.quota':'More quota lets sites persist more identifiers.',
         'fingerprint.trackability':'Strong signals let sites recognise you without cookies.',
         'browser.uaCh':'UA-CH exposes precise versions for targeting and compatibility.',
-        'privacy.local':'Nothing leaves your browser unless you decide to share it.',
+        'privacy.local':'The profile is not uploaded; the network check and FingerprintJS Pro run only when you click.',
         'privacy.permissions':'Permissions granted elsewhere automatically apply here.',
         'fingerprint.fonts':'Font sets can still single you out even when other signals are reduced.',
         'privacy.cookies':'Cookies restore sessions and enable persistent recognition.',
@@ -1971,9 +1991,7 @@ const I18N = {
     advicePrefix:'💡 Tip:',
     methodologyButton:'How is the percentage calculated?',
     methodSummary:'<b>How we calculate it</b>',
-    methodText:'<p><b>What we measure</b></p><p>Your browser reveals 21\u00A0parameters to every website: browser type, OS, screen resolution, GPU, CPU cores, memory, languages, extensions, graphics and audio fingerprints, fonts, and more.</p><p><b>How we score</b></p><p>For each parameter we check how common it is. Chrome on Windows is extremely common. An older Firefox with an unusual GPU is rare\u00A0\u2014 and that rarity makes you stand out.</p><p>The more rare parameters match\u00A0\u2014 the higher your score.</p><p><b>Where the data comes from</b></p><p>Probabilities are based on public research by EFF\u00A0Panopticlick and FingerprintJS. We also account for correlations between signals (Safari always runs on Apple\u00A0GPU, so that pair doesn\u2019t double-count).</p><p><b>What the percentage means</b></p><p>We simulate 25,000\u00A0virtual browsers and compare your result against them. If you scored 85%\u00A0\u2014 your fingerprint is more unique than 85% of simulated users.</p><p style="opacity:.7;font-size:13px">All calculations happen in your browser and nothing is uploaded.</p>',
-    policySummary:'<b>How we handle data</b>',
-    policyText:'All processing happens in your browser. On page load, the browser queries your IP data via ipapi.co (with fallbacks to freeipapi.com, ipify.org, or myip.com if unavailable). We display the full response in the interface. There are no other external requests. No extra fonts, trackers, or hidden requests are loaded.',
+    methodText:'<p><b>What we measure</b></p><p>Your browser reveals 21\u00A0parameters to every website: browser type, OS, screen resolution, GPU, CPU cores, memory, languages, extensions, graphics and audio fingerprints, fonts, and more.</p><p><b>How we score</b></p><p>For each parameter we check how common it is. Chrome on Windows is extremely common. An older Firefox with an unusual GPU is rare\u00A0\u2014 and that rarity makes you stand out.</p><p>The more rare parameters match\u00A0\u2014 the higher your score.</p><p><b>Where the data comes from</b></p><p>Probabilities are based on public research by EFF\u00A0Panopticlick and FingerprintJS. We also account for correlations between signals (Safari always runs on Apple\u00A0GPU, so that pair doesn\u2019t double-count).</p><p><b>What the percentage means</b></p><p>We simulate 25,000\u00A0virtual browsers and compare your result against them. If you scored 85%\u00A0\u2014 your fingerprint is more unique than 85% of simulated users.</p><p style="opacity:.7;font-size:13px">The score is computed in your browser; the parameters behind it are not uploaded.</p>',
     batteryUnavailable:'Not available in this browser',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Local fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="Changelog">v${version}</button><br><span style="opacity:.5;font-size:12px">Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics (no cookies, no personal data).</span><br><span id="footerVisitCount" style="display:none;opacity:.5;font-size:12px"></span>`,
     entropyUnit:'bits',
@@ -2105,9 +2123,20 @@ const I18N = {
           </ul>
           <h3>Maʼlumotlar qanday ishlanadi</h3>
           <p>
-            Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz.
-            Xizmat toʻliq bepul, reklama va roʻyxatdan oʻtishsiz.
+            Barmoq izi, noyoblik bahosi va profil brauzeringizda hisoblanadi — sahifa ularni yubormaydi.
+            Xizmat bepul, reklama va roʻyxatdan oʻtishsiz. Tarmoqqa nima ketadi:
           </p>
+          <ul class="fp-list">
+            <li>Sahifa ochilganda — Cloudflare’dagi serverimizdan umumiy statistika soʻraladi, Cloudflare Web Analytics
+              esa koʻrishni cookiesiz hisoblaydi. Har qanday server kabi ular IP-manzilingiz va brauzeringizni koʻradi.</li>
+            <li>«Tarmoqni tekshirish» bosilganda — serverimizga soʻrovlar ketadi. U IP, provayder va sarlavhalaringizni
+              koʻrsatadi, tezlikni oʻlchaydi va IP-ni ip-api.com (zaxira — ipinfo.io), whoisjson.com va Google DNS orqali tekshiradi.
+              Hisobot IP-ingiz boʻyicha bir soat saqlanadi; anonim statistikaga (brauzer, OT, mamlakat) IP tushmaydi.
+              Serverimiz ishlamasa, brauzer ochiq IP xizmatlaridan toʻgʻridan-toʻgʻri soʻraydi
+              (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
+            <li>«Haqiqiy maʼlumotlar bilan solishtirish» bosilganda — FingerprintJS Pro: uning skripti brauzeringiz signallari
+              va IP-manzilingizni FingerprintJS serverlariga yuboradi va tashrif ID sini qaytaradi. Bosmaguningizcha u yuklanmaydi.</li>
+          </ul>
         </details>
       </section>
     `,
@@ -2116,7 +2145,7 @@ const I18N = {
       'Siz o\u02BBnlab saytlarga ro\u02BByxatdan o\u02BBtmasdan kirdingiz — hammada bir xil iz qoldirdingiz. Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari barcha oldingi tashriflarni ismingiz bilan bog\u02BBlab, bu profilni sotishi mumkin.',
       'Do\u02BBkonlar qurilma va to\u02BBlov qobiliyatingizni bilib narxlarni oshiradi. Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq bo\u02BBladi. Sug\u02BBurta kompaniyalari va ish beruvchilar ma\u02BClumot brokerlaridan profillar sotib oladi. Ma\u02BClumotlar bazasi sizib chiqqandan keyin profilni «o\u02BBchirish» mumkin emas.',
       'Hozir siz haqingizda nimalar ko\u02BBrinishini ko\u02BBrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.',
-      'Barcha hisob-kitoblar faqat brauzeringizda bajariladi. Biz hech narsani saqlamaymiz va uzatmaymiz. Xizmat to\u02BBliq bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa freeipapi.com, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq — uchinchi tomon shriftlar, trekerlar yoki yashirin skriptlar yo\u02BBq.'
+      'Barmoq izi, noyoblik bahosi va profil brauzeringizda hisoblanadi — sahifa ularni yubormaydi. Xizmat bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa ochilganda Cloudflare\u2019dagi serverimizdan umumiy statistika so\u02BBraladi, Cloudflare Web Analytics esa ko\u02BBrishni cookiesiz hisoblaydi. IP faqat \u00ABTarmoqni tekshirish\u00BB bosilganda tekshiriladi (serverimiz, ip-api.com, whoisjson.com, Google DNS), FingerprintJS Pro esa faqat \u00ABHaqiqiy ma\u02BClumotlar bilan solishtirish\u00BB bosilganda yuklanadi.'
     ],
     uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
     uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
@@ -2428,7 +2457,7 @@ const I18N = {
     },
     detailTitle:"Mutaxassislar uchun tafsilotlar",
     networkTitle:"Tarmoq tahlili",
-    networkDesc:"IP-manzilingiz, provayder, VPN holati va ulanish tezligini aniqlaymiz. Ma\u02BClumotlar faqat siz bosganda so\u02BBraladi.",
+    networkDesc:"IP-manzilingiz, provayder, VPN holati va ulanish tezligini aniqlaymiz. So\u02BBrovlar faqat siz bosganda ketadi: serverimizga, u esa ip-api.com, whoisjson.com va Google DNS dan so\u02BBraydi.",
     networkButton:"Tarmoqni tekshirish",
     networkLoading:"Tekshirilmoqda...",
     networkRecheck:"Qayta tekshirish",
@@ -2453,7 +2482,7 @@ const I18N = {
     },
     fpjsTitle:"Global baza bilan solishtirish",
     fpjsDesc:"Barmoq izingizni FingerprintJS Pro bazasi (milliardlab izlar) bilan solishtiring. Bu sizni qanchalik aniqlanishingizni ko\u02BBrsatadi.",
-    fpjsDisclaimer:"\u26A0 Ma\u02BClumotlar solishtirish uchun FingerprintJS serverlariga yuboriladi. Bepul tarif (oyiga 20\u00A0000 tekshiruvgacha). FingerprintJS shaxsiy ma\u02BClumotlaringizni olmaydi.",
+    fpjsDisclaimer:"\u26A0 Tugma FingerprintJS Pro ni yuklaydi: u brauzeringiz signallari va IP-manzilingizni FingerprintJS serverlariga yuboradi va tashrif ID sini qaytaradi.",
     fpjsButton:"Global baza bilan solishtirish",
     fpjsLoading:"Yuklanmoqda...",
     fpjsRecheck:"Qayta tekshirish",
@@ -2568,7 +2597,7 @@ const I18N = {
           if(String(finding.value||'').toLowerCase().includes('medium')) return 'Kukisiz kuzatish o‘rtacha';
           return 'Kukisiz kuzatish qiyin';
         },
-        'privacy.local':()=> 'Barcha hisob-kitoblar brauzeringizda bajariladi.',
+        'privacy.local':()=> 'Profil brauzeringizda tuziladi.',
         'privacy.permissions':()=> 'Qo‘shimcha signallar faqat siz ruxsat berganingizdan keyin olinadi.',
         'browser.uaCh':finding=>finding.value,
         'network.profile':finding=>String(finding.value||'')
@@ -2646,7 +2675,7 @@ const I18N = {
         'storage.quota':'Katta kvota ko‘proq identifikator saqlashga imkon beradi.',
         'fingerprint.trackability':'Kuchli signallar kukisiz ham qayta tanishga yordam beradi.',
         'browser.uaCh':'UA-CH aniq versiyalarni ochib beradi va maqsadli ko‘rsatmalarga xizmat qiladi.',
-        'privacy.local':'Maʼlumotlar siz ulashmaguningizcha brauzerdan chiqmaydi.',
+        'privacy.local':'Profil serverga yuborilmaydi; tarmoq tekshiruvi va FingerprintJS Pro faqat tugma bosilganda ishlaydi.',
         'privacy.permissions':'Boshqa saytga berilgan ruxsatlar shu yerda ham amal qiladi.',
         'fingerprint.fonts':'Shrift to‘plamlari sizni boshqa foydalanuvchilardan ajratishi mumkin.',
         'privacy.cookies':'Cookie seanslarni tiklash va kuzatuv uchun ishlatiladi.',
@@ -2740,9 +2769,7 @@ const I18N = {
     advicePrefix:'💡 Maslahat:',
     methodologyButton:"Foiz qanday hisoblanadi?",
     methodSummary:'<b>Natija qanday olinadi</b>',
-    methodText:'<p><b>Nimani o\u02BBlchaymiz</b></p><p>Brauzeringiz har bir saytga 21\u00A0ta parametrni uzatadi: brauzer turi, OT, ekran o\u02BBlchami, videokarta, protsessor yadrolari, xotira, tillar, kengaytmalar, grafik va audio izlar, shriftlar va boshqalar.</p><p><b>Qanday baholaymiz</b></p><p>Har bir parametr uchun uning qanchalik kam uchraydigani tekshiriladi. Windows\u2019da Chrome\u00A0\u2014 juda keng tarqalgan. Noodatiy GPU bilan eski Firefox\u00A0\u2014 noyoblik, siz ajralib turasiz.</p><p>Noyob parametrlar qancha ko\u02BBp bo\u02BBlsa\u00A0\u2014 ball shuncha yuqori.</p><p><b>Ma\u02BClumot qayerdan</b></p><p>Ehtimolliklar EFF\u00A0Panopticlick va FingerprintJS ochiq tadqiqotlariga asoslangan. Signallar orasidagi bog\u02BBliqliklar ham hisobga olinadi.</p><p><b>Foiz nimani anglatadi</b></p><p>25\u00A0000\u00A0ta virtual brauzer modellashtiriladi va sizning natijangiz ular bilan taqqoslanadi. Agar 85% bo\u02BBlsa\u00A0\u2014 sizning izingiz modellashtirilgan foydalanuvchilarning 85% dan noyobroq.</p><p style="opacity:.7;font-size:13px">Barcha hisob-kitoblar brauzeringizda amalga oshiriladi va hech qayerga yuborilmaydi.</p>',
-    policySummary:'<b>Maʼlumotlardan foydalanish</b>',
-    policyText:"Barcha jarayon brauzer ichida bo\u02BBladi. Sahifa yuklanganda brauzer IP ma\u02BClumotlarini ipapi.co orqali so\u02BBraydi (mavjud bo\u02BBlmasa freeipapi.com, ipify.org yoki myip.com ishlatiladi). Javobning hammasini interfeysda ko\u02BBrsatamiz. Boshqa tashqi so\u02BBrovlar yo\u02BBq.",
+    methodText:'<p><b>Nimani o\u02BBlchaymiz</b></p><p>Brauzeringiz har bir saytga 21\u00A0ta parametrni uzatadi: brauzer turi, OT, ekran o\u02BBlchami, videokarta, protsessor yadrolari, xotira, tillar, kengaytmalar, grafik va audio izlar, shriftlar va boshqalar.</p><p><b>Qanday baholaymiz</b></p><p>Har bir parametr uchun uning qanchalik kam uchraydigani tekshiriladi. Windows\u2019da Chrome\u00A0\u2014 juda keng tarqalgan. Noodatiy GPU bilan eski Firefox\u00A0\u2014 noyoblik, siz ajralib turasiz.</p><p>Noyob parametrlar qancha ko\u02BBp bo\u02BBlsa\u00A0\u2014 ball shuncha yuqori.</p><p><b>Ma\u02BClumot qayerdan</b></p><p>Ehtimolliklar EFF\u00A0Panopticlick va FingerprintJS ochiq tadqiqotlariga asoslangan. Signallar orasidagi bog\u02BBliqliklar ham hisobga olinadi.</p><p><b>Foiz nimani anglatadi</b></p><p>25\u00A0000\u00A0ta virtual brauzer modellashtiriladi va sizning natijangiz ular bilan taqqoslanadi. Agar 85% bo\u02BBlsa\u00A0\u2014 sizning izingiz modellashtirilgan foydalanuvchilarning 85% dan noyobroq.</p><p style="opacity:.7;font-size:13px">Ball brauzeringizda hisoblanadi: uning parametrlari hech qayerga yuborilmaydi.</p>',
     batteryUnavailable:'Bu brauzerda mavjud emas',
     footer:version=>`© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Mahalliy fingerprint audit • <button id="versionBtn" class="btn" style="padding:2px 8px;font-size:12px;border-radius:6px;display:inline-flex;cursor:pointer" title="O\u02BBzgarishlar tarixi">v${version}</button><br><span style="opacity:.5;font-size:12px">Cloudflare\u2019da joylashtirilgan. Cloudflare Web Analytics anonim tashrif statistikasini yig\u02BBadi (cookie va shaxsiy ma\u02BClumotlarsiz).</span><br><span id="footerVisitCount" style="display:none;opacity:.5;font-size:12px"></span>`,
     entropyUnit:'bit',
@@ -6270,9 +6297,11 @@ async function render(lang){
   const fpjsHeroBtnEl=getEl('fpjsHeroBtn');
   if(fpjsHeroBtnEl){
     const fpjsHeroBtnLabel={ru:'\uD83D\uDD0D \u0421\u0440\u0430\u0432\u043d\u0438\u0442\u044c \u0441 \u0440\u0435\u0430\u043b\u044c\u043d\u044b\u043c\u0438 \u0434\u0430\u043d\u043d\u044b\u043c\u0438',en:'\uD83D\uDD0D Compare with real data',uz:'\uD83D\uDD0D Haqiqiy ma\'lumotlar bilan solishtirish'}[currentLang]||'\uD83D\uDD0D Compare with real data';
+    fpjsHeroBtnEl.dataset.label=fpjsHeroBtnLabel;
     if(!fpjsHeroBtnEl.disabled) fpjsHeroBtnEl.textContent=fpjsHeroBtnLabel;
     fpjsHeroBtnEl.style.display='';
   }
+  renderFpjsHeroBadge(t);
   const methodBtn=getEl('methodologyBtn');
   if(methodBtn) methodBtn.textContent=t.methodologyButton||'How is the percentage calculated?';
   const footerEl=getEl('footerText');
@@ -6414,9 +6443,6 @@ async function render(lang){
     addCard(frag,'fullness',t.formatFullness(filled,total),t);
     addHashCard(frag,'fp',fp,t);
     cards.appendChild(frag);
-
-    // Auto-run FingerprintJS Pro after main scan completes (show badge in hero)
-    autoRunFingerprintJS();
   }catch(e){
     if(token!==renderToken)return;
     console.error(e);
@@ -7191,6 +7217,7 @@ function updateFooterVisitCount(){
 
 /* ============== FingerprintJS Pro (Advanced) ============== */
 let _fpjsPromise=null;
+let _fpjsResult=null;
 const FPJS_API_KEY='sE9LTvMdm0ITAz950nNQ'; // gitleaks:allow — public FingerprintJS browser key, already visible in the fpjscdn.net URL below
 async function loadFingerprintJS(){
   if(_fpjsPromise) return _fpjsPromise;
@@ -7220,10 +7247,21 @@ function showFpjsHeroBadge(result,t){
   badge.style.display='';
 }
 
+// FingerprintJS Pro runs only on a click: until then the badge says what the comparison sends where.
+function renderFpjsHeroBadge(t){
+  if(_fpjsResult){showFpjsHeroBadge(_fpjsResult,t);return;}
+  const badge=getEl('heroBadgeFpjs');
+  if(!badge) return;
+  badge.textContent=t.fpjsDisclaimer||'';
+  badge.style.display=t.fpjsDisclaimer?'':'none';
+}
+
 async function handleFpjsClick(){
   const btn=getEl('fpjsBtn');
+  const heroBtn=getEl('fpjsHeroBtn');
   const t=I18N[currentLang]||I18N.ru;
   if(btn){btn.disabled=true;btn.textContent=t.fpjsLoading||'Loading...';}
+  if(heroBtn){heroBtn.disabled=true;heroBtn.textContent=t.fpjsLoading||'Loading...';}
   try{
     const FpJS=await loadFingerprintJS();
     const fp=await FpJS.load();
@@ -7252,7 +7290,7 @@ async function handleFpjsClick(){
     }
     const resultsEl=getEl('fpjsResults');
     if(resultsEl) resultsEl.style.display='';
-    // Show result in hero badge
+    _fpjsResult=result;
     showFpjsHeroBadge(result,t);
     if(btn){btn.textContent=t.fpjsRecheck||'Re-check';btn.disabled=false;}
   }catch(e){
@@ -7262,18 +7300,13 @@ async function handleFpjsClick(){
       resultsEl.style.display='';
       resultsEl.innerHTML='<p class="small" style="color:var(--danger)">'+esc(e.message||'FingerprintJS error')+'</p>';
     }
-  }
-}
-
-async function autoRunFingerprintJS(){
-  try{
-    const t=I18N[currentLang]||I18N.ru;
-    const FpJS=await loadFingerprintJS();
-    const fp=await FpJS.load();
-    const result=await fp.get();
-    showFpjsHeroBadge(result,t);
-  }catch(e){
-    // Silently fail - FingerprintJS is optional enhancement
+    const badge=getEl('heroBadgeFpjs');
+    if(badge){
+      badge.innerHTML='<span style="color:var(--danger)">'+esc(e.message||'FingerprintJS error')+'</span>';
+      badge.style.display='';
+    }
+  }finally{
+    if(heroBtn){heroBtn.textContent=heroBtn.dataset.label||'';heroBtn.disabled=false;}
   }
 }
 
