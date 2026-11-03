@@ -129,12 +129,24 @@ class Element {
           results.push(node);
         }
       }
+      const dataAttr = /^\[data-([a-z-]+)="([^"]*)"\]$/.exec(selector);
+      if (dataAttr) {
+        const key = dataAttr[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        if (node.dataset && node.dataset[key] === dataAttr[2]) results.push(node);
+      }
+      if (/^\.[\w-]+$/.test(selector)) {
+        const cls = selector.slice(1);
+        if (node.classList._set.has(cls) || String(node.className).split(/\s+/).includes(cls)) results.push(node);
+      }
       if (Array.isArray(node.children)) {
         node.children.forEach(child => match(child));
       }
     };
     match(this);
     return results;
+  }
+  querySelector(selector) {
+    return this.querySelectorAll(selector)[0] || null;
   }
   click() {
     const event = {
@@ -722,6 +734,7 @@ const sandbox = {
   TextEncoder,
   crypto: webcrypto,
   URL: windowStub.URL,
+  URLSearchParams,
   RTCPeerConnection: windowStub.RTCPeerConnection,
   Blob: windowStub.Blob,
   File: windowStub.File,
@@ -733,14 +746,25 @@ const sandbox = {
   AbortController
 };
 
+// The live clock ticks on an interval; unref it so the test process can exit.
+const unrefInterval = (fn, ms) => {
+  const id = setInterval(fn, ms);
+  if (id && typeof id.unref === 'function') id.unref();
+  return id;
+};
+sandbox.setInterval = unrefInterval;
+sandbox.clearInterval = clearInterval;
+
 sandbox.window.window = sandbox.window;
 sandbox.window.setTimeout = setTimeout;
 sandbox.window.clearTimeout = clearTimeout;
+sandbox.window.setInterval = unrefInterval;
+sandbox.window.clearInterval = clearInterval;
 
 vm.createContext(sandbox);
 vm.runInContext(script, sandbox, { filename: 'index-inline.js' });
 const stateRef = vm.runInContext('state', sandbox);
-const invalidateSnapshot = vm.runInContext('invalidateSnapshot', sandbox);
+const invalidateSnapshot = () => vm.runInContext('snapshotCache = null; snapshotPromise = null;', sandbox);
 const I18N = vm.runInContext('I18N', sandbox);
 
 (async () => {
