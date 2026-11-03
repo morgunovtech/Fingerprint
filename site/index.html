@@ -420,7 +420,7 @@
             <li>При открытии страницы — запрос общей статистики к нашему серверу на Cloudflare и подсчёт
               просмотра Cloudflare Web Analytics без cookie. Как любой сервер, они видят ваш IP-адрес и браузер.</li>
             <li>По кнопке «Проверить сеть» — запросы к нашему серверу. Он показывает ваш IP, провайдера и заголовки,
-              измеряет скорость и проверяет IP через ip-api.com (запасной — ipinfo.io), whoisjson.com и Google DNS.
+              измеряет скорость и проверяет IP через ipquery.io (запасной — ipinfo.io), whoisjson.com и Google DNS.
               Отчёт хранится под вашим IP один час; в анонимную статистику (браузер, ОС, страна) IP не попадает.
               Если наш сервер недоступен, браузер спрашивает публичные сервисы IP напрямую
               (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
@@ -585,7 +585,7 @@ const I18N = {
       'Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток. Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать все прошлые визиты с вашим именем и продать этот профиль.',
       'Магазины повышают цены, зная ваше устройство и платёжеспособность. Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее. Страховые компании и работодатели покупают профили у брокеров данных. После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.',
       'Показывает, что видно о вас прямо сейчас, и объясняет, как снизить риски — без технических знаний.',
-      'Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет. Сервис бесплатный, без рекламы и регистрации. При открытии страница запрашивает общую статистику у нашего сервера на Cloudflare, а Cloudflare Web Analytics считает просмотр без cookie. IP проверяется только по кнопке «Проверить сеть» (наш сервер, ip-api.com, whoisjson.com, Google DNS). Ни одна сторонняя служба не видит ваш отпечаток.'
+      'Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет. Сервис бесплатный, без рекламы и регистрации. При открытии страница запрашивает общую статистику у нашего сервера на Cloudflare, а Cloudflare Web Analytics считает просмотр без cookie. IP проверяется только по кнопке «Проверить сеть» (наш сервер, ipquery.io, whoisjson.com, Google DNS). Ни одна сторонняя служба не видит ваш отпечаток.'
     ],
     uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
     uniqPracticeTitle:'Что это значит на практике:',
@@ -897,7 +897,7 @@ const I18N = {
     },
     detailTitle:'Подробности для профессионалов',
     networkTitle:'Анализ сети',
-    networkDesc:'Определим ваш IP-адрес, провайдера, наличие VPN и скорость соединения. Запросы уходят только по нажатию: нашему серверу, а от него — ip-api.com, whoisjson.com и Google DNS.',
+    networkDesc:'Определим ваш IP-адрес, провайдера, наличие VPN и скорость соединения. Запросы уходят только по нажатию: нашему серверу, а от него — ipquery.io, whoisjson.com и Google DNS.',
     networkButton:'Проверить сеть',
     networkLoading:'Проверяем...',
     networkRecheck:'Проверить снова',
@@ -1351,7 +1351,7 @@ const I18N = {
             <li>When the page opens: a request for aggregate stats to our server on Cloudflare, and a cookieless
               page view count by Cloudflare Web Analytics. Like any server, they see your IP address and browser.</li>
             <li>When you click “Check network”: requests to our server. It shows you your IP, ISP and headers,
-              measures your speed and checks your IP with ip-api.com (ipinfo.io as fallback), whoisjson.com and Google DNS.
+              measures your speed and checks your IP with ipquery.io (ipinfo.io as fallback), whoisjson.com and Google DNS.
               The report is cached under your IP for one hour; the anonymous stats (browser, OS, country) never get your IP.
               If our server is down, the browser asks public IP services directly
               (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
@@ -1364,7 +1364,7 @@ const I18N = {
       'You visited dozens of websites without signing up — leaving the same fingerprint everywhere. Then you created an account on one of them. Now ad networks can link all your past visits to your name and sell that profile.',
       'Stores raise prices based on your device and perceived spending power. Scammers know your city, ISP, and device — phishing becomes more precise. Insurance companies and employers buy profiles from data brokers. Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.',
       'It shows what is visible about you right now and explains how to reduce the risks — no technical knowledge required.',
-      'Your fingerprint, uniqueness score and profile are computed in your browser; the page does not upload them. The service is free, with no ads and no sign-up. When it opens, the page asks our server on Cloudflare for aggregate stats, and Cloudflare Web Analytics counts the view without cookies. Your IP is checked only when you click “Check network” (our server, ip-api.com, whoisjson.com, Google DNS). No third party sees your fingerprint.'
+      'Your fingerprint, uniqueness score and profile are computed in your browser; the page does not upload them. The service is free, with no ads and no sign-up. When it opens, the page asks our server on Cloudflare for aggregate stats, and Cloudflare Web Analytics counts the view without cookies. Your IP is checked only when you click “Check network” (our server, ipquery.io, whoisjson.com, Google DNS). No third party sees your fingerprint.'
     ],
     uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
     uniqPracticeTitle:'What this means in practice:',
@@ -1676,7 +1676,7 @@ const I18N = {
     },
     detailTitle:'Details for professionals',
     networkTitle:'Network Analysis',
-    networkDesc:'We\u2019ll detect your IP address, ISP, VPN status, and connection speed. Requests go out only when you click: to our server, which then asks ip-api.com, whoisjson.com and Google DNS.',
+    networkDesc:'We\u2019ll detect your IP address, ISP, VPN status, and connection speed. Requests go out only when you click: to our server, which then asks ipquery.io, whoisjson.com and Google DNS.',
     networkButton:'Check network',
     networkLoading:'Checking...',
     networkRecheck:'Re-check',
@@ -2097,7 +2097,7 @@ const I18N = {
             <li>Sahifa ochilganda — Cloudflare’dagi serverimizdan umumiy statistika soʻraladi, Cloudflare Web Analytics
               esa koʻrishni cookiesiz hisoblaydi. Har qanday server kabi ular IP-manzilingiz va brauzeringizni koʻradi.</li>
             <li>«Tarmoqni tekshirish» bosilganda — serverimizga soʻrovlar ketadi. U IP, provayder va sarlavhalaringizni
-              koʻrsatadi, tezlikni oʻlchaydi va IP-ni ip-api.com (zaxira — ipinfo.io), whoisjson.com va Google DNS orqali tekshiradi.
+              koʻrsatadi, tezlikni oʻlchaydi va IP-ni ipquery.io (zaxira — ipinfo.io), whoisjson.com va Google DNS orqali tekshiradi.
               Hisobot IP-ingiz boʻyicha bir soat saqlanadi; anonim statistikaga (brauzer, OT, mamlakat) IP tushmaydi.
               Serverimiz ishlamasa, brauzer ochiq IP xizmatlaridan toʻgʻridan-toʻgʻri soʻraydi
               (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
@@ -2110,7 +2110,7 @@ const I18N = {
       'Siz o\u02BBnlab saytlarga ro\u02BByxatdan o\u02BBtmasdan kirdingiz — hammada bir xil iz qoldirdingiz. Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari barcha oldingi tashriflarni ismingiz bilan bog\u02BBlab, bu profilni sotishi mumkin.',
       'Do\u02BBkonlar qurilma va to\u02BBlov qobiliyatingizni bilib narxlarni oshiradi. Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq bo\u02BBladi. Sug\u02BBurta kompaniyalari va ish beruvchilar ma\u02BClumot brokerlaridan profillar sotib oladi. Ma\u02BClumotlar bazasi sizib chiqqandan keyin profilni «o\u02BBchirish» mumkin emas.',
       'Hozir siz haqingizda nimalar ko\u02BBrinishini ko\u02BBrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.',
-      'Barmoq izi, noyoblik bahosi va profil brauzeringizda hisoblanadi — sahifa ularni yubormaydi. Xizmat bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa ochilganda Cloudflare\u2019dagi serverimizdan umumiy statistika so\u02BBraladi, Cloudflare Web Analytics esa ko\u02BBrishni cookiesiz hisoblaydi. IP faqat \u00ABTarmoqni tekshirish\u00BB bosilganda tekshiriladi (serverimiz, ip-api.com, whoisjson.com, Google DNS). Barmoq izingizni hech qanday uchinchi tomon ko\u02BBrmaydi.'
+      'Barmoq izi, noyoblik bahosi va profil brauzeringizda hisoblanadi — sahifa ularni yubormaydi. Xizmat bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa ochilganda Cloudflare\u2019dagi serverimizdan umumiy statistika so\u02BBraladi, Cloudflare Web Analytics esa ko\u02BBrishni cookiesiz hisoblaydi. IP faqat \u00ABTarmoqni tekshirish\u00BB bosilganda tekshiriladi (serverimiz, ipquery.io, whoisjson.com, Google DNS). Barmoq izingizni hech qanday uchinchi tomon ko\u02BBrmaydi.'
     ],
     uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
     uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
@@ -2422,7 +2422,7 @@ const I18N = {
     },
     detailTitle:"Mutaxassislar uchun tafsilotlar",
     networkTitle:"Tarmoq tahlili",
-    networkDesc:"IP-manzilingiz, provayder, VPN holati va ulanish tezligini aniqlaymiz. So\u02BBrovlar faqat siz bosganda ketadi: serverimizga, u esa ip-api.com, whoisjson.com va Google DNS dan so\u02BBraydi.",
+    networkDesc:"IP-manzilingiz, provayder, VPN holati va ulanish tezligini aniqlaymiz. So\u02BBrovlar faqat siz bosganda ketadi: serverimizga, u esa ipquery.io, whoisjson.com va Google DNS dan so\u02BBraydi.",
     networkButton:"Tarmoqni tekshirish",
     networkLoading:"Tekshirilmoqda...",
     networkRecheck:"Qayta tekshirish",

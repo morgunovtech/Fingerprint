@@ -764,6 +764,47 @@ const I18N = vm.runInContext('I18N', sandbox);
   const profilerModule = await import(new URL('./site/src/profiler.js', `file://${__dirname}/`).href);
   sandbox.__profilerModule = profilerModule;
   sandbox.window.__profilerModule = profilerModule;
+
+  // Worker geolocation: ipquery.io, then ipinfo.io when it fails; HTTPS only.
+  const { fetchGeolocation } = await import(new URL('./worker/src/providers/geolocation.js', `file://${__dirname}/`).href);
+  const geoUrls = [];
+  let ipqueryUp = true;
+  const realFetch = globalThis.fetch;
+  const realWarn = console.warn;
+  globalThis.fetch = async url => {
+    const target = String(url);
+    geoUrls.push(target);
+    if (target.startsWith('https://api.ipquery.io/')) {
+      if (!ipqueryUp) return { ok: false, status: 503, json: async () => ({}) };
+      return makeJsonResponse({
+        ip: '198.51.100.2',
+        isp: { asn: 'AS8193', org: 'Uzbektelekom', isp: 'Uzbektelekom' },
+        location: { country: 'Uzbekistan', country_code: 'UZ', city: 'Tashkent', state: 'Tashkent', latitude: 41.3, longitude: 69.2 },
+        risk: { is_mobile: true, is_vpn: false, is_tor: false, is_proxy: false, is_datacenter: false }
+      });
+    }
+    if (target.startsWith('https://ipinfo.io/')) {
+      return makeJsonResponse({ ip: '198.51.100.2', city: 'Tashkent', region: 'Tashkent', country: 'UZ', loc: '41.3,69.2', org: 'AS8193 Uzbektelekom' });
+    }
+    throw new Error(`Unexpected Worker fetch: ${target}`);
+  };
+  console.warn = () => {};
+  try {
+    const fromIpquery = await fetchGeolocation('198.51.100.2');
+    assert.equal(fromIpquery.asn, 'AS8193');
+    assert.equal(fromIpquery.region, 'Tashkent');
+    assert.equal(fromIpquery.connection_type, 'mobile');
+    ipqueryUp = false;
+    const fromIpinfo = await fetchGeolocation('198.51.100.2');
+    assert.equal(fromIpinfo.asn, 'AS8193');
+    assert.equal(fromIpinfo.org, 'Uzbektelekom');
+    assert.equal(fromIpinfo.connection_type, null);
+    assert.ok(geoUrls.length === 3 && geoUrls.every(url => url.startsWith('https://')), geoUrls.join(' '));
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = realWarn;
+  }
+
   assert.equal(typeof sandbox.detectPointerType, 'function');
   assert.equal(sandbox.detectPointerType(), 'none');
   assert.deepEqual(sandbox.getLanguages(), ['ru-RU', 'en-US']);
