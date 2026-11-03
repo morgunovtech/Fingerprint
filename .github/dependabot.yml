@@ -1,0 +1,16 @@
+# One grouped PR per week with the Worker's npm updates (wrangler), monthly
+# PRs for the Actions. CI checks them; nothing merges automatically.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /worker
+    schedule:
+      interval: weekly
+      day: saturday
+    groups:
+      worker-deps:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
