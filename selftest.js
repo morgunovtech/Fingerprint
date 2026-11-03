@@ -423,12 +423,11 @@ documentStub.body.removeChild = function removeChild(child) {
 
 documentStub.createComment = () => ({ nodeType: 8, textContent: '' });
 
-// Records the scripts the page adds; a script "loads" on the next tick.
+// Records any script the page adds to <head>; it should add none (no third-party scripts).
 const headScripts = [];
 documentStub.head = {
   appendChild(child) {
     headScripts.push(child.src || '');
-    setTimeout(() => child.onload && child.onload(), 0);
     return child;
   }
 };
@@ -580,17 +579,6 @@ function makeBinaryResponse(size = BYTES) {
 async function fetchStub(url, options = {}) {
   const target = typeof url === 'string' ? url : String(url);
   fetchLog.push({ url: target, options });
-  if (target === '/headers') {
-    return makeJsonResponse({
-      ip: '198.51.100.2',
-      headers: {
-        'CF-IPCountry': 'UZ',
-        'CF-IPCity': 'Tashkent',
-        'CF-Timezone': 'Asia/Tashkent',
-        'CF-Connecting-IP': '198.51.100.2'
-      }
-    });
-  }
   if (target.endsWith('/api/whoami')) {
     if (!workerWhoami) throw new Error('Worker unreachable');
     return makeJsonResponse(workerWhoami);
@@ -605,24 +593,11 @@ async function fetchStub(url, options = {}) {
       org: 'Uzbektelekom Joint Stock Company'
     });
   }
-  if (target.startsWith('https://ipwho.is')) {
-    return makeJsonResponse({
-      success: true,
-      ip: '198.51.100.2',
-      city: 'Tashkent',
-      country: 'Uzbekistan',
-      connection: { org: 'Uzbektelekom Joint Stock Company', isp: 'Uzbektelekom' },
-      timezone: { id: 'Asia/Tashkent' }
-    });
-  }
   if (target.startsWith('https://api64.ipify.org')) {
     return makeJsonResponse({ ip: '198.51.100.2' });
   }
   if (target.startsWith('https://api.myip.com')) {
     return makeJsonResponse({ ip: '198.51.100.2', country: 'Uzbekistan', cc: 'UZ' });
-  }
-  if (target.startsWith('https://speed.cloudflare.com') || target.startsWith('https://httpbin.org/bytes')) {
-    return makeBinaryResponse();
   }
   if (target.includes('share-card.svg')) {
     return makeBinaryResponse(4096);
@@ -939,21 +914,6 @@ const I18N = vm.runInContext('I18N', sandbox);
   const initialShare = stateRef.sharePayload;
   assert.ok(initialShare);
   assert.equal(elements.get('shareBtn').dataset.ready, '1');
-
-  // FingerprintJS Pro is opt-in: nothing loads before the click, the badge says what the click sends.
-  const fpjsScripts = () => headScripts.filter(src => src.includes('fpjscdn.net'));
-  assert.deepEqual(fpjsScripts(), []);
-  const fpjsBadgeEl = elements.get('heroBadgeFpjs');
-  assert.equal(fpjsBadgeEl.textContent, I18N.ru.fpjsDisclaimer);
-  sandbox.window.FingerprintJS = {
-    load: async () => ({ get: async () => ({ visitorId: 'abcdef1234567890', confidence: { score: 0.99 } }) })
-  };
-  await sandbox.handleFpjsClick();
-  assert.equal(fpjsScripts().length, 1);
-  assert.ok(fpjsBadgeEl.innerHTML.includes('abcdef123456'));
-  const fpjsHeroBtnEl = elements.get('fpjsHeroBtn');
-  assert.equal(fpjsHeroBtnEl.disabled, false);
-  assert.equal(fpjsHeroBtnEl.textContent, fpjsHeroBtnEl.dataset.label);
   await sandbox.handleShareClick();
   assert.equal(sharePayloads.length, 1);
   await sandbox.handleSaveClick();
@@ -992,6 +952,7 @@ const I18N = vm.runInContext('I18N', sandbox);
   assert.equal(stateRef.serverData.details.region, 'Tashkent');
   assert.ok(/Tashkent|\u0422\u0430\u0448\u043a\u0435\u043d\u0442|Uzbekistan|\u0423\u0437\u0431\u0435\u043a\u0438\u0441\u0442\u0430\u043d/i.test(collectShockText().join(' ')), 'exposure list should mention updated region');
   assert.ok(stateRef.sharePayload);
+  assert.deepEqual(headScripts, []);
 
   console.log('Self-test completed successfully');
 })();

@@ -292,8 +292,6 @@
     .methodology-content .small p{margin:0 0 10px}
     .methodology-content .small p:last-child{margin-bottom:0}
     .methodology-content .small b{display:inline-block;margin-top:4px}
-    /* === FingerprintJS Pro disclaimer === */
-    .fpjs-disclaimer{background:var(--warning-bg);border:1px solid var(--warning);border-radius:var(--radius-md);padding:12px 16px;margin:12px 0;font-size:13px;line-height:1.5}
     /* === Speed hero display (fast.com style) === */
     .speed-hero{font-size:56px;font-weight:800;letter-spacing:-2px;line-height:1;color:var(--text)}
     .speed-hero-label{font-size:14px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:1px}
@@ -415,8 +413,8 @@
           </ul>
           <h3>Как мы обрабатываем данные</h3>
           <p>
-            Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет.
-            Сервис бесплатный, без рекламы и регистрации. Что всё-таки уходит в сеть:
+            Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет,
+            и ни одна сторонняя служба их не видит. Сервис бесплатный, без рекламы и регистрации. Что всё-таки уходит в сеть:
           </p>
           <ul class="fp-list">
             <li>При открытии страницы — запрос общей статистики к нашему серверу на Cloudflare и подсчёт
@@ -426,8 +424,6 @@
               Отчёт хранится под вашим IP один час; в анонимную статистику (браузер, ОС, страна) IP не попадает.
               Если наш сервер недоступен, браузер спрашивает публичные сервисы IP напрямую
               (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
-            <li>По кнопке «Сравнить с реальными данными» — FingerprintJS Pro: его скрипт отправляет сигналы вашего
-              браузера и IP-адрес на серверы FingerprintJS и возвращает ID посетителя. Без нажатия он не загружается.</li>
           </ul>
         </details>
       </section>
@@ -449,9 +445,7 @@
       <div class="hero-actions">
         <button class="btn btn-primary" id="shareBtn"></button>
         <button class="btn" id="printBtn"></button>
-        <button class="btn" id="fpjsHeroBtn" style="display:none;gap:6px"></button>
       </div>
-      <div id="heroBadgeFpjs" style="display:none;margin-top:12px;font-size:13px;color:var(--muted);line-height:1.5"></div>
       <div id="methodologyModal" class="methodology-modal" role="dialog" aria-modal="true" aria-labelledby="methodologyTitle" style="display:none">
         <div class="methodology-content" tabindex="-1">
           <button class="methodology-close" id="methodologyClose" aria-label="Close">&times;</button>
@@ -489,17 +483,6 @@
       <div class="data-group" id="groupNetwork"></div>
       <div id="speedResult" class="small" style="margin-top:6px"></div>
       <div id="osintResults" style="display:none"></div>
-    </div>
-  </section>
-
-  <!-- Advanced: FingerprintJS Pro (hidden – auto-runs after scan, results shown in hero badge) -->
-  <section class="block" id="fpjsSection" style="display:none">
-    <h2 class="section-heading" id="fpjsTitle"></h2>
-    <p id="fpjsDesc" class="small" style="margin-bottom:8px"></p>
-    <div id="fpjsDisclaimer" class="fpjs-disclaimer"></div>
-    <button class="btn btn-primary" id="fpjsBtn" style="gap:8px"></button>
-    <div id="fpjsResults" style="display:none;margin-top:16px">
-      <div class="data-group" id="groupFpjs"></div>
     </div>
   </section>
 
@@ -602,7 +585,7 @@ const I18N = {
       'Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток. Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать все прошлые визиты с вашим именем и продать этот профиль.',
       'Магазины повышают цены, зная ваше устройство и платёжеспособность. Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее. Страховые компании и работодатели покупают профили у брокеров данных. После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.',
       'Показывает, что видно о вас прямо сейчас, и объясняет, как снизить риски — без технических знаний.',
-      'Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет. Сервис бесплатный, без рекламы и регистрации. При открытии страница запрашивает общую статистику у нашего сервера на Cloudflare, а Cloudflare Web Analytics считает просмотр без cookie. IP проверяется только по кнопке «Проверить сеть» (наш сервер, ip-api.com, whoisjson.com, Google DNS), а FingerprintJS Pro загружается только по кнопке «Сравнить с реальными данными».'
+      'Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет. Сервис бесплатный, без рекламы и регистрации. При открытии страница запрашивает общую статистику у нашего сервера на Cloudflare, а Cloudflare Web Analytics считает просмотр без cookie. IP проверяется только по кнопке «Проверить сеть» (наш сервер, ip-api.com, whoisjson.com, Google DNS). Ни одна сторонняя служба не видит ваш отпечаток.'
     ],
     uniqWarning:'Важно: чем выше процент, тем проще сайтам узнавать вас между визитами. Цель — снизить отличимость / процент уникальности.',
     uniqPracticeTitle:'Что это значит на практике:',
@@ -937,13 +920,6 @@ const I18N = {
       eduTitle:'Что это значит?',
       eduText:'Расхождения между серверными и клиентскими данными могут указывать на использование VPN, прокси, эмулятора или инструментов для подмены отпечатка. Сайты используют эти несоответствия для выявления ботов и мошенников.'
     },
-    fpjsTitle:'Сравнение с глобальной базой',
-    fpjsDesc:'Сравните ваш отпечаток с базой FingerprintJS Pro (миллиарды отпечатков). Это покажет, насколько вы реально идентифицируемы.',
-    fpjsDisclaimer:'\u26A0 Кнопка загружает FingerprintJS Pro: он отправляет сигналы вашего браузера и IP-адрес на серверы FingerprintJS и возвращает ID посетителя.',
-    fpjsButton:'Сравнить с глобальной базой',
-    fpjsLoading:'Загрузка...',
-    fpjsRecheck:'Проверить снова',
-    fpjs:{groupTitle:'Результат FingerprintJS Pro',visitorId:'ID посетителя',confidence:'Уверенность',identified:'Идентифицируемы?',yes:'Да',no:'Нет'},
     shock:{
       title:'\u0427\u0442\u043e \u0441\u0430\u0439\u0442 \u0437\u043d\u0430\u0435\u0442 \u043e \u0432\u0430\u0441',
       location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} \u0412\u044b \u0432 <code>${city}, ${country}</code> \u2014 IP: <code>${ip}</code>`,
@@ -1135,7 +1111,7 @@ const I18N = {
         'storage.quota':'Большие квоты позволяют хранить больше идентификаторов.',
         'fingerprint.trackability':'Сильные сигналы упрощают повторное распознавание.',
         'browser.uaCh':'UA-CH раскрывает точные версии для таргетинга и совместимости.',
-        'privacy.local':'Профиль не отправляется на сервер; сеть и FingerprintJS Pro проверяются только по кнопкам.',
+        'privacy.local':'Профиль не отправляется на сервер; сеть проверяется только по кнопке.',
         'privacy.permissions':'Выданные ранее разрешения автоматически доступны сайтам.',
         'fingerprint.fonts':'Наборы шрифтов помогают сайтам отличать вас от других посетителей.',
         'privacy.cookies':'Cookie позволяют сайтам узнавать вас и восстанавливать сессии.',
@@ -1352,7 +1328,7 @@ const I18N = {
           right now and explains how to reduce the risks.
         </p>
         <details>
-          <summary style=”cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0”>More about tracking and risks ▾</summary>
+          <summary style="cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0">More about tracking and risks ▾</summary>
           <h3>How tracking works without cookies</h3>
           <p>
             You visited dozens of websites without signing up — leaving the same fingerprint everywhere.
@@ -1360,7 +1336,7 @@ const I18N = {
             all your past visits to your name and sell that profile.
           </p>
           <h3>Why this is dangerous</h3>
-          <ul class=”fp-list”>
+          <ul class="fp-list">
             <li>Stores raise prices based on your device and perceived spending power.</li>
             <li>Scammers know your city, ISP, and device — phishing becomes more precise.</li>
             <li>Insurance companies and employers buy profiles from data brokers.</li>
@@ -1368,8 +1344,8 @@ const I18N = {
           </ul>
           <h3>How we process data</h3>
           <p>
-            Your fingerprint, uniqueness score and profile are computed in your browser; the page does not upload them.
-            The service is free, with no ads and no sign-up. What does go over the network:
+            Your fingerprint, uniqueness score and profile are computed in your browser; the page does not upload them,
+            and no third party sees them. The service is free, with no ads and no sign-up. What does go over the network:
           </p>
           <ul class="fp-list">
             <li>When the page opens: a request for aggregate stats to our server on Cloudflare, and a cookieless
@@ -1379,8 +1355,6 @@ const I18N = {
               The report is cached under your IP for one hour; the anonymous stats (browser, OS, country) never get your IP.
               If our server is down, the browser asks public IP services directly
               (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
-            <li>When you click “Compare with real data”: FingerprintJS Pro. Its script sends your browser’s signals
-              and IP address to FingerprintJS servers and returns a visitor ID. It does not load until you click.</li>
           </ul>
         </details>
       </section>
@@ -1390,7 +1364,7 @@ const I18N = {
       'You visited dozens of websites without signing up — leaving the same fingerprint everywhere. Then you created an account on one of them. Now ad networks can link all your past visits to your name and sell that profile.',
       'Stores raise prices based on your device and perceived spending power. Scammers know your city, ISP, and device — phishing becomes more precise. Insurance companies and employers buy profiles from data brokers. Once a database leaks, the profile cannot be “deleted” — it is tied to you forever.',
       'It shows what is visible about you right now and explains how to reduce the risks — no technical knowledge required.',
-      'Your fingerprint, uniqueness score and profile are computed in your browser; the page does not upload them. The service is free, with no ads and no sign-up. When it opens, the page asks our server on Cloudflare for aggregate stats, and Cloudflare Web Analytics counts the view without cookies. Your IP is checked only when you click “Check network” (our server, ip-api.com, whoisjson.com, Google DNS), and FingerprintJS Pro loads only when you click “Compare with real data”.'
+      'Your fingerprint, uniqueness score and profile are computed in your browser; the page does not upload them. The service is free, with no ads and no sign-up. When it opens, the page asks our server on Cloudflare for aggregate stats, and Cloudflare Web Analytics counts the view without cookies. Your IP is checked only when you click “Check network” (our server, ip-api.com, whoisjson.com, Google DNS). No third party sees your fingerprint.'
     ],
     uniqWarning:'Important: the higher the percentage, the easier it is for sites to recognise you between visits. Aim to lower the distinctiveness / uniqueness score.',
     uniqPracticeTitle:'What this means in practice:',
@@ -1725,13 +1699,6 @@ const I18N = {
       eduTitle:'What does this mean?',
       eduText:'Discrepancies between server-side and client-side data may indicate VPN usage, proxy, emulator, or fingerprint-spoofing tools. Websites use these mismatches to detect bots and fraudsters.'
     },
-    fpjsTitle:'Compare with global database',
-    fpjsDesc:'Compare your fingerprint against FingerprintJS Pro\u2019s database (billions of fingerprints). This shows how identifiable you really are.',
-    fpjsDisclaimer:'\u26A0 The button loads FingerprintJS Pro: it sends your browser\u2019s signals and IP address to FingerprintJS servers and returns a visitor ID.',
-    fpjsButton:'Compare with global database',
-    fpjsLoading:'Loading...',
-    fpjsRecheck:'Re-check',
-    fpjs:{groupTitle:'FingerprintJS Pro Result',visitorId:'Visitor ID',confidence:'Confidence',identified:'Identifiable?',yes:'Yes',no:'No'},
     shock:{
       title:'What the site knows about you',
       location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} You\u2019re in <code>${city}, ${country}</code> \u2014 IP: <code>${ip}</code>`,
@@ -1895,7 +1862,7 @@ const I18N = {
         'storage.quota':'More quota lets sites persist more identifiers.',
         'fingerprint.trackability':'Strong signals let sites recognise you without cookies.',
         'browser.uaCh':'UA-CH exposes precise versions for targeting and compatibility.',
-        'privacy.local':'The profile is not uploaded; the network check and FingerprintJS Pro run only when you click.',
+        'privacy.local':'The profile is not uploaded; the network check runs only when you click.',
         'privacy.permissions':'Permissions granted elsewhere automatically apply here.',
         'fingerprint.fonts':'Font sets can still single you out even when other signals are reduced.',
         'privacy.cookies':'Cookies restore sessions and enable persistent recognition.',
@@ -2107,7 +2074,7 @@ const I18N = {
           koʻrinishini koʻrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi.
         </p>
         <details>
-          <summary style=”cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0”>Kuzatuv va xavflar haqida batafsil ▾</summary>
+          <summary style="cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0">Kuzatuv va xavflar haqida batafsil ▾</summary>
           <h3>Cookielarsiz kuzatuv qanday ishlaydi</h3>
           <p>
             Siz oʻnlab saytlarga roʻyxatdan oʻtmasdan kirdingiz — hammada bir xil iz qoldirdingiz.
@@ -2115,7 +2082,7 @@ const I18N = {
             barcha oldingi tashriflarni ismingiz bilan bogʻlab, bu profilni sotishi mumkin.
           </p>
           <h3>Bu nima uchun xavfli</h3>
-          <ul class=”fp-list”>
+          <ul class="fp-list">
             <li>Doʻkonlar qurilma va toʻlov qobiliyatingizni bilib narxlarni oshiradi.</li>
             <li>Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq boʻladi.</li>
             <li>Sugʻurta kompaniyalari va ish beruvchilar maʼlumot brokerlaridan profillar sotib oladi.</li>
@@ -2123,8 +2090,8 @@ const I18N = {
           </ul>
           <h3>Maʼlumotlar qanday ishlanadi</h3>
           <p>
-            Barmoq izi, noyoblik bahosi va profil brauzeringizda hisoblanadi — sahifa ularni yubormaydi.
-            Xizmat bepul, reklama va roʻyxatdan oʻtishsiz. Tarmoqqa nima ketadi:
+            Barmoq izi, noyoblik bahosi va profil brauzeringizda hisoblanadi — sahifa ularni yubormaydi,
+            hech qanday uchinchi tomon ularni koʻrmaydi. Xizmat bepul, reklama va roʻyxatdan oʻtishsiz. Tarmoqqa nima ketadi:
           </p>
           <ul class="fp-list">
             <li>Sahifa ochilganda — Cloudflare’dagi serverimizdan umumiy statistika soʻraladi, Cloudflare Web Analytics
@@ -2134,8 +2101,6 @@ const I18N = {
               Hisobot IP-ingiz boʻyicha bir soat saqlanadi; anonim statistikaga (brauzer, OT, mamlakat) IP tushmaydi.
               Serverimiz ishlamasa, brauzer ochiq IP xizmatlaridan toʻgʻridan-toʻgʻri soʻraydi
               (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
-            <li>«Haqiqiy maʼlumotlar bilan solishtirish» bosilganda — FingerprintJS Pro: uning skripti brauzeringiz signallari
-              va IP-manzilingizni FingerprintJS serverlariga yuboradi va tashrif ID sini qaytaradi. Bosmaguningizcha u yuklanmaydi.</li>
           </ul>
         </details>
       </section>
@@ -2145,7 +2110,7 @@ const I18N = {
       'Siz o\u02BBnlab saytlarga ro\u02BByxatdan o\u02BBtmasdan kirdingiz — hammada bir xil iz qoldirdingiz. Keyin ulardan birida akkaunt yaratdingiz. Endi reklama tarmoqlari barcha oldingi tashriflarni ismingiz bilan bog\u02BBlab, bu profilni sotishi mumkin.',
       'Do\u02BBkonlar qurilma va to\u02BBlov qobiliyatingizni bilib narxlarni oshiradi. Firibgarlar shahar, provayder va qurilmangizni biladi — fishing aniqroq bo\u02BBladi. Sug\u02BBurta kompaniyalari va ish beruvchilar ma\u02BClumot brokerlaridan profillar sotib oladi. Ma\u02BClumotlar bazasi sizib chiqqandan keyin profilni «o\u02BBchirish» mumkin emas.',
       'Hozir siz haqingizda nimalar ko\u02BBrinishini ko\u02BBrsatadi va xatarlarni qanday kamaytirish mumkinligini tushuntiradi — texnik bilim shart emas.',
-      'Barmoq izi, noyoblik bahosi va profil brauzeringizda hisoblanadi — sahifa ularni yubormaydi. Xizmat bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa ochilganda Cloudflare\u2019dagi serverimizdan umumiy statistika so\u02BBraladi, Cloudflare Web Analytics esa ko\u02BBrishni cookiesiz hisoblaydi. IP faqat \u00ABTarmoqni tekshirish\u00BB bosilganda tekshiriladi (serverimiz, ip-api.com, whoisjson.com, Google DNS), FingerprintJS Pro esa faqat \u00ABHaqiqiy ma\u02BClumotlar bilan solishtirish\u00BB bosilganda yuklanadi.'
+      'Barmoq izi, noyoblik bahosi va profil brauzeringizda hisoblanadi — sahifa ularni yubormaydi. Xizmat bepul, reklama va ro\u02BByxatdan o\u02BBtishsiz. Sahifa ochilganda Cloudflare\u2019dagi serverimizdan umumiy statistika so\u02BBraladi, Cloudflare Web Analytics esa ko\u02BBrishni cookiesiz hisoblaydi. IP faqat \u00ABTarmoqni tekshirish\u00BB bosilganda tekshiriladi (serverimiz, ip-api.com, whoisjson.com, Google DNS). Barmoq izingizni hech qanday uchinchi tomon ko\u02BBrmaydi.'
     ],
     uniqWarning:'Muhim: foiz qanchalik yuqori bo‘lsa, saytlar tashriflar orasida sizni shunchalik oson taniydi. Maqsad — noyoblik foizini pasaytirish.',
     uniqPracticeTitle:'Amaliyotda bu nimani anglatadi:',
@@ -2480,13 +2445,6 @@ const I18N = {
       eduTitle:"Bu nima degani?",
       eduText:"Server va klient ma\u02BClumotlari o\u02BBrtasidagi tafovutlar VPN, proksi, emulator yoki barmoq izi almashtirish vositalaridan foydalanishni ko\u02BBrsatishi mumkin. Veb-saytlar botlar va firibgarlarni aniqlash uchun bu nomuvofiqliklardan foydalanadi."
     },
-    fpjsTitle:"Global baza bilan solishtirish",
-    fpjsDesc:"Barmoq izingizni FingerprintJS Pro bazasi (milliardlab izlar) bilan solishtiring. Bu sizni qanchalik aniqlanishingizni ko\u02BBrsatadi.",
-    fpjsDisclaimer:"\u26A0 Tugma FingerprintJS Pro ni yuklaydi: u brauzeringiz signallari va IP-manzilingizni FingerprintJS serverlariga yuboradi va tashrif ID sini qaytaradi.",
-    fpjsButton:"Global baza bilan solishtirish",
-    fpjsLoading:"Yuklanmoqda...",
-    fpjsRecheck:"Qayta tekshirish",
-    fpjs:{groupTitle:"FingerprintJS Pro natijasi",visitorId:"Tashrif ID",confidence:"Ishonch darajasi",identified:"Aniqlanasizmi?",yes:"Ha",no:"Yo\u02BBq"},
     shock:{
       title:"Sayt siz haqingizda nimalarni biladi",
       location:(flag,city,country,ip)=>`\uD83D\uDCCD ${flag} Siz <code>${city}, ${country}</code>dasiz \u2014 IP: <code>${ip}</code>`,
@@ -2675,7 +2633,7 @@ const I18N = {
         'storage.quota':'Katta kvota ko‘proq identifikator saqlashga imkon beradi.',
         'fingerprint.trackability':'Kuchli signallar kukisiz ham qayta tanishga yordam beradi.',
         'browser.uaCh':'UA-CH aniq versiyalarni ochib beradi va maqsadli ko‘rsatmalarga xizmat qiladi.',
-        'privacy.local':'Profil serverga yuborilmaydi; tarmoq tekshiruvi va FingerprintJS Pro faqat tugma bosilganda ishlaydi.',
+        'privacy.local':'Profil serverga yuborilmaydi; tarmoq tekshiruvi faqat tugma bosilganda ishlaydi.',
         'privacy.permissions':'Boshqa saytga berilgan ruxsatlar shu yerda ham amal qiladi.',
         'fingerprint.fonts':'Shrift to‘plamlari sizni boshqa foydalanuvchilardan ajratishi mumkin.',
         'privacy.cookies':'Cookie seanslarni tiklash va kuzatuv uchun ishlatiladi.',
@@ -3384,7 +3342,6 @@ function localizeDeviceName(deviceObj,lang){
   const localName=entry?(entry[lang]||entry.en||raw):raw;
   return {name:localName};
 }
-function extractGeo(headers){if(!headers)return{};const h=k=>headers[k]||headers[k.toLowerCase()];const city=h('CF-IPCity')||h('x-vercel-ip-city')||h('x-appengine-city')||h('x-geo-city')||null;const country=h('CF-IPCountry')||h('x-vercel-ip-country')||h('x-appengine-country')||h('x-geo-country')||null;return{city,country};}
 
 const COUNTRY_NAME_TO_CODE={
   'united states':'US','usa':'US','united kingdom':'GB','great britain':'GB','russia':'RU','russian federation':'RU',
@@ -4370,37 +4327,6 @@ function extractCanonicalDetailsFromPayload(payload){
   return Object.keys(details).length?details:null;
 }
 
-function normalizeHeaders(headers){
-  if(!headers || typeof headers!=='object') return {};
-  const out={};
-  Object.entries(headers).forEach(([key,value])=>{
-    if(value==null) return;
-    if(Array.isArray(value)){
-      out[key]=value.map(v=>String(v)).join(', ');
-      out[key.toLowerCase()]=out[key];
-    }else if(typeof value==='object'){
-      const str=String(value.value||JSON.stringify(value));
-      out[key]=str;
-      out[key.toLowerCase()]=str;
-    }else{
-      const str=String(value);
-      out[key]=str;
-      out[key.toLowerCase()]=str;
-    }
-  });
-  return out;
-}
-
-function ipFromHeaders(headers){
-  const get=h=>headers[h]||headers[h.toLowerCase()]||headers[h.toUpperCase()];
-  const forwarded=get('x-forwarded-for');
-  if(forwarded){
-    const first=forwarded.split(',')[0].trim();
-    if(first) return first;
-  }
-  return get('cf-connecting-ip')||get('x-real-ip')||get('client-ip')||get('remote-addr')||null;
-}
-
 async function fetchIpFromWorker(){
   const resp=await fetchWithTimeout(WORKER_API+'/api/whoami',{timeout:8000,mode:'cors',cache:'no-store'});
   const data=await resp.json();
@@ -4433,15 +4359,6 @@ async function fetchIpFromWorker(){
   // Store whoami extras for server fingerprint section
   state.whoamiData=data;
   return {ip:data.ip,geo,raw,source:'worker',headers:null,details,detailSource:'worker'};
-}
-
-async function fetchIpFromHeaders(){
-  const resp=await fetchWithTimeout('/headers',{timeout:4000,credentials:'omit'});
-  const data=await resp.json();
-  const headers=normalizeHeaders(data.headers||data);
-  const ip=data.ip||ipFromHeaders(headers)||null;
-  const geo=extractGeo(headers);
-  return {ip,geo,raw:data,source:'headers',headers};
 }
 
 async function fetchIpFromIpapi(){
@@ -4617,61 +4534,6 @@ function evaluateVpnState(serverData){
   }
   return {status,reasons:uniqueReasons,checked:true};
 }
-async function runSpeedTest(){
-  const BYTES=2000000;
-  async function measure(url,timeout=10000){
-    const cacheBust=Date.now();
-    const target=url.includes('?')?`${url}&cacheBust=${cacheBust}`:`${url}?cacheBust=${cacheBust}`;
-    const start=performance.now();
-    const resp=await fetchWithTimeout(target,{timeout,mode:'cors',cache:'no-store',credentials:'omit'});
-    let bytes=0;
-    if(resp.body?.getReader){
-      const reader=resp.body.getReader();
-      while(true){
-        const {done,value}=await reader.read();
-        if(done) break;
-        if(value) bytes+=value.byteLength;
-      }
-    }else{
-      const buf=await resp.arrayBuffer();
-      bytes=buf.byteLength;
-    }
-    if(bytes===0){
-      const hint=parseInt(resp.headers.get('content-length')||'0',10);
-      if(hint>0) bytes=hint;
-    }
-    if(bytes===0) bytes=BYTES;
-    const duration=Math.max((performance.now()-start)/1000,0.001);
-    const mbps=Number(((bytes*8)/(duration*1e6)).toFixed(2));
-    const latency=Math.max(1,Math.round(duration*1000));
-    return {mbps,latency,note:null};
-  }
-
-  const attempts=[
-    {url:`https://speed.cloudflare.com/__down?bytes=${BYTES}`,timeout:12000},
-    {url:`https://httpbin.org/bytes/${BYTES}`,timeout:12000}
-  ];
-  const errors=[];
-  for(const attempt of attempts){
-    try{
-      return await measure(attempt.url,attempt.timeout);
-    }catch(err){
-      errors.push(err.message||String(err));
-    }
-  }
-  const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-  if(conn?.downlink){
-    const downlink=Number(conn.downlink||0);
-    if(downlink>0){
-      const latency=Math.max(1,Math.round(conn.rtt||100));
-      return {mbps:Number(downlink.toFixed(2)),latency,note:'approx'};
-    }
-  }
-  const e=new Error(errors.join('; '));
-  e.attempts=errors;
-  throw e;
-}
-
 let ipFetchPromise=null;
 function autoFetchIp(){
   if(state.serverData) return Promise.resolve(state.serverData);
@@ -6289,19 +6151,6 @@ async function render(lang){
   const serverFpTitleEl=getEl('serverFpTitle');if(serverFpTitleEl)serverFpTitleEl.textContent=t.serverFpTitle||'';
   const serverFpDescEl=getEl('serverFpDesc');if(serverFpDescEl)serverFpDescEl.textContent=t.serverFpDesc||'';
   const netBtnEl=getEl('networkBtn');if(netBtnEl&&!netBtnEl.disabled)netBtnEl.textContent=t.networkButton||'Check network';
-  // FingerprintJS Pro section
-  const fpjsTitleEl=getEl('fpjsTitle');if(fpjsTitleEl)fpjsTitleEl.textContent=t.fpjsTitle||'';
-  const fpjsDescEl=getEl('fpjsDesc');if(fpjsDescEl)fpjsDescEl.textContent=t.fpjsDesc||'';
-  const fpjsDisclEl=getEl('fpjsDisclaimer');if(fpjsDisclEl)fpjsDisclEl.textContent=t.fpjsDisclaimer||'';
-  const fpjsBtnEl=getEl('fpjsBtn');if(fpjsBtnEl&&!fpjsBtnEl.disabled)fpjsBtnEl.textContent=t.fpjsButton||'Compare';
-  const fpjsHeroBtnEl=getEl('fpjsHeroBtn');
-  if(fpjsHeroBtnEl){
-    const fpjsHeroBtnLabel={ru:'\uD83D\uDD0D \u0421\u0440\u0430\u0432\u043d\u0438\u0442\u044c \u0441 \u0440\u0435\u0430\u043b\u044c\u043d\u044b\u043c\u0438 \u0434\u0430\u043d\u043d\u044b\u043c\u0438',en:'\uD83D\uDD0D Compare with real data',uz:'\uD83D\uDD0D Haqiqiy ma\'lumotlar bilan solishtirish'}[currentLang]||'\uD83D\uDD0D Compare with real data';
-    fpjsHeroBtnEl.dataset.label=fpjsHeroBtnLabel;
-    if(!fpjsHeroBtnEl.disabled) fpjsHeroBtnEl.textContent=fpjsHeroBtnLabel;
-    fpjsHeroBtnEl.style.display='';
-  }
-  renderFpjsHeroBadge(t);
   const methodBtn=getEl('methodologyBtn');
   if(methodBtn) methodBtn.textContent=t.methodologyButton||'How is the percentage calculated?';
   const footerEl=getEl('footerText');
@@ -7215,101 +7064,6 @@ function updateFooterVisitCount(){
   el.style.display='';
 }
 
-/* ============== FingerprintJS Pro (Advanced) ============== */
-let _fpjsPromise=null;
-let _fpjsResult=null;
-const FPJS_API_KEY='sE9LTvMdm0ITAz950nNQ'; // gitleaks:allow — public FingerprintJS browser key, already visible in the fpjscdn.net URL below
-async function loadFingerprintJS(){
-  if(_fpjsPromise) return _fpjsPromise;
-  _fpjsPromise=new Promise((resolve,reject)=>{
-    const s=document.createElement('script');
-    s.src='https://fpjscdn.net/v3/'+FPJS_API_KEY+'/iife.min.js';
-    s.onload=()=>{if(window.FingerprintJS)resolve(window.FingerprintJS);else reject(new Error('FingerprintJS not available'));};
-    s.onerror=()=>{_fpjsPromise=null;reject(new Error('Failed to load FingerprintJS'));};
-    document.head.appendChild(s);
-  });
-  return _fpjsPromise;
-}
-
-function showFpjsHeroBadge(result,t){
-  const badge=getEl('heroBadgeFpjs');
-  if(!badge) return;
-  const labels=t.fpjs||{};
-  const vid=result.visitorId||'—';
-  const conf=result.confidence?.score?Math.round(result.confidence.score*100):0;
-  const confBadgeClass=conf>=90?'status-badge--danger':conf>=50?'status-badge--warning':'status-badge--safe';
-  const disclaimer=t.fpjsDisclaimer||'';
-  badge.innerHTML=
-    '<span style="font-weight:600">FingerprintJS Pro:</span> '+
-    '<code style="font-size:12px;background:var(--code-bg);padding:1px 6px;border-radius:4px">'+esc(vid.substring(0,12))+'…</code> '+
-    '<span class="status-badge '+confBadgeClass+'" style="font-size:11px">'+esc(conf+'%')+'</span>'+
-    (disclaimer?'<br><span style="font-size:11px;color:var(--muted)">'+esc(disclaimer)+'</span>':'');
-  badge.style.display='';
-}
-
-// FingerprintJS Pro runs only on a click: until then the badge says what the comparison sends where.
-function renderFpjsHeroBadge(t){
-  if(_fpjsResult){showFpjsHeroBadge(_fpjsResult,t);return;}
-  const badge=getEl('heroBadgeFpjs');
-  if(!badge) return;
-  badge.textContent=t.fpjsDisclaimer||'';
-  badge.style.display=t.fpjsDisclaimer?'':'none';
-}
-
-async function handleFpjsClick(){
-  const btn=getEl('fpjsBtn');
-  const heroBtn=getEl('fpjsHeroBtn');
-  const t=I18N[currentLang]||I18N.ru;
-  if(btn){btn.disabled=true;btn.textContent=t.fpjsLoading||'Loading...';}
-  if(heroBtn){heroBtn.disabled=true;heroBtn.textContent=t.fpjsLoading||'Loading...';}
-  try{
-    const FpJS=await loadFingerprintJS();
-    const fp=await FpJS.load();
-    const result=await fp.get();
-    const groupEl=getEl('groupFpjs');
-    if(groupEl){
-      const labels=t.fpjs||{};
-      groupEl.innerHTML='<h3>'+(labels.groupTitle||'FingerprintJS Pro')+'</h3>';
-      const mkR=(label,value,opts)=>{
-        opts=opts||{};
-        const div=document.createElement('div');
-        div.className=opts.badge?'data-row data-row--status':'data-row';
-        let valueHtml=opts.code?'<code>'+esc(value)+'</code>':esc(value);
-        if(opts.badge){
-          const cls=opts.badge==='safe'?'status-badge--safe':opts.badge==='danger'?'status-badge--danger':'status-badge--warning';
-          valueHtml='<span class="status-badge '+cls+'">'+esc(value)+'</span>';
-        }
-        div.innerHTML='<span class="data-label">'+esc(label)+'</span><span class="data-value">'+valueHtml+'</span>';
-        return div;
-      };
-      const vid=result.visitorId||'—';
-      const conf=result.confidence?.score?Math.round(result.confidence.score*100):0;
-      groupEl.appendChild(mkR(labels.visitorId||'Visitor ID',vid.substring(0,12)+'...',{code:true}));
-      groupEl.appendChild(mkR(labels.confidence||'Confidence',conf+'%',{badge:conf>=90?'danger':conf>=50?'warning':'safe'}));
-      groupEl.appendChild(mkR(labels.identified||'Identifiable',conf>=50?(labels.yes||'Yes'):(labels.no||'No'),{badge:conf>=50?'danger':'safe'}));
-    }
-    const resultsEl=getEl('fpjsResults');
-    if(resultsEl) resultsEl.style.display='';
-    _fpjsResult=result;
-    showFpjsHeroBadge(result,t);
-    if(btn){btn.textContent=t.fpjsRecheck||'Re-check';btn.disabled=false;}
-  }catch(e){
-    if(btn){btn.textContent=t.fpjsButton||'Compare';btn.disabled=false;}
-    const resultsEl=getEl('fpjsResults');
-    if(resultsEl){
-      resultsEl.style.display='';
-      resultsEl.innerHTML='<p class="small" style="color:var(--danger)">'+esc(e.message||'FingerprintJS error')+'</p>';
-    }
-    const badge=getEl('heroBadgeFpjs');
-    if(badge){
-      badge.innerHTML='<span style="color:var(--danger)">'+esc(e.message||'FingerprintJS error')+'</span>';
-      badge.style.display='';
-    }
-  }finally{
-    if(heroBtn){heroBtn.textContent=heroBtn.dataset.label||'';heroBtn.disabled=false;}
-  }
-}
-
 function initApp(){
   themePreference=loadThemePreference();
   applyThemePreference(themePreference);
@@ -7416,13 +7170,9 @@ function initApp(){
       if(e.target===methodModal) methodModal.style.display='none';
     });
   }
-  // Wire network check and FingerprintJS Pro buttons
+  // Wire the network check button
   const netBtn=getEl('networkBtn');
   if(netBtn) netBtn.addEventListener('click',handleNetworkCheck);
-  const fpjsBtn=getEl('fpjsBtn');
-  if(fpjsBtn) fpjsBtn.addEventListener('click',handleFpjsClick);
-  const fpjsHeroBtn=getEl('fpjsHeroBtn');
-  if(fpjsHeroBtn) fpjsHeroBtn.addEventListener('click',handleFpjsClick);
   const viewModeBtn=getEl('viewModeBtn');
   const reportModeEl=getEl('reportMode');
   const storyModeEl=getEl('storyMode');
