@@ -2830,8 +2830,53 @@ const I18N = {
   }
 };
 
-const APP_VERSION = '2.1';
+const APP_VERSION = '2.2.0';
 const CHANGELOG = [
+  {
+    version:'2.2.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Cloudflare Worker fingerprint-api: /api/scan для IP и доменов (геолокация, DNS с обратной записью, DNS-блоклисты, прозрачность сертификатов, заголовки безопасности), /api/whoami и /api/check, тест скорости, кэш в KV, анонимная агрегированная статистика',
+        'Сторонние IP-сервисы заменены Worker-ом; к ним страница обращается, только если он недоступен',
+        'Раздел серверного отпечатка: что видит сервер до запуска JavaScript и где это расходится с браузером',
+        'Story Mode (?mode=story): те же данные как рассказ об одном дне',
+        'Единые карточки и исправления интерфейса',
+        'robots.txt, sitemap.xml, настоящая страница 404 и вступление без JavaScript',
+        'Уборка: убраны дубликаты, wrangler 4, починен selftest, CI с Dependabot, _headers для Pages, Pages раздаёт только site/, README и лицензия MIT',
+        'Тексты о приватности на RU/EN/UZ совпадают с тем, что делает код; FingerprintJS Pro убран',
+        'Геолокация IP через ipquery.io по HTTPS, запасной вариант — ipinfo.io',
+        'DNS-блоклисты сокращены до четырёх, отвечающих публичным резолверам — исправлен ложный вердикт «в чёрном списке»',
+        'Одна версия везде: страница, Worker (/api/health) и CHANGELOG.md; с этого выпуска — SemVer'
+      ],
+      en:[
+        'Cloudflare Worker fingerprint-api: /api/scan for an IP or a domain (geolocation, DNS with reverse lookup, DNS blocklists, certificate transparency, security headers), /api/whoami and /api/check, speed test, KV cache, anonymous aggregate stats',
+        'Third-party IP services replaced by the Worker; the page asks them only when it is down',
+        'Server-side fingerprint section: what the server sees before JavaScript runs, and where it contradicts the browser',
+        'Story Mode (?mode=story): the same data told as one day',
+        'Unified cards and UI fixes',
+        'robots.txt, sitemap.xml, a real 404 page and an intro that works without JavaScript',
+        'Cleanup: duplicates removed, wrangler 4, selftest repaired, CI with Dependabot, Pages _headers, Pages serves only site/, README and MIT license',
+        'Privacy texts in RU/EN/UZ now match what the code does; FingerprintJS Pro removed',
+        'IP geolocation via ipquery.io over HTTPS, ipinfo.io as fallback',
+        'DNS blocklists reduced to the four that answer public resolvers, fixing the false "blacklisted" verdict',
+        'One version everywhere: the page, the Worker (/api/health) and CHANGELOG.md; SemVer from this release on'
+      ],
+      uz:[
+        "Cloudflare Worker fingerprint-api: IP va domenlar uchun /api/scan (geolokatsiya, teskari yozuv bilan DNS, DNS qora roʻyxatlari, sertifikat shaffofligi, xavfsizlik sarlavhalari), /api/whoami va /api/check, tezlik testi, KV kesh, anonim umumiy statistika",
+        "Uchinchi tomon IP xizmatlari Worker bilan almashtirildi; sahifa ularga faqat Worker ishlamaganda murojaat qiladi",
+        "Server tomonidagi fingerprint boʻlimi: JavaScript ishga tushgunga qadar server nimani koʻradi va bu brauzer bilan qayerda mos kelmaydi",
+        "Story Mode (?mode=story): oʻsha maʼlumotlar bir kun haqidagi hikoya shaklida",
+        "Yagona kartalar va interfeys tuzatishlari",
+        "robots.txt, sitemap.xml, haqiqiy 404 sahifasi va JavaScriptsiz kirish matni",
+        "Tozalash: dublikatlar olib tashlandi, wrangler 4, selftest tuzatildi, Dependabot bilan CI, Pages uchun _headers, Pages faqat site/ ni tarqatadi, README va MIT litsenziyasi",
+        "RU/EN/UZ maxfiylik matnlari kod bajaradigan ishga mos keltirildi; FingerprintJS Pro olib tashlandi",
+        "IP geolokatsiyasi HTTPS orqali ipquery.io dan, zaxira — ipinfo.io",
+        "DNS qora roʻyxatlari ommaviy rezolverlarga javob beradigan toʻrttasiga qisqartirildi — notoʻgʻri «qora roʻyxatda» xulosasi tuzatildi",
+        "Hamma joyda bitta versiya: sahifa, Worker (/api/health) va CHANGELOG.md; shu chiqarilishdan boshlab SemVer"
+      ]
+    }
+  },
   {
     version:'2.1',
     date:'2026-03-25',

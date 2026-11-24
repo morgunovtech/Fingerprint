@@ -2,15 +2,23 @@
  * Cloudflare Worker — Fingerprint API
  *
  * Routes:
- *   GET  /api/scan?target=example.com   — full fingerprint report
+ *   GET  /api/scan?target=example.com   — full fingerprint report for a domain
  *   GET  /api/scan?target=8.8.8.8       — IP scan
- *   GET  /api/health                     — health check
+ *   GET  /api/health                     — health check, reports VERSION
  *   GET  /api/whoami                     — visitor's own fingerprint (from request)
- *   GET  /api/check                      — whoami with content negotiation
+ *   GET  /api/check                      — whoami with content negotiation (plain text for curl)
+ *   GET  /api/stats                      — anonymous aggregate stats, counted by /api/whoami
+ *   GET  /api/speedtest/download?size=N  — random bytes for the download test (100 KB to 25 MB)
+ *   POST /api/speedtest/upload           — accepts any body, returns its size and server time
+ *   GET  /api/speedtest/ping             — "pong" for the latency test
  *   OPTIONS *                            — CORS preflight
  */
 
 import { collectFingerprint } from './collector.js';
+
+// One version for the release: the same number as APP_VERSION in site/index.html,
+// worker/package.json and the top entry of CHANGELOG.md.
+const VERSION = '2.2.0';
 
 /* ============ /api/whoami — build visitor profile from request ============ */
 
@@ -180,12 +188,12 @@ function buildWhoami(request) {
       client_hints: hintsParsed,
       header_order: headerOrder,
     },
-    // Phase 1.1: computed fields
+    // Derived fields: parsed UA and Client Hints, header-order hash, UA/hints consistency
     ua_parsed: uaParsed,
     hints_parsed: hintsParsed,
     header_hash: null, // will be filled async — see below
     consistency,
-    // Phase 1.2: cross-check
+    // Server-side values the page compares with what the browser reports
     cross_check: crossCheck,
   };
 }
@@ -198,7 +206,7 @@ async function buildWhoamiAsync(request) {
   return result;
 }
 
-/* ============ Anonymous visit stats (Phase 3.2) ============ */
+/* ============ Anonymous visit stats: aggregate counters in KV, read by /api/stats ============ */
 async function trackVisitStats(whoami, env) {
   if (!env.CACHE) return;
   try {
@@ -285,7 +293,7 @@ export default {
     if (url.pathname === '/api/health') {
       return jsonResponse({
         status: 'ok',
-        version: '2.0.0',
+        version: VERSION,
         timestamp: new Date().toISOString(),
         kv_status: env.CACHE ? 'connected' : 'not configured',
       }, 200, request, env);

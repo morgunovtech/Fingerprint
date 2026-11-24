@@ -1,0 +1,71 @@
+# Changelog
+
+What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
+
+## 2.2.0 — 2026-11-24
+
+Everything shipped since 2.1: the Cloudflare Worker and the server-side view, Story Mode, the cleanup of 2026-11-03, and the first release with one version number across the page, the Worker and this file.
+
+**Worker and server-side view**
+- Cloudflare Worker `fingerprint-api` (`worker/`, plain JavaScript, Workers KV): `/api/scan` for an IP or a domain — geolocation, ISP and connection type, DNS records with the reverse record, four DNS blocklists, certificates from the certificate transparency logs and security headers (domains only); `/api/whoami` and `/api/check` (plain text for `curl`) with what the server sees before any JavaScript runs; `/api/speedtest/*`; a KV cache of scan reports; anonymous aggregate counters readable at `/api/stats`; a 60-requests-per-minute rate limit per IP.
+- The page asks the Worker instead of third-party IP APIs; the public IP services remain only as a fallback for when the Worker is down.
+- A server-side fingerprint section on the page: IP, ISP and ASN, TLS version, HTTP protocol, header order and Client Hints, with the places where the server's view contradicts the browser's.
+- A real speed test through the Worker instead of `navigator.connection`.
+
+**Page**
+- Story Mode (`?mode=story`, also a toggle in the header): the same data told as one day, from opening the laptop to watching a video.
+- Unified cards, visitor percentages from the live stats, and the UI and audit fixes of March 2026.
+- `robots.txt`, `sitemap.xml`, a real 404 page and an intro that renders without JavaScript (2026-09-26).
+
+**Cleanup of 2026-11-03**
+- Duplicate code and leftover files removed; wrangler 4; `selftest.js` runs again against the current page.
+- CI on every PR (selftest, Worker dry-run build, `npm audit`, gitleaks), Dependabot with auto-merge of minor and patch updates, `_headers` for Pages; Pages serves only `site/`, so the Worker source and the self-test are not public.
+- README and the MIT license.
+- The privacy texts in Russian, English and Uzbek say what the code does; FingerprintJS Pro removed.
+- IP geolocation via ipquery.io over HTTPS with ipinfo.io as fallback, so the visitor's IP never travels unencrypted.
+- DNS blocklists reduced to the four that answer public resolvers (Barracuda, SpamCop, UCEPROTECT, PSBL); Spamhaus's refusal codes are no longer read as a listing, which fixes the false "blacklisted" verdict.
+
+**Release**
+- One version in four places: `APP_VERSION` in the page, `VERSION` in the Worker (reported by `/api/health`), `worker/package.json` and this file. README documents the rule; wrangler bumped by Dependabot along the way.
+
+## 2.1 — 2026-03-25
+
+- New signals: WebGL, AudioContext, font fingerprinting.
+- Tracker simulation (5 tests).
+- Browser data spoofing detection.
+- Browser-specific recommendations.
+- VPN risk card.
+- Methodology modal.
+
+## 2.0 — 2026-03-25
+
+- Full redesign: verdict-first architecture.
+- Data grouping: identity, device, network.
+- Risk cards and personal recommendations.
+- Entropy frequency table normalization.
+- Collapsible details block.
+
+## 1.5 — 2025-12-15
+
+- New signals: speech synthesis voices, CSS media features, JS math fingerprint.
+- Font detection list expanded from 10 to 48 fonts.
+- High contrast theme added (◑).
+- Global Privacy Control (GPC) replacing legacy DNT.
+- VPN detector improved: removed false positives for Google/Amazon/Azure users.
+- Fixed advice text: Canvas protection, WebRTC blocking, Battery API deprecation notice.
+- Renamed "Save PDF" button to "Print / Save".
+
+## 1.1 — 2025-10-11
+
+- Added battery detector (Battery API).
+- Improved device detection accuracy.
+- Minor UI bug fixes.
+
+## 1.0 — 2025-10-07
+
+- Initial public release.
+- Canvas, Audio, WebGL fingerprinting.
+- IP detection with 5-source fallback.
+- VPN, AdBlock, WebRTC detection.
+- PDF export and Share function.
+- RU / EN / UZ language support.
