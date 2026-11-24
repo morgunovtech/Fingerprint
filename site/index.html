@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title id="pageTitle">Fingerprint — by morgunov.tech</title>
-  <meta id="metaDescription" name="description" content="Fingerprint показывает, какие данные о вас сразу получает сайт, как они влияют на приватность и какие шаги помогут защититься. Все расчеты выполняются локально." />
+  <title id="pageTitle">Fingerprint — кто и что узнаёт о вас, пока вы открываете сайт — morgunov.tech</title>
+  <meta id="metaDescription" name="description" content="Шесть шагов от включения ноутбука до открытого сайта: кто и что узнаёт о вас на каждом, на ваших реальных данных, и что с этим делать." />
   <link rel="canonical" href="https://fprint.morgunov.tech" />
   <!-- /en/ is the same page with English link-preview tags (functions/en/index.js). -->
   <link rel="alternate" hreflang="ru" href="https://fprint.morgunov.tech/" />
@@ -12,8 +12,8 @@
   <link rel="alternate" hreflang="x-default" href="https://fprint.morgunov.tech/" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
   <meta name="robots" content="index, follow" />
-  <meta id="ogTitle" property="og:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
-  <meta id="ogDescription" property="og:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
+  <meta id="ogTitle" property="og:title" content="Fingerprint — кто и что узнаёт о вас, пока вы открываете сайт" />
+  <meta id="ogDescription" property="og:description" content="Шесть шагов от включения ноутбука до открытого сайта: кто и что узнаёт о вас на каждом, на ваших реальных данных, и что с этим делать." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://fprint.morgunov.tech" />
   <!-- PNG: LinkedIn and most messengers do not show an SVG preview. The card's source is
@@ -22,12 +22,12 @@
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Fingerprint by morgunov.tech — узнай, насколько ты анонимен" />
+  <meta property="og:image:alt" content="Fingerprint by morgunov.tech — кто и что узнаёт о вас, пока вы открываете сайт" />
   <meta property="og:locale" content="ru_RU" />
   <meta property="og:locale:alternate" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta id="twTitle" name="twitter:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
-  <meta id="twDescription" name="twitter:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
+  <meta id="twTitle" name="twitter:title" content="Fingerprint — кто и что узнаёт о вас, пока вы открываете сайт" />
+  <meta id="twDescription" name="twitter:description" content="Шесть шагов от включения ноутбука до открытого сайта: кто и что узнаёт о вас на каждом, на ваших реальных данных, и что с этим делать." />
   <meta name="twitter:image" content="https://fprint.morgunov.tech/share-card.png" />
   <!-- Yandex Webmaster ownership of fprint.morgunov.tech (Google verifies the whole
        morgunov.tech domain by DNS). -->
@@ -40,7 +40,7 @@
       "@type": "WebApplication",
       "name": "Fingerprint",
       "url": "https://fprint.morgunov.tech",
-      "description": "Проверка приватности для обычных пользователей: страница показывает, что любой сайт узнаёт о вашем браузере в момент открытия, насколько уникальным это вас делает и как стать менее заметным для слежки.",
+      "description": "Образовательная страница о приватности для обычных пользователей: шесть шагов от включения ноутбука до открытого сайта, и на каждом, на ваших реальных данных, кто и что о вас узнаёт и что с этим делать.",
       "applicationCategory": "SecurityApplication",
       "operatingSystem": "Any",
       "isAccessibleForFree": true,
@@ -64,6 +64,7 @@
       }
     }
   </script>
+  <link rel="stylesheet" href="/assets/app.css" />
   <link rel="stylesheet" href="/assets/app.css" />
 </head>
 <body>
@@ -90,52 +91,36 @@
           <button type="button" data-theme="contrast" aria-label="High contrast"><span class="menu-icon" aria-hidden="true">◑</span></button>
         </div>
       </div>
-      <button class="btn" id="viewModeBtn" type="button">📖 История</button>
     </div>
     </nav>
   </header>
 
   <main id="mainContent">
-<div id="reportMode">
   <!-- Intro -->
-  <section class="block">
-    <h2 id="introTitle" class="section-title sr-only">«Цифровой отпечаток»: что о вас знают сайты</h2>
+  <section class="block intro">
+    <h2 id="introTitle" class="intro-title">Кто и что узнаёт о вас, пока вы открываете сайт</h2>
     <!-- The Russian intro is in the markup rather than only in the strings: a reader that runs no
          JavaScript (an AI assistant, a text-only crawler) gets the page's text. src/app.js reads
          this block as the Russian introRichHtml and swaps in another language when needed. -->
     <div id="introText" class="small intro-content--rich">
-      <section class="fp-section" lang="ru" aria-labelledby="fp-title">
+      <section class="fp-section" lang="ru" aria-labelledby="introTitle">
         <p>
-          Каждый браузер оставляет уникальный след — набор технических характеристик,
-          который сайты читают молча, без запроса и без вашего разрешения.
-          Это называется цифровым отпечатком. Сервис показывает, что видно о вас прямо сейчас,
-          и объясняет, как снизить риски.
+          Между включением ноутбука и открытой страницей о вас узнают несколько компаний.
+          Эта страница проходит путь шаг за шагом, на ваших реальных данных: всё, что ниже,
+          браузер только что отдал этому сайту. Никуда ничего не отправляется, кроме одного запроса,
+          который вы сами запускаете на шаге 3.
         </p>
         <details>
-          <summary class="intro-more">Подробнее о слежке и рисках ▾</summary>
-          <h3>Как работает слежка без cookies</h3>
+          <summary class="intro-more">Как страница обращается с данными ▾</summary>
           <p>
-            Вы зашли на десятки сайтов без регистрации — везде оставили одинаковый отпечаток.
-            Потом создали аккаунт на любом из них. Теперь рекламные сети могут связать
-            все прошлые визиты с вашим именем и продать этот профиль.
-          </p>
-          <h3>Чем это опасно</h3>
-          <ul class="fp-list">
-            <li>Магазины повышают цены, зная ваше устройство и платёжеспособность.</li>
-            <li>Мошенники знают ваш город, провайдера и устройство — фишинг становится точнее.</li>
-            <li>Страховые компании и работодатели покупают профили у брокеров данных.</li>
-            <li>После утечки базы профиль нельзя «удалить» — он навсегда привязан к вам.</li>
-          </ul>
-          <h3>Как мы обрабатываем данные</h3>
-          <p>
-            Отпечаток, балл уникальности и профиль считаются в вашем браузере — страница их не отправляет,
-            и ни одна сторонняя служба их не видит. Сервис бесплатный, без рекламы и регистрации. Что всё-таки уходит в сеть:
+            Всё считается в вашем браузере и никуда не загружается; ни одна сторонняя служба этого не видит.
+            Сервис бесплатный, без рекламы и регистрации. Что всё-таки уходит в сеть:
           </p>
           <ul class="fp-list">
             <li>При открытии страницы — запрос общей статистики к нашему серверу на Cloudflare и подсчёт
               просмотра Cloudflare Web Analytics без cookie. Как любой сервер, они видят ваш IP-адрес и браузер.</li>
-            <li>По кнопке «Проверить сеть» — запросы к нашему серверу. Он показывает ваш IP, провайдера и заголовки,
-              измеряет скорость и проверяет IP через ipquery.io (запасной — ipinfo.io) и Google DNS.
+            <li>По кнопке на шаге 3 — запросы к нашему серверу. Он показывает ваш IP, провайдера и заголовки
+              и проверяет IP через ipquery.io (запасной — ipinfo.io) и Google DNS.
               Отчёт хранится под вашим IP один час; в анонимную статистику (браузер, ОС, страна) IP не попадает.
               Если наш сервер недоступен, браузер спрашивает публичные сервисы IP напрямую
               (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
@@ -145,113 +130,21 @@
     </div>
   </section>
 
-  <!-- The verdict and what the site knows -->
-  <section class="block" id="shockSection" style="display:none">
-    <div id="heroSkeleton"><div class="skeleton skeleton-hero"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line" style="width:60%"></div></div>
-    <div id="heroVerdict" class="hero-verdict" style="display:none">
-      <div class="hero-top-row">
-        <div class="hero-number" id="heroNumber">0</div>
-        <button class="btn btn-link" id="methodologyBtn" style="display:none"></button>
-      </div>
-      <div class="hero-subtitle" id="heroSubtitle"></div>
-      <div id="heroConclusion" class="hero-conclusion"></div>
-      <div class="hero-actions">
-        <button class="btn btn-primary" id="shareBtn"></button>
-        <button class="btn" id="printBtn"></button>
-      </div>
-      <div id="methodologyModal" class="methodology-modal" role="dialog" aria-modal="true" aria-labelledby="methodologyTitle" style="display:none">
-        <div class="methodology-content" tabindex="-1">
-          <button class="methodology-close" id="methodologyClose" aria-label="Close">&times;</button>
-          <h3 id="methodologyTitle"></h3>
-          <div id="methodologyBody" class="small"></div>
-        </div>
-      </div>
-    </div>
-    <h2 class="section-heading" id="shockTitle"></h2>
-    <div id="shock" style="display:none">
-      <div class="data-groups">
-        <div class="data-group" id="groupIdentity"></div>
-      </div>
-    </div>
-  </section>
+  <!-- The six steps and the sum, rendered by src/walk.js -->
+  <div id="walk" aria-live="polite">
+    <div class="step step--skeleton"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line" style="width:60%"></div></div>
+  </div>
 
-  <!-- Network analysis, on demand -->
-  <section class="block" id="networkSection">
-    <h2 class="section-heading" id="networkTitle"></h2>
-    <p id="networkDesc" class="small"></p>
-    <button class="btn btn-primary" id="networkBtn"></button>
-    <div id="networkResults" style="display:none">
-      <div id="speedHeroArea" style="display:none">
-        <div class="speed-hero" id="speedHeroNumber">—</div>
-        <div class="speed-hero-label" id="speedHeroLabel"></div>
-        <div class="speed-hero-latency" id="speedHeroLatency"></div>
-      </div>
-      <div class="data-group" id="groupNetwork"></div>
-    </div>
-  </section>
-
-  <!-- Server fingerprint: what the Worker sees before any JavaScript runs -->
-  <section class="block" id="serverFpSection" style="display:none">
-    <h2 class="section-heading" id="serverFpTitle"></h2>
-    <p id="serverFpDesc" class="small"></p>
-    <div class="data-group" id="groupServerFp"></div>
-    <div id="contradictionsBlock"></div>
-  </section>
-
-  <!-- Tracker protection tests -->
-  <section class="block" id="trackerSection" style="display:none">
-    <h2 class="section-heading" id="trackerTitle"></h2>
-    <div id="trackerResults"></div>
-    <div id="trackerVerdict" class="tracker-verdict"></div>
-  </section>
-
-  <!-- The problem and the risks -->
-  <section class="block implications-block" id="implicationsBlock">
-    <div class="section section--problem">
-      <h2 class="section-title" id="implProblemTitle"></h2>
-      <div id="implProblemText" class="body-text"></div>
-    </div>
-    <div class="section section--risks">
-      <h2 class="section-title" id="implRisksTitle"></h2>
-      <div class="risk-cards-grid" id="implRisksGrid"></div>
-    </div>
-  </section>
-
-  <!-- Steps: personal and general recommendations -->
-  <section class="block implications-block" id="recsBlock">
-    <div class="section section--steps">
-      <h2 class="section-heading" id="implStepsTitle"></h2>
-      <details id="personalRecsDetails" open>
-        <summary class="recs-summary">
-          <span id="personalRecsSummaryText"></span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </summary>
-        <div id="personalRecs"></div>
-      </details>
-      <details id="generalRecsDetails">
-        <summary class="recs-summary">
-          <span id="generalRecsSummaryText"></span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </summary>
-        <div id="generalRecs"></div>
-      </details>
-    </div>
-  </section>
-
-  <!-- Detail cards -->
+  <!-- Everything the browser handed over, for the curious -->
   <section class="block">
     <details id="detailsAccordion">
       <summary class="section-heading details-summary">
         <span id="detailTitle"></span>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </summary>
-      <div class="cards" id="cards"></div>
+      <div id="detailsBody" class="details-body"></div>
     </details>
   </section>
-
-</div><!-- /reportMode -->
-<div id="storyMode" style="display:none"></div>
-
   </main>
   <footer class="small" id="footerText"></footer>
 </div>

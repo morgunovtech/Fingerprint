@@ -1,7 +1,6 @@
-// The tracker simulation (three ad-blocker bait elements plus the DNT and GPC settings) and the
-// consistency check of the browser's own data.
+// The ad-blocker check (three bait elements plus the DNT and GPC signals) and the consistency
+// check of the browser's own data.
 
-import { getEl } from './dom.js';
 import { state } from './state.js';
 
 // Each bait is a hidden element with the class names ad blockers hide; after half a second the
@@ -34,20 +33,15 @@ export async function runTrackerTests() {
   return results;
 }
 
-export function renderTrackerTests(results, t) {
-  const section = getEl('trackerSection');
-  const container = getEl('trackerResults');
+// True when at least one bait element was hidden: an ad blocker or a privacy browser is at work.
+export function blockerDetected(results) {
+  return Array.isArray(results) && results.some(r => ['pixel', 'analytics', 'iframe'].includes(r.id) && r.blocked);
+}
+
+// The rows of the check and its verdict, as a fragment the walk inserts.
+export function trackerRows(results, t) {
+  const frag = document.createDocumentFragment();
   const tt = t.trackers;
-  if (!section || !container || !tt) return;
-  getEl('trackerTitle').textContent = tt.title;
-  container.innerHTML = '';
-  if (tt.description) {
-    const descP = document.createElement('p');
-    descP.className = 'small';
-    descP.style.marginBottom = '12px';
-    descP.textContent = tt.description;
-    container.appendChild(descP);
-  }
   let blockedCount = 0;
   for (const r of results) {
     const meta = tt[r.id];
@@ -58,26 +52,18 @@ export function renderTrackerTests(results, t) {
     const badge = document.createElement('span');
     badge.className = 'tracker-badge ' + (r.blocked ? 'tracker-badge--blocked' : 'tracker-badge--open');
     badge.textContent = r.blocked ? meta.blocked : meta.open;
-    const textWrap = document.createElement('div');
-    textWrap.className = 'tracker-text';
-    const nameEl = document.createElement('div');
-    nameEl.className = 'tracker-name';
-    nameEl.textContent = meta.name;
-    textWrap.appendChild(nameEl);
-    const explain = tt[r.id + 'Explain'];
-    if (explain) {
-      const explainEl = document.createElement('div');
-      explainEl.className = 'tracker-explain';
-      explainEl.textContent = explain;
-      textWrap.appendChild(explainEl);
-    }
+    const name = document.createElement('span');
+    name.className = 'tracker-name';
+    name.textContent = meta.name;
     row.appendChild(badge);
-    row.appendChild(textWrap);
-    container.appendChild(row);
+    row.appendChild(name);
+    frag.appendChild(row);
   }
-  const verdictEl = getEl('trackerVerdict');
-  if (verdictEl && typeof tt.verdict === 'function') verdictEl.textContent = tt.verdict(blockedCount, results.length);
-  section.style.display = '';
+  const verdict = document.createElement('p');
+  verdict.className = 'tracker-verdict';
+  verdict.textContent = typeof tt.verdict === 'function' ? tt.verdict(blockedCount, results.length) : '';
+  frag.appendChild(verdict);
+  return frag;
 }
 
 // Signs that the browser's data is spoofed or contradicts itself.
@@ -88,7 +74,6 @@ export function checkSpoofing() {
   const uaWin = /Windows/i.test(ua), uaMac = /Macintosh|Mac OS/i.test(ua), uaAndroid = /Android/i.test(ua);
   const uaLinux = /Linux/i.test(ua) && !uaAndroid;
   if ((uaWin && !/Win/i.test(platform)) || (uaMac && !/Mac/i.test(platform)) || (uaLinux && !/Linux/i.test(platform))) issues.push('ua_platform');
-  // Canvas randomisation: the same drawing twice gives two different images.
   try {
     const draw = () => {
       const c = document.createElement('canvas');
@@ -100,13 +85,10 @@ export function checkSpoofing() {
     };
     if (draw() !== draw()) issues.push('canvas_randomized');
   } catch (_) { /* ignore */ }
-  // The IP's time zone and the browser's are on different continents.
   const ipTz = state.serverData?.details?.timezone || '';
   let browserTz = '';
   try { browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (_) { /* ignore */ }
   if (ipTz && browserTz && (ipTz.split('/')[0] || '') !== (browserTz.split('/')[0] || '')) issues.push('tz_mismatch');
-  const dpr = window.devicePixelRatio || 1;
-  if (dpr >= 2 && (screen.width || 0) < 1000 && (screen.height || 0) < 700) issues.push('screen_dpr');
   if (navigator.webdriver === true) issues.push('webdriver');
   return { consistent: issues.length === 0, issues };
 }

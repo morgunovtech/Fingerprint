@@ -9,9 +9,9 @@
 const SITE = 'https://fprint.morgunov.tech';
 
 export const EN = {
-  title: 'Fingerprint — how anonymous are you online',
-  description: 'Shows what any website learns about you the moment you open it, how unique your browser is, and how to hide.',
-  imageAlt: 'Fingerprint by morgunov.tech — how anonymous are you online?'
+  title: 'Fingerprint — who learns what about you while you open a website',
+  description: 'Six steps from opening your laptop to a loaded website: who learns what about you at each one, on your real data, and what to do about it.',
+  imageAlt: 'Fingerprint by morgunov.tech — who learns what about you while you open a website'
 };
 
 const attr = value => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');

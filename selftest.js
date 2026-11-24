@@ -61,8 +61,8 @@ for (const dir of ['site/src', 'site/src/i18n', 'worker/src', 'worker/src/provid
 
   // Every id the modules look up exists in the markup.
   const srcText = fs.readdirSync(path.join(SITE, 'src')).filter(f => f.endsWith('.js')).map(f => read(`site/src/${f}`)).join('\n');
-  const ids = new Set([...srcText.matchAll(/(?:getEl|getElementById)\('([A-Za-z]+)'\)/g)].map(m => m[1]));
-  const dynamicIds = new Set(['versionBtn', 'footerVisitCount']); // rendered by the footer string
+  const ids = new Set([...srcText.matchAll(/(?:getEl|getElementById)\('([A-Za-z-]+)'\)/g)].map(m => m[1]));
+  const dynamicIds = new Set(['versionBtn', 'footerVisitCount', 'step-3', 'shareBtn', 'printBtn']); // rendered by the footer string and the walk
   for (const id of ids) {
     if (dynamicIds.has(id)) continue;
     assert.ok(html.includes(`id="${id}"`), `site/index.html has no element with id="${id}"`);
@@ -619,60 +619,51 @@ const waitFor = async (cond, label) => {
 
   /* ============ The page's modules ============ */
   const signals = await import(moduleUrl('./site/src/signals.js'));
-  const entropy = await import(moduleUrl('./site/src/entropy.js'));
   const device = await import(moduleUrl('./site/src/device.js'));
   const network = await import(moduleUrl('./site/src/network.js'));
   const share = await import(moduleUrl('./site/src/share.js'));
-  const { state, snapshot, invalidateSnapshot } = await import(moduleUrl('./site/src/state.js'));
+  const { state, snapshot } = await import(moduleUrl('./site/src/state.js'));
   const { I18N } = await import(moduleUrl('./site/src/i18n/index.js'));
 
   assert.equal(signals.detectPointerType(), 'none');
   assert.deepEqual(signals.getLanguages(), ['ru-RU', 'en-US']);
   assert.equal(signals.detectScreenSetup().mode, 'single');
   assert.equal((await signals.sha256('test')).length, 64);
-  assert.equal(entropy.canonicalOsFamily('Windows 11 Pro'), 'Windows');
-  assert.equal(entropy.bucketDeviceMemory(12), '9-16');
-  assert.equal(entropy.bucketCoreCount(4), '≤4');
   assert.equal(network.normalizeCallingCode(' +998 '), '+998');
   const details = network.extractCanonicalDetailsFromPayload({ region_name: 'Tashkent', country_name: 'Uzbekistan', timezone: 'Asia/Tashkent', country_calling_code: '+998', org: 'Uzbektelekom Joint Stock Company' });
   assert.equal(details.org, 'Uzbektelekom Joint Stock Company');
-  assert.equal(details.country_calling_code, '+998');
   assert.equal(network.resolveCountryCode(details, {}, {}), 'UZ');
   assert.equal(device.browserDisplayName({ userAgent: navigatorStub.userAgent, uaBrands: navigatorStub.userAgentData.brands }), 'Safari 17');
   assert.equal(device.guessOSVersion({ userAgent: navigatorStub.userAgent, uaPlatform: 'macOS', uaHighEntropy: { platformVersion: '14.0.0' } }), 'macOS 14');
   assert.deepEqual(device.guessDevice({ userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/134', hw: { deviceMemory: 8 }, touch: { maxTouchPoints: 5 }, screen: { w: 412, h: 915, pixelRatio: 2.6 } }), { id: 'androidFlagship' });
-  assert.equal(device.deviceDisplayName({ id: 'androidFlagship' }, I18N.en), 'Android flagship smartphone');
+  assert.equal(device.deviceKind({ id: 'androidFlagship' }), 'phone');
+  assert.equal(device.deviceKind({ name: 'MacBook Air (Apple M2)' }), 'laptop');
+  assert.equal(device.deviceKind({ name: 'iPad' }), 'tablet');
+  assert.equal(device.osFamilyOf({ userAgent: navigatorStub.userAgent, uaPlatform: 'macOS' }), 'mac');
+  assert.equal(device.osVendorKey('android'), 'google');
+  assert.equal(device.osVendorKey('linux'), null);
+  assert.equal(device.browserVendorKey('Yandex Browser'), 'yandex');
+  assert.equal(device.browserVendorKey('Safari'), 'apple');
   assert.equal(device.formatGpuRenderer('ANGLE (Apple, Apple M2, OpenGL)'), 'Apple M2');
 
-  // The score: a known feature set gives a positive H and a percentile in range, and the model
-  // only uses keys the frequency tables know (the audio bucket used to emit unknown ones).
-  const H = entropy.entropyFromFeatures({ browser: 'Safari', osFamily: 'macOS', screen: '1512x982@2', dpr: '2', langsCount: '2', gpuBrand: 'Apple', memoryBucket: '9-16', coresBucket: '5-8', hasCanvas: '1', hasAudio: '1', pluginsBucket: '1-3', permBucket: '1-3', storageBucket: 'full', touchBucket: 'none', webglRenderer: 'Apple GPU', audioHash: 'rare', fontsBucket: '1-5' });
-  assert.ok(H > 0);
-  const pct = entropy.percentileFromH(H);
-  assert.ok(pct >= 0 && pct <= 100);
-  for (const hash of ['0a', '1b', '2c', '3d', '4e', '5f', '6a', 'ff']) {
-    const f = entropy.featuresOf({ languages: [], screen: { w: 1, h: 1, pixelRatio: 1 }, gl: {}, hw: {}, hashes: {}, plugins: [], perms: {}, storage: {}, touch: {}, webgl: { supported: false }, audioFp: { supported: true, hash }, fontsFp: { count: 0 } }, 'Linux');
-    assert.ok(hash in {} || entropy.FREQ['audio.hash'][f.audioHash] != null, `audio bucket ${f.audioHash} is not in the table`);
-  }
-
-  // "Check network": a Worker answer is final; public IP services are only the fallback.
+  // The IP lookup: a Worker answer is final; public IP services are only the fallback.
   const publicIpServices = /ipapi\.co|freeipapi\.com|ipify\.org|myip\.com/;
   const publicIpCalls = from => fetchLog.slice(from).map(entry => entry.url).filter(url => publicIpServices.test(url));
-  workerWhoami = {
+  const WHOAMI = {
     ip: '198.51.100.2',
-    geo: { country: 'UZ', region: 'Tashkent', city: 'Tashkent', timezone: 'Asia/Tashkent' },
+    geo: { country: 'UZ', region: 'Tashkent', city: 'Tashkent', timezone: 'Asia/Tashkent', colo: 'TAS' },
     network: { asn: 8193, asOrganization: 'Uzbektelekom', httpProtocol: 'HTTP/2', tlsVersion: 'TLSv1.3', tlsCipher: 'AEAD-AES128-GCM-SHA256' },
-    headers: { header_order: ['user-agent', 'accept', 'accept-language'], client_hints: { ua: '"Chromium";v="134"', platform: 'macOS', mobile: '?0', browser: 'Chromium' } },
+    headers: { user_agent: navigatorStub.userAgent, accept_language: 'ru-RU,ru;q=0.9', header_order: ['user-agent', 'accept', 'accept-language'], client_hints: { ua: '"Chromium";v="134"', platform: 'macOS', mobile: '?0', browser: 'Chromium' } },
     header_hash: '0123456789abcdef',
     consistency: { consistent: true, issues: [] },
     cross_check: { server_timezone: 'Asia/Tashkent', server_platform: 'macOS', server_browser: 'Safari 17' }
   };
+  workerWhoami = WHOAMI;
   let logStart = fetchLog.length;
   const fromWorker = await network.fetchIpData();
   assert.equal(fromWorker.source, 'worker');
   assert.equal(fromWorker.details.region, 'Tashkent');
   assert.deepEqual(publicIpCalls(logStart), []);
-  // The page calls the Worker on its own host (the route fprint.morgunov.tech/api/*), not workers.dev.
   assert.ok(fetchLog.slice(logStart).some(entry => entry.url === 'https://fprint.morgunov.tech/api/whoami'));
   assert.ok(!fetchLog.some(entry => entry.url.includes('workers.dev')), 'no calls to the workers.dev address');
   workerWhoami = null;
@@ -682,9 +673,7 @@ const waitFor = async (cond, label) => {
   assert.equal(fromFallback.source, 'ipapi');
   assert.equal(fromFallback.details.country_calling_code, '+998');
   assert.ok(publicIpCalls(logStart).some(url => url.startsWith('https://ipapi.co')));
-
   assert.equal(share.resolveShareUrl(), 'https://example.com/fingerprint');
-  assert.ok(share.createShareCardSvg({ pct: 56, headline: 'Test headline', tagline: 'Tag', url: 'https://example.com' }, { share: { tagline: 'Preview tag' } }).includes('<svg'));
 
   // The same keys in every language, all the way down (functions compared by arity).
   const walk = (obj, prefix = '') => Object.entries(obj).flatMap(([k, v]) => {
@@ -697,53 +686,57 @@ const waitFor = async (cond, label) => {
     const keys = new Set(walk(dict));
     const missing = baseKeys.filter(key => !keys.has(key));
     assert.deepEqual(missing, [], `Missing localization keys for ${lang}`);
+    const extra = walk(dict).filter(key => key !== 'introRichHtml' && !baseKeys.includes(key));
+    assert.deepEqual(extra, [], `Extra localization keys in ${lang}`);
   }
   // Every t.<key> the modules read exists in the strings.
   {
-    const srcText = ['app', 'report', 'story', 'server-view', 'share', 'trackers'].map(f => read(`site/src/${f}.js`)).join('\n');
-    const known = new Set([...walk(I18N.ru).map(k => k.replace(/\(\)$/, '')), 'introRichHtml']); // ru's intro is read from the markup
-    const used = new Set([...srcText.matchAll(/\bt\.([a-zA-Z]+(?:\.[a-zA-Z]+)*)/g)].map(m => m[1]).filter(k => !['story', 'trackers', 'implications', 'osint', 'rows', 'serverFp', 'contradictions', 'share', 'copy', 'units', 'labels', 'permNames', 'permStates', 'pointerLabels', 'dntStatus', 'monitorText', 'theme', 'meta', 'speedTest', 'langLabels', 'deviceNames', 'heroConclusion', 'uniqHeadline'].includes(k.split('.')[0]) || k.includes('.')));
-    const unknown = [...used].filter(k => !known.has(k));
+    const srcText = ['app', 'walk', 'share', 'trackers'].map(f => read(`site/src/${f}.js`)).join('\n');
+    const known = new Set([...walk(I18N.ru).map(k => k.replace(/\(\)$/, '')), 'introRichHtml']);
+    const used = new Set([...srcText.matchAll(/\bt\.([a-zA-Z]+(?:\.[a-zA-Z]+)*)/g)].map(m => m[1]));
+    const unknown = [...used].filter(k => !known.has(k) && !known.has(k.split('.').slice(0, -1).join('.')));
     assert.deepEqual(unknown, [], 'strings the modules read but ru.js lacks');
   }
 
-  /* ============ The page: start-up, controls, languages, network check ============ */
-  state.webrtc = null;
+  /* ============ The page: start-up, the walk, controls, languages, the network check ============ */
   const app = await import(moduleUrl('./site/src/app.js'));
   assert.equal(typeof documentStub._domReady, 'function', 'app.js waits for DOMContentLoaded');
   workerStats = { total_visits: 1000, browsers: { 'Safari 17': 300 }, os: { macOS: 500 }, countries: { UZ: 400 }, tls_versions: { 'TLSv1.3': 950 } };
   documentStub._domReady();
-  const shareBtnEl = elements.get('shareBtn');
-  assert.equal(shareBtnEl.dataset.ready, '0');
-  assert.equal(shareBtnEl.getAttribute('aria-disabled'), 'true');
   await settle(40);
-  assert.equal(shareBtnEl.dataset.ready, '1');
-  assert.equal(shareBtnEl.getAttribute('aria-disabled'), null);
   assert.equal(documentElement.lang, 'ru');
   assert.ok(snapshot.value, 'the snapshot is computed');
-  assert.ok(snapshot.value.pct >= 0 && snapshot.value.pct <= 100);
-  assert.equal(elements.get('heroNumber').textContent, snapshot.value.pct + '%');
   assert.equal(elements.get('introText').innerHTML, introSource, 'the Russian intro is the one from the markup');
   assert.deepEqual(alerts, []);
 
   // All the text a node holds: its own, its innerHTML and its children's.
   const textOf = node => (!node || typeof node !== 'object') ? '' : [node._textContent, node._innerHTML, ...node.children.map(textOf)].filter(Boolean).join(' ');
-  const rowsOf = groupId => elements.get(groupId).querySelectorAll('.data-row').map(r => textOf(r).replace(/<[^>]+>/g, ' ').replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim());
-  const rowText = groupId => textOf(elements.get(groupId));
-  assert.ok(/Устройство/.test(rowText('groupIdentity')) && /MacBook/.test(rowText('groupIdentity')), rowText('groupIdentity'));
-  assert.ok(/Safari 17/.test(rowText('groupIdentity')));
-  assert.ok(/у 30% посетителей/.test(rowText('groupIdentity')), 'the browser row shows the share of visitors from /api/stats');
-  assert.equal(elements.get('cards').children.length, 22, 'detail cards');
-  assert.ok(elements.get('footerText').innerHTML.includes('v2.'), 'footer shows the version');
+  const walkEl = elements.get('walk');
+  const stepEl = n => walkEl.children.find(c => c.id === `step-${n}`);
+  const stepText = n => textOf(stepEl(n)).replace(/<[^>]+>/g, ' ').replace(/&quot;/g, '"').replace(/\s+/g, ' ');
+  const titles = () => [1, 2, 3, 4, 5, 6].map(n => stepEl(n).querySelector('.step-title').textContent);
+  assert.equal(walkEl.children.filter(c => c.hasClass('step')).length, 7, 'six steps and the sum');
+  assert.deepEqual(titles(), ['Вы открыли ноутбук', 'Запустилась операционная система', 'Вы подключились к Wi-Fi', 'Вы открыли Safari', 'Вы ввели адрес сайта', 'Сайт открылся']);
+  assert.ok(/MacBook/.test(stepText(1)) && /1512×982/.test(stepText(1)) && /Apple GPU/.test(stepText(1)), stepText(1));
+  assert.ok(/macOS 17/.test(stepText(2)) && /Apple/.test(stepText(2)), stepText(2));
+  assert.ok(stepEl(3).querySelector('[data-action="check-network"]'), 'the network button sits in step 3');
+  assert.ok(/ваш интернет-провайдер/.test(stepText(3)), 'the provider is unnamed before the check');
+  assert.ok(/Safari 17/.test(stepText(4)) && /у 30% посетителей/.test(stepText(4)), stepText(4));
+  assert.ok(/Cloudflare/.test(stepText(5)));
+  assert.ok(/Шрифты/.test(stepText(6)));
+  const summaryEl = () => walkEl.children.find(c => c.id === 'summary');
+  assert.ok(/Apple: устройство включено/.test(textOf(summaryEl())));
+  assert.ok(/Нажмите кнопку на шаге 3/.test(textOf(summaryEl())), 'the sum says the provider is unknown until the check');
+  assert.ok(state.sharePayload && state.sharePayload.text.includes('https://example.com/fingerprint'));
 
-  // The probes ran once: five tracker rows, and the WebRTC stub's host candidate is a leak.
+  // The probes ran once: the blocker row and the five bait rows, and the WebRTC stub's host candidate is a leak.
   await waitFor(() => state.trackerResults && state.webrtc, 'the tracker tests and the WebRTC probe');
   await settle();
   assert.equal(state.trackerResults.length, 5);
-  assert.equal(elements.get('trackerResults').querySelectorAll('.tracker-row').length, 5);
+  assert.equal(stepEl(6).querySelectorAll('.tracker-row').length, 5);
   assert.deepEqual(state.webrtc, { checked: true, leak: true, ips: ['10.0.0.2'] });
-  assert.ok(/Утечка: 10\.0\.0\.2/.test(rowText('groupNetwork')), rowText('groupNetwork'));
-  assert.ok(elements.get('personalRecs').children.some(card => textOf(card).includes('WebRTC')), 'the WebRTC advice is shown when the probe finds a leak');
+  assert.ok(/виден адрес: 10\.0\.0\.2/.test(stepText(6)), stepText(6));
+  assert.ok(/Блокировщик рекламы/.test(stepText(4)));
 
   // Language menu
   const langBtnEl = elements.get('langBtn');
@@ -757,7 +750,6 @@ const waitFor = async (cond, label) => {
   langOptions[0].click();
   await settle();
   assert.equal(langMenuEl.hidden, true);
-  assert.ok(langBtnEl.textContent.includes('Язык'));
 
   // Theme menu
   const themeBtnEl = elements.get('themeBtn');
@@ -779,16 +771,18 @@ const waitFor = async (cond, label) => {
     if (cls) assert.ok(documentElement.classList.contains(cls));
   }
 
-  // Share and save
+  // Share and save (the buttons live in the sum and are handled by data-action)
+  const shareBtnEl = summaryEl().querySelector('[data-action="share"]');
+  assert.ok(shareBtnEl);
   const savedSharePayload = state.sharePayload;
   state.sharePayload = null;
-  await share.handleShareClick();
-  assert.equal(shareBtnEl.textContent, I18N.ru.share.unavailable);
+  await share.handleShareClick(shareBtnEl);
+  assert.equal(shareBtnEl.textContent, I18N.ru.summary.share.unavailable);
   state.sharePayload = savedSharePayload;
   shareBtnEl.textContent = shareBtnEl.dataset.label;
-  await share.handleShareClick();
+  await share.handleShareClick(shareBtnEl);
   assert.equal(sharePayloads.length, 1);
-  assert.ok(clipboardWrites[0].includes('https://example.com/fingerprint'));
+  assert.ok(clipboardWrites[0].includes('Apple') && clipboardWrites[0].includes('https://example.com/fingerprint'));
   await share.handleSaveClick();
   assert.ok(printed || downloads.length > 0);
 
@@ -801,12 +795,13 @@ const waitFor = async (cond, label) => {
   assert.equal(elements.get('twTitle').content, I18N.en.meta.title);
   assert.ok(elements.get('introTitle').textContent.length > 0);
   assert.ok(langBtnEl.textContent.includes('Language'));
-  assert.ok(/Device/.test(rowText('groupIdentity')) && /Leak: 10\.0\.0\.2/.test(rowText('groupNetwork')));
+  assert.deepEqual(titles().slice(0, 2), ['You opened your laptop', 'The operating system started']);
+  assert.ok(/an address is visible: 10\.0\.0\.2/.test(stepText(6)));
   await app.render('uz');
   await settle();
   assert.equal(documentElement.lang, 'uz');
   assert.ok(langBtnEl.textContent.includes('Til'));
-  assert.ok(/Qurilma/.test(rowText('groupIdentity')));
+  assert.equal(titles()[0], 'Siz noutbukni ochdingiz');
 
   // /en/ opens in English over a saved Russian choice; a language picked there moves the
   // address back to / (and English to /en/), so a shared link previews in that language.
@@ -819,70 +814,53 @@ const waitFor = async (cond, label) => {
     windowStub.location = { origin: 'https://fprint.morgunov.tech', pathname: '/en/', search: '', hash: '' };
     assert.equal(app.detectLang(), 'en');
     app.syncLangPath('ru');
-    windowStub.location = { origin: 'https://fprint.morgunov.tech', pathname: '/', search: '?mode=story', hash: '' };
+    windowStub.location = { origin: 'https://fprint.morgunov.tech', pathname: '/', search: '?x=1', hash: '' };
     assert.equal(app.detectLang(), 'ru');
     app.syncLangPath('en');
     app.syncLangPath('ru');
     windowStub.location = realLocation;
     app.syncLangPath('en');
-    assert.deepEqual(replaced, ['/', '/en/?mode=story'], 'the address changes only between / and /en/');
+    assert.deepEqual(replaced, ['/', '/en/?x=1'], 'the address changes only between / and /en/');
     windowStub.history = { replaceState: () => {} };
     if (savedLang === undefined) localStore.delete('fp_lang'); else localStore.set('fp_lang', savedLang);
   }
 
-  // "Check network" in Russian: IP, ISP, VPN rows; scan rows; the server fingerprint section
-  // reads the Worker's actual shape (TLS, HTTP, header order, Client Hints).
+  // The network check from the button at step 3, in Russian: steps 3, 5 and 6 and the sum fill in.
   await app.render('ru');
   await settle();
-  workerWhoami = {
-    ip: '198.51.100.2',
-    geo: { country: 'UZ', region: 'Tashkent', city: 'Tashkent', timezone: 'Asia/Tashkent' },
-    network: { asn: 8193, asOrganization: 'Uzbektelekom', httpProtocol: 'HTTP/2', tlsVersion: 'TLSv1.3', tlsCipher: 'AEAD-AES128-GCM-SHA256' },
-    headers: { header_order: ['user-agent', 'accept', 'accept-language'], client_hints: { ua: '"Chromium";v="134"', platform: 'macOS', mobile: '?0', browser: 'Chromium' } },
-    header_hash: '0123456789abcdef',
-    consistency: { consistent: true, issues: [] },
-    cross_check: { server_timezone: 'Asia/Tashkent', server_platform: 'macOS', server_browser: 'Safari 17' }
-  };
+  workerWhoami = WHOAMI;
   workerScan = { resolved_ip: '198.51.100.2', geolocation: { isp: 'Uzbektelekom JSC', asn: 'AS8193', connection_type: 'mobile' }, reputation: { blacklisted: false, blacklists_checked: 4, blacklist_hits: [] } };
   state.serverData = null;
-  await app.handleNetworkCheck();
+  state.whoamiData = null;
+  // The button's click is delegated through #walk, which the stub DOM does not bubble; call the handler.
+  assert.ok(stepEl(3).querySelector('[data-action="check-network"]'));
+  const checking = app.handleNetworkCheck();
+  await waitFor(() => state.networkStatus === 'done', 'the network check');
+  await checking;
   await settle();
-  assert.ok(state.serverData);
-  assert.equal(state.serverData.details.region, 'Tashkent');
-  assert.equal(state.speed.status, 'done');
-  const net = rowText('groupNetwork');
-  assert.ok(/198\.51\.100\.2/.test(net), net);
-  assert.ok(/Uzbektelekom/.test(net));
-  assert.ok(/AS8193/.test(net), 'scan rows are merged into the network group');
-  assert.ok(/Мобильная сеть/.test(net));
-  assert.ok(/проверено 4 баз/.test(net));
-  const identity = rowText('groupIdentity');
-  assert.ok(/Ташкент|Tashkent/.test(identity) && /Узбекистан/.test(identity), identity);
-  const serverFp = rowsOf('groupServerFp').join(' | ');
-  for (const expected of ['TLSv1.3 / AEAD-AES128-GCM-SHA256', 'HTTP/2', '0123456789abcdef', 'user-agent, accept, accept-language', 'macOS', '?0', '"Chromium";v="134"', 'AS8193 · Uzbektelekom']) {
-    assert.ok(serverFp.includes(expected), `server fingerprint shows ${expected}: ${serverFp}`);
-  }
-  assert.ok(/у 95% посетителей/.test(rowText('groupServerFp')), 'the TLS row shows the share of visitors');
-  assert.ok(elements.get('contradictionsBlock').children.length >= 2);
-  assert.equal(elements.get('networkBtn').textContent, I18N.ru.networkRecheck);
+  assert.ok(state.serverData && state.serverData.details.region === 'Tashkent');
+  const s3 = stepText(3);
+  assert.ok(/198\.51\.100\.2/.test(s3) && /Uzbektelekom JSC/.test(s3) && /Ташкент/.test(s3) && /мобильная сеть/.test(s3), s3);
+  assert.equal(stepEl(3).querySelector('.step-title').textContent, 'Вы вышли в сеть через мобильного оператора', 'a mobile connection changes the wording');
+  assert.ok(/совпадает с устройством/.test(s3) || /по IP Asia\/Tashkent/.test(s3));
+  assert.equal(stepEl(3).querySelector('[data-action="check-network"]').textContent, I18N.ru.steps.s3.check.recheck);
+  const s5 = stepText(5);
+  assert.ok(/TLSv1\.3 \/ AEAD-AES128-GCM-SHA256/.test(s5) && /HTTP\/2/.test(s5) && /TAS/.test(s5), s5);
+  assert.ok(/Uzbektelekom JSC/.test(textOf(stepEl(5).querySelector('.step-who'))), 'the DNS party names the provider');
+  const s6 = stepText(6);
+  assert.ok(/ru-RU,ru;q=0\.9/.test(s6) && /macOS, Chromium/.test(s6) && /Заголовков в запросе 3/.test(s6), s6);
+  const sum = textOf(summaryEl());
+  assert.ok(/Uzbektelekom JSC: ваш IP-адрес/.test(sum) && /DNS-сервер \(Uzbektelekom JSC\)/.test(sum) && /Apple: устройство/.test(sum), sum);
+  assert.ok(state.sharePayload.text.includes('Uzbektelekom JSC'));
+  const detailsText = textOf(elements.get('detailsBody')).replace(/<[^>]+>/g, ' ');
+  assert.ok(/AS8193/.test(detailsText) && /0123456789abcdef/.test(detailsText) && /SHA-256/.test(detailsText), 'the details hold the raw data');
+  assert.ok(!/undefined|\[object Object\]|NaN/.test(textOf(walkEl)), 'no placeholders in the walk');
 
-  // Story Mode shows the real values, not placeholders.
-  const { renderStoryMode } = await import(moduleUrl('./site/src/story.js'));
-  renderStoryMode(snapshot.value.basic, I18N.ru, snapshot.value);
-  const storyHtml = textOf(elements.get('storyMode'));
-  for (const expected of ['MacBook', '1512×982', 'Apple GPU', '198.51.100.2', 'Uzbektelekom', 'Safari 17', 'TLSv1.3', 'ru-RU, en-US', '1 / 5', `${snapshot.value.pct}%`]) {
-    assert.ok(storyHtml.includes(expected), `story shows ${expected}`);
-  }
-  assert.ok(!/undefined|\[object Object\]|\?\.\?/.test(storyHtml), 'no placeholders in the story');
-
-  // A language switch after the network check keeps every section.
+  // A language switch after the check keeps every section filled.
   await app.render('en');
   await settle();
-  assert.ok(/AS8193/.test(rowText('groupNetwork')) && /Mobile network/.test(rowText('groupNetwork')));
-  assert.ok(rowsOf('groupServerFp').join(' ').includes('TLSv1.3'));
-  assert.ok(state.sharePayload);
-
-  // No script was added to the page and nothing reached the workers.dev address.
+  assert.ok(/Uzbektelekom JSC/.test(stepText(3)) && /mobile network/.test(stepText(3)));
+  assert.ok(/TLSv1\.3/.test(stepText(5)));
   assert.ok(!fetchLog.some(entry => entry.url.includes('workers.dev')));
 
   console.log('Self-test completed successfully');

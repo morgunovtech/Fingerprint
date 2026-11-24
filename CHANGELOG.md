@@ -2,6 +2,27 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.0.0 — 2026-11-24
+
+A new product on the same data. The page is one walk of six steps, from opening the device to a loaded site, for people who are not technical: at each step, what was measured right now, who learns it (by name, from the data: the makers of the system and the browser, your provider, Cloudflare), how it works, why it matters and one thing to do. The scanner it used to be (a uniqueness percentage, 22 cards of hashes, a speed test, two modes) is gone. The Worker's API keeps its shape.
+
+**The page**
+- Six steps: you opened the laptop (or unlocked the phone: the wording follows the device), the operating system started, you went online, you opened the browser (named), you typed the site's address, the site loaded. Then the sum: who learned what, a checklist with one action per step, "Share" with a text built from your data, "Print / Save".
+- Three tiers of honesty on every step: "Measured right now" rows, rows that appear after the check at step 3, and "how it works" for what a web page cannot see (what the OS maker gets at boot, what the DNS server logs). The page no longer says "TLS fingerprint" where it only has a version and a cipher, nor "ad pixel not blocked" where no pixel was loaded: the bait check is called a bait check.
+- The network check is the button at step 3, with a plain description of the one request that leaves the page and what it sends. After it, steps 3, 5 and 6 fill in: IP, provider, where the IP places you, connection type, VPN signs and the time zone of the IP; TLS version and cipher, HTTP protocol, the nearest Cloudflare node; what the server got before any script (User-Agent, languages, Client Hints, the number of headers).
+- "Who learns this" names parties from the data: Apple, Microsoft or Google for the system; Google, Apple, Mozilla, Brave, Yandex, Microsoft, Opera, Samsung, Vivaldi or The Browser Company for the browser; the provider by name after the check; the DNS server (the provider's by default); Cloudflare; the site owner; ad networks (none on this page, 10 to 30 on a typical site).
+- Actions are specific to the system (macOS, iOS, Windows, Android, ChromeOS, Linux) and the browser (Chrome, Firefox, Brave, Safari).
+- "Everything the browser handed over" at the bottom keeps the raw data for the curious: device, browser, network, what the server saw, the fingerprints (Canvas, audio, WebGL, fonts, the SHA-256 of the whole snapshot).
+- New in the copy, in Russian, English and Uzbek: the operating-system step, the plain-language row labels, the named parties, the sum and the checklist. The Uzbek copy was written with the other two and would benefit from a native speaker's pass.
+
+**Removed**
+- The uniqueness percentage and its model (`entropy.js`): it ranked the visitor against a distribution sampled from hand-typed frequency tables, not against people, and the footer's "N fingerprints checked" next to it read as if it did. The methodology modal went with it.
+- The 22 detail cards with their "how it is used / example / advice" texts, Report and Story modes and the toggle between them, the speed test (the Worker's `/api/speedtest/*` endpoints stay for API users), the risk cards and the two recommendation lists (their content lives in the steps' "why it matters" and "what to do"), the server-vs-browser consistency block, the SVG share card generated on the fly.
+- From the page's own strings: everything the removed sections used; the three language files are a third of their size.
+
+**Links and previews**
+- The page's title and descriptions, the JSON-LD description and the English texts of `/en/` say what the page is now. The preview cards (`share-card.svg`, `share-card-en.svg` and their PNGs) carry the new headline instead of "99%".
+
 ## 2.5.0 — 2026-11-24
 
 An audit and a rewrite of the page's code: the single 7,400-line `index.html` is now markup plus a stylesheet and ES modules, the dead code and the unused strings are gone, and four things that were silently broken work. The Worker's API keeps its shape.
