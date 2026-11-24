@@ -2,6 +2,18 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 2.4.0 — 2026-11-24
+
+An English address for links shared on LinkedIn and elsewhere, and a link preview those sites can show. What the page checks and sends does not change.
+
+- https://fprint.morgunov.tech/en/ is the same page in English, with English link-preview tags: title, description, image, `og:locale` `en_US` and its own canonical address. A Pages Function, `functions/en/index.js`, rewrites the tags in the `<head>` of `site/index.html` on the way out, so there is still one page; `/en` redirects to `/en/`. The English description is the one the project uses elsewhere: "Shows what any website learns about you the moment you open it, how unique your browser is, and how to hide." The page sets the same title and description for itself when it switches to English.
+- On `/en/` the page opens in English over a saved choice or the browser language, and opening it does not change the language saved for `/`. A language picked in the menu moves the address between `/` and `/en/` (Uzbek stays on `/`), so a copied or shared link previews in the language on screen.
+- The link preview is a 1200×630 PNG, `share-card.png` for `/` and `share-card-en.png` for `/en/`, with `og:image:type`, `width`, `height` and `alt`. It used to be `share-card.svg`, which LinkedIn and most messengers do not show, so links went out without a picture. The SVGs stay as the sources, laid out again: the headline ran into the "99%" circle. `share-card.svg` is still the file the network test downloads.
+- The `<head>` links the two addresses with `hreflang` (`ru`, `en`, `x-default` → `/`); `sitemap.xml` and `llms.txt` list `/en/`.
+- The page imports `src/profiler.js` and the network test fetches `share-card.svg` by absolute path, so both work from `/en/`.
+- `selftest.js` checks that both preview images are 1200×630 PNGs, runs the Function's rewrite over `site/index.html` (every tag it rewrites must be there, no Cyrillic left in the preview tags of `/en/`, nothing but the `<head>` changes), compares its English texts with the ones the page sets for itself, and checks the language pick from the address.
+- The Worker has no change but the version number it reports at `/api/health`.
+
 ## 2.3.0 — 2026-11-24
 
 The API has a new public address on the site's own host; the old one keeps working.

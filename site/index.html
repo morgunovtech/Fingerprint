@@ -6,17 +6,29 @@
   <title id="pageTitle">Fingerprint — by morgunov.tech</title>
   <meta id="metaDescription" name="description" content="Fingerprint показывает, какие данные о вас сразу получает сайт, как они влияют на приватность и какие шаги помогут защититься. Все расчеты выполняются локально." />
   <link rel="canonical" href="https://fprint.morgunov.tech" />
+  <!-- /en/ is the same page with English link-preview tags (functions/en/index.js). -->
+  <link rel="alternate" hreflang="ru" href="https://fprint.morgunov.tech/" />
+  <link rel="alternate" hreflang="en" href="https://fprint.morgunov.tech/en/" />
+  <link rel="alternate" hreflang="x-default" href="https://fprint.morgunov.tech/" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
   <meta name="robots" content="index, follow" />
   <meta id="ogTitle" property="og:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
   <meta id="ogDescription" property="og:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://fprint.morgunov.tech" />
-  <meta property="og:image" content="https://fprint.morgunov.tech/share-card.svg" />
+  <!-- PNG: LinkedIn and most messengers do not show an SVG preview. The card's source is
+       share-card.svg (share-card-en.svg for /en/); README, "Link previews", renders it. -->
+  <meta property="og:image" content="https://fprint.morgunov.tech/share-card.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Fingerprint by morgunov.tech — узнай, насколько ты анонимен" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:locale:alternate" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta id="twTitle" name="twitter:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
   <meta id="twDescription" name="twitter:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
-  <meta name="twitter:image" content="https://fprint.morgunov.tech/share-card.svg" />
+  <meta name="twitter:image" content="https://fprint.morgunov.tech/share-card.png" />
   <!-- Yandex Webmaster ownership of fprint.morgunov.tech (Google verifies the whole
        morgunov.tech domain by DNS). -->
   <meta name="yandex-verification" content="33eb7fdb9bb757df" />
@@ -2869,8 +2881,29 @@ const I18N = {
   }
 };
 
-const APP_VERSION = '2.3.0';
+const APP_VERSION = '2.4.0';
 const CHANGELOG = [
+  {
+    version:'2.4.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Английская версия по адресу https://fprint.morgunov.tech/en/: ссылка на неё в LinkedIn, Telegram и других сетях показывает карточку на английском',
+        'Карточка ссылки теперь картинка PNG: прежний SVG LinkedIn и большинство мессенджеров не показывали',
+        'Выбор языка меняет адрес: английский — /en/, русский и узбекский — /, так что скопированная ссылка откроется на том же языке'
+      ],
+      en:[
+        'An English address, https://fprint.morgunov.tech/en/: a link to it on LinkedIn, Telegram and other networks shows an English preview',
+        'The link preview is a PNG image now: LinkedIn and most messengers did not show the SVG it used to be',
+        'Picking a language changes the address: English is /en/, Russian and Uzbek are /, so a copied link opens in the same language'
+      ],
+      uz:[
+        "Inglizcha manzil, https://fprint.morgunov.tech/en/: LinkedIn, Telegram va boshqa tarmoqlarda unga havola inglizcha kartochka bilan koʻrinadi",
+        "Havola kartochkasi endi PNG rasm: avvalgi SVG ni LinkedIn va koʻpchilik messenjerlar koʻrsatmasdi",
+        "Til tanlansa, manzil ham oʻzgaradi: inglizcha — /en/, ruscha va oʻzbekcha — /, shuning uchun nusxalangan havola oʻsha tilda ochiladi"
+      ]
+    }
+  },
   {
     version:'2.3.0',
     date:'2026-11-24',
@@ -6041,7 +6074,7 @@ function loadProfilerModule(){
     return profilerModulePromise;
   }
   profilerLoadError=null;
-  profilerModulePromise=import('./src/profiler.js').then(mod=>{profilerLoadError=null;globalThis.__profilerModule=mod;return mod;}).catch(err=>{
+  profilerModulePromise=import('/src/profiler.js').then(mod=>{profilerLoadError=null;globalThis.__profilerModule=mod;return mod;}).catch(err=>{
     profilerLoadError=err;
     profilerModulePromise=null;
     throw err;
@@ -6221,7 +6254,7 @@ async function render(lang){
   document.documentElement.lang=currentLang;
   // Update page title and meta tags per language
   const metaTitles={ru:'Fingerprint \u2014 \u0443\u0437\u043d\u0430\u0439, \u043d\u0430\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0442\u044b \u0430\u043d\u043e\u043d\u0438\u043c\u0435\u043d \u0432 \u0441\u0435\u0442\u0438',en:'Fingerprint \u2014 how anonymous are you online',uz:'Fingerprint \u2014 internetda qanchalik anonimsiz'};
-  const metaDescs={ru:'\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u043c, \u043a\u0430\u043a\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 \u0441\u0430\u0439\u0442\u044b \u0432\u0438\u0434\u044f\u0442 \u0443\u0436\u0435 \u0441\u0435\u0439\u0447\u0430\u0441, \u043e\u0446\u0435\u043d\u0438\u0432\u0430\u0435\u043c \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043a\u0430 \u0438 \u0434\u0430\u0451\u043c \u043f\u043e\u043d\u044f\u0442\u043d\u044b\u0435 \u0441\u043e\u0432\u0435\u0442\u044b \u043f\u043e \u0437\u0430\u0449\u0438\u0442\u0435 \u043f\u0440\u0438\u0432\u0430\u0442\u043d\u043e\u0441\u0442\u0438.',en:'See what data websites already know about you, measure your fingerprint uniqueness, and get actionable privacy tips.',uz:"Saytlar hozir sizning qanday ma\u02BClumotlaringizni ko\u02BBrayotganini ko\u02BBrsatamiz, barmoq izingiz noyobligini baholaymiz va maxfiylik bo\u02BByicha maslahatlar beramiz."};
+  const metaDescs={ru:'\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u043c, \u043a\u0430\u043a\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 \u0441\u0430\u0439\u0442\u044b \u0432\u0438\u0434\u044f\u0442 \u0443\u0436\u0435 \u0441\u0435\u0439\u0447\u0430\u0441, \u043e\u0446\u0435\u043d\u0438\u0432\u0430\u0435\u043c \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u043e\u0442\u043f\u0435\u0447\u0430\u0442\u043a\u0430 \u0438 \u0434\u0430\u0451\u043c \u043f\u043e\u043d\u044f\u0442\u043d\u044b\u0435 \u0441\u043e\u0432\u0435\u0442\u044b \u043f\u043e \u0437\u0430\u0449\u0438\u0442\u0435 \u043f\u0440\u0438\u0432\u0430\u0442\u043d\u043e\u0441\u0442\u0438.',en:'Shows what any website learns about you the moment you open it, how unique your browser is, and how to hide.',uz:"Saytlar hozir sizning qanday ma\u02BClumotlaringizni ko\u02BBrayotganini ko\u02BBrsatamiz, barmoq izingiz noyobligini baholaymiz va maxfiylik bo\u02BByicha maslahatlar beramiz."};
   const mTitle=metaTitles[currentLang]||metaTitles.ru;
   const mDesc=metaDescs[currentLang]||metaDescs.ru;
   document.title=mTitle+' \u2014 morgunov.tech';
@@ -6446,7 +6479,26 @@ async function render(lang){
   }
 }
 
+// /en/ is the English page (functions/en/index.js gives it English link-preview tags), so the
+// address decides before a saved choice or the browser language.
+function langFromPath(){
+  try{return /^\/en\/?$/.test(window.location.pathname)?'en':null;}catch(_){return null;}
+}
+
+// After an explicit language choice the address follows it between / and /en/, so a copied or
+// shared link opens with the preview in the language on screen.
+function syncLangPath(lang){
+  try{
+    const {pathname,search,hash}=window.location;
+    if(!/^\/(en\/?)?$/.test(pathname)) return;
+    const next=lang==='en'?'/en/':'/';
+    if(next!==pathname) window.history.replaceState(null,'',next+search+hash);
+  }catch(_){/* ignore */}
+}
+
 function detectLang(){
+  const fromPath=langFromPath();
+  if(fromPath)return fromPath;
   try{
     const saved=localStorage.getItem('fp_lang');
     if(saved&&I18N[saved])return saved;
@@ -7215,7 +7267,8 @@ function initApp(){
   themePreference=loadThemePreference();
   applyThemePreference(themePreference);
   const lang=detectLang();
-  try{localStorage.setItem('fp_lang',lang);}catch(_){/* ignore */}
+  // Opening /en/ is not a choice: the saved language stays for the next visit to /.
+  if(!langFromPath()){try{localStorage.setItem('fp_lang',lang);}catch(_){/* ignore */}}
   const shareBtnEl=getEl('shareBtn');
   if(shareBtnEl){
     shareBtnEl.addEventListener('click',()=>{handleShareClick().catch(()=>{});});
@@ -7243,6 +7296,7 @@ function initApp(){
         langMenuIsOpen=false;
         setLangMenu(false);
         try{localStorage.setItem('fp_lang',value);}catch(_){/* ignore */}
+        syncLangPath(value);
         langBtn.focus({preventScroll:true});
         render(value);
       });

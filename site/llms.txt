@@ -30,10 +30,11 @@ The Worker answers on the site's own host, https://fprint.morgunov.tech/api/ (th
 
 ## Languages
 
-Russian, English and Uzbek.
+Russian, English and Uzbek. The page follows the browser language; https://fprint.morgunov.tech/en/ opens it in English.
 
 ## Links
 
 - [Fingerprint](https://fprint.morgunov.tech/): the service
+- [Fingerprint in English](https://fprint.morgunov.tech/en/): the same page, English from the start
 - [Source code](https://github.com/morgunovtech/Fingerprint): the GitHub repository, MIT license
 - [Author](https://s.morgunov.tech/): Semyon Morgunov, who built it

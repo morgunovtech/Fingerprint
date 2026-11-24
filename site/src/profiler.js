@@ -355,7 +355,7 @@ async function measureNetwork(probeUrl) {
   if (typeof fetch === 'undefined' || typeof performance === 'undefined') {
     return null;
   }
-  const target = probeUrl || (typeof location !== 'undefined' ? new URL('share-card.svg', location.href).toString() : null);
+  const target = probeUrl || (typeof location !== 'undefined' ? new URL('/share-card.svg', location.href).toString() : null);
   if (!target)
     return null;
   const samples = [];
