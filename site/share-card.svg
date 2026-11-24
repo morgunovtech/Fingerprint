@@ -2,8 +2,7 @@
 <!--
   The Russian link-preview card; share-card-en.svg is the English one. LinkedIn and most
   messengers do not show SVG, so og:image points at share-card.png, rendered from this file
-  with headless Chrome (the command is in README, "Link previews"). The page's network test
-  also downloads this file (measureNetwork in src/profiler.js).
+  with headless Chrome (the command is in README, "Link previews").
 -->
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>

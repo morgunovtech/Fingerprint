@@ -1,42 +1,41 @@
+// Self-test: runs the page's modules (site/src/*.js) in Node with a stub DOM and browser APIs,
+// checks the helpers, the score, the strings' parity across languages and the UI controls, then
+// the static files, the /en/ Pages Function and the Worker's providers. No install needed:
+//   node selftest.js
+
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 const assert = require('node:assert/strict');
-const { performance } = require('node:perf_hooks');
 const { webcrypto } = require('node:crypto');
 
+const SITE = path.join(__dirname, 'site');
+const read = rel => fs.readFileSync(path.join(__dirname, rel), 'utf8');
+const moduleUrl = rel => new URL(rel, `file://${__dirname}/`).href;
+
 function assertNoMergeMarkers(text, label) {
-  const patterns = [
-    /^<<<<<<< /m,
-    /^=======$/m,
-    /^>>>>>>> /m
-  ];
-  patterns.forEach(pattern => {
-    if (pattern.test(text)) {
-      throw new Error(`Merge conflict marker ${pattern.source} found in ${label}`);
-    }
-  });
+  for (const pattern of [/^<<<<<<< /m, /^=======$/m, /^>>>>>>> /m]) {
+    if (pattern.test(text)) throw new Error(`Merge conflict marker ${pattern.source} found in ${label}`);
+  }
 }
 
-// The site Pages serves lives in site/ (wrangler.toml → pages_build_output_dir).
-const html = fs.readFileSync(path.join(__dirname, 'site', 'index.html'), 'utf8');
+const html = read('site/index.html');
 assertNoMergeMarkers(html, 'site/index.html');
-const match = html.match(/<script>([\s\S]*)<\/script>/);
-if (!match) {
-  throw new Error('Failed to extract inline script');
+for (const dir of ['site/src', 'site/src/i18n', 'worker/src', 'worker/src/providers']) {
+  for (const file of fs.readdirSync(path.join(__dirname, dir))) {
+    if (file.endsWith('.js')) assertNoMergeMarkers(read(`${dir}/${file}`), `${dir}/${file}`);
+  }
 }
-const script = match[1];
-assertNoMergeMarkers(script, 'inline script');
 
-// Static files for search engines and AI assistants. The JSON-LD block sits in <head>, above the
-// one inline <script> the regex above extracts, so it never ends up in the sandbox.
+/* ============ Static files: the page's head, robots.txt, llms.txt ============ */
 {
   const head = html.slice(0, html.indexOf('</head>'));
   assert.match(head, /<meta name="yandex-verification" content="33eb7fdb9bb757df" \/>/);
   const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
   assert.equal(blocks.length, 1, 'one JSON-LD block');
-  assert.equal(html.split('<script>').length, 2, 'exactly one bare <script> tag: the one extracted above');
-  assert.ok(blocks[0].index < html.indexOf('<script>'), 'JSON-LD sits above the inline script');
+  // The page's only script is the module entry point; no inline code, no third-party script.
+  const scripts = [...html.matchAll(/<script\b[^>]*>/g)].map(m => m[0]);
+  assert.deepEqual(scripts, ['<script type="application/ld+json">', '<script type="module" src="/src/app.js">'], scripts.join(' '));
+  assert.match(head, /<link rel="stylesheet" href="\/assets\/app\.css" \/>/);
   const data = JSON.parse(blocks[0][1]);
   assert.equal(data['@type'], 'WebApplication');
   assert.equal(data.url, head.match(/<link rel="canonical" href="([^"]+)"/)[1]);
@@ -44,28 +43,36 @@ assertNoMergeMarkers(script, 'inline script');
   assert.equal(data.isAccessibleForFree, true);
   assert.deepEqual(data.inLanguage, ['ru', 'en', 'uz']);
   assert.equal(data.sameAs, 'https://github.com/morgunovtech/Fingerprint');
-  // The Person of s.morgunov.tech's own JSON-LD: the same @id joins the two.
   assert.equal(data.author['@id'], 'https://s.morgunov.tech/#person');
 
   // A crawler that matches a named group ignores the * group, so every group carries the signals.
-  const robots = fs.readFileSync(path.join(__dirname, 'site', 'robots.txt'), 'utf8');
+  const robots = read('site/robots.txt');
   const groups = robots.split(/\n(?=User-agent:)/).filter(group => group.startsWith('User-agent:'));
   assert.ok(groups.length > 1);
-  groups.forEach(group => {
-    assert.match(group, /^Content-Signal: search=yes, ai-input=yes, ai-train=yes$/m, group.split('\n')[0]);
-  });
+  groups.forEach(group => assert.match(group, /^Content-Signal: search=yes, ai-input=yes, ai-train=yes$/m, group.split('\n')[0]));
   assert.equal((robots.match(/^Content-Signal:/gm) || []).length, groups.length, 'one Content-Signal line per group');
 
-  const llms = fs.readFileSync(path.join(__dirname, 'site', 'llms.txt'), 'utf8');
+  const llms = read('site/llms.txt');
   assert.match(llms, /^# Fingerprint/);
   assert.match(llms, /^> /m);
-  ['https://fprint.morgunov.tech/', 'https://github.com/morgunovtech/Fingerprint', 'https://s.morgunov.tech/'].forEach(url => {
+  for (const url of ['https://fprint.morgunov.tech/', 'https://github.com/morgunovtech/Fingerprint', 'https://s.morgunov.tech/']) {
     assert.ok(llms.includes(`(${url})`), url);
-  });
+  }
+
+  // Every id the modules look up exists in the markup.
+  const srcText = fs.readdirSync(path.join(SITE, 'src')).filter(f => f.endsWith('.js')).map(f => read(`site/src/${f}`)).join('\n');
+  const ids = new Set([...srcText.matchAll(/(?:getEl|getElementById)\('([A-Za-z]+)'\)/g)].map(m => m[1]));
+  const dynamicIds = new Set(['versionBtn', 'footerVisitCount']); // rendered by the footer string
+  for (const id of ids) {
+    if (dynamicIds.has(id)) continue;
+    assert.ok(html.includes(`id="${id}"`), `site/index.html has no element with id="${id}"`);
+  }
 }
 
+/* ============ Stub DOM and browser APIs on globalThis ============ */
+
 class Element {
-  constructor(id = null, tagName = 'div') {
+  constructor(tagName = 'div', id = null) {
     this.id = id;
     this.tagName = tagName.toUpperCase();
     this.children = [];
@@ -76,210 +83,113 @@ class Element {
     this._textContent = '';
     this._innerHTML = '';
     this.className = '';
+    this.disabled = false;
+    this.hidden = false;
+    this.content = '';
+    const set = new Set();
     this.classList = {
-      _set: new Set(),
-      add: (...cls) => cls.forEach(c => this.classList._set.add(c)),
-      remove: (...cls) => cls.forEach(c => this.classList._set.delete(c)),
-      contains: c => this.classList._set.has(c),
+      _set: set,
+      add: (...cls) => cls.forEach(c => set.add(c)),
+      remove: (...cls) => cls.forEach(c => set.delete(c)),
+      contains: c => set.has(c),
       toggle: (cls, force) => {
-        if (force === undefined) {
-          if (this.classList._set.has(cls)) {
-            this.classList._set.delete(cls);
-            return false;
-          }
-          this.classList._set.add(cls);
-          return true;
-        }
-        if (force) {
-          this.classList._set.add(cls);
-          return true;
-        }
-        this.classList._set.delete(cls);
-        return false;
+        const on = force === undefined ? !set.has(cls) : Boolean(force);
+        if (on) set.add(cls); else set.delete(cls);
+        return on;
       }
     };
-    this.disabled = false;
-    this.value = '';
-    this.hidden = false;
   }
-  set textContent(value) {
-    this._textContent = value;
-    this.children = [];
-  }
-  get textContent() {
-    return this._textContent;
-  }
-  set innerHTML(value) {
-    this._innerHTML = value;
-    this.children = [];
-  }
-  get innerHTML() {
-    return this._innerHTML;
-  }
+  set textContent(value) { this._textContent = String(value); this.children = []; }
+  get textContent() { return this._textContent + this.children.map(c => (typeof c === 'object' ? c.textContent : '')).join(''); }
+  set innerHTML(value) { this._innerHTML = String(value); this.children = []; }
+  get innerHTML() { return this._innerHTML; }
   appendChild(child) {
     if (!child) return child;
-    if (child._isFragment) {
-      child.children.forEach(node => this.appendChild(node));
-      return child;
-    }
+    if (child._isFragment) { child.children.forEach(node => this.appendChild(node)); return child; }
     this.children.push(child);
-    if (typeof child === 'object') {
-      child.parentNode = this;
-    }
+    if (typeof child === 'object') child.parentNode = this;
     return child;
   }
   removeChild(child) {
     const idx = this.children.indexOf(child);
     if (idx >= 0) this.children.splice(idx, 1);
   }
-  setAttribute(name, value) {
-    this.attributes[name] = String(value);
+  remove() { this.parentNode?.removeChild(this); }
+  replaceWith(node) {
+    const parent = this.parentNode;
+    if (!parent) return;
+    parent.children.splice(parent.children.indexOf(this), 1, node);
+    node.parentNode = parent;
   }
-  getAttribute(name) {
-    return this.attributes[name] ?? null;
-  }
-  removeAttribute(name) {
-    delete this.attributes[name];
-  }
-  addEventListener(event, cb) {
-    if (!this.listeners[event]) this.listeners[event] = [];
-    this.listeners[event].push(cb);
-  }
-  focus() {
-    this._focused = true;
-  }
+  cloneNode() { return this; }
+  setAttribute(name, value) { this.attributes[name] = String(value); }
+  getAttribute(name) { return this.attributes[name] ?? null; }
+  removeAttribute(name) { delete this.attributes[name]; }
+  addEventListener(event, cb) { (this.listeners[event] = this.listeners[event] || []).push(cb); }
+  focus() { this._focused = true; }
   contains(node) {
     if (node === this) return true;
-    if (!Array.isArray(this.children)) return false;
     return this.children.some(child => (typeof child === 'object' && typeof child.contains === 'function') ? child.contains(node) : child === node);
   }
+  hasClass(cls) { return this.classList._set.has(cls) || String(this.className).split(/\s+/).includes(cls); }
   querySelectorAll(selector) {
     const results = [];
-    const match = (node) => {
+    const classes = [...selector.matchAll(/\.([\w-]+)/g)].map(m => m[1]);
+    const dataAttr = /^(\w+)?\[data-([a-z-]+)(?:="([^"]*)")?\]$/.exec(selector);
+    const tag = /^([a-z]+)(?:[.[]|$)/i.exec(selector)?.[1];
+    const match = node => {
       if (!node || typeof node !== 'object') return;
-      if (selector === 'button[data-lang]') {
-        if (node.tagName === 'BUTTON' && node.dataset && Object.prototype.hasOwnProperty.call(node.dataset, 'lang')) {
-          results.push(node);
-        }
-      }
-      if (selector === 'button[data-theme]') {
-        if (node.tagName === 'BUTTON' && node.dataset && Object.prototype.hasOwnProperty.call(node.dataset, 'theme')) {
-          results.push(node);
-        }
-      }
-      const dataAttr = /^\[data-([a-z-]+)="([^"]*)"\]$/.exec(selector);
+      let ok = true;
       if (dataAttr) {
-        const key = dataAttr[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-        if (node.dataset && node.dataset[key] === dataAttr[2]) results.push(node);
-      }
-      if (/^\.[\w-]+$/.test(selector)) {
-        const cls = selector.slice(1);
-        if (node.classList._set.has(cls) || String(node.className).split(/\s+/).includes(cls)) results.push(node);
-      }
-      if (Array.isArray(node.children)) {
-        node.children.forEach(child => match(child));
-      }
+        const key = dataAttr[2].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        ok = (!dataAttr[1] || node.tagName === dataAttr[1].toUpperCase()) && node.dataset && Object.prototype.hasOwnProperty.call(node.dataset, key)
+          && (dataAttr[3] === undefined || node.dataset[key] === dataAttr[3]);
+      } else if (classes.length) {
+        ok = classes.every(c => node.hasClass(c)) && (!tag || selector.startsWith('.') || node.tagName === tag.toUpperCase());
+      } else if (tag) {
+        ok = node.tagName === tag.toUpperCase();
+      } else ok = false;
+      if (ok && node !== this) results.push(node);
+      node.children.forEach(match);
     };
     match(this);
     return results;
   }
-  querySelector(selector) {
-    return this.querySelectorAll(selector)[0] || null;
-  }
+  querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   click() {
-    const event = {
-      type: 'click',
-      stopPropagation() {},
-      preventDefault() {},
-      target: this,
-      currentTarget: this
-    };
+    const event = { type: 'click', stopPropagation() {}, preventDefault() {}, target: this, currentTarget: this };
     (this.listeners.click || []).forEach(cb => cb(event));
   }
-  get clientWidth() {
-    if (this.style && typeof this.style.width === 'string') {
-      const parsed = parseInt(this.style.width, 10);
-      if (!Number.isNaN(parsed)) return parsed;
-    }
-    return 100;
-  }
-  get clientHeight() {
-    if (this.style && typeof this.style.height === 'string') {
-      const parsed = parseInt(this.style.height, 10);
-      if (!Number.isNaN(parsed)) return parsed;
-    }
-    return 20;
-  }
-  get offsetParent() {
-    if (this.style && (this.style.display === 'none' || this.style.visibility === 'hidden')) return null;
-    return this.parentNode || null;
-  }
+  get clientWidth() { const v = parseInt(this.style.width, 10); return Number.isNaN(v) ? 100 : v; }
+  get clientHeight() { const v = parseInt(this.style.height, 10); return Number.isNaN(v) ? 20 : v; }
+  get offsetHeight() { return this.clientHeight; }
+  get offsetParent() { return this.style.display === 'none' || this.style.visibility === 'hidden' ? null : this.parentNode || null; }
 }
 
 class DocumentFragment {
-  constructor() {
-    this._isFragment = true;
-    this.children = [];
-  }
-  appendChild(child) {
-    if (!child) return child;
-    this.children.push(child);
-    return child;
-  }
-}
-
-function extractText(node) {
-  if (!node || typeof node !== 'object') return '';
-  let text = '';
-  if (typeof node._textContent === 'string' && node._textContent) {
-    text += ` ${node._textContent}`;
-  }
-  if (typeof node._innerHTML === 'string' && node._innerHTML) {
-    text += ` ${node._innerHTML}`;
-  }
-  if (Array.isArray(node.children)) {
-    node.children.forEach(child => {
-      text += ` ${extractText(child)}`;
-    });
-  }
-  return text;
+  constructor() { this._isFragment = true; this.children = []; }
+  appendChild(child) { if (child) this.children.push(child); return child; }
 }
 
 class Canvas2DContextStub {
-  constructor() {
-    this.fillStyle = '#000';
-    this.font = '10px sans-serif';
-  }
-  createLinearGradient() {
-    return { addColorStop: () => {} };
-  }
+  constructor() { this.fillStyle = '#000'; this.font = '10px sans-serif'; }
+  createLinearGradient() { return { addColorStop: () => {} }; }
   fillRect() {}
   fillText() {}
   rotate() {}
   measureText() {
     const parts = String(this.font || '').split(',');
-    const cleaned = parts[0].replace(/['"]/g, '').trim();
-    const primary = cleaned.replace(/^\d+px\s*/,'').trim() || 'sans-serif';
-    const fallbackRaw = parts[parts.length - 1] || '';
-    const fallback = fallbackRaw.replace(/['"]/g, '').trim() || primary;
+    const primary = parts[0].replace(/['"]/g, '').trim().replace(/^\d+px\s*/, '').trim() || 'sans-serif';
+    const fallback = (parts[parts.length - 1] || '').replace(/['"]/g, '').trim() || primary;
     const base = fallback === 'monospace' ? 90 : fallback === 'serif' ? 100 : 110;
-    const extra = availableFonts.has(primary) ? 15 : 0;
-    return { width: base + extra };
+    return { width: base + (availableFonts.has(primary) ? 15 : 0) };
   }
 }
 
 class WebGLContextStub {
-  constructor() {
-    this.VENDOR = 'vendor';
-    this.RENDERER = 'renderer';
-  }
+  constructor() { this.VENDOR = 'vendor'; this.RENDERER = 'renderer'; this.VERTEX_SHADER = 1; this.FRAGMENT_SHADER = 2; this.ARRAY_BUFFER = 3; this.STATIC_DRAW = 4; this.FLOAT = 5; this.COLOR_BUFFER_BIT = 6; this.TRIANGLES = 7; this.RGBA = 8; this.UNSIGNED_BYTE = 9; }
   getExtension(name) {
-    if (name === 'WEBGL_debug_renderer_info') {
-      return {
-        UNMASKED_VENDOR_WEBGL: 'UNMASKED_VENDOR_WEBGL',
-        UNMASKED_RENDERER_WEBGL: 'UNMASKED_RENDERER_WEBGL'
-      };
-    }
+    if (name === 'WEBGL_debug_renderer_info') return { UNMASKED_VENDOR_WEBGL: 'UNMASKED_VENDOR_WEBGL', UNMASKED_RENDERER_WEBGL: 'UNMASKED_RENDERER_WEBGL' };
     return null;
   }
   getParameter(param) {
@@ -287,32 +197,16 @@ class WebGLContextStub {
     if (param === 'UNMASKED_RENDERER_WEBGL' || param === this.RENDERER) return 'Apple GPU';
     return '';
   }
+  getSupportedExtensions() { return ['OES_texture_float']; }
+  createShader() { return {}; } shaderSource() {} compileShader() {} createProgram() { return {}; } attachShader() {} linkProgram() {} useProgram() {}
+  createBuffer() { return {}; } bindBuffer() {} bufferData() {} getAttribLocation() { return 0; } enableVertexAttribArray() {} vertexAttribPointer() {}
+  clearColor() {} clear() {} drawArrays() {}
+  readPixels(x, y, w, h, fmt, type, pixels) { for (let i = 0; i < pixels.length; i += 4) { pixels[i] = 219; pixels[i + 1] = 69; pixels[i + 2] = 84; pixels[i + 3] = 255; } }
 }
 
 class LinkElement extends Element {
-  constructor() {
-    super(null, 'a');
-    this.href = '';
-    this.download = '';
-    this.clicked = false;
-  }
-  click() {
-    this.clicked = true;
-    downloads.push({ href: this.href, download: this.download });
-  }
-}
-
-class TextAreaElement extends Element {
-  constructor() {
-    super(null, 'textarea');
-    this.value = '';
-  }
-  setAttribute(name, value) {
-    this.attributes[name] = value;
-  }
-  select() {
-    this.selected = true;
-  }
+  constructor() { super('a'); this.href = ''; this.download = ''; }
+  click() { downloads.push({ href: this.href, download: this.download }); }
 }
 
 const downloads = [];
@@ -320,78 +214,28 @@ const clipboardWrites = [];
 const sharePayloads = [];
 const alerts = [];
 let printed = false;
-
 const availableFonts = new Set(['Arial', 'Roboto', 'Times New Roman']);
 
+// The elements of site/index.html by id, with the menus' buttons.
 const elements = new Map();
-const elementIds = [
-  'langBtn','langMenu','themeBtn','themeMenu','introTitle','introText','uniqLine','uniqWarning','uniqPracticeTitle','uniqPracticeList','uniqRisksTitle','uniqRisksList','uniqAdviceTitle','uniqAdvice','uniqOutcome','shockSection','shock','shockList','ipInfo','speedResult','detailTitle','cards','methodSummary','methodText','footerText','shareBtn','printBtn','ipBtn','shockTitle','profilingSummary'
-];
-
-for (const id of elementIds) {
-  elements.set(id, new Element(id));
+for (const [, tag, id] of html.matchAll(/<([a-z0-9]+)\b[^>]*\bid="([A-Za-z]+)"/g)) elements.set(id, new Element(tag, id));
+const introSource = html.match(/<div id="introText"[^>]*>([\s\S]*?)<\/div>\n  <\/section>/)[1];
+elements.get('introText')._innerHTML = introSource;
+for (const [menuId, attr, values] of [['langMenu', 'lang', ['ru', 'en', 'uz']], ['themeMenu', 'theme', ['auto', 'light', 'dark', 'contrast']]]) {
+  for (const value of values) {
+    const btn = new Element('button');
+    btn.dataset[attr] = value;
+    elements.get(menuId).appendChild(btn);
+  }
 }
-
-const shareBtnEl = elements.get('shareBtn');
-shareBtnEl.tagName = 'BUTTON';
-const printBtnEl = elements.get('printBtn');
-printBtnEl.tagName = 'BUTTON';
-const ipBtnEl = elements.get('ipBtn');
-ipBtnEl.tagName = 'BUTTON';
-elements.get('langBtn').tagName = 'BUTTON';
-elements.get('themeBtn').tagName = 'BUTTON';
-elements.get('langMenu').tagName = 'DIV';
-elements.get('themeMenu').tagName = 'DIV';
-elements.get('shockSection').tagName = 'SECTION';
-elements.get('uniqPracticeList').tagName = 'UL';
-elements.get('uniqRisksList').tagName = 'UL';
-elements.get('uniqAdvice').tagName = 'UL';
-elements.get('shockList').tagName = 'UL';
-elements.get('profilingSummary').tagName = 'DIV';
-
-const langMenuEl = elements.get('langMenu');
-['ru','en','uz'].forEach(code => {
-  const btn = new Element(null, 'button');
-  btn.dataset.lang = code;
-  langMenuEl.appendChild(btn);
-});
-const themeMenuEl = elements.get('themeMenu');
-['auto','light','dark'].forEach(mode => {
-  const btn = new Element(null, 'button');
-  btn.dataset.theme = mode;
-  themeMenuEl.appendChild(btn);
-});
 
 const docClassTokens = new Set();
 const documentElement = {
-  outerHTML: html,
   lang: 'ru',
   classList: {
-    add(...tokens) {
-      tokens.forEach(token => docClassTokens.add(token));
-    },
-    remove(...tokens) {
-      tokens.forEach(token => docClassTokens.delete(token));
-    },
-    toggle(token, force) {
-      if (force === undefined) {
-        if (docClassTokens.has(token)) {
-          docClassTokens.delete(token);
-          return false;
-        }
-        docClassTokens.add(token);
-        return true;
-      }
-      if (force) {
-        docClassTokens.add(token);
-        return true;
-      }
-      docClassTokens.delete(token);
-      return false;
-    },
-    contains(token) {
-      return docClassTokens.has(token);
-    }
+    add(...tokens) { tokens.forEach(t => docClassTokens.add(t)); },
+    remove(...tokens) { tokens.forEach(t => docClassTokens.delete(t)); },
+    contains(token) { return docClassTokens.has(token); }
   }
 };
 const bodyEl = new Element('body', 'body');
@@ -400,18 +244,16 @@ const cookieStore = new Map();
 const documentStub = {
   documentElement,
   body: bodyEl,
+  readyState: 'loading',
+  title: '',
   _domReady: null,
-  addEventListener(event, cb) {
-    if (event === 'DOMContentLoaded') {
-      this._domReady = cb;
-    }
-  },
+  addEventListener(event, cb) { if (event === 'DOMContentLoaded') this._domReady = cb; },
+  removeEventListener() {},
   createElement(tag) {
     const lower = String(tag).toLowerCase();
     if (lower === 'canvas') {
       return {
-        width: 0,
-        height: 0,
+        width: 0, height: 0,
         getContext(type) {
           if (type === '2d') return new Canvas2DContextStub();
           if (type === 'webgl' || type === 'experimental-webgl') return new WebGLContextStub();
@@ -421,80 +263,28 @@ const documentStub = {
       };
     }
     if (lower === 'a') return new LinkElement();
-    if (lower === 'textarea') return new TextAreaElement();
-    if (lower === 'li' || lower === 'div' || lower === 'span' || lower === 'p' || lower === 'strong' || lower === 'button') {
-      return new Element(null, tag);
-    }
-    if (lower === 'option') {
-      return { value: '', textContent: '' };
-    }
-    return new Element(null, tag);
+    return new Element(tag);
   },
-  createTextNode(text) {
-    return { nodeType: 3, textContent: text };
-  },
-  createDocumentFragment() {
-    return new DocumentFragment();
-  },
+  createDocumentFragment() { return new DocumentFragment(); },
   getElementById(id) {
-    if (!elements.has(id)) {
-      elements.set(id, new Element(id));
-    }
+    if (!elements.has(id)) elements.set(id, new Element('div', id));
     return elements.get(id);
   },
-  execCommand(cmd) {
-    return cmd === 'copy';
-  },
-  removeEventListener() {},
+  execCommand(cmd) { return cmd === 'copy'; },
 };
-
-documentStub.body.appendChild = function appendChild(child) {
-  Element.prototype.appendChild.call(bodyEl, child);
-  return child;
-};
-
-documentStub.body.removeChild = function removeChild(child) {
-  bodyEl.removeChild(child);
-};
-
-documentStub.createComment = () => ({ nodeType: 8, textContent: '' });
-
-// Records any script the page adds to <head>; it should add none (no third-party scripts).
-const headScripts = [];
-documentStub.head = {
-  appendChild(child) {
-    headScripts.push(child.src || '');
-    return child;
-  }
-};
-
-documentStub.createRange = () => ({ createContextualFragment: () => new DocumentFragment() });
-
-documentStub.documentElement = documentElement;
-
 Object.defineProperty(documentStub, 'cookie', {
-  get() {
-    return Array.from(cookieStore.entries()).map(([key, value]) => `${key}=${value}`).join('; ');
-  },
+  get() { return Array.from(cookieStore.entries()).map(([k, v]) => `${k}=${v}`).join('; '); },
   set(value) {
-    if (!value) return;
     const [pair, ...attrs] = String(value).split(';');
     const [name, rawVal = ''] = pair.split('=');
     if (!name) return;
-    const trimmedName = name.trim();
-    const trimmedValue = rawVal.trim();
-    const expiresAttr = attrs.find(attr => attr.trim().toLowerCase().startsWith('expires='));
-    if (expiresAttr && expiresAttr.toLowerCase().includes('1970')) {
-      cookieStore.delete(trimmedName);
-    } else {
-      cookieStore.set(trimmedName, trimmedValue);
-    }
+    if (attrs.some(a => a.trim().toLowerCase().startsWith('expires=') && a.includes('1970'))) cookieStore.delete(name.trim());
+    else cookieStore.set(name.trim(), rawVal.trim());
   }
 });
 
 const localStore = new Map();
 const sessionStore = new Map();
-const indexedDbStore = new Map();
 const storageAPI = store => ({
   getItem: key => (store.has(key) ? store.get(key) : null),
   setItem: (key, value) => { store.set(key, String(value)); },
@@ -503,141 +293,77 @@ const storageAPI = store => ({
 
 const performanceStub = {
   _now: 0,
-  now() {
-    this._now += 50;
-    return this._now;
-  },
+  now() { this._now += 50; return this._now; },
   memory: { jsHeapSizeLimit: 2 * 1024 * 1024 * 1024 },
   getEntriesByType: () => [],
   getEntriesByName: () => []
 };
 
 class OfflineAudioContextStub {
-  constructor() {
-    this.destination = {};
-  }
-  createOscillator() {
-    return {
-      type: 'sine',
-      frequency: { value: 0 },
-      connect: () => {},
-      start: () => {},
-      stop: () => {}
-    };
-  }
+  constructor() { this.destination = {}; this.currentTime = 0; }
+  createOscillator() { return { type: 'sine', frequency: { setValueAtTime: () => {} }, connect: () => {}, start: () => {}, stop: () => {} }; }
   createDynamicsCompressor() {
-    return { connect: () => {} };
+    const param = { setValueAtTime: () => {} };
+    return { threshold: param, knee: param, ratio: param, attack: param, release: param, connect: () => {} };
   }
-  startRendering() {
-    return Promise.resolve({
-      getChannelData: () => new Float32Array(256).fill(0.5)
-    });
-  }
+  startRendering() { return Promise.resolve({ getChannelData: () => new Float32Array(44100).fill(0.5) }); }
 }
 
+// A peer connection that reports one host candidate with a real local address: a leak.
+let webrtcCandidate = 'candidate:0 1 udp 2113937151 10.0.0.2 5000 typ host';
 class RTCPeerConnectionStub {
   constructor() {
-    this._listeners = {};
     setTimeout(() => {
-      this._emit('icecandidate', { candidate: { candidate: 'candidate:0 1 udp 2113937151 10.0.0.2 5000 typ host' } });
-      this._emit('icecandidate', { candidate: null });
-    }, 20);
+      if (webrtcCandidate) this.onicecandidate?.({ candidate: { candidate: webrtcCandidate } });
+      this.onicecandidate?.({ candidate: null });
+    }, 5);
   }
-  createDataChannel() {
-    return {};
-  }
-  addEventListener(type, cb) {
-    if (!this._listeners[type]) this._listeners[type] = [];
-    this._listeners[type].push(cb);
-  }
-  set onicecandidate(cb) {
-    this._listeners.icecandidate = cb ? [cb] : [];
-  }
-  async createOffer() {
-    return {};
-  }
+  createDataChannel() { return {}; }
+  async createOffer() { return {}; }
   async setLocalDescription() {}
   close() {}
-  _emit(type, event) {
-    const list = this._listeners[type] || [];
-    list.forEach(cb => {
-      try {
-        cb(event);
-      } catch (error) {
-        console.error('RTC listener error', error);
-      }
-    });
-  }
 }
 
 const fetchLog = [];
 // A /api/whoami body while the Worker is up; null makes the Worker unreachable.
 let workerWhoami = null;
-const BYTES = 2_000_000;
+let workerScan = null;
+let workerStats = null;
 function makeHeaders(map) {
-  const lower = {};
-  Object.entries(map || {}).forEach(([key, value]) => {
-    lower[key.toLowerCase()] = String(value);
-  });
-  return {
-    get(name) {
-      if (!name) return null;
-      const norm = String(name).toLowerCase();
-      return lower[norm] ?? null;
-    }
-  };
+  const lower = Object.fromEntries(Object.entries(map || {}).map(([k, v]) => [k.toLowerCase(), String(v)]));
+  return { get: name => (name ? lower[String(name).toLowerCase()] ?? null : null) };
 }
 function makeJsonResponse(data, headers = {}) {
-  const base = {
-    ok: true,
-    status: 200,
-    headers: makeHeaders(headers),
-    json: async () => data,
-    arrayBuffer: async () => Buffer.from(JSON.stringify(data)),
-    body: null
-  };
+  const base = { ok: true, status: 200, headers: makeHeaders(headers), json: async () => data, text: async () => JSON.stringify(data), arrayBuffer: async () => Buffer.from(JSON.stringify(data)), body: null };
   base.clone = () => makeJsonResponse(data, headers);
   return base;
 }
-function makeBinaryResponse(size = BYTES) {
-  const base = {
-    ok: true,
-    status: 200,
-    headers: makeHeaders({ 'content-length': String(size) }),
-    json: async () => ({}),
-    arrayBuffer: async () => Buffer.alloc(size),
-    body: null
-  };
-  base.clone = () => makeBinaryResponse(size);
-  return base;
+function makeBinaryResponse(size) {
+  return { ok: true, status: 200, headers: makeHeaders({ 'content-length': String(size) }), json: async () => ({}), arrayBuffer: async () => Buffer.alloc(size), body: null };
 }
 
 async function fetchStub(url, options = {}) {
-  const target = typeof url === 'string' ? url : String(url);
+  const target = String(url);
   fetchLog.push({ url: target, options });
   if (target.endsWith('/api/whoami')) {
     if (!workerWhoami) throw new Error('Worker unreachable');
     return makeJsonResponse(workerWhoami);
   }
+  if (target.endsWith('/api/stats')) {
+    if (!workerStats) throw new Error('Worker unreachable');
+    return makeJsonResponse(workerStats);
+  }
+  if (target.includes('/api/scan?target=')) {
+    if (!workerScan) throw new Error('Worker unreachable');
+    return makeJsonResponse(workerScan);
+  }
+  if (target.endsWith('/api/speedtest/ping')) return makeBinaryResponse(4);
+  if (target.includes('/api/speedtest/download?size=')) return makeBinaryResponse(Number(target.split('size=')[1]));
   if (target.startsWith('https://ipapi.co')) {
-    return makeJsonResponse({
-      ip: '198.51.100.2',
-      region: 'Tashkent',
-      country_name: 'Uzbekistan',
-      timezone: 'Asia/Tashkent',
-      country_calling_code: '+998',
-      org: 'Uzbektelekom Joint Stock Company'
-    });
+    return makeJsonResponse({ ip: '198.51.100.2', region: 'Tashkent', city: 'Tashkent', country_name: 'Uzbekistan', country_code: 'UZ', timezone: 'Asia/Tashkent', country_calling_code: '+998', org: 'Uzbektelekom Joint Stock Company' });
   }
-  if (target.startsWith('https://api64.ipify.org')) {
-    return makeJsonResponse({ ip: '198.51.100.2' });
-  }
-  if (target.startsWith('https://api.myip.com')) {
-    return makeJsonResponse({ ip: '198.51.100.2', country: 'Uzbekistan', cc: 'UZ' });
-  }
-  if (target.includes('share-card.svg')) {
-    return makeBinaryResponse(4096);
-  }
+  if (target.startsWith('https://api64.ipify.org')) return makeJsonResponse({ ip: '198.51.100.2' });
+  if (target.startsWith('https://api.myip.com')) return makeJsonResponse({ ip: '198.51.100.2', country: 'Uzbekistan', cc: 'UZ' });
   throw new Error(`Unexpected fetch URL: ${target}`);
 }
 
@@ -647,42 +373,23 @@ const navigatorStub = {
   languages: ['ru-RU', 'en-US'],
   language: 'ru-RU',
   maxTouchPoints: 0,
-  clipboard: {
-    writeText: async text => {
-      clipboardWrites.push(text);
-    }
-  },
-  permissions: {
-    query: async () => ({ state: 'prompt' })
-  },
-  mediaDevices: {
-    enumerateDevices: async () => [
-      { kind: 'audioinput', label: 'Mic' },
-      { kind: 'videoinput', label: 'Camera' }
-    ]
-  },
+  clipboard: { writeText: async text => { clipboardWrites.push(text); } },
+  permissions: { query: async () => ({ state: 'prompt' }) },
+  mediaDevices: { enumerateDevices: async () => [{ kind: 'audioinput', label: 'Mic' }, { kind: 'videoinput', label: 'Camera' }] },
   plugins: [{ name: 'Test Plugin' }],
-  connection: { downlink: 85, rtt: 30, effectiveType: '4g' },
+  connection: { downlink: 85, rtt: 30, effectiveType: '4g', type: 'wifi' },
   hardwareConcurrency: 8,
   deviceMemory: 16,
   cookieEnabled: true,
   doNotTrack: '1',
   getBattery: async () => ({ level: 0.76, charging: true }),
-  share: async payload => {
-    sharePayloads.push(payload);
-  },
+  share: async payload => { sharePayloads.push(payload); },
   canShare: () => true,
   userAgentData: {
     brands: [{ brand: 'Safari', version: '17' }],
     mobile: false,
     platform: 'macOS',
-    getHighEntropyValues: async () => ({
-      architecture: 'arm',
-      bitness: '64',
-      model: '',
-      platformVersion: '17.0.0',
-      uaFullVersion: '17.0.0'
-    })
+    getHighEntropyValues: async () => ({ architecture: 'arm', bitness: '64', model: '', platformVersion: '17.0.0', uaFullVersion: '17.0.0' })
   }
 };
 
@@ -691,143 +398,79 @@ const windowStub = {
   navigator: navigatorStub,
   localStorage: storageAPI(localStore),
   sessionStorage: storageAPI(sessionStore),
-  indexedDB: {
-    open(name) {
-      const request = { result: null };
-      setTimeout(() => {
-        request.result = { close: () => {} };
-        if (typeof request.onupgradeneeded === 'function') request.onupgradeneeded({ target: { result: request.result } });
-        if (typeof request.onsuccess === 'function') request.onsuccess({ target: { result: request.result } });
-      }, 0);
-      return request;
-    },
-    deleteDatabase(name) {
-      indexedDbStore.delete(name);
-      const req = {};
-      setTimeout(() => {
-        if (typeof req.onsuccess === 'function') req.onsuccess({});
-      }, 0);
-      return req;
-    }
-  },
+  indexedDB: {},
   devicePixelRatio: 2,
   screen: { width: 1512, height: 982, colorDepth: 24, isExtended: false, availLeft: 0, availTop: 0 },
-  matchMedia: query => ({
-    media: query,
-    matches: false,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    addListener: () => {},
-    removeListener: () => {}
-  }),
-  getComputedStyle: el => ({
-    display: el.style?.display ?? 'block',
-    visibility: el.style?.visibility ?? 'visible'
-  }),
-  location: { origin: 'https://example.com', pathname: '/fingerprint/index.html', href: 'https://example.com/fingerprint/index.html' },
-  setTimeout,
-  clearTimeout,
+  matchMedia: query => ({ media: query, matches: false, addEventListener() {}, removeEventListener() {} }),
+  getComputedStyle: el => ({ display: el.style?.display ?? 'block', visibility: el.style?.visibility ?? 'visible' }),
+  location: { origin: 'https://example.com', pathname: '/fingerprint/index.html', href: 'https://example.com/fingerprint/index.html', search: '', hash: '' },
+  history: { replaceState: () => {} },
+  isSecureContext: true,
+  setTimeout, clearTimeout,
   alert: msg => alerts.push(msg),
-  URL: {
-    createObjectURL: () => 'blob:test',
-    revokeObjectURL: () => {}
-  },
-  Blob: class BlobShim {
-    constructor(parts, options = {}) {
-      this.parts = parts;
-      this.type = options.type || '';
-    }
-  },
-  File: class FileShim {
-    constructor(parts, name, options = {}) {
-      this.parts = parts;
-      this.name = name;
-      this.type = options.type || '';
-    }
-  },
+  URL: { createObjectURL: () => 'blob:test', revokeObjectURL: () => {} },
   fetch: fetchStub,
   OfflineAudioContext: OfflineAudioContextStub,
   RTCPeerConnection: RTCPeerConnectionStub,
   print: () => { printed = true; }
 };
-
-const sandbox = {
-  console,
-  window: windowStub,
-  document: documentStub,
-  navigator: navigatorStub,
-  screen: windowStub.screen,
-  localStorage: windowStub.localStorage,
-  sessionStorage: windowStub.sessionStorage,
-  performance: performanceStub,
-  TextEncoder,
-  crypto: webcrypto,
-  URL: windowStub.URL,
-  URLSearchParams,
-  RTCPeerConnection: windowStub.RTCPeerConnection,
-  Blob: windowStub.Blob,
-  File: windowStub.File,
-  fetch: fetchStub,
-  setTimeout,
-  clearTimeout,
-  alert: windowStub.alert,
-  OfflineAudioContext: OfflineAudioContextStub,
-  AbortController
-};
-
+windowStub.window = windowStub;
 // The live clock ticks on an interval; unref it so the test process can exit.
-const unrefInterval = (fn, ms) => {
-  const id = setInterval(fn, ms);
-  if (id && typeof id.unref === 'function') id.unref();
-  return id;
+const nodeSetInterval = setInterval;
+const unrefInterval = (fn, ms) => { const id = nodeSetInterval(fn, ms); id.unref?.(); return id; };
+windowStub.setInterval = unrefInterval;
+windowStub.clearInterval = clearInterval;
+
+class BlobShim { constructor(parts, options = {}) { this.parts = parts; this.type = options.type || ''; } }
+class FileShim extends BlobShim { constructor(parts, name, options = {}) { super(parts, options); this.name = name; } }
+
+const globals = {
+  window: windowStub, document: documentStub, navigator: navigatorStub, screen: windowStub.screen,
+  localStorage: windowStub.localStorage, sessionStorage: windowStub.sessionStorage, performance: performanceStub,
+  crypto: webcrypto, fetch: fetchStub, alert: windowStub.alert, location: windowStub.location, history: windowStub.history,
+  OfflineAudioContext: OfflineAudioContextStub, RTCPeerConnection: RTCPeerConnectionStub,
+  setInterval: unrefInterval, clearInterval, Blob: BlobShim, File: FileShim, URL: windowStub.URL, requestAnimationFrame: undefined
 };
-sandbox.setInterval = unrefInterval;
-sandbox.clearInterval = clearInterval;
+// URL is also the constructor the modules use for new URL(...): keep Node's and add the blob helpers.
+globals.URL = Object.assign(URL, windowStub.URL);
+for (const [name, value] of Object.entries(globals)) {
+  Object.defineProperty(globalThis, name, { value, configurable: true, writable: true });
+}
 
-sandbox.window.window = sandbox.window;
-sandbox.window.setTimeout = setTimeout;
-sandbox.window.clearTimeout = clearTimeout;
-sandbox.window.setInterval = unrefInterval;
-sandbox.window.clearInterval = clearInterval;
-
-vm.createContext(sandbox);
-vm.runInContext(script, sandbox, { filename: 'index-inline.js' });
-const stateRef = vm.runInContext('state', sandbox);
-const invalidateSnapshot = () => vm.runInContext('snapshotCache = null; snapshotPromise = null;', sandbox);
-const I18N = vm.runInContext('I18N', sandbox);
+/* ============ Static-file checks that need a module: the /en/ Function ============ */
 
 // A PNG of 1200×630 in site/: the size LinkedIn, Telegram and X show in full.
 function assertPreviewPng(url) {
   const prefix = 'https://fprint.morgunov.tech/';
   assert.ok(url.startsWith(prefix) && url.endsWith('.png'), url);
-  const png = fs.readFileSync(path.join(__dirname, 'site', url.slice(prefix.length)));
+  const png = fs.readFileSync(path.join(SITE, url.slice(prefix.length)));
   assert.equal(png.toString('ascii', 1, 4), 'PNG', url);
   assert.equal(png.readUInt32BE(16), 1200, url);
   assert.equal(png.readUInt32BE(20), 630, url);
 }
-
 const metaContent = (page, attrName, key) => {
   const found = page.match(new RegExp(`<meta (?:id="\\w+" )?${attrName}="${key}" content="([^"]*)" />`));
   assert.ok(found, `${attrName}=${key}`);
   return found[1];
 };
 
-(async () => {
-  const profilerModule = await import(new URL('./site/src/profiler.js', `file://${__dirname}/`).href);
+const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+const settle = async (n = 20) => { for (let i = 0; i < n; i++) await tick(); };
+// Polls a condition (the bait tests take half a second each) for up to three seconds.
+const waitFor = async (cond, label) => {
+  for (let i = 0; i < 150; i++) { if (cond()) return; await new Promise(resolve => setTimeout(resolve, 20)); }
+  throw new Error(`timed out waiting for ${label}`);
+};
 
-  // Link previews. / carries the Russian tags, /en/ the English ones: functions/en/index.js
-  // rewrites them in the same page, so every tag it looks for must still be there.
+(async () => {
   {
     const head = html.slice(0, html.indexOf('</head>'));
-    ['og:image', 'twitter:image'].forEach(key => {
-      assertPreviewPng(metaContent(head, key.startsWith('og:') ? 'property' : 'name', key));
-    });
+    ['og:image', 'twitter:image'].forEach(key => assertPreviewPng(metaContent(head, key.startsWith('og:') ? 'property' : 'name', key)));
     assert.equal(metaContent(head, 'property', 'og:image:width'), '1200');
     assert.equal(metaContent(head, 'property', 'og:image:height'), '630');
     assert.match(head, /<link rel="alternate" hreflang="en" href="https:\/\/fprint\.morgunov\.tech\/en\/" \/>/);
     assert.match(head, /<link rel="alternate" hreflang="x-default" href="https:\/\/fprint\.morgunov\.tech\/" \/>/);
-
-    const { englishPage, EN } = await import(new URL('./functions/en/index.js', `file://${__dirname}/`).href);
+    const { englishPage, EN } = await import(moduleUrl('./functions/en/index.js'));
     const { html: en, missing } = englishPage(html);
     assert.deepEqual(missing, [], 'functions/en/index.js could not find these tags in site/index.html');
     const enHead = en.slice(0, en.indexOf('</head>'));
@@ -846,131 +489,171 @@ const metaContent = (page, attrName, key) => {
     });
     // Only the JSON-LD block and the page body may stay Russian on /en/.
     const previewTags = enHead.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '').match(/<meta [^>]*>/g);
-    previewTags.forEach(tag => assert.doesNotMatch(tag, /[\u0400-\u04FF]/, tag));
+    previewTags.forEach(tag => assert.doesNotMatch(tag, /[Ѐ-ӿ]/, tag));
     assert.equal(en.slice(enHead.length), html.slice(head.length), 'only the head changes');
+    // The tags the page sets for English match the ones /en/ serves to link previews.
+    const { I18N } = await import(moduleUrl('./site/src/i18n/index.js'));
+    assert.equal(I18N.en.meta.title, EN.title);
+    assert.equal(I18N.en.meta.description, EN.description);
   }
-  sandbox.__profilerModule = profilerModule;
-  sandbox.window.__profilerModule = profilerModule;
 
-  // Worker geolocation: ipquery.io, then ipinfo.io when it fails; HTTPS only.
-  const { fetchGeolocation } = await import(new URL('./worker/src/providers/geolocation.js', `file://${__dirname}/`).href);
-  const geoUrls = [];
-  let ipqueryUp = true;
+  /* ============ Worker providers ============ */
   const realFetch = globalThis.fetch;
   const realWarn = console.warn;
-  globalThis.fetch = async url => {
-    const target = String(url);
-    geoUrls.push(target);
-    if (target.startsWith('https://api.ipquery.io/')) {
-      if (!ipqueryUp) return { ok: false, status: 503, json: async () => ({}) };
-      return makeJsonResponse({
-        ip: '198.51.100.2',
-        isp: { asn: 'AS8193', org: 'Uzbektelekom', isp: 'Uzbektelekom' },
-        location: { country: 'Uzbekistan', country_code: 'UZ', city: 'Tashkent', state: 'Tashkent', latitude: 41.3, longitude: 69.2 },
-        risk: { is_mobile: true, is_vpn: false, is_tor: false, is_proxy: false, is_datacenter: false }
-      });
-    }
-    if (target.startsWith('https://ipinfo.io/')) {
-      return makeJsonResponse({ ip: '198.51.100.2', city: 'Tashkent', region: 'Tashkent', country: 'UZ', loc: '41.3,69.2', org: 'AS8193 Uzbektelekom' });
-    }
-    throw new Error(`Unexpected Worker fetch: ${target}`);
-  };
-  console.warn = () => {};
-  try {
-    const fromIpquery = await fetchGeolocation('198.51.100.2');
-    assert.equal(fromIpquery.asn, 'AS8193');
-    assert.equal(fromIpquery.region, 'Tashkent');
-    assert.equal(fromIpquery.connection_type, 'mobile');
-    ipqueryUp = false;
-    const fromIpinfo = await fetchGeolocation('198.51.100.2');
-    assert.equal(fromIpinfo.asn, 'AS8193');
-    assert.equal(fromIpinfo.org, 'Uzbektelekom');
-    assert.equal(fromIpinfo.connection_type, null);
-    assert.ok(geoUrls.length === 3 && geoUrls.every(url => url.startsWith('https://')), geoUrls.join(' '));
-  } finally {
-    globalThis.fetch = realFetch;
-    console.warn = realWarn;
-  }
-
-  // Worker reputation: only 127.0.0.2–127.0.0.255 is a listing; 127.255.255.x is an error code
-  // (Spamhaus refusing a public resolver) and the list is then not counted as checked.
-  const { DNSBLS, checkDnsbl, fetchReputation } = await import(new URL('./worker/src/providers/reputation.js', `file://${__dirname}/`).href);
-  let dnsblAnswers = {};
-  globalThis.fetch = async url => {
-    const name = new URL(String(url)).searchParams.get('name');
-    const list = DNSBLS.find(dnsbl => name.endsWith('.' + dnsbl));
-    const answer = dnsblAnswers[list];
-    if (answer === 'down') throw new Error('DoH unreachable');
-    if (answer === 'nxdomain') return makeJsonResponse({ Status: 3 });
-    return makeJsonResponse({ Status: 0, Answer: [{ name, type: 1, data: answer }] });
-  };
-  try {
-    dnsblAnswers = { [DNSBLS[0]]: '127.0.0.2', [DNSBLS[1]]: '127.255.255.254' };
-    assert.equal(await checkDnsbl('198.51.100.2', DNSBLS[0]), 'listed');
-    assert.equal(await checkDnsbl('198.51.100.2', DNSBLS[1]), 'error');
-    dnsblAnswers = { [DNSBLS[0]]: '127.0.0.2', [DNSBLS[1]]: '127.255.255.254', [DNSBLS[2]]: 'nxdomain', [DNSBLS[3]]: 'down' };
-    const listed = await fetchReputation('198.51.100.2');
-    assert.deepEqual([listed.blacklisted, listed.blacklist_hits, listed.blacklists_checked], [true, [DNSBLS[0]], 2]);
-    dnsblAnswers = Object.fromEntries(DNSBLS.map(dnsbl => [dnsbl, '127.255.255.254']));
-    assert.equal(await fetchReputation('198.51.100.2'), null);
-    dnsblAnswers = Object.fromEntries(DNSBLS.map(dnsbl => [dnsbl, 'nxdomain']));
-    const clean = await fetchReputation('198.51.100.2');
-    assert.deepEqual([clean.blacklisted, clean.blacklists_checked], [false, DNSBLS.length]);
-    assert.equal(await fetchReputation('2001:db8::1'), null);
-  } finally {
-    globalThis.fetch = realFetch;
-  }
-
-  // Worker scan of an IP: geolocation, reverse DNS and blocklists only. No WHOIS lookup;
-  // the whois key stays null so the /api/scan shape is unchanged.
-  const { collectFingerprint } = await import(new URL('./worker/src/collector.js', `file://${__dirname}/`).href);
-  const scanUrls = [];
   const realLog = console.log;
-  globalThis.fetch = async url => {
-    const target = String(url);
-    scanUrls.push(target);
-    if (target.startsWith('https://api.ipquery.io/')) {
-      return makeJsonResponse({ ip: '198.51.100.7', isp: { asn: 'AS8193', org: 'Uzbektelekom', isp: 'Uzbektelekom' }, location: { country_code: 'UZ' }, risk: {} });
+  const setFetch = fn => Object.defineProperty(globalThis, 'fetch', { value: fn, configurable: true, writable: true });
+
+  // Geolocation: ipquery.io, then ipinfo.io when it fails; HTTPS only.
+  {
+    const { fetchGeolocation } = await import(moduleUrl('./worker/src/providers/geolocation.js'));
+    const geoUrls = [];
+    let ipqueryUp = true;
+    setFetch(async url => {
+      const target = String(url);
+      geoUrls.push(target);
+      if (target.startsWith('https://api.ipquery.io/')) {
+        if (!ipqueryUp) return { ok: false, status: 503, json: async () => ({}) };
+        return makeJsonResponse({ ip: '198.51.100.2', isp: { asn: 'AS8193', org: 'Uzbektelekom', isp: 'Uzbektelekom' }, location: { country: 'Uzbekistan', country_code: 'UZ', city: 'Tashkent', state: 'Tashkent', latitude: 41.3, longitude: 69.2 }, risk: { is_mobile: true, is_vpn: false, is_tor: false, is_proxy: false, is_datacenter: false } });
+      }
+      if (target.startsWith('https://ipinfo.io/')) return makeJsonResponse({ ip: '198.51.100.2', city: 'Tashkent', region: 'Tashkent', country: 'UZ', loc: '41.3,69.2', org: 'AS8193 Uzbektelekom' });
+      throw new Error(`Unexpected Worker fetch: ${target}`);
+    });
+    console.warn = () => {};
+    try {
+      const fromIpquery = await fetchGeolocation('198.51.100.2');
+      assert.equal(fromIpquery.asn, 'AS8193');
+      assert.equal(fromIpquery.region, 'Tashkent');
+      assert.equal(fromIpquery.connection_type, 'mobile');
+      ipqueryUp = false;
+      const fromIpinfo = await fetchGeolocation('198.51.100.2');
+      assert.equal(fromIpinfo.asn, 'AS8193');
+      assert.equal(fromIpinfo.org, 'Uzbektelekom');
+      assert.equal(fromIpinfo.connection_type, null);
+      assert.ok(geoUrls.length === 3 && geoUrls.every(url => url.startsWith('https://')), geoUrls.join(' '));
+    } finally {
+      setFetch(realFetch);
+      console.warn = realWarn;
     }
-    if (target.startsWith('https://dns.google/')) return makeJsonResponse({ Status: 3 });
-    throw new Error(`Unexpected Worker fetch: ${target}`);
-  };
-  console.log = () => {};
-  try {
-    const scan = await collectFingerprint('198.51.100.7', {});
-    assert.ok('whois' in scan);
-    assert.equal(scan.whois, null);
-    assert.ok(!scan.sources_ok.includes('whois') && !scan.sources_failed.includes('whois'));
-    assert.ok(scan.sources_ok.includes('geolocation'));
-    assert.ok(scanUrls.every(url => url.startsWith('https://api.ipquery.io/') || url.startsWith('https://dns.google/')), scanUrls.join(' '));
-  } finally {
-    globalThis.fetch = realFetch;
-    console.log = realLog;
   }
 
-  assert.equal(typeof sandbox.detectPointerType, 'function');
-  assert.equal(sandbox.detectPointerType(), 'none');
-  assert.deepEqual(sandbox.getLanguages(), ['ru-RU', 'en-US']);
-  const screenInfo = sandbox.detectScreenSetup();
-  assert.equal(screenInfo.mode, 'single');
+  // Reputation: only 127.0.0.2–127.0.0.255 is a listing; 127.255.255.x is an error code
+  // (Spamhaus refusing a public resolver) and the list is then not counted as checked.
+  {
+    const { DNSBLS, checkDnsbl, fetchReputation } = await import(moduleUrl('./worker/src/providers/reputation.js'));
+    let dnsblAnswers = {};
+    setFetch(async url => {
+      const name = new URL(String(url)).searchParams.get('name');
+      const list = DNSBLS.find(dnsbl => name.endsWith('.' + dnsbl));
+      const answer = dnsblAnswers[list];
+      if (answer === 'down') throw new Error('DoH unreachable');
+      if (answer === 'nxdomain') return makeJsonResponse({ Status: 3 });
+      return makeJsonResponse({ Status: 0, Answer: [{ name, type: 1, data: answer }] });
+    });
+    try {
+      dnsblAnswers = { [DNSBLS[0]]: '127.0.0.2', [DNSBLS[1]]: '127.255.255.254' };
+      assert.equal(await checkDnsbl('198.51.100.2', DNSBLS[0]), 'listed');
+      assert.equal(await checkDnsbl('198.51.100.2', DNSBLS[1]), 'error');
+      dnsblAnswers = { [DNSBLS[0]]: '127.0.0.2', [DNSBLS[1]]: '127.255.255.254', [DNSBLS[2]]: 'nxdomain', [DNSBLS[3]]: 'down' };
+      const listed = await fetchReputation('198.51.100.2');
+      assert.deepEqual([listed.blacklisted, listed.blacklist_hits, listed.blacklists_checked], [true, [DNSBLS[0]], 2]);
+      dnsblAnswers = Object.fromEntries(DNSBLS.map(dnsbl => [dnsbl, '127.255.255.254']));
+      assert.equal(await fetchReputation('198.51.100.2'), null);
+      dnsblAnswers = Object.fromEntries(DNSBLS.map(dnsbl => [dnsbl, 'nxdomain']));
+      const clean = await fetchReputation('198.51.100.2');
+      assert.deepEqual([clean.blacklisted, clean.blacklists_checked], [false, DNSBLS.length]);
+      assert.equal(await fetchReputation('2001:db8::1'), null);
+    } finally {
+      setFetch(realFetch);
+    }
+  }
 
-  const hash = await sandbox.sha256('test');
-  assert.equal(hash.length, 64);
-  assert.equal(sandbox.canonicalOsFamily('Windows 11 Pro'), 'Windows');
-  assert.equal(sandbox.bucketDeviceMemory(12), '9-16');
-  assert.equal(sandbox.bucketCoreCount(4), '≤4');
-  assert.equal(sandbox.bucketSpeedValue({ status: 'done', mbps: 5 }), 'slow');
-  assert.equal(sandbox.bucketLatencyValue({ status: 'done', latency: 45 }), 'moderate');
-  assert.equal(sandbox.normalizeCallingCode(' +998 '), '+998');
-  const details = sandbox.extractCanonicalDetailsFromPayload({
-    region_name: 'Tashkent',
-    country_name: 'Uzbekistan',
-    timezone: 'Asia/Tashkent',
-    country_calling_code: '+998',
-    org: 'Uzbektelekom Joint Stock Company'
-  });
+  // Scan of an IP: geolocation, reverse DNS and blocklists only. No WHOIS lookup; the whois key
+  // stays null so the /api/scan shape is unchanged.
+  {
+    const { collectFingerprint } = await import(moduleUrl('./worker/src/collector.js'));
+    const scanUrls = [];
+    setFetch(async url => {
+      const target = String(url);
+      scanUrls.push(target);
+      if (target.startsWith('https://api.ipquery.io/')) return makeJsonResponse({ ip: '198.51.100.7', isp: { asn: 'AS8193', org: 'Uzbektelekom', isp: 'Uzbektelekom' }, location: { country_code: 'UZ' }, risk: {} });
+      if (target.startsWith('https://dns.google/')) return makeJsonResponse({ Status: 3 });
+      throw new Error(`Unexpected Worker fetch: ${target}`);
+    });
+    console.log = () => {};
+    try {
+      const scan = await collectFingerprint('198.51.100.7', {});
+      assert.ok('whois' in scan);
+      assert.equal(scan.whois, null);
+      assert.ok(!scan.sources_ok.includes('whois') && !scan.sources_failed.includes('whois'));
+      assert.ok(scan.sources_ok.includes('geolocation'));
+      assert.ok(scanUrls.every(url => url.startsWith('https://api.ipquery.io/') || url.startsWith('https://dns.google/')), scanUrls.join(' '));
+    } finally {
+      setFetch(realFetch);
+      console.log = realLog;
+    }
+  }
+
+  // /api/whoami: the shape the page's server-fingerprint section reads.
+  {
+    const { buildWhoami, parseUA, checkConsistency, whoamiText } = await import(moduleUrl('./worker/src/whoami.js'));
+    const headers = new Map([
+      ['cf-connecting-ip', '198.51.100.2'], ['user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'],
+      ['accept', 'text/html'], ['accept-language', 'ru-RU,ru;q=0.9'], ['accept-encoding', 'gzip'],
+      ['sec-ch-ua', '"Chromium";v="134", "Google Chrome";v="134", "Not A(Brand";v="99"'], ['sec-ch-ua-platform', '"Windows"'], ['sec-ch-ua-mobile', '?0']
+    ]);
+    const request = { headers: { get: k => headers.get(k) ?? null, entries: () => headers.entries() }, cf: { country: 'UZ', city: 'Tashkent', timezone: 'Asia/Tashkent', asn: 8193, asOrganization: 'Uzbektelekom', httpProtocol: 'HTTP/2', tlsVersion: 'TLSv1.3', tlsCipher: 'AEAD-AES128-GCM-SHA256' } };
+    const w = await buildWhoami(request);
+    assert.equal(w.ip, '198.51.100.2');
+    assert.equal(w.network.tlsVersion, 'TLSv1.3');
+    assert.equal(w.network.httpProtocol, 'HTTP/2');
+    assert.deepEqual(w.headers.header_order.slice(0, 2), ['user-agent', 'accept']);
+    assert.equal(w.headers.client_hints.platform, 'Windows');
+    assert.equal(w.headers.client_hints.browser, 'Chromium');
+    assert.equal(w.header_hash.length, 16);
+    assert.equal(w.consistency.consistent, true);
+    assert.equal(w.cross_check.server_browser, 'Chrome 134');
+    assert.deepEqual(parseUA('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'), { browser: 'Safari', version: '17', os: 'iOS', os_version: '17.0' });
+    assert.equal(checkConsistency({ browser: 'Firefox', os: 'Linux' }, { browser: 'Chromium', platform: 'Windows', mobile: '?1' }).issues.length, 3);
+    assert.match(whoamiText(w), /^IP:\s+198\.51\.100\.2\n/);
+  }
+
+  /* ============ The page's modules ============ */
+  const signals = await import(moduleUrl('./site/src/signals.js'));
+  const entropy = await import(moduleUrl('./site/src/entropy.js'));
+  const device = await import(moduleUrl('./site/src/device.js'));
+  const network = await import(moduleUrl('./site/src/network.js'));
+  const share = await import(moduleUrl('./site/src/share.js'));
+  const { state, snapshot, invalidateSnapshot } = await import(moduleUrl('./site/src/state.js'));
+  const { I18N } = await import(moduleUrl('./site/src/i18n/index.js'));
+
+  assert.equal(signals.detectPointerType(), 'none');
+  assert.deepEqual(signals.getLanguages(), ['ru-RU', 'en-US']);
+  assert.equal(signals.detectScreenSetup().mode, 'single');
+  assert.equal((await signals.sha256('test')).length, 64);
+  assert.equal(entropy.canonicalOsFamily('Windows 11 Pro'), 'Windows');
+  assert.equal(entropy.bucketDeviceMemory(12), '9-16');
+  assert.equal(entropy.bucketCoreCount(4), '≤4');
+  assert.equal(network.normalizeCallingCode(' +998 '), '+998');
+  const details = network.extractCanonicalDetailsFromPayload({ region_name: 'Tashkent', country_name: 'Uzbekistan', timezone: 'Asia/Tashkent', country_calling_code: '+998', org: 'Uzbektelekom Joint Stock Company' });
   assert.equal(details.org, 'Uzbektelekom Joint Stock Company');
-  assert.equal(sandbox.categorizeIpDetail(details), 'rich');
+  assert.equal(details.country_calling_code, '+998');
+  assert.equal(network.resolveCountryCode(details, {}, {}), 'UZ');
+  assert.equal(device.browserDisplayName({ userAgent: navigatorStub.userAgent, uaBrands: navigatorStub.userAgentData.brands }), 'Safari 17');
+  assert.equal(device.guessOSVersion({ userAgent: navigatorStub.userAgent, uaPlatform: 'macOS', uaHighEntropy: { platformVersion: '14.0.0' } }), 'macOS 14');
+  assert.deepEqual(device.guessDevice({ userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/134', hw: { deviceMemory: 8 }, touch: { maxTouchPoints: 5 }, screen: { w: 412, h: 915, pixelRatio: 2.6 } }), { id: 'androidFlagship' });
+  assert.equal(device.deviceDisplayName({ id: 'androidFlagship' }, I18N.en), 'Android flagship smartphone');
+  assert.equal(device.formatGpuRenderer('ANGLE (Apple, Apple M2, OpenGL)'), 'Apple M2');
+
+  // The score: a known feature set gives a positive H and a percentile in range, and the model
+  // only uses keys the frequency tables know (the audio bucket used to emit unknown ones).
+  const H = entropy.entropyFromFeatures({ browser: 'Safari', osFamily: 'macOS', screen: '1512x982@2', dpr: '2', langsCount: '2', gpuBrand: 'Apple', memoryBucket: '9-16', coresBucket: '5-8', hasCanvas: '1', hasAudio: '1', pluginsBucket: '1-3', permBucket: '1-3', storageBucket: 'full', touchBucket: 'none', webglRenderer: 'Apple GPU', audioHash: 'rare', fontsBucket: '1-5' });
+  assert.ok(H > 0);
+  const pct = entropy.percentileFromH(H);
+  assert.ok(pct >= 0 && pct <= 100);
+  for (const hash of ['0a', '1b', '2c', '3d', '4e', '5f', '6a', 'ff']) {
+    const f = entropy.featuresOf({ languages: [], screen: { w: 1, h: 1, pixelRatio: 1 }, gl: {}, hw: {}, hashes: {}, plugins: [], perms: {}, storage: {}, touch: {}, webgl: { supported: false }, audioFp: { supported: true, hash }, fontsFp: { count: 0 } }, 'Linux');
+    assert.ok(hash in {} || entropy.FREQ['audio.hash'][f.audioHash] != null, `audio bucket ${f.audioHash} is not in the table`);
+  }
 
   // "Check network": a Worker answer is final; public IP services are only the fallback.
   const publicIpServices = /ipapi\.co|freeipapi\.com|ipify\.org|myip\.com/;
@@ -978,10 +661,14 @@ const metaContent = (page, attrName, key) => {
   workerWhoami = {
     ip: '198.51.100.2',
     geo: { country: 'UZ', region: 'Tashkent', city: 'Tashkent', timezone: 'Asia/Tashkent' },
-    network: { asn: 8193, asOrganization: 'Uzbektelekom' }
+    network: { asn: 8193, asOrganization: 'Uzbektelekom', httpProtocol: 'HTTP/2', tlsVersion: 'TLSv1.3', tlsCipher: 'AEAD-AES128-GCM-SHA256' },
+    headers: { header_order: ['user-agent', 'accept', 'accept-language'], client_hints: { ua: '"Chromium";v="134"', platform: 'macOS', mobile: '?0', browser: 'Chromium' } },
+    header_hash: '0123456789abcdef',
+    consistency: { consistent: true, issues: [] },
+    cross_check: { server_timezone: 'Asia/Tashkent', server_platform: 'macOS', server_browser: 'Safari 17' }
   };
   let logStart = fetchLog.length;
-  const fromWorker = await sandbox.fetchIpData();
+  const fromWorker = await network.fetchIpData();
   assert.equal(fromWorker.source, 'worker');
   assert.equal(fromWorker.details.region, 'Tashkent');
   assert.deepEqual(publicIpCalls(logStart), []);
@@ -989,60 +676,78 @@ const metaContent = (page, attrName, key) => {
   assert.ok(fetchLog.slice(logStart).some(entry => entry.url === 'https://fprint.morgunov.tech/api/whoami'));
   assert.ok(!fetchLog.some(entry => entry.url.includes('workers.dev')), 'no calls to the workers.dev address');
   workerWhoami = null;
-  stateRef.whoamiData = null;
+  state.whoamiData = null;
   logStart = fetchLog.length;
-  const fromFallback = await sandbox.fetchIpData();
+  const fromFallback = await network.fetchIpData();
   assert.equal(fromFallback.source, 'ipapi');
   assert.equal(fromFallback.details.country_calling_code, '+998');
   assert.ok(publicIpCalls(logStart).some(url => url.startsWith('https://ipapi.co')));
-  const H = sandbox.entropyFromFeatures({
-    browser: 'Safari',
-    osFamily: 'macOS',
-    screen: '1512x982@2',
-    dpr: '2',
-    langsCount: '2',
-    gpuBrand: 'Apple',
-    memoryBucket: '9-16',
-    coresBucket: '5-8',
-    hasCanvas: '1',
-    hasAudio: '1',
-    pluginsBucket: '1-3',
-    permBucket: '1-3',
-    storageBucket: 'full',
-    touchBucket: 'none',
-    ipDetail: 'rich',
-    ipCountry: 'US',
-    speedBucket: 'mid',
-    latencyBucket: 'moderate'
+
+  assert.equal(share.resolveShareUrl(), 'https://example.com/fingerprint');
+  assert.ok(share.createShareCardSvg({ pct: 56, headline: 'Test headline', tagline: 'Tag', url: 'https://example.com' }, { share: { tagline: 'Preview tag' } }).includes('<svg'));
+
+  // The same keys in every language, all the way down (functions compared by arity).
+  const walk = (obj, prefix = '') => Object.entries(obj).flatMap(([k, v]) => {
+    const p = prefix ? `${prefix}.${k}` : k;
+    if (v && typeof v === 'object' && !Array.isArray(v)) return [p, ...walk(v, p)];
+    return [typeof v === 'function' ? `${p}()` : p];
   });
-  assert.ok(H > 0);
-  const pct = sandbox.percentileFromH(H);
-  assert.ok(pct >= 0 && pct <= 100);
-  assert.equal(sandbox.resolveShareUrl(), 'https://example.com/fingerprint');
-
-  const svg = sandbox.createShareCardSvg({ pct: 56, headline: 'Test headline', note: 'Note', tagline: 'Tag', url: 'https://example.com' }, { share: { tagline: 'Preview tag' } });
-  assert.ok(svg.includes('<svg'));
-
-  const baseKeys = Object.keys(I18N.ru);
+  const baseKeys = walk(I18N.ru).filter(k => k !== 'introRichHtml');
   for (const [lang, dict] of Object.entries(I18N)) {
-    const missing = baseKeys.filter(key => !(key in dict));
+    const keys = new Set(walk(dict));
+    const missing = baseKeys.filter(key => !keys.has(key));
     assert.deepEqual(missing, [], `Missing localization keys for ${lang}`);
   }
-
-  if (typeof documentStub._domReady === 'function') {
-    await documentStub._domReady();
+  // Every t.<key> the modules read exists in the strings.
+  {
+    const srcText = ['app', 'report', 'story', 'server-view', 'share', 'trackers'].map(f => read(`site/src/${f}.js`)).join('\n');
+    const known = new Set([...walk(I18N.ru).map(k => k.replace(/\(\)$/, '')), 'introRichHtml']); // ru's intro is read from the markup
+    const used = new Set([...srcText.matchAll(/\bt\.([a-zA-Z]+(?:\.[a-zA-Z]+)*)/g)].map(m => m[1]).filter(k => !['story', 'trackers', 'implications', 'osint', 'rows', 'serverFp', 'contradictions', 'share', 'copy', 'units', 'labels', 'permNames', 'permStates', 'pointerLabels', 'dntStatus', 'monitorText', 'theme', 'meta', 'speedTest', 'langLabels', 'deviceNames', 'heroConclusion', 'uniqHeadline'].includes(k.split('.')[0]) || k.includes('.')));
+    const unknown = [...used].filter(k => !known.has(k));
+    assert.deepEqual(unknown, [], 'strings the modules read but ru.js lacks');
   }
-  invalidateSnapshot();
+
+  /* ============ The page: start-up, controls, languages, network check ============ */
+  state.webrtc = null;
+  const app = await import(moduleUrl('./site/src/app.js'));
+  assert.equal(typeof documentStub._domReady, 'function', 'app.js waits for DOMContentLoaded');
+  workerStats = { total_visits: 1000, browsers: { 'Safari 17': 300 }, os: { macOS: 500 }, countries: { UZ: 400 }, tls_versions: { 'TLSv1.3': 950 } };
+  documentStub._domReady();
   const shareBtnEl = elements.get('shareBtn');
-  const initialRender = sandbox.render('ru');
   assert.equal(shareBtnEl.dataset.ready, '0');
   assert.equal(shareBtnEl.getAttribute('aria-disabled'), 'true');
-  await initialRender;
-  await new Promise(resolve => setTimeout(resolve, 0));
+  await settle(40);
   assert.equal(shareBtnEl.dataset.ready, '1');
   assert.equal(shareBtnEl.getAttribute('aria-disabled'), null);
+  assert.equal(documentElement.lang, 'ru');
+  assert.ok(snapshot.value, 'the snapshot is computed');
+  assert.ok(snapshot.value.pct >= 0 && snapshot.value.pct <= 100);
+  assert.equal(elements.get('heroNumber').textContent, snapshot.value.pct + '%');
+  assert.equal(elements.get('introText').innerHTML, introSource, 'the Russian intro is the one from the markup');
+  assert.deepEqual(alerts, []);
+
+  // All the text a node holds: its own, its innerHTML and its children's.
+  const textOf = node => (!node || typeof node !== 'object') ? '' : [node._textContent, node._innerHTML, ...node.children.map(textOf)].filter(Boolean).join(' ');
+  const rowsOf = groupId => elements.get(groupId).querySelectorAll('.data-row').map(r => textOf(r).replace(/<[^>]+>/g, ' ').replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim());
+  const rowText = groupId => textOf(elements.get(groupId));
+  assert.ok(/Устройство/.test(rowText('groupIdentity')) && /MacBook/.test(rowText('groupIdentity')), rowText('groupIdentity'));
+  assert.ok(/Safari 17/.test(rowText('groupIdentity')));
+  assert.ok(/у 30% посетителей/.test(rowText('groupIdentity')), 'the browser row shows the share of visitors from /api/stats');
+  assert.equal(elements.get('cards').children.length, 22, 'detail cards');
+  assert.ok(elements.get('footerText').innerHTML.includes('v2.'), 'footer shows the version');
+
+  // The probes ran once: five tracker rows, and the WebRTC stub's host candidate is a leak.
+  await waitFor(() => state.trackerResults && state.webrtc, 'the tracker tests and the WebRTC probe');
+  await settle();
+  assert.equal(state.trackerResults.length, 5);
+  assert.equal(elements.get('trackerResults').querySelectorAll('.tracker-row').length, 5);
+  assert.deepEqual(state.webrtc, { checked: true, leak: true, ips: ['10.0.0.2'] });
+  assert.ok(/Утечка: 10\.0\.0\.2/.test(rowText('groupNetwork')), rowText('groupNetwork'));
+  assert.ok(elements.get('personalRecs').children.some(card => textOf(card).includes('WebRTC')), 'the WebRTC advice is shown when the probe finds a leak');
+
+  // Language menu
   const langBtnEl = elements.get('langBtn');
-  assert.ok(langBtnEl.textContent.includes('Язык'), 'langBtn should contain language label');
+  assert.ok(langBtnEl.textContent.includes('Язык'));
   const langMenuEl = elements.get('langMenu');
   assert.equal(langMenuEl.hidden, true);
   langBtnEl.click();
@@ -1050,72 +755,59 @@ const metaContent = (page, attrName, key) => {
   const langOptions = langMenuEl.querySelectorAll('button[data-lang]');
   assert.equal(langOptions.length, 3);
   langOptions[0].click();
-  await new Promise(resolve => setTimeout(resolve, 0));
+  await settle();
   assert.equal(langMenuEl.hidden, true);
-  assert.ok(langBtnEl.textContent.includes('Язык'), 'langBtn should contain language label');
+  assert.ok(langBtnEl.textContent.includes('Язык'));
+
+  // Theme menu
   const themeBtnEl = elements.get('themeBtn');
   assert.ok(themeBtnEl.innerHTML.includes('Тема'));
   const themeMenuEl = elements.get('themeMenu');
   assert.equal(themeMenuEl.hidden, true);
   themeBtnEl.click();
   assert.equal(themeMenuEl.hidden, false);
-  const darkOption = themeMenuEl.querySelectorAll('button[data-theme]').find(btn => btn.dataset.theme === 'dark');
-  assert.ok(darkOption);
-  darkOption.click();
-  await new Promise(resolve => setTimeout(resolve, 0));
+  themeMenuEl.querySelectorAll('button[data-theme="dark"]')[0].click();
+  await settle();
   assert.equal(themeMenuEl.hidden, true);
   assert.ok(documentElement.classList.contains('force-dark'));
   assert.ok(themeBtnEl.innerHTML.includes('🌙'));
-  vm.runInContext("applyThemePreference('light')", sandbox);
-  vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
-  assert.ok(documentElement.classList.contains('force-light'));
-  assert.ok(themeBtnEl.innerHTML.includes('☀️'));
-  vm.runInContext("applyThemePreference('dark')", sandbox);
-  vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
-  assert.ok(documentElement.classList.contains('force-dark'));
-  assert.ok(!documentElement.classList.contains('force-light'));
-  assert.ok(themeBtnEl.innerHTML.includes('🌙'));
-  vm.runInContext("applyThemePreference('auto')", sandbox);
-  vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
-  assert.ok(!documentElement.classList.contains('force-dark'));
-  assert.ok(themeBtnEl.innerHTML.includes('🌓'));
+  for (const [mode, icon, cls] of [['light', '☀️', 'force-light'], ['contrast', '◑', 'force-contrast'], ['auto', '🌓', null]]) {
+    app.applyThemePreference(mode);
+    app.updateThemeButton(I18N.ru);
+    assert.ok(themeBtnEl.innerHTML.includes(icon), mode);
+    assert.equal(docClassTokens.size, cls ? 1 : 0, mode);
+    if (cls) assert.ok(documentElement.classList.contains(cls));
+  }
 
-  const savedSharePayload = stateRef.sharePayload;
-  shareBtnEl.textContent = shareBtnEl.dataset.label;
-  stateRef.sharePayload = null;
-  await sandbox.handleShareClick();
+  // Share and save
+  const savedSharePayload = state.sharePayload;
+  state.sharePayload = null;
+  await share.handleShareClick();
   assert.equal(shareBtnEl.textContent, I18N.ru.share.unavailable);
-  stateRef.sharePayload = savedSharePayload;
+  state.sharePayload = savedSharePayload;
   shareBtnEl.textContent = shareBtnEl.dataset.label;
-
-  const shockListEl = elements.get('shockList');
-  const collectShockText = () => Array.from(shockListEl.children || [])
-    .map(item => extractText(item).replace(/\s+/g, ' ').trim())
-    .filter(Boolean);
-  for (let i = 0; i < 200 && collectShockText().length === 0; i += 1) {
-    await new Promise(resolve => setTimeout(resolve, 0));
-  }
-  const initialShockEntries = collectShockText();
-  assert.ok(initialShockEntries.length >= 1);
-  assert.ok(initialShockEntries.some(text => /Устройство|Браузер/i.test(text)));
-  const initialShare = stateRef.sharePayload;
-  assert.ok(initialShare);
-  assert.equal(elements.get('shareBtn').dataset.ready, '1');
-  await sandbox.handleShareClick();
+  await share.handleShareClick();
   assert.equal(sharePayloads.length, 1);
-  await sandbox.handleSaveClick();
+  assert.ok(clipboardWrites[0].includes('https://example.com/fingerprint'));
+  await share.handleSaveClick();
   assert.ok(printed || downloads.length > 0);
-  await sandbox.render('en');
-  await new Promise(resolve => setTimeout(resolve, 0));
+
+  // English and Uzbek
+  await app.render('en');
+  await settle();
   assert.equal(documentElement.lang, 'en');
-  // The tags the page sets for English match the ones /en/ serves to link previews.
-  {
-    const { EN } = await import(new URL('./functions/en/index.js', `file://${__dirname}/`).href);
-    assert.equal(elements.get('ogTitle').content, EN.title);
-    assert.equal(elements.get('ogDescription').content, EN.description);
-    assert.equal(elements.get('twTitle').content, EN.title);
-    assert.equal(elements.get('twDescription').content, EN.description);
-  }
+  assert.equal(elements.get('ogTitle').content, I18N.en.meta.title);
+  assert.equal(elements.get('ogDescription').content, I18N.en.meta.description);
+  assert.equal(elements.get('twTitle').content, I18N.en.meta.title);
+  assert.ok(elements.get('introTitle').textContent.length > 0);
+  assert.ok(langBtnEl.textContent.includes('Language'));
+  assert.ok(/Device/.test(rowText('groupIdentity')) && /Leak: 10\.0\.0\.2/.test(rowText('groupNetwork')));
+  await app.render('uz');
+  await settle();
+  assert.equal(documentElement.lang, 'uz');
+  assert.ok(langBtnEl.textContent.includes('Til'));
+  assert.ok(/Qurilma/.test(rowText('groupIdentity')));
+
   // /en/ opens in English over a saved Russian choice; a language picked there moves the
   // address back to / (and English to /en/), so a shared link previews in that language.
   {
@@ -1125,51 +817,76 @@ const metaContent = (page, attrName, key) => {
     const savedLang = localStore.get('fp_lang');
     localStore.set('fp_lang', 'ru');
     windowStub.location = { origin: 'https://fprint.morgunov.tech', pathname: '/en/', search: '', hash: '' };
-    assert.equal(vm.runInContext('detectLang()', sandbox), 'en');
-    vm.runInContext("syncLangPath('ru')", sandbox);
+    assert.equal(app.detectLang(), 'en');
+    app.syncLangPath('ru');
     windowStub.location = { origin: 'https://fprint.morgunov.tech', pathname: '/', search: '?mode=story', hash: '' };
-    assert.equal(vm.runInContext('detectLang()', sandbox), 'ru');
-    vm.runInContext("syncLangPath('en')", sandbox);
-    vm.runInContext("syncLangPath('ru')", sandbox);
+    assert.equal(app.detectLang(), 'ru');
+    app.syncLangPath('en');
+    app.syncLangPath('ru');
     windowStub.location = realLocation;
-    vm.runInContext("syncLangPath('en')", sandbox);
+    app.syncLangPath('en');
     assert.deepEqual(replaced, ['/', '/en/?mode=story'], 'the address changes only between / and /en/');
-    delete windowStub.history;
-    if (savedLang === undefined) localStore.delete('fp_lang');
-    else localStore.set('fp_lang', savedLang);
+    windowStub.history = { replaceState: () => {} };
+    if (savedLang === undefined) localStore.delete('fp_lang'); else localStore.set('fp_lang', savedLang);
   }
-  assert.ok(elements.get('introTitle').textContent.length > 0);
-  assert.ok(elements.get('langBtn').textContent.includes('Language'));
-  let englishShock = '';
-  for (let i = 0; i < 200; i += 1) {
-    englishShock = collectShockText().join(' ');
-    if (/Looks like you|Detecting your location/i.test(englishShock)) break;
-    await new Promise(resolve => setTimeout(resolve, 0));
+
+  // "Check network" in Russian: IP, ISP, VPN rows; scan rows; the server fingerprint section
+  // reads the Worker's actual shape (TLS, HTTP, header order, Client Hints).
+  await app.render('ru');
+  await settle();
+  workerWhoami = {
+    ip: '198.51.100.2',
+    geo: { country: 'UZ', region: 'Tashkent', city: 'Tashkent', timezone: 'Asia/Tashkent' },
+    network: { asn: 8193, asOrganization: 'Uzbektelekom', httpProtocol: 'HTTP/2', tlsVersion: 'TLSv1.3', tlsCipher: 'AEAD-AES128-GCM-SHA256' },
+    headers: { header_order: ['user-agent', 'accept', 'accept-language'], client_hints: { ua: '"Chromium";v="134"', platform: 'macOS', mobile: '?0', browser: 'Chromium' } },
+    header_hash: '0123456789abcdef',
+    consistency: { consistent: true, issues: [] },
+    cross_check: { server_timezone: 'Asia/Tashkent', server_platform: 'macOS', server_browser: 'Safari 17' }
+  };
+  workerScan = { resolved_ip: '198.51.100.2', geolocation: { isp: 'Uzbektelekom JSC', asn: 'AS8193', connection_type: 'mobile' }, reputation: { blacklisted: false, blacklists_checked: 4, blacklist_hits: [] } };
+  state.serverData = null;
+  await app.handleNetworkCheck();
+  await settle();
+  assert.ok(state.serverData);
+  assert.equal(state.serverData.details.region, 'Tashkent');
+  assert.equal(state.speed.status, 'done');
+  const net = rowText('groupNetwork');
+  assert.ok(/198\.51\.100\.2/.test(net), net);
+  assert.ok(/Uzbektelekom/.test(net));
+  assert.ok(/AS8193/.test(net), 'scan rows are merged into the network group');
+  assert.ok(/Мобильная сеть/.test(net));
+  assert.ok(/проверено 4 баз/.test(net));
+  const identity = rowText('groupIdentity');
+  assert.ok(/Ташкент|Tashkent/.test(identity) && /Узбекистан/.test(identity), identity);
+  const serverFp = rowsOf('groupServerFp').join(' | ');
+  for (const expected of ['TLSv1.3 / AEAD-AES128-GCM-SHA256', 'HTTP/2', '0123456789abcdef', 'user-agent, accept, accept-language', 'macOS', '?0', '"Chromium";v="134"', 'AS8193 · Uzbektelekom']) {
+    assert.ok(serverFp.includes(expected), `server fingerprint shows ${expected}: ${serverFp}`);
   }
-  assert.ok(/Looks like you|Detecting your location/i.test(englishShock), 'English shock should contain new-style insights');
-  await sandbox.render('uz');
-  await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(documentElement.lang, 'uz');
-  assert.ok(elements.get('introTitle').textContent.length > 0);
-  assert.ok(elements.get('langBtn').textContent.includes('Til'));
-  let uzbekShock = '';
-  for (let i = 0; i < 200; i += 1) {
-    uzbekShock = collectShockText().join(' ');
-    if (/Ehtimol siz|Joylashuvingiz aniqlanmoqda/i.test(uzbekShock)) break;
-    await new Promise(resolve => setTimeout(resolve, 0));
+  assert.ok(/у 95% посетителей/.test(rowText('groupServerFp')), 'the TLS row shows the share of visitors');
+  assert.ok(elements.get('contradictionsBlock').children.length >= 2);
+  assert.equal(elements.get('networkBtn').textContent, I18N.ru.networkRecheck);
+
+  // Story Mode shows the real values, not placeholders.
+  const { renderStoryMode } = await import(moduleUrl('./site/src/story.js'));
+  renderStoryMode(snapshot.value.basic, I18N.ru, snapshot.value);
+  const storyHtml = textOf(elements.get('storyMode'));
+  for (const expected of ['MacBook', '1512×982', 'Apple GPU', '198.51.100.2', 'Uzbektelekom', 'Safari 17', 'TLSv1.3', 'ru-RU, en-US', '1 / 5', `${snapshot.value.pct}%`]) {
+    assert.ok(storyHtml.includes(expected), `story shows ${expected}`);
   }
-  assert.ok(/Ehtimol siz|Joylashuvingiz aniqlanmoqda/i.test(uzbekShock), 'Uzbek shock should contain new-style insights');
-  await sandbox.autoFetchIp();
-  await sandbox.render('ru');
-  await new Promise(resolve => setTimeout(resolve, 0));
-  for (let i = 0; i < 20 && !/Tashkent|\u0422\u0430\u0448\u043a\u0435\u043d\u0442/i.test(collectShockText().join(' ')); i += 1) {
-    await new Promise(resolve => setTimeout(resolve, 0));
-  }
-  assert.ok(stateRef.serverData);
-  assert.equal(stateRef.serverData.details.region, 'Tashkent');
-  assert.ok(/Tashkent|\u0422\u0430\u0448\u043a\u0435\u043d\u0442|Uzbekistan|\u0423\u0437\u0431\u0435\u043a\u0438\u0441\u0442\u0430\u043d/i.test(collectShockText().join(' ')), 'exposure list should mention updated region');
-  assert.ok(stateRef.sharePayload);
-  assert.deepEqual(headScripts, []);
+  assert.ok(!/undefined|\[object Object\]|\?\.\?/.test(storyHtml), 'no placeholders in the story');
+
+  // A language switch after the network check keeps every section.
+  await app.render('en');
+  await settle();
+  assert.ok(/AS8193/.test(rowText('groupNetwork')) && /Mobile network/.test(rowText('groupNetwork')));
+  assert.ok(rowsOf('groupServerFp').join(' ').includes('TLSv1.3'));
+  assert.ok(state.sharePayload);
+
+  // No script was added to the page and nothing reached the workers.dev address.
+  assert.ok(!fetchLog.some(entry => entry.url.includes('workers.dev')));
 
   console.log('Self-test completed successfully');
-})();
+})().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

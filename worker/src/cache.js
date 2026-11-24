@@ -1,28 +1,19 @@
 /**
- * Cache layer — uses Cloudflare KV if available, otherwise in-memory Map.
- * In-memory cache resets on cold starts, which is fine for edge workers.
+ * Scan report cache: Workers KV when the binding exists, otherwise an in-memory Map that lives
+ * as long as the isolate (fine for `wrangler dev` without KV).
  */
 
-const TTL = {
-  geo: 86400,        // 24h
-  dns: 3600,         // 1h
-  reputation: 21600, // 6h
-  ssl: 86400,        // 24h
-  headers: 3600,     // 1h
-};
+export const REPORT_TTL_SECONDS = 3600;
 
-// In-memory fallback (per-isolate, survives warm requests)
 const memCache = new Map();
 
 export async function cacheGet(key, env) {
-  // Try KV first
   if (env?.CACHE) {
     try {
       const val = await env.CACHE.get(key, 'json');
       if (val) return val;
-    } catch { /* fall through */ }
+    } catch { /* fall through to memory */ }
   }
-  // In-memory fallback
   const entry = memCache.get(key);
   if (!entry) return null;
   if (Date.now() > entry.expiresAt) {
@@ -32,16 +23,11 @@ export async function cacheGet(key, env) {
   return entry.value;
 }
 
-export async function cacheSet(key, value, provider, env) {
-  const ttl = TTL[provider] || 3600;
-  // KV
+export async function cacheSet(key, value, env, ttl = REPORT_TTL_SECONDS) {
   if (env?.CACHE) {
     try {
       await env.CACHE.put(key, JSON.stringify(value), { expirationTtl: ttl });
-    } catch { /* fall through */ }
+    } catch { /* keep the memory copy */ }
   }
-  // In-memory
   memCache.set(key, { value, expiresAt: Date.now() + ttl * 1000 });
 }
-
-export { TTL };

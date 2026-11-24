@@ -8,7 +8,7 @@ Fingerprint reads the same signals any site can read without asking — browser 
 
 ## Key Features
 
-- **What a site sees instantly**: browser and OS, screen and monitors, GPU, CPU cores and memory, languages and timezone, fonts, Canvas and audio hashes, storage, permissions, battery, media devices — no prompts needed. A profile section turns these into guesses: device model, likely region, VPN likelihood, WebRTC IP leak.
+- **What a site sees instantly**: browser and OS, screen and monitors, GPU, CPU cores and memory, languages and timezone, fonts, Canvas and audio hashes, storage, permissions, battery, media devices — no prompts needed. The page turns these into guesses: device model and OS version, and after "Check network" the location, VPN likelihood and a WebRTC leak check.
 - **Uniqueness estimate**: each signal is weighted by how common it is (frequency tables based on EFF Panopticlick and FingerprintJS research, correlated signals counted once), and the result is ranked against 25,000 simulated browsers.
 - **Tips to protect yourself**: advice matched to the findings — a timezone that doesn't match the IP, a WebRTC leak, an exposed Canvas fingerprint — with steps for Chrome, Firefox, Brave and Safari.
 - **Tracker simulation**: three ad-blocker bait elements created on the page itself (nothing is loaded from anywhere) and the Do Not Track and Global Privacy Control settings.
@@ -18,7 +18,7 @@ Fingerprint reads the same signals any site can read without asking — browser 
 
 ## Privacy
 
-- **Computed in the browser**: all fingerprint signals, the uniqueness score, the profile and the tracker checks. The page does not upload them, and no third party sees the fingerprint.
+- **Computed in the browser**: all fingerprint signals, the uniqueness score, the device guesses, the tracker checks and the WebRTC probe (no STUN server, nothing is sent). The page does not upload them, and no third party sees the fingerprint.
 - **On page load** the page only reads aggregate stats from the site's Cloudflare Worker, which sees the IP and request headers, as any server does.
 - **"Check network"** (on click only) sends the IP to the Worker's `/api/whoami` (returned, not stored) and `/api/scan`, which asks ipquery.io (ipinfo.io as fallback) for location, ISP and connection type and Google DNS for the reverse record and the blocklists. The scan report is cached for one hour under the IP. There is no WHOIS lookup. Only if the Worker is down does the browser ask public IP services directly (ipapi.co and freeipapi.com, then ipify.org and myip.com).
 - **Anonymous stats**: each check adds one to aggregate counters (browser and version, OS, country, TLS version) — no IP, no ID, no timestamps; anyone can read them at `/api/stats`.

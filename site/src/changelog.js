@@ -1,0 +1,303 @@
+// What changed for the people who use the page, shown in the changelog modal (the version badge in
+// the footer). CHANGELOG.md carries the same entries in English; the top entry's version is APP_VERSION.
+export const CHANGELOG = [
+  {
+    version:'2.5.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Режим «История» показывает реальные данные: устройство, экран, GPU, хеши Canvas/Audio/WebGL, число заблокированных трекеров, а после «Проверить сеть» — IP, провайдера и версию TLS. Раньше на их месте стояли знаки вопроса',
+        'Раздел «Серверный отпечаток» показывает версию и шифр TLS, HTTP-протокол, порядок заголовков и Client Hints — они приходили с сервера, но не выводились',
+        'Проверка утечки WebRTC работает: строка «WebRTC» и совет про утечку основаны на реальной пробе, а не всегда на «Безопасно»',
+        'Блок «Что сайт знает о вас» занимает всю ширину страницы, а не треть',
+        'Страница больше не скачивает share-card.svg три раза и не пишет тестовые cookie при каждой отрисовке: модуль профайлинга, результаты которого нигде не показывались, удалён',
+        '«Распечатать / Сохранить» на телефоне сохраняет статический снимок страницы со стилями и без скриптов — раньше сохранённый файл заново запускал всю проверку',
+        'Код страницы разбит на модули (стили, переводы, сбор сигналов, модель уникальности, сеть, отрисовка) и очищен от неиспользуемых функций и строк. Процент уникальности может сдвинуться на пару пунктов: исправлена группировка аудио-отпечатка в модели'
+      ],
+      en:[
+        'Story Mode shows real data: device, screen, GPU, the Canvas/Audio/WebGL hashes, the number of blocked trackers and, after "Check network", the IP, ISP and TLS version. Question marks used to stand in their place',
+        'The "Server fingerprint" section shows the TLS version and cipher, the HTTP protocol, the header order and the Client Hints: the server sent them, the page never displayed them',
+        'The WebRTC leak check works: the "WebRTC" row and the advice about the leak come from an actual probe instead of always reading "Safe"',
+        'The "What the site knows about you" block takes the full page width instead of a third',
+        'The page no longer downloads share-card.svg three times or writes test cookies on every render: the profiling module whose findings were never shown is gone',
+        '"Print / Save" on a phone saves a static snapshot of the page with its styles and without scripts; the saved file used to run the whole check again',
+        'The page code is split into modules (styles, translations, signal collection, uniqueness model, network, rendering) and cleared of unused functions and strings. The uniqueness percentage may shift by a point or two: the audio fingerprint bucket in the model was fixed'
+      ],
+      uz:[
+        '«Hikoya» rejimi haqiqiy maʼlumotlarni koʻrsatadi: qurilma, ekran, GPU, Canvas/Audio/WebGL xeshlari, bloklangan trekerlar soni, «Tarmoqni tekshirish»dan keyin esa IP, provayder va TLS versiyasi. Ilgari ularning oʻrnida soʻroq belgilari turardi',
+        '«Server barmoq izi» boʻlimi TLS versiyasi va shifrini, HTTP protokolini, sarlavhalar tartibini va Client Hints ni koʻrsatadi: server ularni yuborardi, sahifa esa koʻrsatmasdi',
+        'WebRTC oqishini tekshirish ishlaydi: «WebRTC» qatori va oqish haqidagi maslahat haqiqiy tekshiruvga asoslanadi, doim «Xavfsiz» emas',
+        '«Sayt siz haqingizda nimalarni biladi» bloki sahifaning uchdan bir qismini emas, toʻliq kengligini egallaydi',
+        'Sahifa endi share-card.svg ni uch marta yuklamaydi va har chizishda sinov cookie larini yozmaydi: natijalari hech qayerda koʻrsatilmagan profillash moduli olib tashlandi',
+        'Telefonda «Chop etish / Saqlash» sahifaning statik nusxasini uslublar bilan va skriptlarsiz saqlaydi; ilgari saqlangan fayl butun tekshiruvni qaytadan ishga tushirardi',
+        'Sahifa kodi modullarga boʻlindi (uslublar, tarjimalar, signallarni yigʻish, noyoblik modeli, tarmoq, chizish) va ishlatilmaydigan funksiya va satrlardan tozalandi. Noyoblik foizi bir-ikki punktga siljishi mumkin: modeldagi audio barmoq izi guruhlanishi tuzatildi'
+      ]
+    }
+  },
+  {
+    version:'2.4.1',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'robots.txt разрешает и обучение ИИ: Content Signals теперь «поиск, ответы ИИ и обучение ИИ — да» (ai-train=yes). Пока владелец не решил, про обучение не говорилось ничего'
+      ],
+      en:[
+        'robots.txt allows AI training too: the Content Signals now say “search, AI answers and AI training: yes” (ai-train=yes). Until the owner decided, they said nothing about training'
+      ],
+      uz:[
+        "robots.txt endi sunʼiy intellektni oʻqitishga ham ruxsat beradi: Content Signals — «qidiruv, sunʼiy intellekt javoblari va sunʼiy intellektni oʻqitish — ha» (ai-train=yes). Ilgari, egasi qaror qilmaguncha, oʻqitish haqida hech narsa aytilmagan edi"
+      ]
+    }
+  },
+  {
+    version:'2.4.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Английская версия по адресу https://fprint.morgunov.tech/en/: ссылка на неё в LinkedIn, Telegram и других сетях показывает карточку на английском',
+        'Карточка ссылки теперь картинка PNG: прежний SVG LinkedIn и большинство мессенджеров не показывали',
+        'Выбор языка меняет адрес: английский — /en/, русский и узбекский — /, так что скопированная ссылка откроется на том же языке'
+      ],
+      en:[
+        'An English address, https://fprint.morgunov.tech/en/: a link to it on LinkedIn, Telegram and other networks shows an English preview',
+        'The link preview is a PNG image now: LinkedIn and most messengers did not show the SVG it used to be',
+        'Picking a language changes the address: English is /en/, Russian and Uzbek are /, so a copied link opens in the same language'
+      ],
+      uz:[
+        "Inglizcha manzil, https://fprint.morgunov.tech/en/: LinkedIn, Telegram va boshqa tarmoqlarda unga havola inglizcha kartochka bilan koʻrinadi",
+        "Havola kartochkasi endi PNG rasm: avvalgi SVG ni LinkedIn va koʻpchilik messenjerlar koʻrsatmasdi",
+        "Til tanlansa, manzil ham oʻzgaradi: inglizcha — /en/, ruscha va oʻzbekcha — /, shuning uchun nusxalangan havola oʻsha tilda ochiladi"
+      ]
+    }
+  },
+  {
+    version:'2.3.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'API теперь на адресе сайта: https://fprint.morgunov.tech/api/ (например, curl https://fprint.morgunov.tech/api/check). Старый адрес на workers.dev продолжает работать',
+        'Страница обращается к серверу на своём же адресе: запросы те же, меняется только имя хоста'
+      ],
+      en:[
+        'The API lives at the site’s own address: https://fprint.morgunov.tech/api/ (try curl https://fprint.morgunov.tech/api/check). The old workers.dev address keeps working',
+        'The page talks to the server on its own address: the same requests, only the hostname changes'
+      ],
+      uz:[
+        "API endi sayt manzilida: https://fprint.morgunov.tech/api/ (masalan, curl https://fprint.morgunov.tech/api/check). workers.dev dagi eski manzil ham ishlashda davom etadi",
+        "Sahifa serverga oʻz manzili orqali murojaat qiladi: soʻrovlar oʻsha-oʻsha, faqat xost nomi oʻzgaradi"
+      ]
+    }
+  },
+  {
+    version:'2.2.2',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Страницу проще найти поисковикам и ИИ-ассистентам: структурированные данные JSON-LD, файл llms.txt с описанием сервиса и Content Signals в robots.txt (поиск и ответы ИИ — да)',
+        'Код подтверждения сайта для Яндекс Вебмастера',
+        'Технические адреса Pages (*.pages.dev) закрыты от поисковиков'
+      ],
+      en:[
+        'Easier for search engines and AI assistants to find: JSON-LD structured data, an llms.txt that describes the service and Content Signals in robots.txt (search and AI answers: yes)',
+        'Site verification code for Yandex Webmaster',
+        'The technical Pages addresses (*.pages.dev) are hidden from search engines'
+      ],
+      uz:[
+        "Sahifani qidiruv tizimlari va sunʼiy intellekt yordamchilari osonroq topadi: JSON-LD tuzilgan maʼlumotlari, xizmatni tavsiflovchi llms.txt fayli va robots.txt dagi Content Signals (qidiruv va sunʼiy intellekt javoblari — ha)",
+        "Yandex Webmaster uchun saytni tasdiqlash kodi",
+        "Pages ning texnik manzillari (*.pages.dev) qidiruv tizimlaridan yashirildi"
+      ]
+    }
+  },
+  {
+    version:'2.2.1',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Запрос WHOIS убран: whoisjson.com требует API-ключ, которого у Worker-а нет, и ничего не возвращал, хотя ваш IP уходил туда при каждой проверке сети. Поле whois в ответе /api/scan осталось и всегда равно null',
+        'Карточка для соцсетей и запасная ссылка «Поделиться» показывают fprint.morgunov.tech вместо адреса, который не открывается',
+        'Ошибка /api/scan для неверной цели просит «домен или IP-адрес»: IPv6 тоже принимается',
+        'Убран неиспользуемый код и комментарии со ссылками на внутренний план'
+      ],
+      en:[
+        'WHOIS lookup removed: whoisjson.com needs an API key the Worker does not have, so it returned nothing, yet your IP was sent there on every “Check network”. The whois field stays in /api/scan, always null',
+        'The social preview card and the fallback share link show fprint.morgunov.tech instead of an address that does not open',
+        'The /api/scan error for an invalid target asks for “a domain or an IP address”: IPv6 is accepted too',
+        'Unused code and comments that referred to an internal plan removed'
+      ],
+      uz:[
+        "WHOIS soʻrovi olib tashlandi: whoisjson.com API kalitini talab qiladi, Worker-da u yoʻq, shuning uchun hech narsa qaytarmasdi, IP-ingiz esa har bir «Tarmoqni tekshirish»da u yerga yuborilardi. /api/scan javobidagi whois maydoni qoldi va doim null",
+        "Ijtimoiy tarmoqlar kartasi va zaxira «Ulashish» havolasi ochilmaydigan manzil oʻrniga fprint.morgunov.tech ni koʻrsatadi",
+        "Notoʻgʻri maqsad uchun /api/scan xatosi «domen yoki IP-manzil» soʻraydi: IPv6 ham qabul qilinadi",
+        "Ishlatilmaydigan kod va ichki rejaga ishora qiluvchi izohlar olib tashlandi"
+      ]
+    }
+  },
+  {
+    version:'2.2.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Cloudflare Worker fingerprint-api: /api/scan для IP и доменов (геолокация, DNS с обратной записью, DNS-блоклисты, прозрачность сертификатов, заголовки безопасности), /api/whoami и /api/check, тест скорости, кэш в KV, анонимная агрегированная статистика',
+        'Сторонние IP-сервисы заменены Worker-ом; к ним страница обращается, только если он недоступен',
+        'Раздел серверного отпечатка: что видит сервер до запуска JavaScript и где это расходится с браузером',
+        'Story Mode (?mode=story): те же данные как рассказ об одном дне',
+        'Единые карточки и исправления интерфейса',
+        'robots.txt, sitemap.xml, настоящая страница 404 и вступление без JavaScript',
+        'Уборка: убраны дубликаты, wrangler 4, починен selftest, CI с Dependabot, _headers для Pages, Pages раздаёт только site/, README и лицензия MIT',
+        'Тексты о приватности на RU/EN/UZ совпадают с тем, что делает код; FingerprintJS Pro убран',
+        'Геолокация IP через ipquery.io по HTTPS, запасной вариант — ipinfo.io',
+        'DNS-блоклисты сокращены до четырёх, отвечающих публичным резолверам — исправлен ложный вердикт «в чёрном списке»',
+        'Одна версия везде: страница, Worker (/api/health) и CHANGELOG.md; с этого выпуска — SemVer'
+      ],
+      en:[
+        'Cloudflare Worker fingerprint-api: /api/scan for an IP or a domain (geolocation, DNS with reverse lookup, DNS blocklists, certificate transparency, security headers), /api/whoami and /api/check, speed test, KV cache, anonymous aggregate stats',
+        'Third-party IP services replaced by the Worker; the page asks them only when it is down',
+        'Server-side fingerprint section: what the server sees before JavaScript runs, and where it contradicts the browser',
+        'Story Mode (?mode=story): the same data told as one day',
+        'Unified cards and UI fixes',
+        'robots.txt, sitemap.xml, a real 404 page and an intro that works without JavaScript',
+        'Cleanup: duplicates removed, wrangler 4, selftest repaired, CI with Dependabot, Pages _headers, Pages serves only site/, README and MIT license',
+        'Privacy texts in RU/EN/UZ now match what the code does; FingerprintJS Pro removed',
+        'IP geolocation via ipquery.io over HTTPS, ipinfo.io as fallback',
+        'DNS blocklists reduced to the four that answer public resolvers, fixing the false "blacklisted" verdict',
+        'One version everywhere: the page, the Worker (/api/health) and CHANGELOG.md; SemVer from this release on'
+      ],
+      uz:[
+        "Cloudflare Worker fingerprint-api: IP va domenlar uchun /api/scan (geolokatsiya, teskari yozuv bilan DNS, DNS qora roʻyxatlari, sertifikat shaffofligi, xavfsizlik sarlavhalari), /api/whoami va /api/check, tezlik testi, KV kesh, anonim umumiy statistika",
+        "Uchinchi tomon IP xizmatlari Worker bilan almashtirildi; sahifa ularga faqat Worker ishlamaganda murojaat qiladi",
+        "Server tomonidagi fingerprint boʻlimi: JavaScript ishga tushgunga qadar server nimani koʻradi va bu brauzer bilan qayerda mos kelmaydi",
+        "Story Mode (?mode=story): oʻsha maʼlumotlar bir kun haqidagi hikoya shaklida",
+        "Yagona kartalar va interfeys tuzatishlari",
+        "robots.txt, sitemap.xml, haqiqiy 404 sahifasi va JavaScriptsiz kirish matni",
+        "Tozalash: dublikatlar olib tashlandi, wrangler 4, selftest tuzatildi, Dependabot bilan CI, Pages uchun _headers, Pages faqat site/ ni tarqatadi, README va MIT litsenziyasi",
+        "RU/EN/UZ maxfiylik matnlari kod bajaradigan ishga mos keltirildi; FingerprintJS Pro olib tashlandi",
+        "IP geolokatsiyasi HTTPS orqali ipquery.io dan, zaxira — ipinfo.io",
+        "DNS qora roʻyxatlari ommaviy rezolverlarga javob beradigan toʻrttasiga qisqartirildi — notoʻgʻri «qora roʻyxatda» xulosasi tuzatildi",
+        "Hamma joyda bitta versiya: sahifa, Worker (/api/health) va CHANGELOG.md; shu chiqarilishdan boshlab SemVer"
+      ]
+    }
+  },
+  {
+    version:'2.1',
+    date:'2026-03-25',
+    changes:{
+      ru:['Новые сигналы: WebGL, AudioContext, Font fingerprinting','Симуляция трекеров (5 тестов)','Детекция подмены данных браузера','Персонализация рекомендаций по браузеру','Карточка рисков VPN','Модальное окно методологии'],
+      en:['New signals: WebGL, AudioContext, Font fingerprinting','Tracker simulation (5 tests)','Browser data spoofing detection','Browser-specific recommendations','VPN risk card','Methodology modal'],
+      uz:["Yangi signallar: WebGL, AudioContext, Font fingerprinting","Treker simulyatsiyasi (5 ta test)","Brauzer maʼlumotlarini soxtalashtirishni aniqlash","Brauzerga moslashtirilgan tavsiyalar","VPN xavf kartasi","Metodologiya modali"]
+    }
+  },
+  {
+    version: '2.0',
+    date: '2026-03-25',
+    changes: {
+      ru: [
+        'Полный редизайн: verdict-first архитектура',
+        'Группировка данных: идентификация, устройство, сеть',
+        'Блок рисков и персональные рекомендации',
+        'Нормализация частотных таблиц энтропии',
+        'Collapsible блок подробностей',
+      ],
+      en: [
+        'Full redesign: verdict-first architecture',
+        'Data grouping: identity, device, network',
+        'Risk cards and personal recommendations',
+        'Entropy frequency table normalization',
+        'Collapsible details block',
+      ],
+      uz: [
+        "Toʻliq qayta dizayn: verdict-first arxitektura",
+        "Maʼlumotlar guruhlash: identifikatsiya, qurilma, tarmoq",
+        "Xavf kartalari va shaxsiy tavsiyalar",
+        "Entropiya chastota jadvallarini normalizatsiya",
+        "Collapsible tafsilotlar bloki",
+      ]
+    }
+  },
+  {
+    version: '1.5',
+    date: '2025-12-15',
+    changes: {
+      ru: [
+        'Новые сигналы: голоса синтеза речи, CSS медиа-функции, математический отпечаток JS',
+        'Расширен список шрифтов с 10 до 48 для детекции',
+        'Добавлена тема высокой контрастности (◑)',
+        'Global Privacy Control (GPC) вместо устаревшего DNT',
+        'Улучшен детектор VPN — убраны ложные срабатывания для Google/Amazon/Azure',
+        'Исправлены подсказки: Canvas защита, WebRTC отключение, Battery API',
+        'Переименована кнопка «Сохранить PDF» → «Распечатать / Сохранить»',
+      ],
+      en: [
+        'New signals: speech synthesis voices, CSS media features, JS math fingerprint',
+        'Font detection list expanded from 10 to 48 fonts',
+        'High contrast theme added (◑)',
+        'Global Privacy Control (GPC) replacing legacy DNT',
+        'VPN detector improved — removed false positives for Google/Amazon/Azure users',
+        'Fixed advice text: Canvas protection, WebRTC blocking, Battery API deprecation notice',
+        'Renamed "Save PDF" button to "Print / Save"',
+      ],
+      uz: [
+        "Yangi signallar: nutq sintezi ovozlari, CSS media xususiyatlari, JS matematik fingerprint",
+        "Shrift aniqlash roʻyxati 10 dan 48 tagacha kengaytirildi",
+        "Yuqori kontrast mavzusi qoʻshildi (◑)",
+        "Eski DNT oʻrniga Global Privacy Control (GPC)",
+        "VPN detektori yaxshilandi — Google/Amazon/Azure uchun notoʻgʻri natijalar olib tashlandi",
+        "Matnlar tuzatildi: Canvas himoyasi, WebRTC bloklash, Battery API",
+        "\"PDF saqlash\" tugmasi \"Chop etish / Saqlash\" ga oʻzgartirildi",
+      ]
+    }
+  },
+  {
+    version: '1.1',
+    date: '2025-10-11',
+    // date preserved from original release
+    changes: {
+      ru: [
+        'Добавлен детектор батареи (Battery API)',
+        'Улучшена точность определения устройства',
+        'Исправлены мелкие ошибки интерфейса',
+      ],
+      en: [
+        'Added battery detector (Battery API)',
+        'Improved device detection accuracy',
+        'Minor UI bug fixes',
+      ],
+      uz: [
+        "Batareya detektori qoʻshildi (Battery API)",
+        "Qurilma aniqlash aniqligi yaxshilandi",
+        "Kichik interfeys xatolari tuzatildi",
+      ]
+    }
+  },
+  {
+    version: '1.0',
+    date: '2025-10-07',
+    // date preserved from original release
+    changes: {
+      ru: [
+        'Первый публичный выпуск',
+        'Canvas, Audio, WebGL отпечатки',
+        'IP-детекция с 5 источниками fallback',
+        'VPN, AdBlock, WebRTC детекция',
+        'PDF-экспорт и функция «Поделиться»',
+        'Поддержка RU / EN / UZ',
+      ],
+      en: [
+        'Initial public release',
+        'Canvas, Audio, WebGL fingerprinting',
+        'IP detection with 5-source fallback',
+        'VPN, AdBlock, WebRTC detection',
+        'PDF export and Share function',
+        'RU / EN / UZ language support',
+      ],
+      uz: [
+        'Birinchi ommaviy chiqarilish',
+        'Canvas, Audio, WebGL fingerprint',
+        "IP aniqlash, 5 ta zaxira manba",
+        'VPN, AdBlock, WebRTC aniqlash',
+        "PDF eksport va 'Ulashish' funksiyasi",
+        "RU / EN / UZ til qoʻllab-quvvatlashi",
+      ]
+    }
+  }
+];
