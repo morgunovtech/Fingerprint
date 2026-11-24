@@ -50,9 +50,9 @@ The page talks to the deployed Worker (`WORKER_API` in `site/index.html`). Port 
 ## Deploy
 
 - **Site:** Cloudflare Pages deploys `main` and serves `site/` (`pages_build_output_dir` in the root `wrangler.toml`).
-- **Worker:** deployed by hand with `cd worker && npm run deploy` (runs `wrangler deploy`). `worker/wrangler.toml` holds the `CACHE` KV binding and `ALLOWED_ORIGINS`.
+- **Worker:** deployed by hand with `cd worker && npm run deploy` (runs `wrangler deploy`). `worker/wrangler.toml` holds the `CACHE` KV binding, `ALLOWED_ORIGINS` and the two hosts the Worker answers on: its workers.dev address and the route `fprint.morgunov.tech/api/*`, which sends `/api/` on the site's own host to the Worker instead of Pages.
 
-For your own copy: create a KV namespace (`npx wrangler kv namespace create CACHE`), put its id in `worker/wrangler.toml`, set `ALLOWED_ORIGINS` to your site, and in `site/index.html` point `WORKER_API` at your Worker. There are no secrets to configure: ipquery.io, ipinfo.io, Google DNS and crt.sh are used without a key.
+For your own copy: create a KV namespace (`npx wrangler kv namespace create CACHE`), put its id in `worker/wrangler.toml`, set `ALLOWED_ORIGINS` to your site, replace the route with one on your own zone or delete it (the Worker then answers on workers.dev only), and in `site/index.html` point `WORKER_API` at your Worker. There are no secrets to configure: ipquery.io, ipinfo.io, Google DNS and crt.sh are used without a key.
 
 ---
 Built by [Semyon Morgunov](https://s.morgunov.tech) with Claude Code as pair programmer.

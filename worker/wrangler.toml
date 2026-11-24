@@ -2,9 +2,23 @@ name = "fingerprint-api"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
 
+# The API answers on two hosts with the same /api/... paths:
+# - https://fprint.morgunov.tech/api/ — a route on the site's own host (zone morgunov.tech):
+#   requests under /api/ go to the Worker instead of Pages, everything else stays Pages.
+# - https://fingerprint-api.xfxrrpkvr5.workers.dev — the original address, kept for
+#   everyone who already calls it. With routes set, wrangler turns workers.dev off
+#   unless workers_dev is true, so it is written out.
+workers_dev = true
+routes = [
+  { pattern = "fprint.morgunov.tech/api/*", zone_name = "morgunov.tech" },
+]
+
 [[kv_namespaces]]
 binding = "CACHE"
 id = "8451daf9f5af49c9bbf730f95460697b"
 
+# Calls from the page to fprint.morgunov.tech/api/ are same-origin and need no CORS. The
+# site's origin stays listed for calls to the workers.dev address: the page makes them
+# until it moves to its own host, and cached copies of older pages keep making them.
 [vars]
 ALLOWED_ORIGINS = "https://fprint.morgunov.tech,http://localhost:3000"
