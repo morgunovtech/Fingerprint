@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The English link-preview card, the one /en/ names; share-card.svg is the Russian one.
+  LinkedIn and most messengers do not show SVG, so og:image points at share-card-en.png,
+  rendered from this file with headless Chrome (the command is in README, "Link previews").
+-->
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f172a" />
+      <stop offset="1" stop-color="#111827" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <g font-family="'Inter','Segoe UI','Helvetica Neue',Arial,sans-serif">
+    <text x="72" y="118" fill="#60a5fa" font-size="40" font-weight="600">Fingerprint by morgunov.tech</text>
+    <text x="72" y="208" fill="#f8fafc" font-size="72" font-weight="700">How anonymous</text>
+    <text x="72" y="290" fill="#f8fafc" font-size="72" font-weight="700">are you online?</text>
+    <text x="72" y="362" fill="#cbd5f5" font-size="30" font-weight="500">See what any website learns the moment you open it,</text>
+    <text x="72" y="404" fill="#94a3b8" font-size="26">how unique your browser is, and how to hide.</text>
+    <circle cx="1010" cy="232" r="128" fill="rgba(96,165,250,0.18)" />
+    <text x="1010" y="250" fill="#60a5fa" font-size="104" font-weight="700" text-anchor="middle">99%</text>
+    <text x="1010" y="298" fill="#cbd5f5" font-size="26" text-anchor="middle">anonymity</text>
+    <text x="72" y="484" fill="#60a5fa" font-size="30" font-weight="600">One click and you know your risk</text>
+    <text x="72" y="532" fill="#94a3b8" font-size="26">Save as PDF • Check your IP • Share the result</text>
+    <text x="72" y="580" fill="#64748b" font-size="26">https://fprint.morgunov.tech</text>
+  </g>
+</svg>

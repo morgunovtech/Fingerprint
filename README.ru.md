@@ -2,7 +2,7 @@
 
 Проверка приватности для обычных пользователей: страница показывает, что любой сайт узнаёт о вашем браузере в момент открытия, насколько уникальным это вас делает и как стать менее заметным для слежки.
 
-**Сайт:** https://fprint.morgunov.tech · **API:** https://fprint.morgunov.tech/api/ · **Лицензия:** [MIT](LICENSE) · [English version](README.md)
+**Сайт:** https://fprint.morgunov.tech (по-английски: https://fprint.morgunov.tech/en/) · **API:** https://fprint.morgunov.tech/api/ · **Лицензия:** [MIT](LICENSE) · [English version](README.md)
 
 ## Что умеет
 
@@ -46,10 +46,19 @@ curl https://fprint.morgunov.tech/api/health
 
 ## Как устроено
 
-- `site/` — то, что раздаёт Cloudflare Pages. Без сборки, без фреймворка, без npm. `index.html` — всё приложение: разметка, стили и один встроенный скрипт со строками RU/EN/UZ, моделью уникальности и Story Mode. `src/profiler.js` — ES-модуль, который страница импортирует для профиля. Плюс `_headers`, `404.html`, `robots.txt`, `sitemap.xml`, `llms.txt` и `share-card.svg`.
+- `site/` — то, что раздаёт Cloudflare Pages. Без сборки, без фреймворка, без npm. `index.html` — всё приложение: разметка, стили и один встроенный скрипт со строками RU/EN/UZ, моделью уникальности и Story Mode. `src/profiler.js` — ES-модуль, который страница импортирует для профиля. Плюс `_headers`, `404.html`, `robots.txt`, `sitemap.xml`, `llms.txt` и карточки для превью ссылок.
+- **`/en/` и превью ссылок.** LinkedIn, Telegram и другие превью ссылок читают теги `og:`, не запуская страницу, поэтому английской странице нужны английские теги в самом HTML. `functions/en/index.js` — функция Pages: на `/en/` она отдаёт `site/index.html`, переписав теги `<head>` по-английски (заголовок, описание, канонический адрес, `og:url`, картинку, `og:locale`); язык страница берёт из адреса. Карточки — PNG 1200×630, потому что SVG LinkedIn и большинство мессенджеров не показывают: `share-card.png` для `/`, `share-card-en.png` для `/en/`. Их исходники — `share-card.svg` (его же скачивает проверка сети) и `share-card-en.svg`; после правки перерисуйте карточку из корня репозитория в headless Chrome:
+
+  ```sh
+  for card in share-card share-card-en; do
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+      --user-data-dir="$(mktemp -d)" --hide-scrollbars --force-device-scale-factor=1 \
+      --window-size=1200,630 --screenshot="$PWD/site/$card.png" "file://$PWD/site/$card.svg"
+  done
+  ```
 - **Для поисковиков и ИИ-ассистентов:** в `<head>` `index.html` — мета подтверждения Яндекс Вебмастера и блок JSON-LD `WebApplication` (данные, браузер их не выполняет; автор — тот же `Person`, что на s.morgunov.tech); в каждой группе `robots.txt` — Content Signals `search=yes, ai-input=yes` ([contentsignals.org](https://contentsignals.org); сигнала `ai-train` нет ни в какую сторону), потому что робот со своей группой не читает `*`; `llms.txt` простым текстом описывает страницу, приватность и API.
 - `worker/` — Cloudflare Worker `fingerprint-api` на чистом JavaScript, без зависимостей в рантайме: `/api/whoami`, `/api/check` (простой текст для `curl`), `/api/scan`, `/api/speedtest/*`, `/api/stats`, `/api/health`. В Workers KV лежат кэш сканов, статистика и лимит запросов (60 в минуту на IP).
-- `selftest.js` запускает встроенный скрипт и `profiler.js` в песочнице Node `vm` с заглушкой DOM и проверяет хелперы, оценку, паритет ключей переводов и элементы управления, а также статические файлы: JSON-LD разбирается и называет канонический адрес, в каждой группе `robots.txt` есть сигналы, `llms.txt` ссылается на сайт, репозиторий и автора. CI запускает его на каждом PR вместе с пробной сборкой Worker-а, `npm audit` и gitleaks.
+- `selftest.js` запускает встроенный скрипт и `profiler.js` в песочнице Node `vm` с заглушкой DOM и проверяет хелперы, оценку, паритет ключей переводов и элементы управления, а также статические файлы: JSON-LD разбирается и называет канонический адрес, в каждой группе `robots.txt` есть сигналы, `llms.txt` ссылается на сайт, репозиторий и автора, обе карточки превью — PNG 1200×630, а функция `/en/` находит каждый тег, который переписывает, не оставляет русского в английских тегах превью и берёт те же английские тексты, что и страница. CI запускает его на каждом PR вместе с пробной сборкой Worker-а, `npm audit` и gitleaks.
 - **Версии.** Выпуск называет одно число, и оно живёт в четырёх местах, которые должны совпадать: `APP_VERSION` в `site/index.html` (бейдж в подвале и окно истории изменений с теми же записями на RU/EN/UZ), `VERSION` в `worker/src/index.js` (его отдаёт `/api/health`), `version` в `worker/package.json` и верхняя запись [CHANGELOG.md](CHANGELOG.md). Выпуски помечаются тегами `vX.Y.Z` на `main`; с 2.2.0 версии следуют SemVer (раньше были из двух частей).
 
 ## Запуск локально
@@ -71,7 +80,7 @@ node selftest.js
 
 ## Деплой
 
-- **Сайт:** Cloudflare Pages деплоит `main` и раздаёт `site/` (`pages_build_output_dir` в корневом `wrangler.toml`).
+- **Сайт:** Cloudflare Pages деплоит `main` и раздаёт `site/` (`pages_build_output_dir` в корневом `wrangler.toml`), а также функцию из `functions/` для `/en/`.
 - **Worker:** деплоится вручную командой `cd worker && npm run deploy` (запускает `wrangler deploy`). В `worker/wrangler.toml` — привязка KV `CACHE`, `ALLOWED_ORIGINS` и два адреса, на которых отвечает Worker: его адрес на workers.dev и маршрут `fprint.morgunov.tech/api/*`, который отдаёт `/api/` на собственном адресе сайта Worker-у вместо Pages.
 
 Для своей копии: создайте пространство KV (`npx wrangler kv namespace create CACHE`), впишите его id в `worker/wrangler.toml`, укажите в `ALLOWED_ORIGINS` свой сайт, замените маршрут своим в своей зоне или удалите его (тогда Worker отвечает только на workers.dev), а в `site/index.html` направьте `WORKER_API` на свой Worker. Секретов настраивать не нужно: ipquery.io, ipinfo.io, Google DNS и crt.sh используются без ключа.

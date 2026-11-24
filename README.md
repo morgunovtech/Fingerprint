@@ -2,7 +2,7 @@
 
 A privacy check for everyday users: it shows what any website learns about your browser the moment you open it, how unique that makes you, and how to be harder to track.
 
-**Live:** https://fprint.morgunov.tech · **API:** https://fprint.morgunov.tech/api/ · **License:** [MIT](LICENSE) · 🇷🇺 [По-русски](README.ru.md)
+**Live:** https://fprint.morgunov.tech (in English: https://fprint.morgunov.tech/en/) · **API:** https://fprint.morgunov.tech/api/ · **License:** [MIT](LICENSE) · 🇷🇺 [По-русски](README.ru.md)
 
 ## What it does
 
@@ -46,10 +46,19 @@ curl https://fprint.morgunov.tech/api/health
 
 ## How it's built
 
-- `site/` is what Cloudflare Pages serves. No build step, no framework, no npm. `index.html` is the whole app: markup, styles and one inline script with the RU/EN/UZ strings, the uniqueness model and Story Mode. `src/profiler.js` is an ES module the page imports for the profile. Plus `_headers`, `404.html`, `robots.txt`, `sitemap.xml`, `llms.txt` and `share-card.svg`.
+- `site/` is what Cloudflare Pages serves. No build step, no framework, no npm. `index.html` is the whole app: markup, styles and one inline script with the RU/EN/UZ strings, the uniqueness model and Story Mode. `src/profiler.js` is an ES module the page imports for the profile. Plus `_headers`, `404.html`, `robots.txt`, `sitemap.xml`, `llms.txt` and the link-preview cards.
+- **`/en/` and link previews.** LinkedIn, Telegram and other link previews read the `og:` tags without running the page, so the English page needs English tags in the HTML itself. `functions/en/index.js` is a Pages Function that serves `/en/` as `site/index.html` with its `<head>` tags rewritten in English (title, description, canonical, `og:url`, image, `og:locale`); the page picks English from the address. The cards are PNG, 1200×630, because LinkedIn and most messengers do not show SVG: `share-card.png` for `/`, `share-card-en.png` for `/en/`. Their sources are `share-card.svg` (also the file the network test downloads) and `share-card-en.svg`; after changing one, render it again from the repo root with headless Chrome:
+
+  ```sh
+  for card in share-card share-card-en; do
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+      --user-data-dir="$(mktemp -d)" --hide-scrollbars --force-device-scale-factor=1 \
+      --window-size=1200,630 --screenshot="$PWD/site/$card.png" "file://$PWD/site/$card.svg"
+  done
+  ```
 - **For search engines and AI assistants:** the `<head>` of `index.html` carries the Yandex Webmaster verification meta and a JSON-LD `WebApplication` block (data the browser never runs; the author is the same `Person` as on s.morgunov.tech); every group in `robots.txt` gives the Content Signals `search=yes, ai-input=yes` ([contentsignals.org](https://contentsignals.org); no `ai-train` signal either way), because a crawler with its own group ignores `*`; `llms.txt` describes the page, its privacy and the API in plain text.
 - `worker/` is the Cloudflare Worker `fingerprint-api` in plain JavaScript, no runtime dependencies: `/api/whoami`, `/api/check` (plain text for `curl`), `/api/scan`, `/api/speedtest/*`, `/api/stats`, `/api/health`. Workers KV holds the scan cache, the stats and the rate limit (60 requests per minute per IP).
-- `selftest.js` runs the inline script and `profiler.js` in a Node `vm` sandbox with a stub DOM and checks the helpers, the score, translation key parity and the UI controls, plus the static files: the JSON-LD parses and names the canonical address, every `robots.txt` group has the content signals, `llms.txt` links the site, the repository and the author. CI runs it on every PR, along with a Worker dry-run build, `npm audit` and gitleaks.
+- `selftest.js` runs the inline script and `profiler.js` in a Node `vm` sandbox with a stub DOM and checks the helpers, the score, translation key parity and the UI controls, plus the static files: the JSON-LD parses and names the canonical address, every `robots.txt` group has the content signals, `llms.txt` links the site, the repository and the author, both preview cards are 1200×630 PNGs, and the `/en/` Function finds every tag it rewrites, leaves no Russian in the English preview tags and uses the same English texts as the page. CI runs it on every PR, along with a Worker dry-run build, `npm audit` and gitleaks.
 - **Versions.** One number names a release and lives in four places that must agree: `APP_VERSION` in `site/index.html` (the footer badge and the changelog modal, which carries the same entries in RU/EN/UZ), `VERSION` in `worker/src/index.js` (what `/api/health` reports), `version` in `worker/package.json`, and the top entry of [CHANGELOG.md](CHANGELOG.md). Releases are tagged `vX.Y.Z` on `main`; versions follow SemVer from 2.2.0 (earlier ones had two parts).
 
 ## Run locally
@@ -71,7 +80,7 @@ The page talks to the deployed Worker at https://fprint.morgunov.tech (`WORKER_A
 
 ## Deploy
 
-- **Site:** Cloudflare Pages deploys `main` and serves `site/` (`pages_build_output_dir` in the root `wrangler.toml`).
+- **Site:** Cloudflare Pages deploys `main` and serves `site/` (`pages_build_output_dir` in the root `wrangler.toml`), plus the Function in `functions/` for `/en/`.
 - **Worker:** deployed by hand with `cd worker && npm run deploy` (runs `wrangler deploy`). `worker/wrangler.toml` holds the `CACHE` KV binding, `ALLOWED_ORIGINS` and the two hosts the Worker answers on: its workers.dev address and the route `fprint.morgunov.tech/api/*`, which sends `/api/` on the site's own host to the Worker instead of Pages.
 
 For your own copy: create a KV namespace (`npx wrangler kv namespace create CACHE`), put its id in `worker/wrangler.toml`, set `ALLOWED_ORIGINS` to your site, replace the route with one on your own zone or delete it (the Worker then answers on workers.dev only), and in `site/index.html` point `WORKER_API` at your Worker. There are no secrets to configure: ipquery.io, ipinfo.io, Google DNS and crt.sh are used without a key.

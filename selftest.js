@@ -796,8 +796,59 @@ const stateRef = vm.runInContext('state', sandbox);
 const invalidateSnapshot = () => vm.runInContext('snapshotCache = null; snapshotPromise = null;', sandbox);
 const I18N = vm.runInContext('I18N', sandbox);
 
+// A PNG of 1200×630 in site/: the size LinkedIn, Telegram and X show in full.
+function assertPreviewPng(url) {
+  const prefix = 'https://fprint.morgunov.tech/';
+  assert.ok(url.startsWith(prefix) && url.endsWith('.png'), url);
+  const png = fs.readFileSync(path.join(__dirname, 'site', url.slice(prefix.length)));
+  assert.equal(png.toString('ascii', 1, 4), 'PNG', url);
+  assert.equal(png.readUInt32BE(16), 1200, url);
+  assert.equal(png.readUInt32BE(20), 630, url);
+}
+
+const metaContent = (page, attrName, key) => {
+  const found = page.match(new RegExp(`<meta (?:id="\\w+" )?${attrName}="${key}" content="([^"]*)" />`));
+  assert.ok(found, `${attrName}=${key}`);
+  return found[1];
+};
+
 (async () => {
   const profilerModule = await import(new URL('./site/src/profiler.js', `file://${__dirname}/`).href);
+
+  // Link previews. / carries the Russian tags, /en/ the English ones: functions/en/index.js
+  // rewrites them in the same page, so every tag it looks for must still be there.
+  {
+    const head = html.slice(0, html.indexOf('</head>'));
+    ['og:image', 'twitter:image'].forEach(key => {
+      assertPreviewPng(metaContent(head, key.startsWith('og:') ? 'property' : 'name', key));
+    });
+    assert.equal(metaContent(head, 'property', 'og:image:width'), '1200');
+    assert.equal(metaContent(head, 'property', 'og:image:height'), '630');
+    assert.match(head, /<link rel="alternate" hreflang="en" href="https:\/\/fprint\.morgunov\.tech\/en\/" \/>/);
+    assert.match(head, /<link rel="alternate" hreflang="x-default" href="https:\/\/fprint\.morgunov\.tech\/" \/>/);
+
+    const { englishPage, EN } = await import(new URL('./functions/en/index.js', `file://${__dirname}/`).href);
+    const { html: en, missing } = englishPage(html);
+    assert.deepEqual(missing, [], 'functions/en/index.js could not find these tags in site/index.html');
+    const enHead = en.slice(0, en.indexOf('</head>'));
+    assert.match(enHead, /<html lang="en">/);
+    assert.match(enHead, /<link rel="canonical" href="https:\/\/fprint\.morgunov\.tech\/en\/" \/>/);
+    assert.equal(metaContent(enHead, 'property', 'og:url'), 'https://fprint.morgunov.tech/en/');
+    assert.equal(metaContent(enHead, 'property', 'og:title'), EN.title);
+    assert.equal(metaContent(enHead, 'property', 'og:description'), EN.description);
+    assert.equal(metaContent(enHead, 'name', 'twitter:title'), EN.title);
+    assert.equal(metaContent(enHead, 'name', 'twitter:description'), EN.description);
+    assert.equal(metaContent(enHead, 'property', 'og:locale'), 'en_US');
+    ['og:image', 'twitter:image'].forEach(key => {
+      const url = metaContent(enHead, key.startsWith('og:') ? 'property' : 'name', key);
+      assert.match(url, /-en\.png$/);
+      assertPreviewPng(url);
+    });
+    // Only the JSON-LD block and the page body may stay Russian on /en/.
+    const previewTags = enHead.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '').match(/<meta [^>]*>/g);
+    previewTags.forEach(tag => assert.doesNotMatch(tag, /[\u0400-\u04FF]/, tag));
+    assert.equal(en.slice(enHead.length), html.slice(head.length), 'only the head changes');
+  }
   sandbox.__profilerModule = profilerModule;
   sandbox.window.__profilerModule = profilerModule;
 
@@ -1057,6 +1108,36 @@ const I18N = vm.runInContext('I18N', sandbox);
   await sandbox.render('en');
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(documentElement.lang, 'en');
+  // The tags the page sets for English match the ones /en/ serves to link previews.
+  {
+    const { EN } = await import(new URL('./functions/en/index.js', `file://${__dirname}/`).href);
+    assert.equal(elements.get('ogTitle').content, EN.title);
+    assert.equal(elements.get('ogDescription').content, EN.description);
+    assert.equal(elements.get('twTitle').content, EN.title);
+    assert.equal(elements.get('twDescription').content, EN.description);
+  }
+  // /en/ opens in English over a saved Russian choice; a language picked there moves the
+  // address back to / (and English to /en/), so a shared link previews in that language.
+  {
+    const realLocation = windowStub.location;
+    const replaced = [];
+    windowStub.history = { replaceState: (_, __, url) => replaced.push(url) };
+    const savedLang = localStore.get('fp_lang');
+    localStore.set('fp_lang', 'ru');
+    windowStub.location = { origin: 'https://fprint.morgunov.tech', pathname: '/en/', search: '', hash: '' };
+    assert.equal(vm.runInContext('detectLang()', sandbox), 'en');
+    vm.runInContext("syncLangPath('ru')", sandbox);
+    windowStub.location = { origin: 'https://fprint.morgunov.tech', pathname: '/', search: '?mode=story', hash: '' };
+    assert.equal(vm.runInContext('detectLang()', sandbox), 'ru');
+    vm.runInContext("syncLangPath('en')", sandbox);
+    vm.runInContext("syncLangPath('ru')", sandbox);
+    windowStub.location = realLocation;
+    vm.runInContext("syncLangPath('en')", sandbox);
+    assert.deepEqual(replaced, ['/', '/en/?mode=story'], 'the address changes only between / and /en/');
+    delete windowStub.history;
+    if (savedLang === undefined) localStore.delete('fp_lang');
+    else localStore.set('fp_lang', savedLang);
+  }
   assert.ok(elements.get('introTitle').textContent.length > 0);
   assert.ok(elements.get('langBtn').textContent.includes('Language'));
   let englishShock = '';
