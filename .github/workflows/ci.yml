@@ -26,8 +26,9 @@ jobs:
       - run: npm audit --audit-level=high
         working-directory: worker
 
-  # Private repos on the free plan get no GitHub secret scanning; gitleaks
-  # scans the whole history instead (.gitleaksignore lists the one public key).
+  # The repo is public and GitHub secret scanning watches new pushes; gitleaks
+  # scans the whole history on every run as a second line of defence
+  # (.gitleaksignore lists the one historical public key).
   secrets:
     name: secrets
     # The action lists the PR's commits through the API; the default token

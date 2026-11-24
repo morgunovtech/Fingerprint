@@ -1,5 +1,6 @@
 # One grouped PR per week with the Worker's npm updates (wrangler), monthly
-# PRs for the Actions. CI checks them; nothing merges automatically.
+# PRs for the Actions. CI checks them; dependabot-automerge.yml then merges
+# minor and patch updates once CI is green, majors wait for a human.
 version: 2
 updates:
   - package-ecosystem: npm
