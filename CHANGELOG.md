@@ -2,6 +2,14 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 2.4.1 — 2026-11-24
+
+`ai-train=yes`: the owner allows AI training. What the page checks and sends does not change.
+
+- Every group in `robots.txt` now gives the Content Signals `search=yes, ai-input=yes, ai-train=yes` (https://contentsignals.org): besides search results and AI answers, the page may be used to train AI models. In 2.2.2 `ai-train` was left unset until the owner decided. The comment above the first group says the same.
+- `selftest.js` expects `ai-train=yes` in every group and exactly one `Content-Signal` line per group.
+- The Worker has no change but the version number it reports at `/api/health`.
+
 ## 2.4.0 — 2026-11-24
 
 An English address for links shared on LinkedIn and elsewhere, and a link preview those sites can show. What the page checks and sends does not change.

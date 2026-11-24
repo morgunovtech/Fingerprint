@@ -52,9 +52,9 @@ assertNoMergeMarkers(script, 'inline script');
   const groups = robots.split(/\n(?=User-agent:)/).filter(group => group.startsWith('User-agent:'));
   assert.ok(groups.length > 1);
   groups.forEach(group => {
-    assert.match(group, /^Content-Signal: search=yes, ai-input=yes$/m, group.split('\n')[0]);
+    assert.match(group, /^Content-Signal: search=yes, ai-input=yes, ai-train=yes$/m, group.split('\n')[0]);
   });
-  assert.doesNotMatch(robots, /ai-train/, 'no ai-train signal either way');
+  assert.equal((robots.match(/^Content-Signal:/gm) || []).length, groups.length, 'one Content-Signal line per group');
 
   const llms = fs.readFileSync(path.join(__dirname, 'site', 'llms.txt'), 'utf8');
   assert.match(llms, /^# Fingerprint/);
