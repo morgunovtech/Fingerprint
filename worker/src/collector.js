@@ -3,7 +3,6 @@
  */
 
 import { fetchGeolocation } from './providers/geolocation.js';
-import { fetchWhois } from './providers/whois.js';
 import { fetchDns } from './providers/dns.js';
 import { fetchReputation } from './providers/reputation.js';
 import { fetchSsl } from './providers/ssl.js';
@@ -43,9 +42,7 @@ async function resolveDomain(domain) {
   }
 }
 
-async function runProvider(name, fn, env) {
-  const cacheKey = `fp:${name}`;
-  // We don't cache at orchestrator level — providers handle their own caching
+async function runProvider(name, fn) {
   try {
     const start = Date.now();
     const result = await fn();
@@ -86,16 +83,15 @@ export async function collectFingerprint(rawTarget, env) {
   const tasks = [];
 
   if (resolvedIp) {
-    tasks.push(runProvider('geolocation', () => fetchGeolocation(resolvedIp), env));
+    tasks.push(runProvider('geolocation', () => fetchGeolocation(resolvedIp)));
   }
-  tasks.push(runProvider('whois', () => fetchWhois(domain || resolvedIp || target), env));
-  tasks.push(runProvider('dns', () => fetchDns(domain, resolvedIp), env));
+  tasks.push(runProvider('dns', () => fetchDns(domain, resolvedIp)));
   if (resolvedIp) {
-    tasks.push(runProvider('reputation', () => fetchReputation(resolvedIp), env));
+    tasks.push(runProvider('reputation', () => fetchReputation(resolvedIp)));
   }
   if (domain) {
-    tasks.push(runProvider('ssl', () => fetchSsl(domain), env));
-    tasks.push(runProvider('http_headers', () => fetchHttpHeaders(domain), env));
+    tasks.push(runProvider('ssl', () => fetchSsl(domain)));
+    tasks.push(runProvider('http_headers', () => fetchHttpHeaders(domain)));
   }
 
   const results = await Promise.allSettled(tasks);
@@ -108,6 +104,7 @@ export async function collectFingerprint(rawTarget, env) {
     sources_ok: [],
     sources_failed: [],
     geolocation: null,
+    // No WHOIS lookup since 2.2.1; the key stays null so API consumers keep the same shape.
     whois: null,
     dns: null,
     reputation: null,

@@ -834,6 +834,33 @@ const I18N = vm.runInContext('I18N', sandbox);
     globalThis.fetch = realFetch;
   }
 
+  // Worker scan of an IP: geolocation, reverse DNS and blocklists only. No WHOIS lookup;
+  // the whois key stays null so the /api/scan shape is unchanged.
+  const { collectFingerprint } = await import(new URL('./worker/src/collector.js', `file://${__dirname}/`).href);
+  const scanUrls = [];
+  const realLog = console.log;
+  globalThis.fetch = async url => {
+    const target = String(url);
+    scanUrls.push(target);
+    if (target.startsWith('https://api.ipquery.io/')) {
+      return makeJsonResponse({ ip: '198.51.100.7', isp: { asn: 'AS8193', org: 'Uzbektelekom', isp: 'Uzbektelekom' }, location: { country_code: 'UZ' }, risk: {} });
+    }
+    if (target.startsWith('https://dns.google/')) return makeJsonResponse({ Status: 3 });
+    throw new Error(`Unexpected Worker fetch: ${target}`);
+  };
+  console.log = () => {};
+  try {
+    const scan = await collectFingerprint('198.51.100.7', {});
+    assert.ok('whois' in scan);
+    assert.equal(scan.whois, null);
+    assert.ok(!scan.sources_ok.includes('whois') && !scan.sources_failed.includes('whois'));
+    assert.ok(scan.sources_ok.includes('geolocation'));
+    assert.ok(scanUrls.every(url => url.startsWith('https://api.ipquery.io/') || url.startsWith('https://dns.google/')), scanUrls.join(' '));
+  } finally {
+    globalThis.fetch = realFetch;
+    console.log = realLog;
+  }
+
   assert.equal(typeof sandbox.detectPointerType, 'function');
   assert.equal(sandbox.detectPointerType(), 'none');
   assert.deepEqual(sandbox.getLanguages(), ['ru-RU', 'en-US']);

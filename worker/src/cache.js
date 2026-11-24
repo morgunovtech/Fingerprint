@@ -5,7 +5,6 @@
 
 const TTL = {
   geo: 86400,        // 24h
-  whois: 604800,     // 7d
   dns: 3600,         // 1h
   reputation: 21600, // 6h
   ssl: 86400,        // 24h

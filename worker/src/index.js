@@ -18,7 +18,7 @@ import { collectFingerprint } from './collector.js';
 
 // One version for the release: the same number as APP_VERSION in site/index.html,
 // worker/package.json and the top entry of CHANGELOG.md.
-const VERSION = '2.2.0';
+const VERSION = '2.2.1';
 
 /* ============ /api/whoami — build visitor profile from request ============ */
 
@@ -419,7 +419,7 @@ export default {
       const cleaned = target.trim().toLowerCase();
       if (cleaned.length > 253 || /[^a-z0-9.:\/\-]/.test(cleaned.replace(/^https?:\/\//, '').replace(/^www\./, ''))) {
         return jsonResponse(
-          { error: 'Invalid target. Provide a domain or IPv4 address.' },
+          { error: 'Invalid target. Provide a domain or an IP address.' },
           400, request, env
         );
       }

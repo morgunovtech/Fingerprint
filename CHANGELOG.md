@@ -2,6 +2,15 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 2.2.1 — 2026-11-24
+
+A privacy fix and corrections; the `/api/scan` response keeps its shape.
+
+- No WHOIS lookup. whoisjson.com needs an API key the Worker never had, so the call returned nothing, yet the visitor's IP was sent there on every "Check network". The provider is gone; `/api/scan` keeps the `whois` field, always `null`, and no longer lists `whois` in `sources_ok`. The privacy texts in Russian, English and Uzbek and both READMEs no longer name whoisjson.com.
+- The social preview card (`share-card.svg`) and the fallback share link show https://fprint.morgunov.tech instead of `morgunov.tech/fingerprint`, which does not open.
+- The `/api/scan` error for an invalid target asks for "a domain or an IP address": IPv6 is accepted too.
+- Unused code removed (an unused Telegram link constant, unused parameters in the Worker's collector) and code comments that referred to an internal plan rewritten as plain descriptions.
+
 ## 2.2.0 — 2026-11-24
 
 Everything shipped since 2.1: the Cloudflare Worker and the server-side view, Story Mode, the cleanup of 2026-11-03, and the first release with one version number across the page, the Worker and this file.
