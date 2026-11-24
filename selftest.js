@@ -162,8 +162,8 @@ class Element {
           results.push(node);
         }
       }
-      if (selector === 'button[data-theme]') {
-        if (node.tagName === 'BUTTON' && node.dataset && Object.prototype.hasOwnProperty.call(node.dataset, 'theme')) {
+      if (selector === 'button[data-theme-option]') {
+        if (node.tagName === 'BUTTON' && node.dataset && Object.prototype.hasOwnProperty.call(node.dataset, 'themeOption')) {
           results.push(node);
         }
       }
@@ -356,9 +356,9 @@ const langMenuEl = elements.get('langMenu');
   langMenuEl.appendChild(btn);
 });
 const themeMenuEl = elements.get('themeMenu');
-['auto','light','dark'].forEach(mode => {
+['auto','light','dark','high-contrast'].forEach(mode => {
   const btn = new Element(null, 'button');
-  btn.dataset.theme = mode;
+  btn.dataset.themeOption = mode;
   themeMenuEl.appendChild(btn);
 });
 
@@ -366,6 +366,7 @@ const docClassTokens = new Set();
 const documentElement = {
   outerHTML: html,
   lang: 'ru',
+  dataset: Object.create(null),   // data-theme / data-theme-preference, as the page writes them
   classList: {
     add(...tokens) {
       tokens.forEach(token => docClassTokens.add(token));
@@ -1059,26 +1060,41 @@ const metaContent = (page, attrName, key) => {
   assert.equal(themeMenuEl.hidden, true);
   themeBtnEl.click();
   assert.equal(themeMenuEl.hidden, false);
-  const darkOption = themeMenuEl.querySelectorAll('button[data-theme]').find(btn => btn.dataset.theme === 'dark');
+  // The theme lives in data-theme on <html> (the DS tokens switch on it) and the choice
+  // itself in data-theme-preference; the option buttons carry data-theme-option, not
+  // data-theme, so the token selectors never match them.
+  const themeOptions = themeMenuEl.querySelectorAll('button[data-theme-option]');
+  assert.equal(themeOptions.length, 4);
+  assert.ok(themeOptions.every(btn => btn.textContent && !/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(btn.textContent)), 'theme options are words, not emoji');
+  const darkOption = themeOptions.find(btn => btn.dataset.themeOption === 'dark');
   assert.ok(darkOption);
   darkOption.click();
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(themeMenuEl.hidden, true);
-  assert.ok(documentElement.classList.contains('force-dark'));
-  assert.ok(themeBtnEl.innerHTML.includes('🌙'));
+  assert.equal(documentElement.dataset.theme, 'dark');
+  assert.equal(documentElement.dataset.themePreference, 'dark');
+  assert.ok(themeBtnEl.getAttribute('aria-label').includes('Тёмная'));
+  assert.equal(sandbox.localStorage.getItem('theme-preference'), 'dark');
   vm.runInContext("applyThemePreference('light')", sandbox);
   vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
-  assert.ok(documentElement.classList.contains('force-light'));
-  assert.ok(themeBtnEl.innerHTML.includes('☀️'));
+  assert.equal(documentElement.dataset.theme, 'light');
+  assert.ok(themeBtnEl.getAttribute('aria-label').includes('Светлая'));
   vm.runInContext("applyThemePreference('dark')", sandbox);
   vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
-  assert.ok(documentElement.classList.contains('force-dark'));
-  assert.ok(!documentElement.classList.contains('force-light'));
-  assert.ok(themeBtnEl.innerHTML.includes('🌙'));
+  assert.equal(documentElement.dataset.theme, 'dark');
+  assert.ok(themeBtnEl.getAttribute('aria-label').includes('Тёмная'));
   vm.runInContext("applyThemePreference('auto')", sandbox);
   vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
-  assert.ok(!documentElement.classList.contains('force-dark'));
-  assert.ok(themeBtnEl.innerHTML.includes('🌓'));
+  assert.equal(documentElement.dataset.theme, 'light');          // the stub's matchMedia never matches dark
+  assert.equal(documentElement.dataset.themePreference, 'auto');
+  assert.ok(themeBtnEl.getAttribute('aria-label').includes('Авто'));
+  vm.runInContext("applyThemePreference('contrast')", sandbox);  // the value saved by versions before 2.5.0
+  vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
+  assert.equal(documentElement.dataset.theme, 'high-contrast');
+  assert.equal(documentElement.dataset.themePreference, 'high-contrast');
+  assert.ok(themeBtnEl.getAttribute('aria-label').includes('Высокий контраст'));
+  vm.runInContext("applyThemePreference('auto')", sandbox);
+  vm.runInContext('updateThemeButton(I18N[currentLang])', sandbox);
 
   const savedSharePayload = stateRef.sharePayload;
   shareBtnEl.textContent = shareBtnEl.dataset.label;

@@ -2,6 +2,17 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 2.5.0 — 2026-11-24
+
+The page wears the morgunov.tech design system. What the page checks and sends does not change.
+
+- Colours and type come from the shared layer at https://s.morgunov.tech/ds/v1/ (`fonts.css`, `tokens.css`, `base.css`; the content-hashed `?v=` addresses from `about-me-page/ds/v1/USAGE.md`): IBM Plex Sans and Mono, the `--v4-*` palette, square corners, no shadows or gradients, no bold heavier than 600. The page's own stylesheet keeps its layout and chrome and writes them on the tokens; status colours (safe, warning, danger) are the page's own, chosen to read AA on every theme. The menus show words instead of emoji and flags (`RU` / `EN` / `UZ`; Авто / Светлая / Тёмная / Высокий контраст), the favicon is the orange mark with an «F».
+- Four themes, switched the way every morgunov.tech page does it: `data-theme` on `<html>` — `light`, `dark`, `high-contrast` — and `auto`, which follows the system and changes with it. A script in `<head>` sets the theme before first paint; the saved choice moved from the key `fp_theme` to `theme-preference` (the DS key), and an old `contrast` value becomes `high-contrast`. The old key is read once and removed.
+- The browser now fetches three stylesheets and the fonts from s.morgunov.tech, the author's own site, which sets no cookies and runs no analytics; those requests carry what any stylesheet request carries — the visitor's IP and browser — and nothing about the fingerprint. README, `llms.txt` and the Privacy section say so.
+- `404.html` has the same head and look.
+- `selftest.js` checks `data-theme` and `data-theme-preference` on `<html>`, the four word-only theme options and the `contrast` → `high-contrast` migration.
+- The Worker has no change but the version number it reports at `/api/health`.
+
 ## 2.4.1 — 2026-11-24
 
 `ai-train=yes`: the owner allows AI training. What the page checks and sends does not change.
