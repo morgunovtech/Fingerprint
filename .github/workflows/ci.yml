@@ -16,7 +16,7 @@ jobs:
           node-version: lts/*
           cache: npm
           cache-dependency-path: worker/package-lock.json
-      # Runs the page's inline script and site/src/profiler.js in a vm sandbox.
+      # Imports the page's modules (site/src/*.js) and the Worker's into Node with stub browser APIs.
       - run: node selftest.js
       - run: npm ci
         working-directory: worker

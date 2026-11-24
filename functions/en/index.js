@@ -1,9 +1,10 @@
 // Cloudflare Pages Function for /en/: the same page as /, with English link-preview tags.
 // LinkedIn, Telegram and other link previews read the og: tags without running the page's
 // script, and site/index.html carries the Russian ones, so this rewrites them on the way out.
-// The page itself picks English from the address (langFromPath in site/index.html).
+// The page itself picks English from the address (langFromPath in site/src/app.js).
 // selftest.js runs englishPage() over site/index.html and fails when a tag it rewrites has
-// changed, and checks that EN matches the English strings the page sets for itself.
+// changed, and checks that EN matches the English strings the page sets for itself (meta in
+// site/src/i18n/en.js).
 
 const SITE = 'https://fprint.morgunov.tech';
 

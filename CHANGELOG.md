@@ -2,6 +2,31 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 2.5.0 — 2026-11-24
+
+An audit and a rewrite of the page's code: the single 7,400-line `index.html` is now markup plus a stylesheet and ES modules, the dead code and the unused strings are gone, and four things that were silently broken work. The Worker's API keeps its shape.
+
+**Fixed on the page**
+- Story Mode shows real data: device, screen, GPU, the Canvas/Audio/WebGL hashes, the number of blocked trackers and, after "Check network", the IP, ISP and TLS version. It used to read fields that never existed on the snapshot and showed `?`, `undefinedxundefined` and `[object Object]`.
+- The "Server fingerprint" section shows the TLS version and cipher, the HTTP protocol, the header order and the Client Hints. The Worker sent them; the page read a different shape and showed only the header hash and the ASN.
+- The WebRTC leak check works: the "WebRTC" row and the advice about the leak come from an actual probe (ICE host candidates without a STUN server, so nothing leaves the machine). The row used to read "Safe" whatever happened, because the value it looked at was never set.
+- The "What the site knows about you" block takes the full width of the page instead of a third: the grid was laid out for three groups and only one is rendered.
+- macOS version from Client Hints: Chromium reports the macOS version itself in `platformVersion`, which the page read as a Darwin kernel number and printed "macOS (Darwin 14.6.1)". It prints "macOS 14" now.
+- "Print / Save" on a phone saves a static snapshot of the page (the stylesheet inlined, the scripts removed). The saved file used to carry the whole script and ran a new check when opened.
+- The audio fingerprint bucket of the uniqueness model emits only keys the frequency table knows; three of its seven outputs used to fall through to "other", so the percentage may shift by a point or two.
+- The contrast theme has its own icon in the theme button.
+
+**Removed**
+- `site/src/profiler.js` (1,267 lines). It ran on every render, twice per render, downloaded `share-card.svg` three times for a bandwidth estimate, wrote test cookies, opened and deleted an IndexedDB database, enumerated 48 fonts and probed WebRTC, and the page displayed none of its findings: the only field it read from the result was never set, and the "basic" signals it expected on `globalThis` were removed in March. The WebRTC probe lives on as `src/network.js`.
+- From the page's code: 17 unused functions and constants, the hidden "old-style" list and the hidden `#uniqLine`, `#ipRow`, `#speedResult` and `#osintResults` elements kept for an older self-test, the second audio rendering and the second WebGL context (each signal is now sampled once), and some 450 lines of strings in each language that nothing read (the profiling block, the IP block, the advice generator, the `uniqMeaning` structure of which only the headline was used).
+- The page no longer fetches `share-card.svg`; the file stays as the source of the link-preview card.
+
+**Code**
+- `site/index.html` is markup only (270 lines). Styles are in `site/assets/app.css`; the code is in `site/src/`: `app.js` (start-up, controls, render), `config.js`, `state.js`, `dom.js`, `i18n/{ru,en,uz}.js`, `changelog.js`, `signals.js` (collection and the snapshot), `entropy.js` (the uniqueness model), `device.js` (device, OS and browser guesses), `network.js` (the Worker, the public IP services, the speed test, the WebRTC probe), `trackers.js`, `report.js`, `story.js`, `server-view.js`, `share.js`. No build step: the browser loads the modules as they are.
+- Every string of the interface is in the three language files; the row labels, badges and messages that were Russian/English/Uzbek literals inside the code moved there, and `selftest.js` checks that the three files carry the same keys and that every key the modules read exists.
+- The Worker: `whoami.js` holds the request parsing (`/api/whoami`, `/api/check`), `index.js` is the router; the legacy `RegExp.$1` statics are gone; `/api/scan` caches under one TTL; the 404 answer lists every endpoint.
+- `selftest.js` installs the browser stubs on `globalThis` and imports the modules; it also covers the Worker's `whoami`, the network check end to end (IP, speed, scan rows, the server fingerprint section), the WebRTC row and advice, Story Mode's values and the language switch after a check.
+
 ## 2.4.1 — 2026-11-24
 
 `ai-train=yes`: the owner allows AI training. What the page checks and sends does not change.

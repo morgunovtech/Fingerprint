@@ -1,5 +1,5 @@
 /**
- * Orchestrator — runs all providers in parallel, returns FingerprintReport.
+ * /api/scan: resolves the target, runs the providers in parallel and assembles the report.
  */
 
 import { fetchGeolocation } from './providers/geolocation.js';
@@ -125,8 +125,8 @@ export async function collectFingerprint(rawTarget, env) {
 
   report.duration_ms = Date.now() - start;
 
-  // Cache the full report for 1 hour
-  await cacheSet(topCacheKey, report, 'dns', env);
+  // The report is cached under the target for an hour.
+  await cacheSet(topCacheKey, report, env);
 
   return report;
 }
