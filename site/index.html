@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- The theme before first paint: data-theme on <html>, the attribute the design system's tokens
+       switch on. A plain script, not a module, so it runs before the stylesheets arrive. -->
+  <script src="/src/theme-init.js"></script>
   <title id="pageTitle">Fingerprint — кто и что узнаёт о вас, пока вы открываете сайт — morgunov.tech</title>
   <meta id="metaDescription" name="description" content="Шесть шагов от включения ноутбука до открытого сайта: кто и что узнаёт о вас на каждом, на ваших реальных данных, и что с этим делать." />
   <link rel="canonical" href="https://fprint.morgunov.tech" />
@@ -10,7 +13,9 @@
   <link rel="alternate" hreflang="ru" href="https://fprint.morgunov.tech/" />
   <link rel="alternate" hreflang="en" href="https://fprint.morgunov.tech/en/" />
   <link rel="alternate" hreflang="x-default" href="https://fprint.morgunov.tech/" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23d9531e'/><text x='16' y='23' font-family='monospace' font-size='20' text-anchor='middle' fill='%2314110d'>F</text></svg>" />
+  <meta name="theme-color" content="#edeae5" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14130f" media="(prefers-color-scheme: dark)" />
   <meta name="robots" content="index, follow" />
   <meta id="ogTitle" property="og:title" content="Fingerprint — кто и что узнаёт о вас, пока вы открываете сайт" />
   <meta id="ogDescription" property="og:description" content="Шесть шагов от включения ноутбука до открытого сайта: кто и что узнаёт о вас на каждом, на ваших реальных данных, и что с этим делать." />
@@ -64,10 +69,14 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="/assets/app.css" />
+  <!-- morgunov.tech design system v1 from its canonical origin (ds/v1/USAGE.md in about-me-page):
+       fonts → tokens → base, ?v= are content hashes; the page's own stylesheet builds on the tokens. -->
+  <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/fonts.css?v=64eea157" />
+  <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/tokens.css?v=fa7fc139" />
+  <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/base.css?v=0e404315" />
   <link rel="stylesheet" href="/assets/app.css" />
 </head>
-<body>
+<body class="v4-page">
 <a href="#mainContent" class="skip-link">Skip to content</a>
 <div class="wrap">
   <header>
@@ -75,20 +84,20 @@
     <nav aria-label="Site controls">
     <div class="toolbar">
       <div class="lang-switcher menu">
-        <button class="btn" id="langBtn" type="button" aria-haspopup="menu" aria-expanded="false">Язык</button>
-        <div class="menu-panel" id="langMenu" hidden>
-          <button type="button" data-lang="ru" aria-label="Русский">🇷🇺</button>
-          <button type="button" data-lang="en" aria-label="English">🇬🇧</button>
-          <button type="button" data-lang="uz" aria-label="Oʻzbekcha">🇺🇿</button>
+        <button class="btn bar-btn" id="langBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu">RU</button>
+        <div class="menu-panel" id="langMenu" role="menu" aria-labelledby="langBtn" hidden>
+          <button type="button" role="menuitemradio" aria-checked="true" data-lang="ru" lang="ru">Русский</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-lang="en" lang="en">English</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-lang="uz" lang="uz">Oʻzbekcha</button>
         </div>
       </div>
       <div class="theme-switcher menu">
-        <button class="btn" id="themeBtn" type="button" aria-haspopup="menu" aria-expanded="false"><span class="menu-icon" aria-hidden="true">🌓</span><span class="btn-text">Тема</span></button>
-        <div class="menu-panel" id="themeMenu" hidden>
-          <button type="button" data-theme="auto" aria-label="Auto"><span class="menu-icon" aria-hidden="true">🌓</span></button>
-          <button type="button" data-theme="light" aria-label="Light"><span class="menu-icon" aria-hidden="true">☀️</span></button>
-          <button type="button" data-theme="dark" aria-label="Dark"><span class="menu-icon" aria-hidden="true">🌙</span></button>
-          <button type="button" data-theme="contrast" aria-label="High contrast"><span class="menu-icon" aria-hidden="true">◑</span></button>
+        <button class="btn bar-btn" id="themeBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="themeMenu">Тема</button>
+        <div class="menu-panel" id="themeMenu" role="menu" aria-labelledby="themeBtn" hidden>
+          <button type="button" role="menuitemradio" aria-checked="true" data-theme-option="auto">Авто</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-option="light">Светлая</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-option="dark">Тёмная</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-theme-option="high-contrast">Контраст</button>
         </div>
       </div>
     </div>
@@ -111,7 +120,7 @@
           который вы сами запускаете на шаге 3.
         </p>
         <details>
-          <summary class="intro-more">Как страница обращается с данными ▾</summary>
+          <summary class="intro-more">Как страница обращается с данными</summary>
           <p>
             Всё считается в вашем браузере и никуда не загружается; ни одна сторонняя служба этого не видит.
             Сервис бесплатный, без рекламы и регистрации. Что всё-таки уходит в сеть:
@@ -124,6 +133,9 @@
               Отчёт хранится под вашим IP один час; в анонимную статистику (браузер, ОС, страна) IP не попадает.
               Если наш сервер недоступен, браузер спрашивает публичные сервисы IP напрямую
               (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
+            <li>Шрифты и таблицы стилей дизайн-системы morgunov.tech — с s.morgunov.tech, сайта автора: как любой
+              сервер, он видит ваш IP-адрес и браузер, но cookie не ставит и аналитику не ведёт. Об отпечатке эти
+              запросы ничего не несут.</li>
           </ul>
         </details>
       </section>
@@ -153,7 +165,7 @@
   <div class="changelog-content" tabindex="-1">
     <header>
       <h2 id="changelogTitle"></h2>
-      <button id="changelogClose" class="changelog-close" aria-label="Close">✕</button>
+      <button id="changelogClose" class="changelog-close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
     </header>
     <div id="changelogContent"></div>
   </div>

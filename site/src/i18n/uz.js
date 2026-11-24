@@ -4,7 +4,7 @@ import { PERSONAL_URL, CANONICAL_URL } from '../config.js';
 export default {
   langButton: 'Til',
   langLabels: { ru: 'Ruscha', en: 'Inglizcha', uz: 'Oʻzbekcha' },
-  theme: { label: 'Mavzu', modes: { auto: 'Avto', light: 'Yorugʻ', dark: 'Qorongʻi', contrast: 'Kontrast' } },
+  theme: { label: 'Mavzu', modes: { auto: 'Avto', light: 'Yorugʻ', dark: 'Qorongʻi', 'high-contrast': 'Kontrast' } },
   meta: {
     title: 'Fingerprint — saytni ochguningizcha kim va nimani bilib oladi',
     description: 'Noutbukni ochishdan saytning yuklanishigacha olti qadam: har birida kim va nimani bilib oladi, sizning haqiqiy maʼlumotlaringizda, va nima qilish kerak.'
@@ -19,7 +19,7 @@ export default {
           tashqari hech narsa hech qayerga yuborilmaydi.
         </p>
         <details>
-          <summary class="intro-more">Bu sahifa maʼlumotlar bilan qanday ishlaydi ▾</summary>
+          <summary class="intro-more">Bu sahifa maʼlumotlar bilan qanday ishlaydi</summary>
           <p>
             Hammasi brauzeringizda hisoblanadi va hech qayerga yuklanmaydi; hech qanday uchinchi tomon ularni koʻrmaydi.
             Xizmat bepul, reklamasiz va roʻyxatdan oʻtishsiz. Tarmoqqa chiqadigan narsalar:
@@ -31,6 +31,9 @@ export default {
               ipquery.io (zaxira: ipinfo.io) va Google DNS orqali tekshiradi. Hisobot IP ostida bir soat saqlanadi;
               anonim statistikaga (brauzer, OT, mamlakat) IP kirmaydi. Serverimiz ishlamasa, brauzer ochiq IP xizmatlaridan
               toʻgʻridan-toʻgʻri soʻraydi (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
+            <li>morgunov.tech dizayn tizimining shriftlari va uslublar jadvallari muallifning oʻz sayti s.morgunov.tech dan
+              keladi: har qanday server kabi u IP manzilingiz va brauzeringizni koʻradi, lekin cookie qoʻymaydi va
+              analitika yuritmaydi. Bu soʻrovlar barmoq izingiz haqida hech narsa olib ketmaydi.</li>
           </ul>
         </details>
       </section>

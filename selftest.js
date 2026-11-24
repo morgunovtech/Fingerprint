@@ -32,10 +32,36 @@ for (const dir of ['site/src', 'site/src/i18n', 'worker/src', 'worker/src/provid
   assert.match(head, /<meta name="yandex-verification" content="33eb7fdb9bb757df" \/>/);
   const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
   assert.equal(blocks.length, 1, 'one JSON-LD block');
-  // The page's only script is the module entry point; no inline code, no third-party script.
+  // The page's scripts are its own: the theme before first paint and the module entry point; no inline
+  // code, no third-party script.
   const scripts = [...html.matchAll(/<script\b[^>]*>/g)].map(m => m[0]);
-  assert.deepEqual(scripts, ['<script type="application/ld+json">', '<script type="module" src="/src/app.js">'], scripts.join(' '));
-  assert.match(head, /<link rel="stylesheet" href="\/assets\/app\.css" \/>/);
+  assert.deepEqual(scripts, ['<script src="/src/theme-init.js">', '<script type="application/ld+json">', '<script type="module" src="/src/app.js">'], scripts.join(' '));
+  // The morgunov.tech design system from its origin, fonts → tokens → base, pinned by content hash,
+  // then the page's own stylesheet; 404.html links the same three files with the same hashes.
+  const sheets = [...head.matchAll(/<link rel="stylesheet" href="([^"]+)" \/>/g)].map(m => m[1]);
+  assert.deepEqual(sheets.map(href => href.replace(/\?v=[0-9a-f]{8}$/, '')), ['https://s.morgunov.tech/ds/v1/fonts.css', 'https://s.morgunov.tech/ds/v1/tokens.css', 'https://s.morgunov.tech/ds/v1/base.css', '/assets/app.css'], sheets.join(' '));
+  assert.ok(sheets.slice(0, 3).every(href => /\?v=[0-9a-f]{8}$/.test(href)), 'the design-system files are pinned by content hash');
+  const notFound = read('site/404.html');
+  assert.deepEqual([...notFound.matchAll(/<link rel="stylesheet" href="([^"]+)" \/>/g)].map(m => m[1]), sheets.slice(0, 3), '404.html: the same design-system files');
+  assert.match(notFound, /<script src="\/src\/theme-init\.js"><\/script>/);
+  assert.match(head, /<meta name="theme-color" content="#edeae5" media="\(prefers-color-scheme: light\)" \/>/);
+
+  // The theme before first paint: data-theme on <html> from theme-preference (the key every
+  // morgunov.tech page shares), with the page's old key read as a fallback; a plain script, not a module.
+  const themeInit = read('site/src/theme-init.js');
+  for (const needle of ["'theme-preference'", "'fp_theme'", "'high-contrast'", "'data-theme'", "'data-theme-preference'", 'prefers-color-scheme: dark']) assert.ok(themeInit.includes(needle), `theme-init.js: ${needle}`);
+  assert.ok(!/^\s*(import|export)\b/m.test(themeInit), 'theme-init.js is a plain script');
+
+  // The design system's rules: square corners, no shadows or gradients, nothing heavier than 600, no
+  // theme classes, no emoji in the chrome and the strings (the data may carry flags: device.js is not checked).
+  for (const file of ['site/assets/app.css', 'site/index.html', 'site/404.html']) {
+    const text = read(file);
+    for (const pattern of [/border-radius/, /box-shadow/, /gradient\(/, /font-weight:\s*[789]00/, /\bforce-(light|dark|contrast)\b/]) assert.ok(!pattern.test(text), `${file}: ${pattern.source}`);
+  }
+  const emoji = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u;
+  for (const file of ['site/index.html', 'site/404.html', 'site/src/app.js', 'site/src/config.js', 'site/src/walk.js', 'site/src/i18n/ru.js', 'site/src/i18n/en.js', 'site/src/i18n/uz.js']) {
+    assert.ok(!emoji.test(read(file)), `${file}: no emoji in the chrome and the strings`);
+  }
   const data = JSON.parse(blocks[0][1]);
   assert.equal(data['@type'], 'WebApplication');
   assert.equal(data.url, head.match(/<link rel="canonical" href="([^"]+)"/)[1]);
@@ -221,7 +247,7 @@ const elements = new Map();
 for (const [, tag, id] of html.matchAll(/<([a-z0-9]+)\b[^>]*\bid="([A-Za-z]+)"/g)) elements.set(id, new Element(tag, id));
 const introSource = html.match(/<div id="introText"[^>]*>([\s\S]*?)<\/div>\n  <\/section>/)[1];
 elements.get('introText')._innerHTML = introSource;
-for (const [menuId, attr, values] of [['langMenu', 'lang', ['ru', 'en', 'uz']], ['themeMenu', 'theme', ['auto', 'light', 'dark', 'contrast']]]) {
+for (const [menuId, attr, values] of [['langMenu', 'lang', ['ru', 'en', 'uz']], ['themeMenu', 'themeOption', ['auto', 'light', 'dark', 'high-contrast']]]) {
   for (const value of values) {
     const btn = new Element('button');
     btn.dataset[attr] = value;
@@ -229,15 +255,9 @@ for (const [menuId, attr, values] of [['langMenu', 'lang', ['ru', 'en', 'uz']], 
   }
 }
 
-const docClassTokens = new Set();
-const documentElement = {
-  lang: 'ru',
-  classList: {
-    add(...tokens) { tokens.forEach(t => docClassTokens.add(t)); },
-    remove(...tokens) { tokens.forEach(t => docClassTokens.delete(t)); },
-    contains(token) { return docClassTokens.has(token); }
-  }
-};
+// <html>: the theme lives in its data-theme and data-theme-preference attributes.
+const documentElement = new Element('html');
+documentElement.lang = 'ru';
 const bodyEl = new Element('body', 'body');
 const cookieStore = new Map();
 
@@ -702,9 +722,15 @@ const waitFor = async (cond, label) => {
   const app = await import(moduleUrl('./site/src/app.js'));
   assert.equal(typeof documentStub._domReady, 'function', 'app.js waits for DOMContentLoaded');
   workerStats = { total_visits: 1000, browsers: { 'Safari 17': 300 }, os: { macOS: 500 }, countries: { UZ: 400 }, tls_versions: { 'TLSv1.3': 950 } };
+  // A theme saved under the page's old key moves to the shared one on start-up: "contrast" is "high-contrast".
+  localStore.set('fp_theme', 'contrast');
   documentStub._domReady();
   await settle(40);
   assert.equal(documentElement.lang, 'ru');
+  assert.equal(localStore.get('theme-preference'), 'high-contrast', 'fp_theme moved to theme-preference');
+  assert.equal(localStore.has('fp_theme'), false, 'the old key is removed');
+  assert.equal(documentElement.getAttribute('data-theme'), 'high-contrast');
+  assert.equal(documentElement.getAttribute('data-theme-preference'), 'high-contrast');
   assert.ok(snapshot.value, 'the snapshot is computed');
   assert.equal(elements.get('introText').innerHTML, introSource, 'the Russian intro is the one from the markup');
   assert.deepEqual(alerts, []);
@@ -740,7 +766,8 @@ const waitFor = async (cond, label) => {
 
   // Language menu
   const langBtnEl = elements.get('langBtn');
-  assert.ok(langBtnEl.textContent.includes('Язык'));
+  assert.equal(langBtnEl.textContent, 'RU');
+  assert.equal(langBtnEl.getAttribute('aria-label'), 'Язык: Русский');
   const langMenuEl = elements.get('langMenu');
   assert.equal(langMenuEl.hidden, true);
   langBtnEl.click();
@@ -751,24 +778,30 @@ const waitFor = async (cond, label) => {
   await settle();
   assert.equal(langMenuEl.hidden, true);
 
-  // Theme menu
+  // Theme menu: words only, data-theme on <html>, the choice saved under the shared key.
   const themeBtnEl = elements.get('themeBtn');
-  assert.ok(themeBtnEl.innerHTML.includes('Тема'));
+  assert.equal(themeBtnEl.textContent, 'Тема');
+  assert.equal(themeBtnEl.getAttribute('aria-label'), 'Тема: Контраст');
   const themeMenuEl = elements.get('themeMenu');
   assert.equal(themeMenuEl.hidden, true);
   themeBtnEl.click();
   assert.equal(themeMenuEl.hidden, false);
-  themeMenuEl.querySelectorAll('button[data-theme="dark"]')[0].click();
+  const themeOptions = themeMenuEl.querySelectorAll('button[data-theme-option]');
+  assert.deepEqual(themeOptions.map(b => b.textContent), ['Авто', 'Светлая', 'Тёмная', 'Контраст']);
+  themeMenuEl.querySelectorAll('button[data-theme-option="dark"]')[0].click();
   await settle();
   assert.equal(themeMenuEl.hidden, true);
-  assert.ok(documentElement.classList.contains('force-dark'));
-  assert.ok(themeBtnEl.innerHTML.includes('🌙'));
-  for (const [mode, icon, cls] of [['light', '☀️', 'force-light'], ['contrast', '◑', 'force-contrast'], ['auto', '🌓', null]]) {
+  assert.equal(documentElement.getAttribute('data-theme'), 'dark');
+  assert.equal(documentElement.getAttribute('data-theme-preference'), 'dark');
+  assert.equal(localStore.get('theme-preference'), 'dark');
+  assert.equal(themeBtnEl.getAttribute('aria-label'), 'Тема: Тёмная');
+  // The stub's matchMedia never matches dark, so "auto" resolves to light.
+  for (const [mode, theme] of [['light', 'light'], ['high-contrast', 'high-contrast'], ['auto', 'light']]) {
     app.applyThemePreference(mode);
     app.updateThemeButton(I18N.ru);
-    assert.ok(themeBtnEl.innerHTML.includes(icon), mode);
-    assert.equal(docClassTokens.size, cls ? 1 : 0, mode);
-    if (cls) assert.ok(documentElement.classList.contains(cls));
+    assert.equal(documentElement.getAttribute('data-theme'), theme, mode);
+    assert.equal(documentElement.getAttribute('data-theme-preference'), mode);
+    assert.deepEqual(themeOptions.filter(b => b.getAttribute('aria-checked') === 'true').map(b => b.dataset.themeOption), [mode]);
   }
 
   // Share and save (the buttons live in the sum and are handled by data-action)
@@ -794,13 +827,15 @@ const waitFor = async (cond, label) => {
   assert.equal(elements.get('ogDescription').content, I18N.en.meta.description);
   assert.equal(elements.get('twTitle').content, I18N.en.meta.title);
   assert.ok(elements.get('introTitle').textContent.length > 0);
-  assert.ok(langBtnEl.textContent.includes('Language'));
+  assert.equal(langBtnEl.textContent, 'EN');
+  assert.equal(langBtnEl.getAttribute('aria-label'), 'Language: English');
   assert.deepEqual(titles().slice(0, 2), ['You opened your laptop', 'The operating system started']);
   assert.ok(/an address is visible: 10\.0\.0\.2/.test(stepText(6)));
   await app.render('uz');
   await settle();
   assert.equal(documentElement.lang, 'uz');
-  assert.ok(langBtnEl.textContent.includes('Til'));
+  assert.equal(langBtnEl.textContent, 'UZ');
+  assert.equal(langBtnEl.getAttribute('aria-label'), 'Til: Oʻzbekcha');
   assert.equal(titles()[0], 'Siz noutbukni ochdingiz');
 
   // /en/ opens in English over a saved Russian choice; a language picked there moves the

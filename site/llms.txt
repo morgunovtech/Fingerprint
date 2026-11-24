@@ -22,6 +22,7 @@ The page is one walk of six steps: you opened your laptop (or unlocked your phon
 - **The button at step 3** (on click only) sends the IP to the Worker's `/api/whoami` (returned, not stored) and `/api/scan`, which asks ipquery.io (ipinfo.io as fallback) for location, ISP and connection type and Google DNS for the reverse record and the blocklists. The scan report is cached for one hour under the IP. There is no WHOIS lookup. Only if the Worker is down does the browser ask public IP services directly (ipapi.co and freeipapi.com, then ipify.org and myip.com).
 - **Anonymous stats**: each check adds one to aggregate counters (browser and version, OS, country, TLS version) — no IP, no ID, no timestamps; anyone can read them at `/api/stats`.
 - **Cloudflare Web Analytics** counts page views without cookies.
+- **Stylesheets and fonts** (the morgunov.tech design system, IBM Plex) load from s.morgunov.tech, the author's own site, which sets no cookies and runs no analytics; those requests carry nothing about the fingerprint.
 
 ## API
 

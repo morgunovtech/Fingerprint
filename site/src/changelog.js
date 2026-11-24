@@ -2,6 +2,30 @@
 // the footer). CHANGELOG.md carries the same entries in English; the top entry's version is APP_VERSION.
 export const CHANGELOG = [
   {
+    version:'3.1.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Страница в дизайн-системе morgunov.tech: шрифты IBM Plex, бумажные поверхности, прямые углы, без теней и без эмодзи в оформлении — как s.morgunov.tech, Good Pass и Found You. Что страница проверяет и отправляет, не изменилось',
+        'Тема переключается так же, как на остальных страницах morgunov.tech: светлая, тёмная или контрастная, выбранная здесь, действует и там, и наоборот. Прежний выбор перенесён',
+        'Стили и шрифты загружаются с s.morgunov.tech — сайта автора, без cookie и аналитики; об отпечатке эти запросы ничего не несут. Это записано во вступлении, в README и в llms.txt',
+        'Меню языка называет языки словами, меню темы — тоже; номер шага стал подписью вместо цифры-водяного знака'
+      ],
+      en:[
+        'The page wears the morgunov.tech design system: IBM Plex, paper surfaces, square corners, no shadows and no emoji in the chrome, like s.morgunov.tech, Good Pass and Found You. What the page checks and sends is unchanged',
+        'The theme switches the way it does on every morgunov.tech page: a light, dark or high-contrast theme picked here applies there too, and back. The earlier choice is carried over',
+        'Stylesheets and fonts load from s.morgunov.tech, the author\'s own site, with no cookies and no analytics; those requests carry nothing about your fingerprint. The intro, the README and llms.txt say so',
+        'The language menu names the languages in words, so does the theme menu; the step number is a label instead of a watermark digit'
+      ],
+      uz:[
+        'Sahifa morgunov.tech dizayn tizimida: IBM Plex shriftlari, qogʻoz yuzalar, toʻgʻri burchaklar, soyasiz va bezakda emojisiz — s.morgunov.tech, Good Pass va Found You kabi. Sahifa nimani tekshirishi va yuborishi oʻzgarmadi',
+        'Mavzu morgunov.tech ning boshqa sahifalaridagidek almashadi: bu yerda tanlangan yorugʻ, qorongʻi yoki kontrast mavzu u yerda ham amal qiladi, va aksincha. Avvalgi tanlov koʻchirildi',
+        'Uslublar va shriftlar muallifning oʻz sayti s.morgunov.tech dan yuklanadi: cookie va analitikasiz; bu soʻrovlar barmoq izingiz haqida hech narsa olib ketmaydi. Bu kirish qismida, README da va llms.txt da yozilgan',
+        'Til menyusi tillarni soʻz bilan ataydi, mavzu menyusi ham; qadam raqami suv belgisi oʻrniga yozuvga aylandi'
+      ]
+    }
+  },
+  {
     version:'3.0.0',
     date:'2026-11-24',
     changes:{
