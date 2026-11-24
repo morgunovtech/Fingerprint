@@ -1,6 +1,6 @@
 // Constants shared by the page modules. One version number names a release: the same string
 // lives in worker/src/index.js (VERSION), worker/package.json and the top entry of CHANGELOG.md.
-export const APP_VERSION = '2.5.0';
+export const APP_VERSION = '3.0.0';
 
 export const PERSONAL_URL = 'https://s.morgunov.tech';
 export const CANONICAL_URL = 'https://fprint.morgunov.tech';
@@ -16,4 +16,3 @@ export const LANG_FLAGS = { ru: '🇷🇺', en: '🇬🇧', uz: '🇺🇿' };
 
 export const THEME_KEY = 'fp_theme';
 export const LANG_KEY = 'fp_lang';
-export const VIEW_MODE_KEY = 'fprint_view_mode';

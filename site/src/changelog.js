@@ -2,6 +2,36 @@
 // the footer). CHANGELOG.md carries the same entries in English; the top entry's version is APP_VERSION.
 export const CHANGELOG = [
   {
+    version:'3.0.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Страница стала одним маршрутом из шести шагов: открыли ноутбук, запустилась система, подключились к сети, открыли браузер, ввели адрес, сайт открылся. На каждом шаге — что измерено прямо сейчас, кто это узнаёт (с именами: производитель системы и браузера, ваш провайдер, Cloudflare), как это устроено, чем опасно и одно действие',
+        'Проверка сети стала действием внутри шага 3 с честным описанием единственного запроса, который уходит с страницы; после неё заполняются шаги 3, 5 и 6 и итог',
+        'Итог называет, кто что узнал, даёт чек-лист по шагам и текст для «Поделиться» на ваших данных',
+        'Убраны процент уникальности (он сравнивал с синтетическим распределением, а не с людьми), методика, 22 карточки с хешами, тест скорости и переключатель режимов. Сырые данные остались в разделе «Все данные, которые отдал браузер» внизу',
+        'Проверка блокировщика честно названа проверкой приманок: никакие пиксели и скрипты не загружаются',
+        'Шаг про операционную систему новый: что производитель узнаёт при загрузке и где это выключить на macOS, iOS, Windows, Android и ChromeOS'
+      ],
+      en:[
+        'The page is now one walk of six steps: you opened the laptop, the system started, you went online, you opened the browser, you typed an address, the site loaded. Each step shows what was measured right now, who learns it (by name: the makers of the system and the browser, your provider, Cloudflare), how it works, why it matters and one thing to do',
+        'The network check is an action inside step 3 with a plain description of the one request that leaves the page; after it, steps 3, 5 and 6 and the sum fill in',
+        'The sum names who learned what, gives a checklist by step and a share text built from your data',
+        'Gone: the uniqueness percentage (it compared you with a synthetic distribution, not with people), the methodology, the 22 hash cards, the speed test and the mode switch. The raw data stays in "Everything the browser handed over" at the bottom',
+        'The blocker check is honestly called a bait check: no pixels or scripts are loaded',
+        'A new step for the operating system: what its maker learns at boot and where to switch it off on macOS, iOS, Windows, Android and ChromeOS'
+      ],
+      uz:[
+        "Sahifa olti qadamdan iborat bitta yoʻlga aylandi: noutbukni ochdingiz, tizim ishga tushdi, tarmoqqa ulandingiz, brauzerni ochdingiz, manzil kiritdingiz, sayt ochildi. Har qadamda — hozir nima oʻlchandi, kim buni bilib oladi (nomlari bilan: tizim va brauzer ishlab chiqaruvchilari, provayderingiz, Cloudflare), bu qanday ishlaydi, nega muhim va bitta amal",
+        "Tarmoqni tekshirish 3-qadam ichidagi amalga aylandi, sahifadan ketadigan yagona soʻrovning ochiq tavsifi bilan; undan keyin 3, 5 va 6-qadamlar hamda xulosa toʻladi",
+        "Xulosa kim nimani bilib olganini aytadi, qadamlar boʻyicha roʻyxat va sizning maʼlumotlaringizdan tuzilgan «Ulashish» matnini beradi",
+        "Olib tashlandi: noyoblik foizi (u sizni odamlar bilan emas, sunʼiy taqsimot bilan solishtirardi), metodika, 22 ta xesh kartochkasi, tezlik testi va rejim almashtirgich. Xom maʼlumotlar pastdagi «Brauzer bergan barcha maʼlumotlar» boʻlimida qoldi",
+        "Bloklovchini tekshirish halol ravishda xoʻraklar tekshiruvi deb ataladi: hech qanday piksel va skript yuklanmaydi",
+        "Operatsion tizim haqida yangi qadam: ishlab chiqaruvchi yuklanishda nimani bilib oladi va buni macOS, iOS, Windows, Android va ChromeOS da qayerda oʻchirish mumkin"
+      ]
+    }
+  },
+  {
     version:'2.5.0',
     date:'2026-11-24',
     changes:{

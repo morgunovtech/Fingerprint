@@ -1,17 +1,15 @@
-// Entry point: wires the controls, picks the language and theme, and renders the page.
+// Entry point: wires the controls, picks the language and theme, and renders the walk.
 
-import { APP_VERSION, LANG_FLAGS, LANG_KEY, THEME_KEY, VIEW_MODE_KEY } from './config.js';
+import { APP_VERSION, LANG_FLAGS, LANG_KEY, THEME_KEY } from './config.js';
 import { getEl, esc } from './dom.js';
 import { state, snapshot } from './state.js';
 import { I18N, textsFor } from './i18n/index.js';
 import { CHANGELOG } from './changelog.js';
 import { getSnapshot } from './signals.js';
-import { autoFetchIp, measureLatency, measureDownload, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js';
-import { runTrackerTests, renderTrackerTests } from './trackers.js';
-import { updateHeroVerdict, renderDataRows, renderImplications, renderCards } from './report.js';
-import { renderStoryMode } from './story.js';
-import { renderScanRows, renderServerFingerprint } from './server-view.js';
-import { resolveShareUrl, handleShareClick, handleSaveClick } from './share.js';
+import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js';
+import { runTrackerTests } from './trackers.js';
+import { renderWalk } from './walk.js';
+import { handleShareClick, handleSaveClick } from './share.js';
 
 /* ---- Theme ---- */
 
@@ -107,24 +105,13 @@ function applyMeta(t) {
 let renderToken = 0;
 let probesStarted = false;
 
-// Re-renders the parts that depend on data arriving later (IP, speed, trackers, WebRTC).
-function renderDynamic(t) {
-  const basic = snapshot.value?.basic;
-  if (!basic) return;
-  renderDataRows(basic, t);
-  if (state.scan) renderScanRows(state.scan, t);
-  renderImplications(basic, t);
-  if (state.trackerResults) renderTrackerTests(state.trackerResults, t);
-  if (state.viewMode === 'story') renderStoryMode(basic, t, snapshot.value);
-}
-
-// The tracker bait and the WebRTC probe run once per page view, after the first snapshot.
+// The ad-blocker check and the WebRTC probe run once per page view, after the first snapshot.
 function startProbes() {
   if (probesStarted) return;
   probesStarted = true;
-  runTrackerTests().then(results => { state.trackerResults = results; renderDynamic(textsFor(state.lang)); })
+  runTrackerTests().then(results => { state.trackerResults = results; renderWalk(textsFor(state.lang)); })
     .catch(err => console.warn('tracker tests failed', err));
-  runWebRtcProbe().then(result => { state.webrtc = result; renderDynamic(textsFor(state.lang)); })
+  runWebRtcProbe().then(result => { state.webrtc = result; renderWalk(textsFor(state.lang)); })
     .catch(err => console.warn('WebRTC probe failed', err));
 }
 
@@ -146,7 +133,6 @@ function updateFooterVisitCount(t) {
 
 export async function render(lang) {
   const token = ++renderToken;
-  const firstRender = renderToken === 1;
   const prevLang = state.lang;
   state.lang = lang in I18N ? lang : 'ru';
   const t = textsFor(state.lang);
@@ -168,56 +154,23 @@ export async function render(lang) {
   });
   updateThemeButton(t);
 
-  const shareBtn = getEl('shareBtn');
-  if (shareBtn) {
-    shareBtn.textContent = t.shareButton;
-    shareBtn.dataset.label = t.shareButton;
-    shareBtn.setAttribute('aria-label', t.shareButton);
-    shareBtn.dataset.ready = '0';
-    shareBtn.setAttribute('aria-disabled', 'true');
-  }
-  state.sharePayload = null;
-
   // The intro: the Russian copy lives in the markup (readable without JavaScript); the other
   // languages swap it in from their strings.
   const introTitleEl = getEl('introTitle');
-  introTitleEl.textContent = t.introTitle || '';
-  introTitleEl.classList.add('sr-only');
-  getEl('introText').innerHTML = t.introRichHtml || '';
-
-  getEl('detailTitle').textContent = t.detailTitle;
-  getEl('shockTitle').textContent = t.shock.title;
-  getEl('networkTitle').textContent = t.networkTitle || '';
-  getEl('networkDesc').textContent = t.networkDesc || '';
-  const netBtn = getEl('networkBtn');
-  if (netBtn && !netBtn.disabled) netBtn.textContent = state.ipFetchDone ? (t.networkRecheck || '') : (t.networkButton || '');
-  getEl('methodologyBtn').textContent = t.methodologyButton || '';
-  getEl('printBtn').textContent = t.saveButton;
-  getEl('printBtn').dataset.label = t.saveButton;
+  if (introTitleEl) introTitleEl.textContent = t.introTitle || '';
+  const introTextEl = getEl('introText');
+  if (introTextEl) introTextEl.innerHTML = t.introRichHtml || '';
+  const detailTitle = getEl('detailTitle');
+  if (detailTitle) detailTitle.textContent = t.details.title;
   renderFooter(t);
-  setViewModeButton(t);
-  fetchVisitorStats().then(() => { if (token === renderToken) { updateFooterVisitCount(t); renderDynamic(t); } });
+  state.sharePayload = null;
+  fetchVisitorStats().then(() => { if (token === renderToken && snapshot.value) { updateFooterVisitCount(t); renderWalk(t); } });
 
   try {
-    const snap = await getSnapshot();
+    await getSnapshot();
     if (token !== renderToken) return;
-    const { headline } = updateHeroVerdict(snap.pct, t, firstRender);
-    renderDynamic(t);
-    renderCards(snap, t);
-    if (state.whoamiData) renderServerFingerprint(state.whoamiData, t);
+    renderWalk(t);
     startProbes();
-
-    const shareConfig = t.share || {};
-    const url = resolveShareUrl();
-    const pct = snap.pct;
-    const text = typeof shareConfig.text === 'function' ? shareConfig.text({ pct, headline, url }) : `${headline}. ${shareConfig.tagline || ''}`.trim();
-    const title = typeof shareConfig.title === 'function' ? shareConfig.title({ pct, headline }) : (shareConfig.title || shareConfig.tagline || headline);
-    state.sharePayload = { pct, headline, text, url, title, tagline: shareConfig.tagline || '' };
-    if (shareBtn) {
-      shareBtn.dataset.ready = '1';
-      shareBtn.removeAttribute('aria-disabled');
-      shareBtn.setAttribute('aria-label', typeof shareConfig.aria === 'function' ? shareConfig.aria({ pct, headline }) : title);
-    }
   } catch (e) {
     if (token !== renderToken) return;
     console.error(e);
@@ -225,92 +178,30 @@ export async function render(lang) {
   }
 }
 
-/* ---- Network check: IP, speed, scan, server fingerprint ---- */
-
-function animateSpeedHero(targetMbps, latency, t) {
-  const heroNumber = getEl('speedHeroNumber');
-  const heroLabel = getEl('speedHeroLabel');
-  const heroLatency = getEl('speedHeroLatency');
-  if (!heroNumber) return;
-  if (heroLabel) heroLabel.textContent = t.units?.mbps || 'Mbps';
-  if (heroLatency && latency) heroLatency.textContent = `${t.speedTest?.latency || 'Latency'}: ${latency} ms`;
-  const duration = 800;
-  const start = performance.now();
-  const from = parseFloat(heroNumber.textContent) || 0;
-  const step = now => {
-    const progress = Math.min((now - start) / duration, 1);
-    const current = from + (targetMbps - from) * (1 - Math.pow(1 - progress, 3));
-    heroNumber.textContent = (progress < 1 ? current : targetMbps).toFixed(1);
-    if (progress < 1) requestAnimationFrame(step);
-  };
-  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(step);
-  else heroNumber.textContent = targetMbps.toFixed(1);
-}
-
-async function runSpeedTest(t) {
-  const heroArea = getEl('speedHeroArea');
-  const heroNumber = getEl('speedHeroNumber');
-  const heroLabel = getEl('speedHeroLabel');
-  const heroLatency = getEl('speedHeroLatency');
-  if (!heroArea || !heroNumber) return;
-  heroArea.style.display = '';
-  heroNumber.textContent = '...';
-  heroNumber.style.opacity = '0.5';
-  if (heroLabel) heroLabel.textContent = t.speedTest?.testing || '';
-  if (heroLatency) heroLatency.textContent = '';
-  state.speed = { status: 'running', mbps: null, latency: null };
-  try {
-    const latency = await measureLatency();
-    if (heroLatency) heroLatency.textContent = `${t.speedTest?.latency || 'Latency'}: ${latency} ms`;
-    const mbps = await measureDownload(current => { heroNumber.textContent = current.toFixed(1); });
-    heroNumber.style.opacity = '1';
-    animateSpeedHero(mbps, latency, t);
-    state.speed = { status: 'done', mbps, latency };
-  } catch (e) {
-    heroNumber.textContent = '—';
-    heroNumber.style.opacity = '1';
-    if (heroLabel) heroLabel.textContent = t.speedTest?.failed || 'Error';
-    state.speed = { status: 'error', mbps: null, latency: null };
-    console.warn('speed test failed:', e);
-  }
-}
+/* ---- The network check (the button at step 3) ---- */
 
 export async function handleNetworkCheck() {
-  const btn = getEl('networkBtn');
+  if (state.networkStatus === 'loading') return;
   const t = textsFor(state.lang);
-  if (btn) { btn.disabled = true; btn.textContent = t.networkLoading || '…'; }
-  const resultsEl = getEl('networkResults');
-  if (resultsEl) resultsEl.style.display = '';
+  state.networkStatus = 'loading';
+  renderWalk(t);
   try {
-    const speedPromise = runSpeedTest(t);
-    await autoFetchIp();
+    state.serverData = null;
+    state.scan = null;
+    const data = await autoFetchIp();
+    if (!data) throw new Error('no answer');
     state.ipFetchDone = true;
-    renderDynamic(t);
-    await speedPromise;
-    renderDynamic(t);
-    const ip = state.serverData?.ip || null;
-    if (ip) {
-      try {
-        await fetchScan(ip);
-        renderDynamic(t);
-      } catch (e) {
-        console.warn('scan failed:', e.message);
-        const note = document.createElement('p');
-        note.className = 'small network-error';
-        note.textContent = t.osint?.error || '';
-        getEl('groupNetwork')?.appendChild(note);
-      }
-    }
-    if (state.whoamiData) renderServerFingerprint(state.whoamiData, t);
+    try { await fetchScan(data.ip); } catch (e) { console.warn('scan failed:', e.message); }
+    state.networkStatus = 'done';
   } catch (e) {
-    state.ipFetchDone = true;
-    if (resultsEl) resultsEl.innerHTML = '<p class="small network-error">' + esc(t.networkError || e.message) + '</p>';
-  } finally {
-    if (btn) { btn.textContent = t.networkRecheck || t.networkButton || ''; btn.disabled = false; }
+    state.networkStatus = 'failed';
+    console.warn('network check failed:', e.message);
   }
+  renderWalk(textsFor(state.lang));
+  if (state.networkStatus === 'done') getEl('step-3')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
 }
 
-/* ---- Changelog and methodology modals ---- */
+/* ---- Changelog modal ---- */
 
 function renderChangelog(lang) {
   const t = textsFor(lang);
@@ -360,29 +251,6 @@ function closeChangelog() {
   document.body.style.overflow = '';
 }
 
-/* ---- View mode ---- */
-
-function setViewModeButton(t) {
-  const btn = getEl('viewModeBtn');
-  if (!btn) return;
-  const story = t.story || {};
-  const label = state.viewMode === 'report' ? (story.toggleStory || '📖 Story') : (story.toggleReport || '📊 Report');
-  btn.textContent = label;
-  btn.classList.toggle('view-mode-active', state.viewMode === 'story');
-}
-
-function setViewMode(mode) {
-  state.viewMode = mode === 'story' ? 'story' : 'report';
-  try { localStorage.setItem(VIEW_MODE_KEY, state.viewMode); } catch (_) { /* ignore */ }
-  const reportEl = getEl('reportMode');
-  const storyEl = getEl('storyMode');
-  if (reportEl) reportEl.style.display = state.viewMode === 'report' ? '' : 'none';
-  if (storyEl) storyEl.style.display = state.viewMode === 'story' ? '' : 'none';
-  const t = textsFor(state.lang);
-  setViewModeButton(t);
-  if (state.viewMode === 'story' && snapshot.value) renderStoryMode(snapshot.value.basic, t, snapshot.value);
-}
-
 /* ---- Start ---- */
 
 export function initApp() {
@@ -392,9 +260,6 @@ export function initApp() {
   const lang = detectLang();
   // Opening /en/ is not a choice: the saved language stays for the next visit to /.
   if (!langFromPath()) { try { localStorage.setItem(LANG_KEY, lang); } catch (_) { /* ignore */ } }
-
-  getEl('shareBtn')?.addEventListener('click', () => { handleShareClick().catch(() => {}); });
-  getEl('printBtn')?.addEventListener('click', () => { handleSaveClick().catch(() => {}); });
 
   const langBtn = getEl('langBtn');
   const langMenu = getEl('langMenu');
@@ -450,28 +315,17 @@ export function initApp() {
   document.getElementById('changelogClose')?.addEventListener('click', closeChangelog);
   document.getElementById('changelogModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeChangelog(); });
 
-  const methodBtn = getEl('methodologyBtn');
-  const methodModal = getEl('methodologyModal');
-  if (methodBtn) {
-    methodBtn.style.display = 'inline-flex';
-    methodBtn.addEventListener('click', () => {
-      const t = textsFor(state.lang);
-      // Both texts come from the page's own strings, not from user input.
-      getEl('methodologyTitle').innerHTML = t.methodSummary || '';
-      getEl('methodologyBody').innerHTML = t.methodText || '';
-      if (methodModal) methodModal.style.display = 'flex';
-    });
-  }
-  getEl('methodologyClose')?.addEventListener('click', () => { if (methodModal) methodModal.style.display = 'none'; });
-  methodModal?.addEventListener('click', e => { if (e.target === methodModal) methodModal.style.display = 'none'; });
+  // The walk re-renders itself, so its buttons are handled by their data-action, not by element.
+  getEl('walk')?.addEventListener('click', event => {
+    const btn = event.target?.closest?.('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    if (action === 'check-network') handleNetworkCheck();
+    else if (action === 'share') handleShareClick(btn).catch(() => {});
+    else if (action === 'save') handleSaveClick().catch(() => {});
+  });
 
-  getEl('networkBtn')?.addEventListener('click', handleNetworkCheck);
-
-  try { const saved = localStorage.getItem(VIEW_MODE_KEY); if (saved === 'story' || saved === 'report') state.viewMode = saved; } catch (_) { /* ignore */ }
-  if (new URLSearchParams(window.location.search).get('mode') === 'story') state.viewMode = 'story';
-  getEl('viewModeBtn')?.addEventListener('click', () => setViewMode(state.viewMode === 'report' ? 'story' : 'report'));
   state.lang = lang;
-  setViewMode(state.viewMode);
   render(lang);
 }
 

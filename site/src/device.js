@@ -188,20 +188,59 @@ export function deviceDisplayName(device, t) {
   return t.deviceNames?.[device.id] || device.id;
 }
 
-export function deviceIcon(device) {
-  if (!device) return '💻';
-  if (device.id) return /phone|Tablet|Device/.test(device.id) ? '📱' : /Laptop/.test(device.id) ? '💻' : '🖥️';
-  const lower = device.name.toLowerCase();
-  if (/iphone|ipad/.test(lower)) return '📱';
-  if (/macbook/.test(lower)) return '💻';
-  return '🖥️';
+// 'phone', 'tablet', 'laptop' or 'desktop': picks the wording of the first step.
+export function deviceKind(device, basic) {
+  if (device?.id) {
+    if (/Phone|Flagship/.test(device.id)) return 'phone';
+    if (/Tablet/.test(device.id)) return 'tablet';
+    if (/Laptop/.test(device.id)) return 'laptop';
+    if (device.id === 'linux') return basic?.battery && basic.battery.level != null && !basic.battery.unavailable ? 'laptop' : 'desktop';
+    return 'desktop';
+  }
+  const name = (device?.name || '').toLowerCase();
+  if (/iphone/.test(name)) return 'phone';
+  if (/ipad/.test(name)) return 'tablet';
+  if (/macbook/.test(name)) return 'laptop';
+  if (name) return 'desktop';
+  const touch = basic?.touch?.maxTouchPoints || 0;
+  const w = basic?.screen?.w || 0;
+  if (touch > 0 && w < 768) return 'phone';
+  if (touch > 0) return 'tablet';
+  return basic?.battery && basic.battery.level != null && !basic.battery.unavailable ? 'laptop' : 'desktop';
 }
 
-const BROWSER_ICONS = { chrome: '🌐', firefox: '🦊', safari: '🧭', edge: '🌐', arc: '🌐', opera: '🌐', brave: '🦁' };
-export function browserIcon(name) {
-  const lower = (name || '').toLowerCase();
-  for (const key of Object.keys(BROWSER_ICONS)) if (lower.includes(key)) return BROWSER_ICONS[key];
-  return '';
+// 'mac', 'ios', 'windows', 'android', 'chromeos', 'linux' or 'other'.
+export function osFamilyOf(basic) {
+  const ua = (basic?.userAgent || '').toLowerCase();
+  const platform = (basic?.uaPlatform || basic?.platform || '').toLowerCase();
+  if (/iphone|ipad|ipod/.test(ua) || platform.includes('ios')) return 'ios';
+  if (/android/.test(ua) || platform.includes('android')) return 'android';
+  if (/mac os x|macintosh/.test(ua) || platform.includes('mac')) return 'mac';
+  if (/windows/.test(ua) || platform.includes('win')) return 'windows';
+  if (/cros/.test(ua) || platform.includes('chrome os')) return 'chromeos';
+  if (/linux/.test(ua) || platform.includes('linux')) return 'linux';
+  return 'other';
+}
+
+// The company behind the operating system, as a key of t.vendors; null for Linux.
+export function osVendorKey(family) {
+  return { mac: 'apple', ios: 'apple', windows: 'microsoft', android: 'google', chromeos: 'google' }[family] || null;
+}
+
+// The company behind the browser, as a key of t.vendors; null when unknown.
+export function browserVendorKey(browserName) {
+  const name = (browserName || '').toLowerCase();
+  if (name.startsWith('arc')) return 'arc';
+  if (name.startsWith('edge')) return 'microsoft';
+  if (name.startsWith('opera')) return 'opera';
+  if (name.startsWith('yandex')) return 'yandex';
+  if (name.startsWith('firefox')) return 'mozilla';
+  if (name.startsWith('brave')) return 'brave';
+  if (name.startsWith('samsung')) return 'samsung';
+  if (name.startsWith('vivaldi')) return 'vivaldi';
+  if (name.startsWith('chrome')) return 'google';
+  if (name.startsWith('safari')) return 'apple';
+  return null;
 }
 
 // "ANGLE (Apple, Apple M2, OpenGL)" → "Apple M2"; "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)" → "NVIDIA, NVIDIA GeForce RTX 3060"
@@ -237,7 +276,7 @@ export const CITY_NAMES = {
   'Saint Petersburg': { ru: 'Санкт-Петербург', uz: 'Sankt-Peterburg' }
 };
 
-const LANGUAGE_FLAGS = { en: '🇬🇧', ru: '🇷🇺', uz: '🇺🇿', uk: '🇺🇦', de: '🇩🇪', fr: '🇫🇷', es: '🇪🇸', pt: '🇧🇷', zh: '🇨🇳', ja: '🇯🇵', ko: '🇰🇷', ar: '🇸🇦', hi: '🇮🇳', tr: '🇹🇷', kk: '🇰🇿', ky: '🇰🇬', tg: '🇹🇯' };
+export const LANGUAGE_FLAGS = { en: '🇬🇧', ru: '🇷🇺', uz: '🇺🇿', uk: '🇺🇦', de: '🇩🇪', fr: '🇫🇷', es: '🇪🇸', pt: '🇧🇷', zh: '🇨🇳', ja: '🇯🇵', ko: '🇰🇷', ar: '🇸🇦', hi: '🇮🇳', tr: '🇹🇷', kk: '🇰🇿', ky: '🇰🇬', tg: '🇹🇯' };
 export function langToFlag(code) {
   return LANGUAGE_FLAGS[String(code).split('-')[0].toLowerCase()] || '🏳️';
 }

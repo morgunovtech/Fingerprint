@@ -1,26 +1,25 @@
-# Fingerprint — What a Website Sees About You
+# Fingerprint — Who Learns What About You While You Open a Website
 
-> Free privacy check for everyday users: it shows what any website learns about your browser the moment you open it, how unique that makes you, and how to be harder to track. All fingerprint signals and the uniqueness score are computed in the browser and never uploaded; only the optional "Check network" asks the site's own Cloudflare Worker what a server sees.
+> An educational page about online privacy for people who are not technical: six steps from opening a laptop to a loaded website, and at each step, on the visitor's real data, who learns what about them and what to do about it. Everything is computed in the browser and never uploaded; only the button at step 3 sends one request to the site's own Cloudflare Worker.
 
 ## What It Does
 
-Fingerprint reads the same signals any site can read without asking — browser and OS, screen, GPU, fonts, Canvas and audio hashes, languages and timezone and more — turns them into plain guesses about the device and the visitor, estimates how unique the combination is, and gives advice matched to what it found.
+The page is one walk of six steps: you opened your laptop (or unlocked your phone), the operating system started, you went online, you opened the browser, you typed the site's address, the site loaded. Each step shows what was measured right now from the visitor's browser, who learns it (named from the data: the makers of the system and the browser, the provider, Cloudflare, the site owner), how it works, why it matters and one thing to do, specific to the visitor's system and browser. Then the sum: who learned what, a checklist, a share text built from the data. At the bottom, the raw data for the curious.
 
 ## Key Features
 
-- **What a site sees instantly**: browser and OS, screen and monitors, GPU, CPU cores and memory, languages and timezone, fonts, Canvas and audio hashes, storage, permissions, battery, media devices — no prompts needed. The page turns these into guesses: device model and OS version, and after "Check network" the location, VPN likelihood and a WebRTC leak check.
-- **Uniqueness estimate**: each signal is weighted by how common it is (frequency tables based on EFF Panopticlick and FingerprintJS research, correlated signals counted once), and the result is ranked against 25,000 simulated browsers.
-- **Tips to protect yourself**: advice matched to the findings — a timezone that doesn't match the IP, a WebRTC leak, an exposed Canvas fingerprint — with steps for Chrome, Firefox, Brave and Safari.
-- **Tracker simulation**: three ad-blocker bait elements created on the page itself (nothing is loaded from anywhere) and the Do Not Track and Global Privacy Control settings.
-- **Server-side view**: "Check network" shows what a server sees before any JavaScript runs — IP, ISP and ASN, TLS version, HTTP protocol, header order, Client Hints — and where that disagrees with the browser; plus connection type (home, mobile, data center, VPN), four DNS blocklists, reverse DNS and a speed test.
-- **Story Mode** (`?mode=story`): the same data told as a walk from opening a laptop to watching a video — who sees what at each step, why it matters, what to do.
-- Light, dark and high-contrast themes; share and print.
+- **Real data, three tiers of honesty**: rows measured right now in the browser; rows that appear after the check at step 3 (IP, provider, where the IP places you, connection type, VPN signs, TLS version, HTTP protocol, what the server got before any script); and plain explanations of what a web page cannot see (the OS maker's telemetry at boot, the DNS server's log).
+- **Named parties**: Apple, Microsoft or Google for the system; Google, Apple, Mozilla, Brave, Yandex, Microsoft, Opera, Samsung, Vivaldi or The Browser Company for the browser; the provider by name after the check; the DNS server; Cloudflare; the site owner; ad networks (none on this page, 10 to 30 on a typical site).
+- **One action per step**, for macOS, iOS, Windows, Android, ChromeOS and Linux, and for Chrome, Firefox, Brave and Safari.
+- **Bait check for ad blockers**: three hidden elements with the class names blockers hide, plus the Do Not Track and Global Privacy Control signals; nothing is loaded from anywhere.
+- **WebRTC probe** without a STUN server: it sends nothing and reports whether a real address shows in the ICE candidates.
+- Russian, English and Uzbek; light, dark and high-contrast themes; share and print.
 
 ## Privacy
 
-- **Computed in the browser**: all fingerprint signals, the uniqueness score, the device guesses, the tracker checks and the WebRTC probe (no STUN server, nothing is sent). The page does not upload them, and no third party sees the fingerprint.
+- **Computed in the browser**: every row of the walk, the device and OS guesses, the bait check and the WebRTC probe. The page does not upload them, and no third party sees them.
 - **On page load** the page only reads aggregate stats from the site's Cloudflare Worker, which sees the IP and request headers, as any server does.
-- **"Check network"** (on click only) sends the IP to the Worker's `/api/whoami` (returned, not stored) and `/api/scan`, which asks ipquery.io (ipinfo.io as fallback) for location, ISP and connection type and Google DNS for the reverse record and the blocklists. The scan report is cached for one hour under the IP. There is no WHOIS lookup. Only if the Worker is down does the browser ask public IP services directly (ipapi.co and freeipapi.com, then ipify.org and myip.com).
+- **The button at step 3** (on click only) sends the IP to the Worker's `/api/whoami` (returned, not stored) and `/api/scan`, which asks ipquery.io (ipinfo.io as fallback) for location, ISP and connection type and Google DNS for the reverse record and the blocklists. The scan report is cached for one hour under the IP. There is no WHOIS lookup. Only if the Worker is down does the browser ask public IP services directly (ipapi.co and freeipapi.com, then ipify.org and myip.com).
 - **Anonymous stats**: each check adds one to aggregate counters (browser and version, OS, country, TLS version) — no IP, no ID, no timestamps; anyone can read them at `/api/stats`.
 - **Cloudflare Web Analytics** counts page views without cookies.
 
@@ -34,7 +33,7 @@ Russian, English and Uzbek. The page follows the browser language; https://fprin
 
 ## Links
 
-- [Fingerprint](https://fprint.morgunov.tech/): the service
+- [Fingerprint](https://fprint.morgunov.tech/): the page
 - [Fingerprint in English](https://fprint.morgunov.tech/en/): the same page, English from the start
 - [Source code](https://github.com/morgunovtech/Fingerprint): the GitHub repository, MIT license
 - [Author](https://s.morgunov.tech/): Semyon Morgunov, who built it

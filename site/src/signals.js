@@ -1,8 +1,6 @@
-// Collects what the browser reveals without asking (the "basic" signals), hashes the combination
-// and scores it. Everything here stays in memory; nothing is sent anywhere.
+// Collects what the browser reveals without asking (the "basic" signals) and hashes the
+// combination. Everything here stays in memory; nothing is sent anywhere.
 
-import { featuresOf, entropyFromFeatures, percentileFromH } from './entropy.js';
-import { guessOSVersion } from './device.js';
 import { state, snapshot } from './state.js';
 
 const TEXT_ENCODER = new TextEncoder();
@@ -322,12 +320,10 @@ export async function computeSnapshot() {
     exposure: collectExposureData()
   };
   const fp = await sha256(JSON.stringify(sortDeep(basic)));
-  const H = entropyFromFeatures(featuresOf(basic, guessOSVersion(basic)));
-  const pct = percentileFromH(H);
-  return { basic, fp, H, pct };
+  return { basic, fp };
 }
 
-// The snapshot, computed once; concurrent callers share the same promise.
+// The snapshot ({basic, fp}), computed once; concurrent callers share the same promise.
 export function getSnapshot() {
   if (snapshot.value) return Promise.resolve(snapshot.value);
   if (snapshot.promise) return snapshot.promise;

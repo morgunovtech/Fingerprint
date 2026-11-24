@@ -1,5 +1,5 @@
-// Everything that leaves the browser: the Worker (whoami, scan, stats, speed test), the public IP
-// services used only when the Worker is down, and the WebRTC probe (which sends nothing).
+// Everything that leaves the browser: the Worker (whoami, scan, stats), the public IP services
+// used only when the Worker is down, and the WebRTC probe (which sends nothing).
 
 import { WORKER_API } from './config.js';
 import { state } from './state.js';
@@ -225,34 +225,6 @@ export function autoFetchIp() {
     }
   })();
   return ipFetchPromise;
-}
-
-/* ---- Speed test through the Worker ---- */
-
-export async function measureLatency() {
-  const pings = [];
-  for (let i = 0; i < 3; i++) {
-    const t0 = performance.now();
-    await fetch(WORKER_API + '/api/speedtest/ping', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
-    pings.push(performance.now() - t0);
-  }
-  return Math.round(Math.min(...pings));
-}
-
-// Three downloads: a 500 KB warm-up, then 2 MB and 5 MB; the best throughput counts.
-export async function measureDownload(onProgress) {
-  const rounds = [{ size: 500000, warmup: true }, { size: 2000000 }, { size: 5000000 }];
-  let best = 0;
-  for (const round of rounds) {
-    const t0 = performance.now();
-    const resp = await fetch(WORKER_API + '/api/speedtest/download?size=' + round.size, { cache: 'no-store', signal: AbortSignal.timeout(30000) });
-    const data = await resp.arrayBuffer();
-    const seconds = (performance.now() - t0) / 1000;
-    const mbps = (data.byteLength * 8) / (seconds * 1000000);
-    if (mbps > best) best = mbps;
-    if (!round.warmup && onProgress) onProgress(mbps);
-  }
-  return Number(best.toFixed(1));
 }
 
 /* ---- /api/scan for the visitor's own IP ---- */
