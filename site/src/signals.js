@@ -1,7 +1,7 @@
 // Collects what the browser reveals without asking (the "basic" signals) and hashes the
 // combination. Everything here stays in memory; nothing is sent anywhere.
 
-import { state, snapshot } from './state.js';
+import { state, snapshot } from './state.js?v=3.1.1';
 
 const TEXT_ENCODER = new TextEncoder();
 

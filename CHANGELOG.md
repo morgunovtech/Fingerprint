@@ -2,6 +2,14 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.1.1 — 2026-11-24
+
+A returning visitor got today's page with yesterday's code. Fixed; nothing else changes.
+
+- **The cause.** Since 2.5.0 the page is markup plus separate modules and a stylesheet, named by plain path. Cloudflare Pages sends the HTML with `max-age=0` and everything else with `max-age=2073600` (24 days), so a browser that had opened 2.5.0 or 3.0.0 took the new `index.html` and ran the modules and the stylesheet it had cached: the old strings in the new markup, the old look, and the walk never rendered because the old code looked for elements that are gone. The symptom lasted until the cache expired or the visitor hard-reloaded.
+- **The fix, twice over.** `site/_headers` gives `/src/*` and `/assets/*` the same `Cache-Control: public, max-age=0, must-revalidate` as the page, so the browser asks every time and gets a 304 while nothing changed. And every script and stylesheet address the page uses, and every `import` between the modules, carries `?v=<release>` (`3.1.1` now), so a release is atomic: the new page can only load the new modules, whatever a browser or a proxy still holds. `selftest.js` fails when an import or a link lacks the current version, or when the cache rule is missing.
+- Version 3.1.1 in the page, the in-page changelog, `CHANGELOG.md`, the Worker (number only) and now the asset addresses; README says where the number lives.
+
 ## 3.1.0 — 2026-11-24
 
 The page wears the morgunov.tech design system. What the page checks and sends does not change.

@@ -9,6 +9,17 @@
 /404.html
   X-Robots-Tag: noindex
 
+# The scripts and the stylesheet revalidate on every visit, as the page itself does (Pages sends
+# max-age=0 for HTML and 24 days for everything else). The page names them with ?v=<release>
+# as well, so a new page never runs a module cached from an earlier release; until 3.1.1 a
+# returning visitor got today's markup with yesterday's modules for up to 24 days. ETags keep
+# the revalidation to a 304.
+/src/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/*
+  Cache-Control: public, max-age=0, must-revalidate
+
 # The site lives at https://fprint.morgunov.tech. The technical Pages hosts
 # (fingerprint-66l.pages.dev and the per-deployment preview hosts) stay out of search results.
 https://:project.pages.dev/*
