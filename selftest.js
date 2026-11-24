@@ -934,6 +934,9 @@ const I18N = vm.runInContext('I18N', sandbox);
   assert.equal(fromWorker.source, 'worker');
   assert.equal(fromWorker.details.region, 'Tashkent');
   assert.deepEqual(publicIpCalls(logStart), []);
+  // The page calls the Worker on its own host (the route fprint.morgunov.tech/api/*), not workers.dev.
+  assert.ok(fetchLog.slice(logStart).some(entry => entry.url === 'https://fprint.morgunov.tech/api/whoami'));
+  assert.ok(!fetchLog.some(entry => entry.url.includes('workers.dev')), 'no calls to the workers.dev address');
   workerWhoami = null;
   stateRef.whoamiData = null;
   logStart = fetchLog.length;

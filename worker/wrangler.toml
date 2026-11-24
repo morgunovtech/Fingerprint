@@ -18,7 +18,7 @@ binding = "CACHE"
 id = "8451daf9f5af49c9bbf730f95460697b"
 
 # Calls from the page to fprint.morgunov.tech/api/ are same-origin and need no CORS. The
-# site's origin stays listed for calls to the workers.dev address: the page makes them
-# until it moves to its own host, and cached copies of older pages keep making them.
+# site's origin stays listed for calls to the workers.dev address from pages older than
+# 2.3.0 that are still open or cached; localhost:3000 is a local copy of the site.
 [vars]
 ALLOWED_ORIGINS = "https://fprint.morgunov.tech,http://localhost:3000"

@@ -26,7 +26,7 @@ Fingerprint reads the same signals any site can read without asking — browser 
 
 ## API
 
-The Worker answers at https://fingerprint-api.xfxrrpkvr5.workers.dev with `/api/check` (plain text for `curl`: what a server sees about you), `/api/whoami`, `/api/scan?target=<IP or domain>` (DNS records, certificates from CT logs and security headers for a domain), `/api/stats`, `/api/health`, `/api/speedtest/*`. Rate limit: 60 requests a minute per IP.
+The Worker answers on the site's own host, https://fprint.morgunov.tech/api/ (the older https://fingerprint-api.xfxrrpkvr5.workers.dev answers the same paths), with `/api/check` (plain text for `curl`: what a server sees about you), `/api/whoami`, `/api/scan?target=<IP or domain>` (DNS records, certificates from CT logs and security headers for a domain), `/api/stats`, `/api/health`, `/api/speedtest/*`. Rate limit: 60 requests a minute per IP.
 
 ## Languages
 
