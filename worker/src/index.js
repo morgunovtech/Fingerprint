@@ -18,7 +18,7 @@ import { collectFingerprint } from './collector.js';
 
 // One version for the release: the same number as APP_VERSION in site/index.html,
 // worker/package.json and the top entry of CHANGELOG.md.
-const VERSION = '2.2.1';
+const VERSION = '2.2.2';
 
 /* ============ /api/whoami — build visitor profile from request ============ */
 

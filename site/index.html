@@ -17,6 +17,42 @@
   <meta id="twTitle" name="twitter:title" content="Fingerprint — узнай, насколько ты анонимен в сети" />
   <meta id="twDescription" name="twitter:description" content="Показываем, какие данные сайты видят уже сейчас, оцениваем уникальность отпечатка и даём понятные советы по защите приватности." />
   <meta name="twitter:image" content="https://fprint.morgunov.tech/share-card.svg" />
+  <!-- Yandex Webmaster ownership of fprint.morgunov.tech (Google verifies the whole
+       morgunov.tech domain by DNS). -->
+  <meta name="yandex-verification" content="33eb7fdb9bb757df" />
+  <!-- Structured data for search engines and AI assistants: a JSON data block the browser never
+       runs. It stays in the head, above the page's one inline script, which selftest.js finds by
+       its bare opening tag. The author is the Person of s.morgunov.tech's own JSON-LD. -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Fingerprint",
+      "url": "https://fprint.morgunov.tech",
+      "description": "Проверка приватности для обычных пользователей: страница показывает, что любой сайт узнаёт о вашем браузере в момент открытия, насколько уникальным это вас делает и как стать менее заметным для слежки.",
+      "applicationCategory": "SecurityApplication",
+      "operatingSystem": "Any",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": [
+        "ru",
+        "en",
+        "uz"
+      ],
+      "sameAs": "https://github.com/morgunovtech/Fingerprint",
+      "author": {
+        "@type": "Person",
+        "@id": "https://s.morgunov.tech/#person",
+        "name": "Семён Моргунов",
+        "alternateName": "Semyon Morgunov",
+        "url": "https://s.morgunov.tech/"
+      }
+    }
+  </script>
   <style>
     :root{
       color-scheme: light dark;
@@ -2829,8 +2865,29 @@ const I18N = {
   }
 };
 
-const APP_VERSION = '2.2.1';
+const APP_VERSION = '2.2.2';
 const CHANGELOG = [
+  {
+    version:'2.2.2',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Страницу проще найти поисковикам и ИИ-ассистентам: структурированные данные JSON-LD, файл llms.txt с описанием сервиса и Content Signals в robots.txt (поиск и ответы ИИ — да)',
+        'Код подтверждения сайта для Яндекс Вебмастера',
+        'Технические адреса Pages (*.pages.dev) закрыты от поисковиков'
+      ],
+      en:[
+        'Easier for search engines and AI assistants to find: JSON-LD structured data, an llms.txt that describes the service and Content Signals in robots.txt (search and AI answers: yes)',
+        'Site verification code for Yandex Webmaster',
+        'The technical Pages addresses (*.pages.dev) are hidden from search engines'
+      ],
+      uz:[
+        "Sahifani qidiruv tizimlari va sunʼiy intellekt yordamchilari osonroq topadi: JSON-LD tuzilgan maʼlumotlari, xizmatni tavsiflovchi llms.txt fayli va robots.txt dagi Content Signals (qidiruv va sunʼiy intellekt javoblari — ha)",
+        "Yandex Webmaster uchun saytni tasdiqlash kodi",
+        "Pages ning texnik manzillari (*.pages.dev) qidiruv tizimlaridan yashirildi"
+      ]
+    }
+  },
   {
     version:'2.2.1',
     date:'2026-11-24',

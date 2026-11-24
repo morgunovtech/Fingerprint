@@ -28,6 +28,42 @@ if (!match) {
 const script = match[1];
 assertNoMergeMarkers(script, 'inline script');
 
+// Static files for search engines and AI assistants. The JSON-LD block sits in <head>, above the
+// one inline <script> the regex above extracts, so it never ends up in the sandbox.
+{
+  const head = html.slice(0, html.indexOf('</head>'));
+  assert.match(head, /<meta name="yandex-verification" content="33eb7fdb9bb757df" \/>/);
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  assert.equal(blocks.length, 1, 'one JSON-LD block');
+  assert.equal(html.split('<script>').length, 2, 'exactly one bare <script> tag: the one extracted above');
+  assert.ok(blocks[0].index < html.indexOf('<script>'), 'JSON-LD sits above the inline script');
+  const data = JSON.parse(blocks[0][1]);
+  assert.equal(data['@type'], 'WebApplication');
+  assert.equal(data.url, head.match(/<link rel="canonical" href="([^"]+)"/)[1]);
+  assert.equal(data.applicationCategory, 'SecurityApplication');
+  assert.equal(data.isAccessibleForFree, true);
+  assert.deepEqual(data.inLanguage, ['ru', 'en', 'uz']);
+  assert.equal(data.sameAs, 'https://github.com/morgunovtech/Fingerprint');
+  // The Person of s.morgunov.tech's own JSON-LD: the same @id joins the two.
+  assert.equal(data.author['@id'], 'https://s.morgunov.tech/#person');
+
+  // A crawler that matches a named group ignores the * group, so every group carries the signals.
+  const robots = fs.readFileSync(path.join(__dirname, 'site', 'robots.txt'), 'utf8');
+  const groups = robots.split(/\n(?=User-agent:)/).filter(group => group.startsWith('User-agent:'));
+  assert.ok(groups.length > 1);
+  groups.forEach(group => {
+    assert.match(group, /^Content-Signal: search=yes, ai-input=yes$/m, group.split('\n')[0]);
+  });
+  assert.doesNotMatch(robots, /ai-train/, 'no ai-train signal either way');
+
+  const llms = fs.readFileSync(path.join(__dirname, 'site', 'llms.txt'), 'utf8');
+  assert.match(llms, /^# Fingerprint/);
+  assert.match(llms, /^> /m);
+  ['https://fprint.morgunov.tech/', 'https://github.com/morgunovtech/Fingerprint', 'https://s.morgunov.tech/'].forEach(url => {
+    assert.ok(llms.includes(`(${url})`), url);
+  });
+}
+
 class Element {
   constructor(id = null, tagName = 'div') {
     this.id = id;
