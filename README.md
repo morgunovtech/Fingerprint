@@ -2,7 +2,7 @@
 
 A privacy check for everyday users: it shows what any website learns about your browser the moment you open it, how unique that makes you, and how to be harder to track.
 
-**Live:** https://fprint.morgunov.tech · **License:** [MIT](LICENSE) · 🇷🇺 [По-русски](README.ru.md)
+**Live:** https://fprint.morgunov.tech · **API:** https://fprint.morgunov.tech/api/ · **License:** [MIT](LICENSE) · 🇷🇺 [По-русски](README.ru.md)
 
 ## What it does
 
@@ -14,10 +14,31 @@ A privacy check for everyday users: it shows what any website learns about your 
 - **Story Mode.** The same data told as a walk from opening your laptop to watching a YouTube video: who sees what at each step, why it matters, what to do. Toggle it in the header or open `?mode=story`.
 - Russian, English and Uzbek; light, dark and high-contrast themes; share and print.
 
+## API
+
+The Worker behind "Check network" is public at **https://fprint.morgunov.tech/api/**, on the site's own host: no key, no sign-up, 60 requests per minute per IP. Its original address, `https://fingerprint-api.xfxrrpkvr5.workers.dev`, answers the same paths and keeps working.
+
+```sh
+# What a server sees about you before any JavaScript runs, as plain text
+curl https://fprint.morgunov.tech/api/check
+
+# The same as JSON
+curl -H 'Accept: application/json' https://fprint.morgunov.tech/api/check
+
+# A report for an IP or a domain (for a domain also certificates and security headers)
+curl 'https://fprint.morgunov.tech/api/scan?target=example.com'
+
+# Anonymous aggregate stats; the deployed version
+curl https://fprint.morgunov.tech/api/stats
+curl https://fprint.morgunov.tech/api/health
+```
+
+`/api/whoami` is what the page calls: the same JSON as `/api/check`, and each call adds one to the anonymous stats. The speed test uses `/api/speedtest/ping`, `/api/speedtest/download?size=N` (100 KB to 25 MB) and `POST /api/speedtest/upload`.
+
 ## Privacy
 
 - **Computed in your browser:** all fingerprint signals, the uniqueness score, the profile and the tracker checks. The page does not upload them, and no third party sees your fingerprint. The only outside script is Cloudflare's page-view counter (below), which Pages adds.
-- **The Worker** gets your IP and request headers, as any server does. On page load the page only reads aggregate stats from it. A per-IP rate-limit counter lives in Workers KV and expires after 60 seconds.
+- **The Worker** answers at https://fprint.morgunov.tech/api/, the same host as the page, and gets your IP and request headers, as any server does. Until 2.3.0 the page called it at `fingerprint-api.xfxrrpkvr5.workers.dev`: the move changed the hostname your browser talks to, not what it sends, and that address still answers. On page load the page only reads aggregate stats from it. A per-IP rate-limit counter lives in Workers KV and expires after 60 seconds.
 - **"Check network"** calls `/api/whoami` (your IP, Cloudflare's location and ASN for it, your headers; returned to you, not stored), the speed test, and `/api/scan` for your IP. The scan sends your IP to ipquery.io (ipinfo.io as fallback) for location, ISP and connection type, to Google DNS (`dns.google`) for the reverse record and the four blocklist lookups. There is no WHOIS lookup. The report is cached in KV under your IP for one hour. Only if the Worker is down does the browser ask public IP services directly: ipapi.co and freeipapi.com, then ipify.org and myip.com if those fail too.
 - **Scanning a domain** (`/api/scan?target=example.com`, API only; the page never sends one) also asks Google DNS for the domain's records, crt.sh for its certificates (certificate transparency logs), and sends one `HEAD` request to the domain itself over https, then http if that fails, to read its security headers. Those services see the scanned domain, and ipquery.io and the blocklists see its resolved address, not yours.
 - **Anonymous stats:** each `/api/whoami` call adds one to aggregate counters: total checks, browser and major version, OS, country, TLS version. No IP, no ID, no timestamps. The page uses them for the "fingerprints checked" footer and the "X% of visitors" hints (after 100 checks). Anyone can read them at `/api/stats`.
@@ -46,7 +67,7 @@ cd worker && npm ci && npx wrangler dev
 node selftest.js
 ```
 
-The page talks to the deployed Worker (`WORKER_API` in `site/index.html`). Port 3000 is in the Worker's `ALLOWED_ORIGINS`; on the default port 8788 CORS blocks those calls. To try your local Worker, point `WORKER_API` at `http://localhost:8787`.
+The page talks to the deployed Worker at https://fprint.morgunov.tech (`WORKER_API` in `site/index.html`). From `localhost` that is a cross-origin call: port 3000 is in the Worker's `ALLOWED_ORIGINS`; on the default port 8788 CORS blocks those calls. To try your local Worker, point `WORKER_API` at `http://localhost:8787`.
 
 ## Deploy
 

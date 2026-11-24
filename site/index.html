@@ -602,7 +602,11 @@
 
 <script>
 const PERSONAL_URL='https://s.morgunov.tech';
-const WORKER_API='https://fingerprint-api.xfxrrpkvr5.workers.dev';
+// The Worker answers on the site's own host (a route for fprint.morgunov.tech/api/*), so
+// on the live site these calls are same-origin. The address is absolute rather than '/api'
+// so a local copy on port 3000 still reaches the deployed Worker (CORS allows that origin).
+// The old https://fingerprint-api.xfxrrpkvr5.workers.dev answers the same paths too.
+const WORKER_API='https://fprint.morgunov.tech';
 
 /* ================= I18N ================= */
 const I18N = {
@@ -2865,8 +2869,26 @@ const I18N = {
   }
 };
 
-const APP_VERSION = '2.2.2';
+const APP_VERSION = '2.3.0';
 const CHANGELOG = [
+  {
+    version:'2.3.0',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'API теперь на адресе сайта: https://fprint.morgunov.tech/api/ (например, curl https://fprint.morgunov.tech/api/check). Старый адрес на workers.dev продолжает работать',
+        'Страница обращается к серверу на своём же адресе: запросы те же, меняется только имя хоста'
+      ],
+      en:[
+        'The API lives at the site’s own address: https://fprint.morgunov.tech/api/ (try curl https://fprint.morgunov.tech/api/check). The old workers.dev address keeps working',
+        'The page talks to the server on its own address: the same requests, only the hostname changes'
+      ],
+      uz:[
+        "API endi sayt manzilida: https://fprint.morgunov.tech/api/ (masalan, curl https://fprint.morgunov.tech/api/check). workers.dev dagi eski manzil ham ishlashda davom etadi",
+        "Sahifa serverga oʻz manzili orqali murojaat qiladi: soʻrovlar oʻsha-oʻsha, faqat xost nomi oʻzgaradi"
+      ]
+    }
+  },
   {
     version:'2.2.2',
     date:'2026-11-24',

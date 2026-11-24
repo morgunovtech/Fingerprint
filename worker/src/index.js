@@ -1,6 +1,9 @@
 /**
  * Cloudflare Worker — Fingerprint API
  *
+ * Served at https://fprint.morgunov.tech/api/ (a route on the site's own host) and at
+ * https://fingerprint-api.xfxrrpkvr5.workers.dev; both answer the same paths.
+ *
  * Routes:
  *   GET  /api/scan?target=example.com   — full fingerprint report for a domain
  *   GET  /api/scan?target=8.8.8.8       — IP scan
@@ -18,7 +21,7 @@ import { collectFingerprint } from './collector.js';
 
 // One version for the release: the same number as APP_VERSION in site/index.html,
 // worker/package.json and the top entry of CHANGELOG.md.
-const VERSION = '2.2.2';
+const VERSION = '2.3.0';
 
 /* ============ /api/whoami — build visitor profile from request ============ */
 

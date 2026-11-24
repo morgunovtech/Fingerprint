@@ -2,9 +2,13 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
-## Unreleased
+## 2.3.0 — 2026-11-24
 
-- The Worker gets a second address on the site's own host: once deployed, it answers at https://fprint.morgunov.tech/api/ with the same paths as before (a route `fprint.morgunov.tech/api/*` on the `morgunov.tech` zone). `https://fingerprint-api.xfxrrpkvr5.workers.dev` keeps answering; the page still calls it until the next release moves it to its own host.
+The API has a new public address on the site's own host; the old one keeps working.
+
+- The Worker answers at https://fprint.morgunov.tech/api/ with the same paths as before (`/api/check`, `/api/whoami`, `/api/scan`, `/api/stats`, `/api/health`, `/api/speedtest/*`): a route `fprint.morgunov.tech/api/*` on the `morgunov.tech` zone. `https://fingerprint-api.xfxrrpkvr5.workers.dev` answers the same way for everyone who already calls it.
+- The page calls its own host: the stats on load, "Check network" and the speed test go to https://fprint.morgunov.tech/api/, same-origin, so no CORS. The hostname the browser talks to changes; what it sends does not.
+- README.md and README.ru.md: an API section with `curl` examples at the new address; the Privacy section names the host and says the workers.dev address still answers. `llms.txt` gives the new API address too.
 
 ## 2.2.2 — 2026-11-24
 
