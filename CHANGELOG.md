@@ -5,7 +5,16 @@ What changed for the people who use the page or call the Worker. The site's own 
 ## Unreleased
 
 - The Worker gets a second address on the site's own host: once deployed, it answers at https://fprint.morgunov.tech/api/ with the same paths as before (a route `fprint.morgunov.tech/api/*` on the `morgunov.tech` zone). `https://fingerprint-api.xfxrrpkvr5.workers.dev` keeps answering; the page still calls it until the next release moves it to its own host.
+
+## 2.2.2 — 2026-11-24
+
+Search engines and AI assistants can find and cite the page; nothing changes in what it checks or sends.
+
+- The page's `<head>` carries the Yandex Webmaster verification meta for fprint.morgunov.tech (Google verifies the whole morgunov.tech domain by DNS) and a JSON-LD `WebApplication`: name, canonical URL, the README's first sentence, `SecurityApplication`, free, Russian, English and Uzbek, the GitHub repository, and the author as the same `Person` that s.morgunov.tech declares. It is a data block the browser never runs.
+- `robots.txt` gives the Content Signals `search=yes, ai-input=yes` (https://contentsignals.org) in every group — a crawler with its own group ignores `*` — so search results and AI answers may use the page. There is no `ai-train` signal either way.
+- `llms.txt`: what the page checks, what stays in the browser and what reaches a server, the Worker's API, the languages and the links, in plain text for AI assistants.
 - The technical Pages hosts (`fingerprint-66l.pages.dev` and the per-deployment preview hosts) send `X-Robots-Tag: noindex`, so search engines index only https://fprint.morgunov.tech.
+- `selftest.js` checks the new static files: the JSON-LD parses and names the canonical address, every `robots.txt` group has the signals, `llms.txt` links the site, the repository and the author.
 
 ## 2.2.1 — 2026-11-24
 

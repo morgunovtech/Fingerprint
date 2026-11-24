@@ -1,0 +1,39 @@
+# Fingerprint — What a Website Sees About You
+
+> Free privacy check for everyday users: it shows what any website learns about your browser the moment you open it, how unique that makes you, and how to be harder to track. All fingerprint signals and the uniqueness score are computed in the browser and never uploaded; only the optional "Check network" asks the site's own Cloudflare Worker what a server sees.
+
+## What It Does
+
+Fingerprint reads the same signals any site can read without asking — browser and OS, screen, GPU, fonts, Canvas and audio hashes, languages and timezone and more — turns them into plain guesses about the device and the visitor, estimates how unique the combination is, and gives advice matched to what it found.
+
+## Key Features
+
+- **What a site sees instantly**: browser and OS, screen and monitors, GPU, CPU cores and memory, languages and timezone, fonts, Canvas and audio hashes, storage, permissions, battery, media devices — no prompts needed. A profile section turns these into guesses: device model, likely region, VPN likelihood, WebRTC IP leak.
+- **Uniqueness estimate**: each signal is weighted by how common it is (frequency tables based on EFF Panopticlick and FingerprintJS research, correlated signals counted once), and the result is ranked against 25,000 simulated browsers.
+- **Tips to protect yourself**: advice matched to the findings — a timezone that doesn't match the IP, a WebRTC leak, an exposed Canvas fingerprint — with steps for Chrome, Firefox, Brave and Safari.
+- **Tracker simulation**: three ad-blocker bait elements created on the page itself (nothing is loaded from anywhere) and the Do Not Track and Global Privacy Control settings.
+- **Server-side view**: "Check network" shows what a server sees before any JavaScript runs — IP, ISP and ASN, TLS version, HTTP protocol, header order, Client Hints — and where that disagrees with the browser; plus connection type (home, mobile, data center, VPN), four DNS blocklists, reverse DNS and a speed test.
+- **Story Mode** (`?mode=story`): the same data told as a walk from opening a laptop to watching a video — who sees what at each step, why it matters, what to do.
+- Light, dark and high-contrast themes; share and print.
+
+## Privacy
+
+- **Computed in the browser**: all fingerprint signals, the uniqueness score, the profile and the tracker checks. The page does not upload them, and no third party sees the fingerprint.
+- **On page load** the page only reads aggregate stats from the site's Cloudflare Worker, which sees the IP and request headers, as any server does.
+- **"Check network"** (on click only) sends the IP to the Worker's `/api/whoami` (returned, not stored) and `/api/scan`, which asks ipquery.io (ipinfo.io as fallback) for location, ISP and connection type and Google DNS for the reverse record and the blocklists. The scan report is cached for one hour under the IP. There is no WHOIS lookup. Only if the Worker is down does the browser ask public IP services directly (ipapi.co and freeipapi.com, then ipify.org and myip.com).
+- **Anonymous stats**: each check adds one to aggregate counters (browser and version, OS, country, TLS version) — no IP, no ID, no timestamps; anyone can read them at `/api/stats`.
+- **Cloudflare Web Analytics** counts page views without cookies.
+
+## API
+
+The Worker answers at https://fingerprint-api.xfxrrpkvr5.workers.dev with `/api/check` (plain text for `curl`: what a server sees about you), `/api/whoami`, `/api/scan?target=<IP or domain>` (DNS records, certificates from CT logs and security headers for a domain), `/api/stats`, `/api/health`, `/api/speedtest/*`. Rate limit: 60 requests a minute per IP.
+
+## Languages
+
+Russian, English and Uzbek.
+
+## Links
+
+- [Fingerprint](https://fprint.morgunov.tech/): the service
+- [Source code](https://github.com/morgunovtech/Fingerprint): the GitHub repository, MIT license
+- [Author](https://s.morgunov.tech/): Semyon Morgunov, who built it
