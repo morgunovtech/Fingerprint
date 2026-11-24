@@ -1,6 +1,6 @@
 // Entry point: wires the controls, picks the language and theme, and renders the walk.
 
-import { APP_VERSION, LANG_FLAGS, LANG_KEY, THEME_KEY } from './config.js';
+import { APP_VERSION, LANG_KEY, LEGACY_THEME_KEY, THEMES, THEME_KEY } from './config.js';
 import { getEl, esc } from './dom.js';
 import { state, snapshot } from './state.js';
 import { I18N, textsFor } from './i18n/index.js';
@@ -13,35 +13,65 @@ import { handleShareClick, handleSaveClick } from './share.js';
 
 /* ---- Theme ---- */
 
-const THEME_ICONS = { auto: '🌓', light: '☀️', dark: '🌙', contrast: '◑' };
+// Themes switch on data-theme on <html> (light, dark, high-contrast), the attribute the design
+// system's tokens read; data-theme-preference keeps the choice itself, "auto" included. The same
+// two attributes are set before first paint by src/theme-init.js; this code takes over from there.
+const DARK_SCHEME = '(prefers-color-scheme: dark)';
 let themePreference = 'auto';
+let schemeQuery = null;
 
+function systemTheme() {
+  try { return window.matchMedia(DARK_SCHEME).matches ? 'dark' : 'light'; } catch (_) { return 'light'; }
+}
+
+// The saved choice under the key every morgunov.tech page shares, or the key this page used before
+// 3.1.0, moved on the first visit ("contrast" is "high-contrast").
 function loadThemePreference() {
   try {
     const stored = localStorage.getItem(THEME_KEY);
-    if (stored in THEME_ICONS) return stored;
-  } catch (_) { /* ignore */ }
+    if (THEMES.includes(stored)) return stored;
+    const legacy = localStorage.getItem(LEGACY_THEME_KEY);
+    if (legacy) {
+      localStorage.removeItem(LEGACY_THEME_KEY);
+      const moved = legacy === 'contrast' ? 'high-contrast' : legacy;
+      if (THEMES.includes(moved)) { localStorage.setItem(THEME_KEY, moved); return moved; }
+    }
+  } catch (_) { /* storage blocked: the system setting decides */ }
   return 'auto';
 }
 
-export function applyThemePreference(mode) {
-  themePreference = mode in THEME_ICONS ? mode : 'auto';
+function stampTheme() {
   const root = document.documentElement;
-  root.classList.remove('force-light', 'force-dark', 'force-contrast');
-  if (themePreference !== 'auto') root.classList.add('force-' + themePreference);
-  try { localStorage.setItem(THEME_KEY, themePreference); } catch (_) { /* ignore */ }
+  root.setAttribute('data-theme', themePreference === 'auto' ? systemTheme() : themePreference);
+  root.setAttribute('data-theme-preference', themePreference);
 }
 
+export function applyThemePreference(mode) {
+  themePreference = THEMES.includes(mode) ? mode : 'auto';
+  stampTheme();
+  try { localStorage.setItem(THEME_KEY, themePreference); } catch (_) { /* ignore */ }
+  // "auto" follows the system setting while the page is open.
+  if (!schemeQuery) {
+    try {
+      schemeQuery = window.matchMedia(DARK_SCHEME);
+      schemeQuery.addEventListener('change', () => { if (themePreference === 'auto') stampTheme(); });
+    } catch (_) { schemeQuery = null; }
+  }
+}
+
+// The button says "Theme" and names the current mode to assistive tech; the menu says the modes in
+// words (no emoji in the chrome) and marks the current one.
 export function updateThemeButton(t) {
   const btn = getEl('themeBtn');
   if (!btn) return;
   const modes = t.theme?.modes || {};
-  const prefix = t.theme?.label || 'Theme';
-  btn.innerHTML = `<span class="menu-icon" aria-hidden="true">${THEME_ICONS[themePreference]}</span><span class="btn-text">${esc(prefix)}</span>`;
-  btn.setAttribute('aria-label', `${prefix}: ${modes[themePreference] || themePreference}`);
-  getEl('themeMenu')?.querySelectorAll('button[data-theme]').forEach(item => {
-    const value = item.dataset.theme || '';
-    item.setAttribute('aria-label', modes[value] || value);
+  const label = t.theme?.label || 'Theme';
+  btn.textContent = label;
+  btn.setAttribute('aria-label', `${label}: ${modes[themePreference] || themePreference}`);
+  getEl('themeMenu')?.querySelectorAll('button[data-theme-option]').forEach(item => {
+    const value = item.dataset.themeOption || '';
+    item.textContent = modes[value] || value;
+    item.setAttribute('aria-checked', String(value === themePreference));
     item.classList.toggle('active', value === themePreference);
   });
 }
@@ -142,14 +172,16 @@ export async function render(lang) {
   setMenu('lang', menus.lang);
   setMenu('theme', menus.theme);
 
+  // The button shows the current language's code; the menu names the languages in their own words
+  // (the markup) and marks the current one.
   const langBtn = getEl('langBtn');
   if (langBtn) {
-    langBtn.textContent = `${LANG_FLAGS[state.lang] || ''} ${t.langButton || 'Language'}`;
-    langBtn.setAttribute('aria-label', t.langButton || 'Language');
+    langBtn.textContent = state.lang.toUpperCase();
+    langBtn.setAttribute('aria-label', `${t.langButton || 'Language'}: ${t.langLabels?.[state.lang] || state.lang}`);
   }
   getEl('langMenu')?.querySelectorAll('button[data-lang]').forEach(btn => {
     const value = btn.dataset.lang;
-    btn.setAttribute('aria-label', t.langLabels?.[value] || btn.getAttribute('aria-label') || value);
+    btn.setAttribute('aria-checked', String(value === state.lang));
     btn.classList.toggle('active', value === state.lang);
   });
   updateThemeButton(t);
@@ -293,12 +325,12 @@ export function initApp() {
       setMenu('lang', false);
       setMenu('theme', !menus.theme);
     });
-    themeMenu.querySelectorAll('button[data-theme]').forEach(btn => {
+    themeMenu.querySelectorAll('button[data-theme-option]').forEach(btn => {
       btn.addEventListener('click', event => {
         event.preventDefault();
         event.stopPropagation();
-        if (!btn.dataset.theme) return;
-        applyThemePreference(btn.dataset.theme);
+        if (!btn.dataset.themeOption) return;
+        applyThemePreference(btn.dataset.themeOption);
         updateThemeButton(textsFor(state.lang));
         setMenu('theme', false);
         themeBtn.focus({ preventScroll: true });

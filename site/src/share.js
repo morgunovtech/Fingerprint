@@ -68,7 +68,12 @@ async function snapshotHtml() {
   doc.querySelectorAll('script').forEach(el => el.remove());
   for (const link of doc.querySelectorAll('link[rel="stylesheet"]')) {
     try {
-      const css = await (await fetch(link.getAttribute('href'))).text();
+      const href = link.getAttribute('href');
+      let css = await (await fetch(href)).text();
+      // The design system's stylesheets come from s.morgunov.tech and name their fonts by absolute
+      // path; in the saved file those paths get the stylesheet's origin, so the fonts still load.
+      const origin = new URL(href, window.location.href).origin;
+      if (origin !== window.location.origin) css = css.replace(/url\((['"]?)\//g, `url($1${origin}/`);
       const style = document.createElement('style');
       style.textContent = css;
       link.replaceWith(style);

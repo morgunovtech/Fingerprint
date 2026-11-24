@@ -2,6 +2,20 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.1.0 — 2026-11-24
+
+The page wears the morgunov.tech design system. What the page checks and sends does not change.
+
+- **Colours and type** come from the shared layer at https://s.morgunov.tech/ds/v1/ (`fonts`, `tokens` and `base` at their content-hashed addresses, the way Good Pass loads them; no `components.css`, the page keeps its own chrome). `site/assets/app.css` is rewritten on the `--v4-*` tokens: IBM Plex Sans and Mono, paper surfaces, square corners, no shadows or gradients, nothing heavier than 600, the DS button, menu, link and focus metrics. The light values stand in as fallbacks, so the page still reads if that origin is down. Status colours (safe / warning / danger) are the page's own, the values the TofsDevOps status page uses, 4.9:1 or better on the background and on the card in every theme; a status is a colour of text and a border, never a fill. The favicon is the orange mark with an "F".
+- **Themes** switch the way every morgunov.tech page does: `data-theme` on `<html>` (`light`, `dark`, `high-contrast`; `auto` follows the system setting and changes with it), set before first paint by `site/src/theme-init.js`, a plain script in the `<head>`. The saved choice moves from `fp_theme` to `theme-preference` (`contrast` becomes `high-contrast`), read once and removed, so the theme picked here is the theme on s.morgunov.tech and back.
+- **Chrome without emoji:** the language button shows the current code (RU / EN / UZ) and its menu names the languages in their own words, the theme menu says the words, the step number is a mono label instead of the watermark digit, the changelog's close button is a drawn cross. Flags inside the data (the languages row, the country of the IP) stay.
+- **Privacy wording:** the intro's "what goes out" list (RU/EN/UZ), README (EN/RU), `llms.txt` and the Privacy section name s.morgunov.tech as the origin of the stylesheets and fonts: the author's site, which sees the IP as any server does, sets no cookies and runs no analytics, and those requests carry nothing about the fingerprint.
+- "Print / Save" on a phone inlines the design-system stylesheets with absolute font addresses, so the saved file keeps the look.
+- Version 3.1.0 in the page, the in-page changelog (RU/EN/UZ), `CHANGELOG.md` and the Worker (version number only; the Worker is deployed by hand).
+- `selftest.js` checks the two theme attributes and the key migration, the four word-only theme options, the design-system links in the `<head>` of both pages (same files, same hashes), and that `app.css`, `index.html` and `404.html` carry no `border-radius`, `box-shadow`, gradient, `font-weight` above 600, theme classes or emoji.
+
+Left as is, on purpose: `share-card.svg`, `share-card-en.svg` and the PNG previews, brand assets to redraw together in the DS palette.
+
 ## 3.0.0 — 2026-11-24
 
 A new product on the same data. The page is one walk of six steps, from opening the device to a loaded site, for people who are not technical: at each step, what was measured right now, who learns it (by name, from the data: the makers of the system and the browser, your provider, Cloudflare), how it works, why it matters and one thing to do. The scanner it used to be (a uniqueness percentage, 22 cards of hashes, a speed test, two modes) is gone. The Worker's API keeps its shape.

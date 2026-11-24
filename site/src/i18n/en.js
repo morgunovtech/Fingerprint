@@ -4,7 +4,7 @@ import { PERSONAL_URL, CANONICAL_URL } from '../config.js';
 export default {
   langButton: 'Language',
   langLabels: { ru: 'Russian', en: 'English', uz: 'Uzbek' },
-  theme: { label: 'Theme', modes: { auto: 'Auto', light: 'Light', dark: 'Dark', contrast: 'Contrast' } },
+  theme: { label: 'Theme', modes: { auto: 'Auto', light: 'Light', dark: 'Dark', 'high-contrast': 'Contrast' } },
   meta: {
     title: 'Fingerprint — who learns what about you while you open a website',
     description: 'Six steps from opening your laptop to a loaded website: who learns what about you at each one, on your real data, and what to do about it.'
@@ -18,7 +18,7 @@ export default {
           just handed to this site. Nothing is sent anywhere except one request you trigger yourself at step 3.
         </p>
         <details>
-          <summary class="intro-more">How this page handles your data ▾</summary>
+          <summary class="intro-more">How this page handles your data</summary>
           <p>
             Everything is computed in your browser and never uploaded; no third party sees it. The service is free,
             with no ads and no sign-up. What does go out:
@@ -30,6 +30,9 @@ export default {
               through ipquery.io (ipinfo.io as fallback) and Google DNS. The report is kept under your IP for an hour;
               the anonymous statistics (browser, OS, country) do not include the IP. If our server is down, the browser asks
               public IP services directly (ipapi.co, freeipapi.com, ipify.org, myip.com).</li>
+            <li>The fonts and stylesheets of the morgunov.tech design system come from s.morgunov.tech, the author's
+              own site: like any server it sees your IP address and browser, but it sets no cookies and runs no
+              analytics. Those requests carry nothing about your fingerprint.</li>
           </ul>
         </details>
       </section>

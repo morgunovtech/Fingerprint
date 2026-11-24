@@ -4,7 +4,7 @@ import { PERSONAL_URL, CANONICAL_URL } from '../config.js';
 export default {
   langButton: 'Язык',
   langLabels: { ru: 'Русский', en: 'Английский', uz: 'Узбекский' },
-  theme: { label: 'Тема', modes: { auto: 'Авто', light: 'Светлая', dark: 'Тёмная', contrast: 'Контраст' } },
+  theme: { label: 'Тема', modes: { auto: 'Авто', light: 'Светлая', dark: 'Тёмная', 'high-contrast': 'Контраст' } },
   meta: {
     title: 'Fingerprint — кто и что узнаёт о вас, пока вы открываете сайт',
     description: 'Шесть шагов от включения ноутбука до открытого сайта: кто и что узнаёт о вас на каждом, на ваших реальных данных, и что с этим делать.'
