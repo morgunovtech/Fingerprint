@@ -8,3 +8,11 @@
 
 /404.html
   X-Robots-Tag: noindex
+
+# The site lives at https://fprint.morgunov.tech. The technical Pages hosts
+# (fingerprint-66l.pages.dev and the per-deployment preview hosts) stay out of search results.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex

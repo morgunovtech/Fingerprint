@@ -2,6 +2,11 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## Unreleased
+
+- The Worker gets a second address on the site's own host: once deployed, it answers at https://fprint.morgunov.tech/api/ with the same paths as before (a route `fprint.morgunov.tech/api/*` on the `morgunov.tech` zone). `https://fingerprint-api.xfxrrpkvr5.workers.dev` keeps answering; the page still calls it until the next release moves it to its own host.
+- The technical Pages hosts (`fingerprint-66l.pages.dev` and the per-deployment preview hosts) send `X-Robots-Tag: noindex`, so search engines index only https://fprint.morgunov.tech.
+
 ## 2.2.1 — 2026-11-24
 
 A privacy fix and corrections; the `/api/scan` response keeps its shape.

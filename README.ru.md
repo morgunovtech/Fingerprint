@@ -50,9 +50,9 @@ node selftest.js
 ## Деплой
 
 - **Сайт:** Cloudflare Pages деплоит `main` и раздаёт `site/` (`pages_build_output_dir` в корневом `wrangler.toml`).
-- **Worker:** деплоится вручную командой `cd worker && npm run deploy` (запускает `wrangler deploy`). В `worker/wrangler.toml` — привязка KV `CACHE` и `ALLOWED_ORIGINS`.
+- **Worker:** деплоится вручную командой `cd worker && npm run deploy` (запускает `wrangler deploy`). В `worker/wrangler.toml` — привязка KV `CACHE`, `ALLOWED_ORIGINS` и два адреса, на которых отвечает Worker: его адрес на workers.dev и маршрут `fprint.morgunov.tech/api/*`, который отдаёт `/api/` на собственном адресе сайта Worker-у вместо Pages.
 
-Для своей копии: создайте пространство KV (`npx wrangler kv namespace create CACHE`), впишите его id в `worker/wrangler.toml`, укажите в `ALLOWED_ORIGINS` свой сайт, а в `site/index.html` направьте `WORKER_API` на свой Worker. Секретов настраивать не нужно: ipquery.io, ipinfo.io, Google DNS и crt.sh используются без ключа.
+Для своей копии: создайте пространство KV (`npx wrangler kv namespace create CACHE`), впишите его id в `worker/wrangler.toml`, укажите в `ALLOWED_ORIGINS` свой сайт, замените маршрут своим в своей зоне или удалите его (тогда Worker отвечает только на workers.dev), а в `site/index.html` направьте `WORKER_API` на свой Worker. Секретов настраивать не нужно: ipquery.io, ipinfo.io, Google DNS и crt.sh используются без ключа.
 
 ---
 Сделал [Семён Моргунов](https://s.morgunov.tech) в паре с Claude Code.
