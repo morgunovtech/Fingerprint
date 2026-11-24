@@ -10,7 +10,11 @@ const { webcrypto } = require('node:crypto');
 
 const SITE = path.join(__dirname, 'site');
 const read = rel => fs.readFileSync(path.join(__dirname, rel), 'utf8');
-const moduleUrl = rel => new URL(rel, `file://${__dirname}/`).href;
+// The release number, read from the source so the static checks can use it before any module loads.
+const APP_VERSION = read('site/src/config.js').match(/export const APP_VERSION = '([^']+)';/)[1];
+// The page's modules are imported the way the page imports them, with ?v=<release>: Node keeps one
+// module instance per URL, and the test must share the page's state rather than hold a second copy.
+const moduleUrl = rel => new URL(rel, `file://${__dirname}/`).href + (rel.includes('/site/src/') ? `?v=${APP_VERSION}` : '');
 
 function assertNoMergeMarkers(text, label) {
   for (const pattern of [/^<<<<<<< /m, /^=======$/m, /^>>>>>>> /m]) {
@@ -35,15 +39,15 @@ for (const dir of ['site/src', 'site/src/i18n', 'worker/src', 'worker/src/provid
   // The page's scripts are its own: the theme before first paint and the module entry point; no inline
   // code, no third-party script.
   const scripts = [...html.matchAll(/<script\b[^>]*>/g)].map(m => m[0]);
-  assert.deepEqual(scripts, ['<script src="/src/theme-init.js">', '<script type="application/ld+json">', '<script type="module" src="/src/app.js">'], scripts.join(' '));
+  assert.deepEqual(scripts, [`<script src="/src/theme-init.js?v=${APP_VERSION}">`, '<script type="application/ld+json">', `<script type="module" src="/src/app.js?v=${APP_VERSION}">`], scripts.join(' '));
   // The morgunov.tech design system from its origin, fonts → tokens → base, pinned by content hash,
   // then the page's own stylesheet; 404.html links the same three files with the same hashes.
   const sheets = [...head.matchAll(/<link rel="stylesheet" href="([^"]+)" \/>/g)].map(m => m[1]);
-  assert.deepEqual(sheets.map(href => href.replace(/\?v=[0-9a-f]{8}$/, '')), ['https://s.morgunov.tech/ds/v1/fonts.css', 'https://s.morgunov.tech/ds/v1/tokens.css', 'https://s.morgunov.tech/ds/v1/base.css', '/assets/app.css'], sheets.join(' '));
+  assert.deepEqual(sheets.map(href => href.replace(/\?v=[0-9a-f]{8}$/, '')), ['https://s.morgunov.tech/ds/v1/fonts.css', 'https://s.morgunov.tech/ds/v1/tokens.css', 'https://s.morgunov.tech/ds/v1/base.css', `/assets/app.css?v=${APP_VERSION}`], sheets.join(' '));
   assert.ok(sheets.slice(0, 3).every(href => /\?v=[0-9a-f]{8}$/.test(href)), 'the design-system files are pinned by content hash');
   const notFound = read('site/404.html');
   assert.deepEqual([...notFound.matchAll(/<link rel="stylesheet" href="([^"]+)" \/>/g)].map(m => m[1]), sheets.slice(0, 3), '404.html: the same design-system files');
-  assert.match(notFound, /<script src="\/src\/theme-init\.js"><\/script>/);
+  assert.ok(notFound.includes(`<script src="/src/theme-init.js?v=${APP_VERSION}"></script>`), '404.html loads theme-init.js at the release address');
   assert.match(head, /<meta name="theme-color" content="#edeae5" media="\(prefers-color-scheme: light\)" \/>/);
 
   // The theme before first paint: data-theme on <html> from theme-preference (the key every
@@ -61,6 +65,21 @@ for (const dir of ['site/src', 'site/src/i18n', 'worker/src', 'worker/src/provid
   const emoji = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u;
   for (const file of ['site/index.html', 'site/404.html', 'site/src/app.js', 'site/src/config.js', 'site/src/walk.js', 'site/src/i18n/ru.js', 'site/src/i18n/en.js', 'site/src/i18n/uz.js']) {
     assert.ok(!emoji.test(read(file)), `${file}: no emoji in the chrome and the strings`);
+  }
+
+  // Every import between the modules names the release (?v=), as the page's own asset links do, so a
+  // browser that cached an earlier release never runs its modules under today's markup; and _headers
+  // makes the scripts and the stylesheet revalidate on every visit, like the page.
+  for (const dir of ['site/src', 'site/src/i18n']) {
+    for (const file of fs.readdirSync(path.join(__dirname, dir)).filter(f => f.endsWith('.js'))) {
+      for (const [, spec] of read(`${dir}/${file}`).matchAll(/\bfrom '([^']+)'/g)) {
+        if (spec.startsWith('.')) assert.ok(spec.endsWith(`?v=${APP_VERSION}`), `${dir}/${file} imports ${spec} without ?v=${APP_VERSION}`);
+      }
+    }
+  }
+  const headersFile = read('site/_headers');
+  for (const prefix of ['/src/*', '/assets/*']) {
+    assert.ok(headersFile.includes(`\n${prefix}\n  Cache-Control: public, max-age=0, must-revalidate\n`), `_headers: ${prefix} revalidates on every visit`);
   }
   const data = JSON.parse(blocks[0][1]);
   assert.equal(data['@type'], 'WebApplication');

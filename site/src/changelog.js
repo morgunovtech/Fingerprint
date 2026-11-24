@@ -2,6 +2,21 @@
 // the footer). CHANGELOG.md carries the same entries in English; the top entry's version is APP_VERSION.
 export const CHANGELOG = [
   {
+    version:'3.1.1',
+    date:'2026-11-24',
+    changes:{
+      ru:[
+        'Исправлено: после обновления страницы браузер, уже заходивший сюда, мог получить новую разметку со старым кодом и стилями из своего кэша — старый вид, старые тексты и пустые полосы вместо шагов на срок до 24 дней. Теперь скрипты и стили перепроверяются при каждом открытии, а их адреса несут номер версии, так что новая страница загружает только новый код'
+      ],
+      en:[
+        'Fixed: after an update a browser that had been here before could get the new markup with the old code and styles from its cache — the old look, the old texts and empty bars instead of the steps, for up to 24 days. The scripts and styles are now revalidated on every visit and their addresses carry the release number, so a new page can only load new code'
+      ],
+      uz:[
+        'Tuzatildi: yangilanishdan keyin ilgari kirgan brauzer yangi belgilashni oʻz keshidagi eski kod va uslublar bilan olishi mumkin edi — eski koʻrinish, eski matnlar va qadamlar oʻrniga boʻsh chiziqlar, 24 kungacha. Endi skriptlar va uslublar har ochilishda qayta tekshiriladi, manzillarida esa versiya raqami bor, shuning uchun yangi sahifa faqat yangi kodni yuklaydi'
+      ]
+    }
+  },
+  {
     version:'3.1.0',
     date:'2026-11-24',
     changes:{

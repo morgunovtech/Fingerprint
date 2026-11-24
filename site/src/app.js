@@ -1,15 +1,15 @@
 // Entry point: wires the controls, picks the language and theme, and renders the walk.
 
-import { APP_VERSION, LANG_KEY, LEGACY_THEME_KEY, THEMES, THEME_KEY } from './config.js';
-import { getEl, esc } from './dom.js';
-import { state, snapshot } from './state.js';
-import { I18N, textsFor } from './i18n/index.js';
-import { CHANGELOG } from './changelog.js';
-import { getSnapshot } from './signals.js';
-import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js';
-import { runTrackerTests } from './trackers.js';
-import { renderWalk } from './walk.js';
-import { handleShareClick, handleSaveClick } from './share.js';
+import { APP_VERSION, LANG_KEY, LEGACY_THEME_KEY, THEMES, THEME_KEY } from './config.js?v=3.1.1';
+import { getEl, esc } from './dom.js?v=3.1.1';
+import { state, snapshot } from './state.js?v=3.1.1';
+import { I18N, textsFor } from './i18n/index.js?v=3.1.1';
+import { CHANGELOG } from './changelog.js?v=3.1.1';
+import { getSnapshot } from './signals.js?v=3.1.1';
+import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.1.1';
+import { runTrackerTests } from './trackers.js?v=3.1.1';
+import { renderWalk } from './walk.js?v=3.1.1';
+import { handleShareClick, handleSaveClick } from './share.js?v=3.1.1';
 
 /* ---- Theme ---- */
 
