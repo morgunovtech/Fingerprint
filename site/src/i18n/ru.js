@@ -1,5 +1,5 @@
 // Russian strings of the page. Keys are the same in ru.js, en.js and uz.js; selftest.js checks that.
-import { PERSONAL_URL, CANONICAL_URL } from '../config.js?v=3.1.1';
+import { PERSONAL_URL, CANONICAL_URL } from '../config.js?v=3.1.2';
 
 export default {
   langButton: 'Язык',

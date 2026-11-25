@@ -2,6 +2,21 @@
 // the footer). CHANGELOG.md carries the same entries in English; the top entry's version is APP_VERSION.
 export const CHANGELOG = [
   {
+    version:'3.1.2',
+    date:'2026-11-25',
+    changes:{
+      ru:[
+        'Исправлено: английская страница /en/ приходила с русским заголовком — тем, что виден во вкладке и в результатах поиска. Английский выставлял скрипт уже после загрузки, поэтому поисковики и читатели без JavaScript видели русский. Теперь заголовок на /en/ английский в самом HTML, как и остальные теги для превью ссылок'
+      ],
+      en:[
+        'Fixed: the English page /en/ arrived with the Russian title, the one shown in the tab and in search results. The script set the English one only after load, so search engines and readers without JavaScript saw Russian. The title on /en/ is now English in the HTML itself, like the other link-preview tags'
+      ],
+      uz:[
+        'Tuzatildi: inglizcha /en/ sahifasi ruscha sarlavha bilan kelardi — varaqda va qidiruv natijalarida koʻrinadigani. Inglizchasini skript faqat yuklangandan keyin qoʻyardi, shuning uchun qidiruv tizimlari va JavaScriptsiz oʻquvchilar ruschasini koʻrardi. Endi /en/ dagi sarlavha HTML ning oʻzida inglizcha, havola koʻrinishi uchun boshqa teglar kabi'
+      ]
+    }
+  },
+  {
     version:'3.1.1',
     date:'2026-11-24',
     changes:{
