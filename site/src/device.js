@@ -92,7 +92,7 @@ export function guessOSVersion(basic) {
   const platform = (basic.uaPlatform || basic.platform || '').toLowerCase();
   const hints = basic.uaHighEntropy || {};
   const pvString = hints.platformVersion || '';
-  const pvMajor = parseInt(pvString.split('.')[0] || '', 10);
+  const pvMajor = Number.parseInt(pvString.split('.')[0] || '', 10);
   const legacy = legacyOsFromUa(ua);
   if (platform.includes('mac')) {
     // Chromium reports the macOS version itself in platformVersion ("14.6.1", "26.0").

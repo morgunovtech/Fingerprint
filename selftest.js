@@ -237,8 +237,8 @@ class Element {
     const event = { type: 'click', stopPropagation() {}, preventDefault() {}, target: this, currentTarget: this };
     (this.listeners.click || []).forEach(cb => cb(event));
   }
-  get clientWidth() { const v = parseInt(this.style.width, 10); return Number.isNaN(v) ? 100 : v; }
-  get clientHeight() { const v = parseInt(this.style.height, 10); return Number.isNaN(v) ? 20 : v; }
+  get clientWidth() { const v = Number.parseInt(this.style.width, 10); return Number.isNaN(v) ? 100 : v; }
+  get clientHeight() { const v = Number.parseInt(this.style.height, 10); return Number.isNaN(v) ? 20 : v; }
   get offsetHeight() { return this.clientHeight; }
   get offsetParent() { return this.style.display === 'none' || this.style.visibility === 'hidden' ? null : this.parentNode || null; }
 }
