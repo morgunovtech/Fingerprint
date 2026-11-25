@@ -1,13 +1,13 @@
 // The walk: six steps from opening the device to a loaded site, each on the visitor's real data,
 // then the sum of who learned what and the raw data for the curious.
 
-import { getEl, esc, mkRow } from './dom.js?v=3.1.2';
-import { state, snapshot } from './state.js?v=3.1.2';
-import { guessDevice, deviceDisplayName, deviceKind, osFamilyOf, osVendorKey, browserDisplayName, browserVendorKey, guessOSVersion, formatGpuRenderer, detectBrowserGroup, COUNTRY_NAMES, CITY_NAMES, countryCodeToFlag, langToFlag } from './device.js?v=3.1.2';
-import { resolveCountryCode, getStatPercent } from './network.js?v=3.1.2';
-import { blockerDetected, trackerRows } from './trackers.js?v=3.1.2';
-import { LOCAL_TZ } from './signals.js?v=3.1.2';
-import { resolveShareUrl } from './share.js?v=3.1.2';
+import { getEl, esc, mkRow } from './dom.js?v=3.2.0';
+import { state, snapshot } from './state.js?v=3.2.0';
+import { guessDevice, deviceDisplayName, deviceKind, osFamilyOf, osVendorKey, browserDisplayName, browserVendorKey, guessOSVersion, formatGpuRenderer, detectBrowserGroup, COUNTRY_NAMES, CITY_NAMES, countryCodeToFlag, langToFlag } from './device.js?v=3.2.0';
+import { resolveCountryCode, getStatPercent } from './network.js?v=3.2.0';
+import { blockerDetected, trackerRows } from './trackers.js?v=3.2.0';
+import { LOCAL_TZ } from './signals.js?v=3.2.0';
+import { resolveShareUrl } from './share.js?v=3.2.0';
 
 const browserGroup = detectBrowserGroup();
 // Which <details> the visitor opened, so a re-render keeps them open.
@@ -193,7 +193,7 @@ function buildSteps(basic, t) {
     ] });
   }
   const checkBox = el('div', 'step-check');
-  const button = el('button', 'btn btn-primary');
+  const button = el('button', 'v4-btn v4-btn-primary');
   button.type = 'button';
   button.dataset.action = 'check-network';
   button.textContent = state.networkStatus === 'loading' ? s.s3.check.loading : checked ? s.s3.check.recheck : s.s3.check.button;
@@ -315,12 +315,12 @@ function renderSummary(container, basic, t, ctx) {
   section.appendChild(checklist);
 
   const actions = el('div', 'summary-actions');
-  const shareBtn = el('button', 'btn btn-primary', su.shareButton);
+  const shareBtn = el('button', 'v4-btn v4-btn-primary', su.shareButton);
   shareBtn.type = 'button';
   shareBtn.id = 'shareBtn';
   shareBtn.dataset.action = 'share';
   shareBtn.dataset.label = su.shareButton;
-  const saveBtn = el('button', 'btn', su.saveButton);
+  const saveBtn = el('button', 'v4-btn', su.saveButton);
   saveBtn.type = 'button';
   saveBtn.id = 'printBtn';
   saveBtn.dataset.action = 'save';

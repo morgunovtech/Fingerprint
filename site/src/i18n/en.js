@@ -1,10 +1,10 @@
 // English strings of the page. Keys are the same in ru.js, en.js and uz.js; selftest.js checks that.
-import { PERSONAL_URL, CANONICAL_URL } from '../config.js?v=3.1.2';
+import { CANONICAL_URL } from '../config.js?v=3.2.0';
 
 export default {
-  langButton: 'Language',
-  langLabels: { ru: 'Russian', en: 'English', uz: 'Uzbek' },
-  theme: { label: 'Theme', modes: { auto: 'Auto', light: 'Light', dark: 'Dark', 'high-contrast': 'Contrast' } },
+  // The words of the family chrome (the bar's menus, the skip link), as s.morgunov.tech says them.
+  chrome: { skip: 'Skip to main content', changeLanguage: 'change language', changeTheme: 'Change colour theme' },
+  theme: { modes: { light: 'Light', dark: 'Dark', auto: 'Auto', 'high-contrast': 'High contrast' } },
   meta: {
     title: 'Fingerprint — who learns what about you while you open a website',
     description: 'Six steps from opening your laptop to a loaded website: who learns what about you at each one, on your real data, and what to do about it.'
@@ -219,7 +219,9 @@ export default {
   },
 
   units: { gb: 'GB', yes: 'yes', no: 'no' },
-  footer: version => `© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Everything is computed in your browser • <button id="versionBtn" class="btn version-btn" title="Changelog">v${version}</button><br><span class="footer-note">Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics (no cookies, no personal data).</span><br><span id="footerVisitCount" class="footer-note" style="display:none"></span>`,
+  // The family footer: name · year · version on the left (the version opens the changelog), the
+  // privacy line on the right, then the page's own notes on a row of their own.
+  footer: version => `<span>morgunov.tech / fingerprint · 2026 · <button id="versionBtn" class="version-btn" type="button" title="Changelog">v${version}</button></span><span class="v4-foot-privacy">Everything is computed in your browser</span><span class="footer-note">Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics (no cookies, no personal data).</span><span id="footerVisitCount" class="footer-note" style="display:none"></span>`,
   footerVisits: n => `Checked ${n} times`,
   statVisitors: pct => `${pct}% of visitors`,
   changelogTitle: 'Changelog',

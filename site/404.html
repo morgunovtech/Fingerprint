@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <!-- The theme before first paint, the same script as index.html. -->
-  <script src="/src/theme-init.js?v=3.1.2"></script>
+  <script src="/src/theme-init.js?v=3.2.0"></script>
   <!-- Served by Cloudflare Pages, with a 404 status, for any path that is not a file of the site.
        Without a 404.html Pages answers every path with index.html and 200 (the single-page fallback),
        which a crawler reads as a site where every address exists — and /robots.txt, /sitemap.xml
@@ -15,45 +15,64 @@
   <meta name="theme-color" content="#edeae5" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#14130f" media="(prefers-color-scheme: dark)" />
   <!-- morgunov.tech design system v1 from its canonical origin (ds/v1/USAGE.md in about-me-page);
-       the same three files, same hashes, as index.html. The rules below build on the tokens. -->
+       the same four files, same hashes, as index.html. The chrome (the bar, the theme menu, the
+       button, the footer) is the family's; the rules below lay out the one block. -->
   <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/fonts.css?v=64eea157" />
-  <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/tokens.css?v=fa7fc139" />
+  <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/tokens.css?v=5629caeb" />
   <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/base.css?v=0e404315" />
+  <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/components.css?v=4621707b" />
   <style>
-    body{margin:0;background:var(--v4-bg,#edeae5);color:var(--v4-fg,#14110d);font-family:var(--v4-sans,"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif);-webkit-font-smoothing:antialiased}
-    body.v4-page{font-size:15px;line-height:1.6}
-    .wrap{max-width:760px;margin:24px auto 72px;padding:0 24px}
-    header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:14px;margin-bottom:24px;border-bottom:1px solid var(--v4-fg,#14110d)}
-    h1{font-size:22px;font-weight:600;letter-spacing:-0.015em;margin:0}
-    h2{font-size:22px;font-weight:600;letter-spacing:-0.015em;margin:0 0 8px}
-    .label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--v4-muted,#5a554c);margin:0 0 8px}
-    .label a{color:inherit}
+    body{margin:0;background:var(--v4-bg,#edeae5);color:var(--v4-fg,#14110d);font-family:var(--v4-sans,"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif)}
+    main{font-size:15px;line-height:1.6}
+    .v4-root{max-width:824px}
+    h1{font-size:22px;font-weight:600;letter-spacing:-0.015em;margin:0 0 8px}
+    .label{font-family:var(--v4-mono,ui-monospace,monospace);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--v4-muted,#5a554c);margin:0 0 8px}
     .block{background:var(--v4-paper,#f5f2ed);border:1px solid var(--v4-line,#c9c5bd);padding:18px;margin:16px 0}
-    p{margin:6px 0}
-    a{color:var(--v4-fg,#14110d);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;text-decoration-color:var(--v4-line,#c9c5bd);transition:color .15s ease,text-decoration-color .15s ease}
-    a:hover,a:focus-visible{color:var(--v4-orange-text,#b03e10);text-decoration-color:var(--v4-orange-text,#b03e10)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:11px 16px;min-height:40px;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;border:1px solid var(--v4-orange,#d9531e);background:var(--v4-orange,#d9531e);color:var(--v4-on-accent,#14110d)}
-    .btn:hover,.btn:focus-visible{filter:brightness(1.06);color:var(--v4-on-accent,#14110d)}
-    :focus-visible{outline:2px solid var(--v4-orange,#d9531e);outline-offset:2px}
-    @media (max-width:640px){.wrap{padding:0 16px}}
+    .block p{margin:6px 0}
+    .block p a{color:var(--v4-fg,#14110d);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;text-decoration-color:var(--v4-line,#c9c5bd);transition:color .15s ease,text-decoration-color .15s ease}
+    .block p a:hover,.block p a:focus-visible{color:var(--v4-orange-text,#b03e10);text-decoration-color:var(--v4-orange-text,#b03e10)}
+    .block .v4-btn{margin-top:12px}
     @media (prefers-reduced-motion: reduce){*{transition-duration:0.001ms!important}}
   </style>
 </head>
 <body class="v4-page">
-<div class="wrap">
-  <header>
-    <h1>Fingerprint</h1><span class="label">by <a href="https://s.morgunov.tech" target="_blank" rel="noopener">morgunov.tech</a></span>
+<!-- The family chrome, as on index.html. The page says the same thing in three languages at once,
+     so the bar carries no language menu. -->
+<a href="#main" class="skip-link">Перейти к основному содержимому</a>
+<div class="v4-root">
+  <header class="v4-bar" id="top">
+    <a class="v4-service" href="https://s.morgunov.tech/"><span class="v4-service-family">morgunov.tech</span><span class="v4-service-sep" aria-hidden="true">/</span><span class="v4-service-name">Fingerprint</span></a>
+    <div class="v4-bar-right">
+      <div class="v4-dropdown v4-theme">
+        <button class="v4-icon-btn" type="button" aria-haspopup="menu" aria-controls="theme-menu" id="theme-toggle" aria-label="Сменить тему оформления">
+          <svg class="v4-icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"></circle><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"></path></svg>
+          <svg class="v4-icon-moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 9A6 6 0 1 1 7 2.5a4.5 4.5 0 0 0 6.5 6.5z"></path></svg>
+          <svg class="v4-icon-contrast" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle><path d="M8 2v12a6 6 0 0 0 0-12z" fill="currentColor"></path></svg>
+        </button>
+        <div class="v4-menu v4-theme-menu" id="theme-menu" role="menu" aria-labelledby="theme-toggle">
+          <button class="v4-menu-item v4-theme-btn" type="button" role="menuitemradio" data-theme-value="light" aria-checked="false">Светлая</button>
+          <button class="v4-menu-item v4-theme-btn" type="button" role="menuitemradio" data-theme-value="dark" aria-checked="false">Тёмная</button>
+          <button class="v4-menu-item v4-theme-btn" type="button" role="menuitemradio" data-theme-value="auto" aria-checked="false">Авто</button>
+          <button class="v4-menu-item v4-theme-btn" type="button" role="menuitemradio" data-theme-value="high-contrast" aria-checked="false">Высокий контраст</button>
+        </div>
+      </div>
+    </div>
   </header>
-  <main>
+  <main id="main">
     <section class="block">
       <p class="label">404</p>
-      <h2>Такой страницы нет</h2>
+      <h1>Такой страницы нет</h1>
       <p>Fingerprint — одна страница, и она по адресу <a href="/">fprint.morgunov.tech</a>. Проверьте адрес или начните с главной.</p>
       <p lang="en">There is no such page. Fingerprint is a single page at <a href="/">fprint.morgunov.tech</a>.</p>
       <p lang="uz">Bunday sahifa yo‘q. Fingerprint — bitta sahifa: <a href="/">fprint.morgunov.tech</a>.</p>
-      <a class="btn" href="/">На главную · Home</a>
+      <a class="v4-btn v4-btn-primary" href="/">На главную · Home</a>
     </section>
   </main>
+  <footer class="v4-foot">
+    <span>morgunov.tech / fingerprint · 2026</span>
+    <span class="v4-foot-privacy">Всё считается в вашем браузере</span>
+  </footer>
 </div>
+<script defer src="/src/chrome.js?v=ade46cf8"></script>
 </body>
 </html>

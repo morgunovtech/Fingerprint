@@ -1,93 +1,40 @@
-// Entry point: wires the controls, picks the language and theme, and renders the walk.
+// Entry point: wires the controls, picks the language, and renders the walk.
 
-import { APP_VERSION, LANG_KEY, LEGACY_THEME_KEY, THEMES, THEME_KEY } from './config.js?v=3.1.2';
-import { getEl, esc } from './dom.js?v=3.1.2';
-import { state, snapshot } from './state.js?v=3.1.2';
-import { I18N, textsFor } from './i18n/index.js?v=3.1.2';
-import { CHANGELOG } from './changelog.js?v=3.1.2';
-import { getSnapshot } from './signals.js?v=3.1.2';
-import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.1.2';
-import { runTrackerTests } from './trackers.js?v=3.1.2';
-import { renderWalk } from './walk.js?v=3.1.2';
-import { handleShareClick, handleSaveClick } from './share.js?v=3.1.2';
+import { APP_VERSION, LANG_KEY } from './config.js?v=3.2.0';
+import { getEl, esc } from './dom.js?v=3.2.0';
+import { state, snapshot } from './state.js?v=3.2.0';
+import { I18N, textsFor } from './i18n/index.js?v=3.2.0';
+import { CHANGELOG } from './changelog.js?v=3.2.0';
+import { getSnapshot } from './signals.js?v=3.2.0';
+import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.2.0';
+import { runTrackerTests } from './trackers.js?v=3.2.0';
+import { renderWalk } from './walk.js?v=3.2.0';
+import { handleShareClick, handleSaveClick } from './share.js?v=3.2.0';
 
-/* ---- Theme ---- */
+/* ---- The family chrome ---- */
 
-// Themes switch on data-theme on <html> (light, dark, high-contrast), the attribute the design
-// system's tokens read; data-theme-preference keeps the choice itself, "auto" included. The same
-// two attributes are set before first paint by src/theme-init.js; this code takes over from there.
-const DARK_SCHEME = '(prefers-color-scheme: dark)';
-let themePreference = 'auto';
-let schemeQuery = null;
-
-function systemTheme() {
-  try { return window.matchMedia(DARK_SCHEME).matches ? 'dark' : 'light'; } catch (_) { return 'light'; }
-}
-
-// The saved choice under the key every morgunov.tech page shares, or the key this page used before
-// 3.1.0, moved on the first visit ("contrast" is "high-contrast").
-function loadThemePreference() {
-  try {
-    const stored = localStorage.getItem(THEME_KEY);
-    if (THEMES.includes(stored)) return stored;
-    const legacy = localStorage.getItem(LEGACY_THEME_KEY);
-    if (legacy) {
-      localStorage.removeItem(LEGACY_THEME_KEY);
-      const moved = legacy === 'contrast' ? 'high-contrast' : legacy;
-      if (THEMES.includes(moved)) { localStorage.setItem(THEME_KEY, moved); return moved; }
-    }
-  } catch (_) { /* storage blocked: the system setting decides */ }
-  return 'auto';
-}
-
-function stampTheme() {
-  const root = document.documentElement;
-  root.setAttribute('data-theme', themePreference === 'auto' ? systemTheme() : themePreference);
-  root.setAttribute('data-theme-preference', themePreference);
-}
-
-export function applyThemePreference(mode) {
-  themePreference = THEMES.includes(mode) ? mode : 'auto';
-  stampTheme();
-  try { localStorage.setItem(THEME_KEY, themePreference); } catch (_) { /* ignore */ }
-  // "auto" follows the system setting while the page is open.
-  if (!schemeQuery) {
-    try {
-      schemeQuery = window.matchMedia(DARK_SCHEME);
-      schemeQuery.addEventListener('change', () => { if (themePreference === 'auto') stampTheme(); });
-    } catch (_) { schemeQuery = null; }
-  }
-}
-
-// The button says "Theme" and names the current mode to assistive tech; the menu says the modes in
-// words (no emoji in the chrome) and marks the current one.
-export function updateThemeButton(t) {
-  const btn = getEl('themeBtn');
-  if (!btn) return;
-  const modes = t.theme?.modes || {};
-  const label = t.theme?.label || 'Theme';
-  btn.textContent = label;
-  btn.setAttribute('aria-label', `${label}: ${modes[themePreference] || themePreference}`);
-  getEl('themeMenu')?.querySelectorAll('button[data-theme-option]').forEach(item => {
-    const value = item.dataset.themeOption || '';
-    item.textContent = modes[value] || value;
-    item.setAttribute('aria-checked', String(value === themePreference));
-    item.classList.toggle('active', value === themePreference);
+// The bar, the language and theme menus and the footer are the morgunov.tech chrome (ds/v1/USAGE.md
+// in about-me-page, "Service chrome"). src/chrome.js, a copy of the design system's script, opens
+// and closes the menus and owns the theme: data-theme and data-theme-preference on <html>, the
+// choice under the theme-preference key, the checked item of the theme menu. This module only puts
+// the chrome's words into the page's language, which changes in place, and switches the language.
+export function labelChrome(t) {
+  const c = t.chrome || {};
+  const skip = getEl('skipLink');
+  if (skip) skip.textContent = c.skip || '';
+  const code = state.lang.toUpperCase();
+  const langCode = getEl('langCode');
+  if (langCode) langCode.textContent = code;
+  getEl('lang-toggle')?.setAttribute('aria-label', `${code} — ${c.changeLanguage || ''}`);
+  getEl('lang-menu')?.querySelectorAll('[data-lang]').forEach(item => {
+    item.setAttribute('aria-checked', String(item.dataset.lang === state.lang));
   });
-}
-
-/* ---- Menus ---- */
-
-const menus = { lang: false, theme: false };
-function setMenu(name, open) {
-  menus[name] = open;
-  const btn = getEl(name + 'Btn');
-  const menu = getEl(name + 'Menu');
-  if (btn) btn.setAttribute('aria-expanded', String(open));
-  if (menu) {
-    menu.hidden = !open;
-    menu.querySelectorAll('button').forEach(b => { b.tabIndex = open ? 0 : -1; });
-  }
+  getEl('theme-toggle')?.setAttribute('aria-label', c.changeTheme || '');
+  const modes = t.theme?.modes || {};
+  getEl('theme-menu')?.querySelectorAll('[data-theme-value]').forEach(item => {
+    const value = item.dataset.themeValue || '';
+    item.textContent = modes[value] || value;
+  });
 }
 
 /* ---- Language ---- */
@@ -163,28 +110,13 @@ function updateFooterVisitCount(t) {
 
 export async function render(lang) {
   const token = ++renderToken;
-  const prevLang = state.lang;
   state.lang = lang in I18N ? lang : 'ru';
   const t = textsFor(state.lang);
   document.documentElement.lang = state.lang;
   applyMeta(t);
-  if (prevLang !== state.lang) menus.lang = false;
-  setMenu('lang', menus.lang);
-  setMenu('theme', menus.theme);
-
-  // The button shows the current language's code; the menu names the languages in their own words
+  // The language button shows the current code; the menu names the languages in their own words
   // (the markup) and marks the current one.
-  const langBtn = getEl('langBtn');
-  if (langBtn) {
-    langBtn.textContent = state.lang.toUpperCase();
-    langBtn.setAttribute('aria-label', `${t.langButton || 'Language'}: ${t.langLabels?.[state.lang] || state.lang}`);
-  }
-  getEl('langMenu')?.querySelectorAll('button[data-lang]').forEach(btn => {
-    const value = btn.dataset.lang;
-    btn.setAttribute('aria-checked', String(value === state.lang));
-    btn.classList.toggle('active', value === state.lang);
-  });
-  updateThemeButton(t);
+  labelChrome(t);
 
   // The intro: the Russian copy lives in the markup (readable without JavaScript); the other
   // languages swap it in from their strings.
@@ -288,61 +220,24 @@ function closeChangelog() {
 export function initApp() {
   // The Russian intro is the one in the markup; the strings table reads it once from there.
   I18N.ru.introRichHtml = getEl('introText')?.innerHTML || '';
-  applyThemePreference(loadThemePreference());
   const lang = detectLang();
   // Opening /en/ is not a choice: the saved language stays for the next visit to /.
   if (!langFromPath()) { try { localStorage.setItem(LANG_KEY, lang); } catch (_) { /* ignore */ } }
 
-  const langBtn = getEl('langBtn');
-  const langMenu = getEl('langMenu');
-  if (langBtn && langMenu) {
-    langBtn.addEventListener('click', event => {
+  // The language switches in place: the items for / and /en/ are links, but the page re-renders
+  // instead of loading again, and the address follows. src/chrome.js closes the menu.
+  getEl('lang-menu')?.querySelectorAll('[data-lang]').forEach(item => {
+    item.addEventListener('click', event => {
       event.preventDefault();
-      event.stopPropagation();
-      setMenu('theme', false);
-      setMenu('lang', !menus.lang);
+      const value = item.dataset.lang;
+      if (!value) return;
+      try { localStorage.setItem(LANG_KEY, value); } catch (_) { /* ignore */ }
+      syncLangPath(value);
+      render(value);
     });
-    langMenu.querySelectorAll('button[data-lang]').forEach(btn => {
-      btn.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-        const value = btn.dataset.lang;
-        if (!value) return;
-        setMenu('lang', false);
-        try { localStorage.setItem(LANG_KEY, value); } catch (_) { /* ignore */ }
-        syncLangPath(value);
-        langBtn.focus({ preventScroll: true });
-        render(value);
-      });
-    });
-  }
-  const themeBtn = getEl('themeBtn');
-  const themeMenu = getEl('themeMenu');
-  if (themeBtn && themeMenu) {
-    themeBtn.addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-      setMenu('lang', false);
-      setMenu('theme', !menus.theme);
-    });
-    themeMenu.querySelectorAll('button[data-theme-option]').forEach(btn => {
-      btn.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!btn.dataset.themeOption) return;
-        applyThemePreference(btn.dataset.themeOption);
-        updateThemeButton(textsFor(state.lang));
-        setMenu('theme', false);
-        themeBtn.focus({ preventScroll: true });
-      });
-    });
-  }
-  document.addEventListener('click', event => {
-    if (menus.lang && langMenu && !(langMenu.contains(event.target) || event.target === langBtn)) setMenu('lang', false);
-    if (menus.theme && themeMenu && !(themeMenu.contains(event.target) || event.target === themeBtn)) setMenu('theme', false);
   });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') { setMenu('lang', false); setMenu('theme', false); closeChangelog(); }
+    if (event.key === 'Escape') closeChangelog();
   });
   document.getElementById('changelogClose')?.addEventListener('click', closeChangelog);
   document.getElementById('changelogModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeChangelog(); });

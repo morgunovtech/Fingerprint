@@ -1,10 +1,10 @@
 // Russian strings of the page. Keys are the same in ru.js, en.js and uz.js; selftest.js checks that.
-import { PERSONAL_URL, CANONICAL_URL } from '../config.js?v=3.1.2';
+import { CANONICAL_URL } from '../config.js?v=3.2.0';
 
 export default {
-  langButton: 'Язык',
-  langLabels: { ru: 'Русский', en: 'Английский', uz: 'Узбекский' },
-  theme: { label: 'Тема', modes: { auto: 'Авто', light: 'Светлая', dark: 'Тёмная', 'high-contrast': 'Контраст' } },
+  // The words of the family chrome (the bar's menus, the skip link), as s.morgunov.tech says them.
+  chrome: { skip: 'Перейти к основному содержимому', changeLanguage: 'сменить язык', changeTheme: 'Сменить тему оформления' },
+  theme: { modes: { light: 'Светлая', dark: 'Тёмная', auto: 'Авто', 'high-contrast': 'Высокий контраст' } },
   meta: {
     title: 'Fingerprint — кто и что узнаёт о вас, пока вы открываете сайт',
     description: 'Шесть шагов от включения ноутбука до открытого сайта: кто и что узнаёт о вас на каждом, на ваших реальных данных, и что с этим делать.'
@@ -193,7 +193,9 @@ export default {
   },
 
   units: { gb: 'ГБ', yes: 'да', no: 'нет' },
-  footer: version => `© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Всё считается в вашем браузере • <button id="versionBtn" class="btn version-btn" title="История изменений">v${version}</button><br><span class="footer-note">Сервис размещён на Cloudflare. Cloudflare Web Analytics собирает анонимную статистику посещений (без cookie и персональных данных).</span><br><span id="footerVisitCount" class="footer-note" style="display:none"></span>`,
+  // The family footer: name · year · version on the left (the version opens the changelog), the
+  // privacy line on the right, then the page's own notes on a row of their own.
+  footer: version => `<span>morgunov.tech / fingerprint · 2026 · <button id="versionBtn" class="version-btn" type="button" title="История изменений">v${version}</button></span><span class="v4-foot-privacy">Всё считается в вашем браузере</span><span class="footer-note">Сервис размещён на Cloudflare. Cloudflare Web Analytics собирает анонимную статистику посещений (без cookie и персональных данных).</span><span id="footerVisitCount" class="footer-note" style="display:none"></span>`,
   footerVisits: n => `Проверено ${n} раз`,
   statVisitors: pct => `у ${pct}% посетителей`,
   changelogTitle: 'История изменений',

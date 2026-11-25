@@ -2,6 +2,21 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.2.0 — 2026-11-25
+
+The page wears the family chrome: the bar, the language and theme menus, the buttons and the footer of s.morgunov.tech instead of its own. What the page checks and sends does not change.
+
+- **Why.** Since 3.1.0 the page took colours and type from the design system and kept a header of its own: the theme was a word ("Theme") where the family has an icon, the menus looked and behaved differently, the footer was centred. A visitor coming from s.morgunov.tech or Found You had to learn the interface again. The guide now calls the chrome required for a family service (`ds/v1/USAGE.md` in about-me-page, "Service chrome", v1.4.0).
+- **The bar.** `MORGUNOV.TECH / FINGERPRINT` on the left (the name alone on a phone), the language menu (`RU ⌄`), then the theme icon at the very edge with the four themes in the family's order: light, dark, auto, high contrast. The markup is the guide's; `components.css` is linked from the design system's origin next to `fonts`, `tokens` and `base`. The page keeps no header, menu, button or footer rules: `selftest.js` checks that, the parts of the chrome on both pages and the order of the themes.
+- **The script.** `site/src/chrome.js` runs the menus and the theme. It is a byte-for-byte copy of `https://s.morgunov.tech/ds/v1/chrome.js`, kept on this origin so the page still runs no script from another one; its address carries the content hash of the copy and `selftest.js` fails if they disagree. `app.js` lost its own theme and menu code and only puts the chrome's words into the page's language (RU/EN/UZ) and switches the language in place. The items for `/` and `/en/` are links now; Uzbek has no address of its own and stays a button. The move of the pre-3.1.0 `fp_theme` key happens in `theme-init.js`.
+- **Buttons and footer.** "Check", "Share" and "Print / Save" are `.v4-btn`: the same pressed, disabled and no-sticky-hover behaviour as on the site. The footer is the family's: name · year · version on the left (the version still opens the changelog), "Everything is computed in your browser" on the right, the Cloudflare note and the visit count on a row of their own.
+- **Type.** The design-system files move to the hashes of about-me-page v1.3.0 and v1.4.0, so captions are 12px (they were 11px) and nothing on the page is set under 12px. The body measures as the family's, so the bar is the same height as on s.morgunov.tech; the walk keeps its 15px reading size and its column of 712px. The page title is the `<h1>` now (the service name used to be).
+- **404.** The same bar (no language menu: the page says its one sentence in three languages), the family button and footer.
+- **Link previews.** `share-card.png` and `share-card-en.png` are renders of the family's share-card template (design system, `templates/share-card`, cards `fingerprint-ru` and `fingerprint-en`) instead of the dark card drawn for this page alone, so a Fingerprint link in Telegram or LinkedIn looks like the other morgunov.tech links. The SVG sources are removed; README says where the card is changed.
+- Version 3.2.0 in the page, the in-page changelog (RU/EN/UZ), `CHANGELOG.md`, the Worker (number only) and the asset addresses (`?v=3.2.0`).
+
+Checked in a browser, not only by `selftest.js`: every element of the bar and the footer computes the same styles as a page built from the guide's markup (20 elements × 3 widths × 3 themes, 0 differences); the walk's own elements differ from 3.1.2 only where intended (captions 12px, the buttons).
+
 ## 3.1.2 — 2026-11-25
 
 Search engines and readers without JavaScript got the Russian `<title>` on `/en/`. Fixed; nothing else changes.

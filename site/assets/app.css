@@ -1,10 +1,12 @@
-/* Fingerprint — the page's styles on the morgunov.tech design system v1. Colours and type come
-   from the tokens (https://s.morgunov.tech/ds/v1/tokens.css, --v4-*), which index.html loads
-   before this file together with fonts.css and base.css; the page keeps its own layout and
-   chrome. Themes switch on data-theme on <html> (light, dark, high-contrast; "auto" is resolved
-   by src/theme-init.js and src/app.js). The DS rules hold here: no rounded corners, no shadows,
-   no gradients, no emoji in the chrome, nothing heavier than 600 (IBM Plex ships 400/500/600).
-   The light values stand in as fallbacks, so the page still reads if the DS origin is down.
+/* Fingerprint — the page's styles on the morgunov.tech design system v1. index.html loads the
+   layer before this file: fonts.css, tokens.css (--v4-*), base.css and components.css from
+   https://s.morgunov.tech/ds/v1/. The chrome is the family's and is not styled here: the bar
+   (.v4-bar) with the service mark and the language and theme menus, the buttons (.v4-btn), the
+   footer (.v4-foot), the skip link. This file lays out the walk and its blocks. Themes switch on
+   data-theme on <html> (light, dark, high-contrast; "auto" is resolved by src/theme-init.js and
+   src/chrome.js). The DS rules hold here: no rounded corners, no shadows, no gradients, no emoji
+   in the chrome, nothing heavier than 600 (IBM Plex ships 400/500/600), nothing set under 12px.
+   The light values stand in as fallbacks for the page's own blocks.
    No CSS framework, no build step. */
 :root{
   --bg:var(--v4-bg,#edeae5); --card:var(--v4-paper,#f5f2ed); --text:var(--v4-fg,#14110d);
@@ -12,8 +14,7 @@
   --border:var(--v4-line,#c9c5bd); --border-subtle:var(--v4-line-soft,#d8d4cc);
   --accent:var(--v4-orange,#d9531e); --accent-text:var(--v4-orange-text,#b03e10); --on-accent:var(--v4-on-accent,#14110d);
   --font-mono:var(--v4-mono,"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace);
-  --label-size:var(--v4-label-size,11px); --label-tracking:var(--v4-label-tracking,0.1em); --label-weight:var(--v4-label-weight,500);
-  --label-xs-size:var(--v4-label-xs-size,10px); --label-xs-tracking:var(--v4-label-xs-tracking,0.12em);
+  --label-size:var(--v4-label-size,12px); --label-tracking:var(--v4-label-tracking,0.1em); --label-weight:var(--v4-label-weight,500);
   /* Status colours: the design system has no semantic palette yet. Page-local, the same values
      as the TofsDevOps status page, 4.9:1 or better on --v4-bg and --v4-paper in every theme.
      A status is a colour of text and borders, never a fill. */
@@ -25,48 +26,27 @@
   [data-theme="auto"]{--success:#6cc08a;--warning:#e2a93b;--danger:#ff7a6e}
 }
 
-/* === Base (base.css does the same; repeated so the page stands without the DS origin) === */
+/* === Base. The body is the family's (base.css: IBM Plex Sans 14px/1.55), so the bar, the menus
+   and the footer measure exactly as on s.morgunov.tech; the page's reading size is set on its own
+   content. The colours and the font are repeated so the page reads without the DS origin. === */
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--text);
-     font-family:var(--v4-sans,"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif);
-     -webkit-font-smoothing:antialiased}
-body.v4-page{font-size:15px;line-height:1.6;letter-spacing:-0.005em}
-.wrap{max-width:760px;margin:24px auto 72px;padding:0 24px}
-a{color:var(--text);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;text-decoration-color:var(--border);transition:color .15s ease,text-decoration-color .15s ease}
-a:hover,a:focus-visible{color:var(--accent-text);text-decoration-color:var(--accent-text)}
+     font-family:var(--v4-sans,"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif)}
+main,.changelog-content{font-size:15px;line-height:1.6;letter-spacing:-0.005em}
+[data-theme="high-contrast"] main,[data-theme="high-contrast"] .changelog-content{font-size:16px}
+/* The family shell (.v4-root, up to 1280px) is one reading column here: 712px of text plus the
+   shell's own side padding. The bar and the footer span it, as on every page of the family. */
+.v4-root{max-width:824px}
+/* Links and code inside the page's own content; the chrome's links are components.css's. */
+:where(main,.changelog-content) a{color:var(--text);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;text-decoration-color:var(--border);transition:color .15s ease,text-decoration-color .15s ease}
+:where(main,.changelog-content) a:hover,:where(main,.changelog-content) a:focus-visible{color:var(--accent-text);text-decoration-color:var(--accent-text)}
 code{font-family:var(--font-mono);font-size:0.92em;background:var(--bg);border:1px solid var(--border-subtle);padding:1px 5px;word-break:break-all}
 .small{color:var(--muted);font-size:14px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.skip-link{position:fixed;top:-10rem;left:16px;background:var(--accent);color:var(--on-accent);padding:6px 12px;z-index:100;text-decoration:none;font-size:13px;transition:top .2s}
-.skip-link:focus{top:8px}
-
-/* === Buttons (the DS .v4-btn metrics) === */
-.btn{display:inline-flex;justify-content:center;align-items:center;gap:8px;min-height:40px;padding:11px 16px;border:1px solid var(--text);background:transparent;color:var(--text);font:inherit;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;cursor:pointer;text-align:center;transition:background .15s ease,color .15s ease,border-color .15s ease}
-.btn:hover,.btn:focus-visible{background:var(--text);color:var(--bg)}
-.btn:disabled{opacity:.55;cursor:not-allowed}
-.btn:disabled:hover{background:transparent;color:var(--text)}
-.btn-primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.btn-primary:hover,.btn-primary:focus-visible{filter:brightness(1.06);background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.btn-primary:disabled,.btn-primary:disabled:hover{filter:none;background:var(--accent);color:var(--on-accent)}
+/* === Buttons: .v4-btn and .v4-btn-primary from components.css; only the page's own states here === */
 .btn--flash-ok,.btn--flash-ok:hover{background:transparent!important;border-color:var(--success)!important;color:var(--success)!important}
 .btn--flash-error,.btn--flash-error:hover{background:transparent!important;border-color:var(--warning)!important;color:var(--warning)!important}
-.version-btn{min-height:0;padding:2px 8px;font-family:var(--font-mono);font-size:var(--label-xs-size);letter-spacing:var(--label-xs-tracking);text-transform:none;border-color:var(--border)}
-
-/* === Header and menus (the top bar of s.morgunov.tech: a rule under it, uppercase labels) === */
-header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-bottom:14px;margin-bottom:24px;border-bottom:1px solid var(--text)}
-h1{font-size:22px;font-weight:600;letter-spacing:-0.015em;margin:0}
-.sub{color:var(--muted);font-size:var(--label-size);font-weight:var(--label-weight);letter-spacing:var(--label-tracking);text-transform:uppercase}
-.sub a{color:inherit}
-.toolbar{display:flex;gap:12px;align-items:center;margin-left:auto;flex-wrap:wrap}
-.menu{position:relative}
-.toolbar .bar-btn{min-height:36px;padding:0 8px;border:none;background:transparent;color:var(--text);font-size:var(--label-size);font-weight:var(--label-weight);letter-spacing:var(--label-tracking);white-space:nowrap}
-.toolbar .bar-btn:hover,.toolbar .bar-btn:focus-visible,.toolbar .bar-btn[aria-expanded="true"]{background:transparent;color:var(--accent-text)}
-.menu-panel{position:absolute;right:0;top:calc(100% + 15px);display:flex;flex-direction:column;padding:6px;border:1px solid var(--border);background:var(--card);min-width:170px;z-index:10}
-.menu-panel[hidden]{display:none!important}
-.menu-panel button{display:block;min-height:40px;border:1px solid transparent;background:transparent;color:var(--text);padding:10px;font:inherit;font-size:var(--label-size);font-weight:var(--label-weight);letter-spacing:var(--label-tracking);text-transform:uppercase;text-align:left;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease}
-.menu-panel button:hover,.menu-panel button:focus-visible{background:var(--bg);color:var(--accent-text)}
-.menu-panel button.active,.menu-panel button[aria-checked="true"]{color:var(--accent-text);border-color:var(--accent)}
 
 /* === Blocks === */
 .block{background:var(--card);border:1px solid var(--border);padding:18px;margin:16px 0}
@@ -105,7 +85,7 @@ details[open]>.intro-more::after{transform:translateY(1px) rotate(225deg)}
 .status-badge--safe,.tracker-badge--blocked{color:var(--success)}
 .status-badge--warning{color:var(--warning)}
 .status-badge--danger,.tracker-badge--open{color:var(--danger)}
-.stat-share{display:block;margin-top:2px;color:var(--muted);font-size:11px;white-space:nowrap;font-weight:400}
+.stat-share{display:block;margin-top:2px;color:var(--muted);font-size:12px;white-space:nowrap;font-weight:400}
 .group-note{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.5}
 .step-check{margin:12px 0;padding:14px 16px;background:var(--bg);border:1px dashed var(--border)}
 .step-check-note{font-size:13px;color:var(--muted);line-height:1.5;margin:10px 0 0}
@@ -150,10 +130,13 @@ details[open]>.intro-more::after{transform:translateY(1px) rotate(225deg)}
 #detailsAccordion[open] .details-summary svg{transform:rotate(180deg)}
 .details-body .data-group{margin:12px 0}
 
-/* === Footer and changelog === */
-footer{margin-top:48px;padding:16px 0 0;border-top:1px solid var(--border);text-align:center;font-size:var(--label-size);font-weight:var(--label-weight);letter-spacing:var(--label-tracking);text-transform:uppercase;color:var(--muted);line-height:2}
-footer a{color:inherit}
-.footer-note{display:inline-block;margin-top:4px;font-size:12px;font-weight:400;letter-spacing:0;text-transform:none;line-height:1.5}
+/* === Footer notes and changelog === */
+/* The footer is .v4-foot: name · year · version on the left, the privacy line on the right. The
+   version is a control (it opens the changelog) set like the footer's links; the page's notes
+   take a row of their own in plain 12px. */
+.v4-foot .version-btn{font:inherit;font-family:var(--font-mono);font-weight:400;letter-spacing:0;text-transform:none;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:2px;transition:color .15s ease,text-decoration-color .15s ease}
+.v4-foot .version-btn:hover,.v4-foot .version-btn:focus-visible{color:var(--accent-text);text-decoration-color:var(--accent-text)}
+.v4-foot .footer-note{flex-basis:100%;font-size:12px;font-weight:400;letter-spacing:0;text-transform:none;line-height:1.5}
 #changelogModal{position:fixed;inset:0;z-index:100;background:rgba(20,17,13,.6);padding:20px;overflow-y:auto}
 .changelog-content{max-width:640px;margin:40px auto;background:var(--card);border:1px solid var(--border);padding:24px}
 .changelog-content header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--text)}
@@ -169,18 +152,11 @@ footer a{color:inherit}
 
 /* === Small screens === */
 @media (max-width:720px){
-  h1{font-size:20px}
-  .wrap{padding:0 16px}
   .block,.step{padding:16px}
   .step-title{font-size:20px}
-  header{align-items:flex-start;padding-bottom:10px;margin-bottom:22px}
-  .toolbar{margin-left:0}
-  .toolbar .bar-btn{min-height:44px}
-  .menu-panel{top:calc(100% + 11px)}
 }
 @media (max-width:520px){
-  .btn{width:100%;min-height:44px}
-  .toolbar .bar-btn{width:auto}
+  .step-check .v4-btn,.summary-actions .v4-btn{width:100%;min-height:44px}
   .data-row{flex-direction:column;gap:2px}
   .data-row .data-value{text-align:left}
   .tracker-row{flex-direction:column;align-items:flex-start;gap:6px}
@@ -190,9 +166,9 @@ footer a{color:inherit}
 /* === Print (tokens.css pins the paper palette) === */
 @media print{
   body{background:#fff!important;color:#000!important;font-size:13px}
-  .wrap{max-width:100%;padding:0;margin:0}
+  .v4-root{max-width:100%;padding:0;margin:0}
   .block,.step{border:1px solid #bbb;page-break-inside:avoid}
-  .btn,.menu,.toolbar,.summary-actions,.step-check,.skeleton,.skip-link{display:none!important}
+  .v4-btn,.v4-bar-right,.summary-actions,.step-check,.skeleton,.skip-link{display:none!important}
   .step-expand{display:block}
   .step-expand summary{list-style:none;font-weight:600}
   .step-expand summary::before{content:none}
