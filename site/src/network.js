@@ -1,9 +1,9 @@
 // Everything that leaves the browser: the Worker (whoami, scan, stats), the public IP services
 // used only when the Worker is down, and the WebRTC probe (which sends nothing).
 
-import { WORKER_API } from './config.js?v=3.3.0';
-import { state } from './state.js?v=3.3.0';
-import { LOCAL_TZ } from './signals.js?v=3.3.0';
+import { WORKER_API } from './config.js?v=3.3.1';
+import { state } from './state.js?v=3.3.1';
+import { LOCAL_TZ } from './signals.js?v=3.3.1';
 
 export async function fetchWithTimeout(url, { timeout = 6000, ...options } = {}) {
   const controller = new AbortController();

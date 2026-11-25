@@ -674,6 +674,64 @@ const waitFor = async (cond, label) => {
     }
   }
 
+  // The scan target as typed or pasted: the scheme, "www.", the path and trailing slashes go, and
+  // a pasted address is scanned as its domain. No regex over the query string: a megabyte of
+  // slashes is cleaned in linear time.
+  {
+    const { cleanTarget, collectFingerprint } = await import(moduleUrl('./worker/src/collector.js'));
+    for (const [raw, host] of [
+      ['example.com', 'example.com'], ['  Example.COM  ', 'example.com'],
+      ['example.com/', 'example.com'], ['example.com///', 'example.com'],
+      ['https://example.com', 'example.com'], ['http://example.com/', 'example.com'], ['HTTPS://WWW.Example.com/', 'example.com'],
+      ['www.example.com', 'example.com'], ['sub.www.example.com', 'sub.www.example.com'],
+      ['example.com/path', 'example.com'], ['example.com/path/', 'example.com'], ['https://www.example.com/a/b/c.html', 'example.com'],
+      ['198.51.100.7/', '198.51.100.7'], ['http://198.51.100.7/admin', '198.51.100.7'], ['2001:db8::1', '2001:db8::1'],
+      ['', ''], ['/', ''], ['///', ''], ['https://', ''], ['https:///', ''],
+    ]) assert.equal(cleanTarget(raw), host, JSON.stringify(raw));
+    const big = 1_000_000;
+    const started = performance.now();
+    assert.equal(cleanTarget('example.com' + '/'.repeat(big)), 'example.com');
+    assert.equal(cleanTarget('/'.repeat(big) + 'example.com'), '');
+    assert.equal(cleanTarget('https://' + 'a/'.repeat(big)), 'a');
+    assert.equal(cleanTarget(' '.repeat(big) + 'example.com/' + ' '.repeat(big)), 'example.com');
+    assert.equal(cleanTarget('a'.repeat(big) + '/'.repeat(big) + 'a'), 'a'.repeat(big));
+    const elapsed = performance.now() - started;
+    assert.ok(elapsed < 1000, `cleanTarget took ${Math.round(elapsed)} ms on megabyte inputs`);
+
+    // A pasted address is reported, resolved and fetched as its domain: the path reaches no provider.
+    const pastedUrls = [];
+    setFetch(async url => {
+      const target = String(url);
+      pastedUrls.push(target);
+      if (target.startsWith('https://dns.google/resolve?name=example.com&type=A')) return makeJsonResponse({ Status: 0, Answer: [{ name: 'example.com.', type: 1, data: '198.51.100.9' }] });
+      if (target.startsWith('https://dns.google/')) return makeJsonResponse({ Status: 3 });
+      if (target.startsWith('https://api.ipquery.io/')) return makeJsonResponse({ ip: '198.51.100.9', isp: {}, location: { country_code: 'UZ' }, risk: {} });
+      if (target.startsWith('https://crt.sh/')) return makeJsonResponse([]);
+      if (target === 'https://example.com') return { ok: true, status: 200, headers: new Headers({ server: 'stub' }) };
+      throw new Error(`Unexpected Worker fetch: ${target}`);
+    });
+    console.log = () => {};
+    try {
+      const scan = await collectFingerprint('https://www.Example.com/path/', {});
+      assert.deepEqual([scan.target, scan.target_type, scan.resolved_ip], ['example.com', 'domain', '198.51.100.9']);
+      assert.equal(scan.http_headers.server, 'stub');
+      assert.ok(pastedUrls.length > 3 && !pastedUrls.some(url => url.includes('path')), pastedUrls.join(' '));
+
+      // The endpoint answers 400 when no host is left, and never starts a scan for it.
+      const { default: worker } = await import(moduleUrl('./worker/src/index.js'));
+      const callScan = target => worker.fetch(new Request('https://fprint.morgunov.tech/api/scan?target=' + encodeURIComponent(target)), {}, { waitUntil() {} });
+      pastedUrls.length = 0;
+      for (const empty of ['/', '///', 'https://', 'http:///']) assert.equal((await callScan(empty)).status, 400, JSON.stringify(empty));
+      assert.equal(pastedUrls.length, 0);
+      const viaEndpoint = await callScan('example.com/path/');
+      assert.equal(viaEndpoint.status, 200);
+      assert.equal((await viaEndpoint.json()).target, 'example.com');
+    } finally {
+      setFetch(realFetch);
+      console.log = realLog;
+    }
+  }
+
   // /api/whoami: the shape the page's server-fingerprint section reads.
   {
     const { buildWhoami, parseUA, checkConsistency, whoamiText } = await import(moduleUrl('./worker/src/whoami.js'));

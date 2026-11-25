@@ -17,16 +17,16 @@ function isIp(target) {
   return false;
 }
 
-function cleanTarget(raw) {
+// What a caller typed or pasted, reduced to the host to look up: no scheme, no "www.", and nothing
+// from the first slash on, so a pasted address ("https://example.com/path/") is scanned as its
+// domain. Every step is one linear pass: the target comes straight from the query string.
+export function cleanTarget(raw) {
   let t = raw.trim().toLowerCase();
-  // Trailing slashes go in one linear pass: the target comes straight from the query string.
-  let end = t.length;
-  while (end > 0 && t[end - 1] === '/') end--;
-  t = t.slice(0, end);
   for (const prefix of ['https://', 'http://', 'www.']) {
     if (t.startsWith(prefix)) t = t.slice(prefix.length);
   }
-  return t;
+  const slash = t.indexOf('/');
+  return slash === -1 ? t : t.slice(0, slash);
 }
 
 async function resolveDomain(domain) {

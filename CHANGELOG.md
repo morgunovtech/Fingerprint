@@ -2,6 +2,16 @@
 
 What changed for the people who use the page or call the Worker. The build mark in the page's footer (the version) links to this file; until 3.3.0 the page had a changelog modal of its own with the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.3.1 — 2026-11-25
+
+A pasted address is scanned as its domain, and the page reports its own failures. Nothing changes in what the page checks or sends.
+
+- **`/api/scan` with a path.** `?target=example.com/path/` or `?target=https://example.com/a/b` kept the path as part of the "domain": the report came back with `target: "example.com/path"`, `resolved_ip: null`, DNS and certificates failed, and the `HEAD` request went to that path instead of the site's root. The target is now cut to its host (scheme, `www.`, and everything from the first slash), so both forms answer like `?target=example.com`. A target with no host left (`/`, `https://`) gets 400 "Invalid target" instead of an empty report. Reports cached under the old keys expire within the hour.
+- **Errors in the page are logged.** Three calls in `site/src/app.js` (the first render, a language switch, the button at step 3) could fail without a trace; a failure now lands in the browser console.
+- **Under the hood** (merged earlier today as #48, the first SonarQube Cloud triage, without a release of its own): the trailing slashes of a scan target were stripped by a regular expression that slows down on a long run of slashes (the endpoint caps the length, so it was not reachable), now by a plain pass; CI pins every GitHub Action to a commit and installs the Worker's tooling with `npm ci --ignore-scripts`; `Number.parseInt` / `Number.parseFloat` instead of the globals, same results.
+- `selftest.js` covers the target clean-up: schemes, `www.`, paths, trailing slashes, IPs, megabyte-long inputs within a second, and the 400.
+- Version 3.3.1 in the page, `CHANGELOG.md`, the Worker and the asset addresses (`?v=3.3.1`). The Worker's code changed, so it is deployed again after the merge.
+
 ## 3.3.0 — 2026-11-25
 
 The footer is the family's, to the letter: name · year · the version as a link to this file on GitHub, and the privacy line. What the page checks and sends does not change.
