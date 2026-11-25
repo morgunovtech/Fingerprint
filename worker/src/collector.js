@@ -9,24 +9,74 @@ import { fetchSsl } from './providers/ssl.js';
 import { fetchHttpHeaders } from './providers/headers.js';
 import { cacheGet, cacheSet } from './cache.js';
 
+// Digits only from `from` to the end (true for an empty tail). A loop, not a regex: see cleanTarget.
+function isDigits(text, from) {
+  for (let i = from; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c < 48 || c > 57) return false;
+  }
+  return true;
+}
+
 function isIp(target) {
   // IPv4
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(target)) return true;
-  // IPv6
-  if (target.includes(':') && /^[0-9a-fA-F:]+$/.test(target)) return true;
-  return false;
+  // IPv6: hex groups with at least two colons, so "host:port" leftovers ("abc:80") are never an IP.
+  const colon = target.indexOf(':');
+  return colon !== -1 && colon !== target.lastIndexOf(':') && /^[0-9a-f:]+$/i.test(target);
 }
 
-// What a caller typed or pasted, reduced to the host to look up: no scheme, no "www.", and nothing
-// from the first slash on, so a pasted address ("https://example.com/path/") is scanned as its
-// domain. Every step is one linear pass: the target comes straight from the query string.
+// What a caller typed or pasted, reduced to the host to look up, so a pasted address
+// ("https://user@www.Example.com:8443/path?x=1#a") is scanned as its domain. Dropped, in this
+// order: the scheme; everything from the first "/", "\", "?" or "#"; the userinfo before the last
+// "@" (credentials never reach the report, the cache key or the log); the port; "www."; trailing
+// dots. An IPv6 literal keeps its colons: bare ("2001:db8::1", several colons, so none of them is
+// a port) or in brackets with an optional port ("[2001:db8::1]:443"). What cannot be a host
+// returns "". Every step is one linear pass with no regular expression: the target comes straight
+// from the query string.
 export function cleanTarget(raw) {
   let t = raw.trim().toLowerCase();
-  for (const prefix of ['https://', 'http://', 'www.']) {
-    if (t.startsWith(prefix)) t = t.slice(prefix.length);
+  const scheme = t.indexOf('://');
+  if (scheme > 0 && isSchemeName(t, scheme)) t = t.slice(scheme + 3);
+  let end = t.length;
+  for (const stop of ['/', '\\', '?', '#']) {
+    const i = t.indexOf(stop);
+    if (i !== -1 && i < end) end = i;
   }
-  const slash = t.indexOf('/');
-  return slash === -1 ? t : t.slice(0, slash);
+  t = t.slice(0, end);
+  const at = t.lastIndexOf('@');
+  if (at !== -1) t = t.slice(at + 1);
+  if (t.startsWith('[')) {
+    const close = t.indexOf(']');
+    if (close === -1) return '';
+    const portOk = close === t.length - 1 || (t[close + 1] === ':' && isDigits(t, close + 2));
+    const inner = t.slice(1, close);
+    return portOk && inner.includes(':') && isIp(inner) ? inner : '';
+  }
+  const colon = t.indexOf(':');
+  if (colon !== -1 && colon === t.lastIndexOf(':') && isDigits(t, colon + 1)) t = t.slice(0, colon);
+  if (t.startsWith('www.')) t = t.slice(4);
+  let last = t.length;
+  while (last > 0 && t[last - 1] === '.') last--;
+  return t.slice(0, last);
+}
+
+// "https", "ftp", "git+ssh": a letter, then letters, digits, "+", "-" or "." up to `end`.
+function isSchemeName(text, end) {
+  for (let i = 0; i < end; i++) {
+    const c = text.charCodeAt(i);
+    const letter = c >= 97 && c <= 122;
+    const other = (c >= 48 && c <= 57) || c === 43 || c === 45 || c === 46;
+    if (!(letter || (i > 0 && other))) return false;
+  }
+  return true;
+}
+
+// A cleaned target the scan can look up: an IP address, or a name of letters, digits, dots and
+// hyphens within DNS's 253 characters. A colon is left only in an IPv6 address.
+export function isScannableHost(host) {
+  if (host.length === 0 || host.length > 253) return false;
+  return isIp(host) || !/[^a-z0-9.-]/.test(host);
 }
 
 async function resolveDomain(domain) {

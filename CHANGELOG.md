@@ -2,6 +2,18 @@
 
 What changed for the people who use the page or call the Worker. The build mark in the page's footer (the version) links to this file; until 3.3.0 the page had a changelog modal of its own with the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.3.2 — 2026-11-25
+
+A pasted address with a port, a login or a query is scanned as its host too. Nothing changes in the page.
+
+- **`/api/scan` with a port.** `?target=example.com:8443` or `?target=https://example.com:8443/path` kept `:8443` as part of the "domain", so nothing resolved; 3.3.1 left that as it was. A host followed by `:` and digits is now scanned as the host, an IPv4 address too (`1.2.3.4:443` is the IP `1.2.3.4`). The report does not mention the dropped port, as it does not mention a dropped path: the scan looks at the host, never at one port of it.
+- **IPv6.** A bare address (`2001:db8::1`) is scanned as before; its colons are not ports. The bracketed form is read now: `[2001:db8::1]` and `[2001:db8::1]:443` are the IP `2001:db8::1` (they used to get 400).
+- **A login in the address.** `user:password@example.com` is scanned as `example.com` (it used to get 400). The login and the password are dropped before anything else happens: they are not in the report, the cache key, the log or any request the scan sends.
+- **A query, a fragment, a trailing dot, another scheme.** `example.com?x=1`, `example.com#a`, `example.com.` and `ftp://example.com` are scanned as `example.com` (400 before, or a "domain" that resolved nothing). So is an address whose path has characters a host cannot have (`https://example.com/a_b?c=1`), which 3.3.1 answered with 400.
+- **Still 400 "Invalid target":** nothing left for a host (`/`, `https://`, `user:password@`, `:8443`, `...`), a port that is not a number (`example.com:abc`), a host with characters outside letters, digits, dots and hyphens or longer than 253, a value longer than 2048 characters (the limit used to be 253 for the address with its path). One colon between hex digits (`dead:beef`) is no longer taken for an IPv6 address.
+- `selftest.js` has the pairs for all of the above, megabyte-long inputs of colons, `@`, brackets and dots within the same second, and the endpoint itself: one cache entry for every spelling of `example.com`, no credentials or port anywhere in the answer.
+- Version 3.3.2 in the page, `CHANGELOG.md`, the Worker and the asset addresses (`?v=3.3.2`). The Worker's code changed, so it is deployed again after the merge.
+
 ## 3.3.1 — 2026-11-25
 
 A pasted address is scanned as its domain, and the page reports its own failures. Nothing changes in what the page checks or sends.
