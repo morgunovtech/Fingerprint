@@ -17,12 +17,14 @@
  *   OPTIONS *                            — CORS preflight
  */
 
-import { collectFingerprint, cleanTarget } from './collector.js';
+import { collectFingerprint, cleanTarget, isScannableHost } from './collector.js';
 import { buildWhoami, whoamiText } from './whoami.js';
 
 // One version for the release: the same number as APP_VERSION in site/src/config.js,
 // worker/package.json and the top entry of CHANGELOG.md.
-const VERSION = '3.3.1';
+const VERSION = '3.3.2';
+// The longest ?target= the scan reads: room for a pasted address with its path and query.
+const MAX_TARGET_LENGTH = 2048;
 
 const RATE_LIMIT_PER_MINUTE = 60;
 
@@ -181,9 +183,10 @@ export default {
       if (!target) {
         return jsonResponse({ error: 'Missing "target" parameter. Usage: /api/scan?target=example.com' }, 400, request, env);
       }
-      const cleaned = target.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
-      // Nothing left once the scheme and the path are gone ("/", "https://"): there is no host to scan.
-      if (cleaned.length > 253 || /[^a-z0-9.:/-]/.test(cleaned) || !cleanTarget(target)) {
+      // The raw value is capped before any work on it; then only the host counts: its path, query,
+      // port and userinfo are dropped, and what is left must be a name or an IP ("/", "https://",
+      // "user:pass@" leave nothing). The answer never repeats the raw value.
+      if (target.length > MAX_TARGET_LENGTH || !isScannableHost(cleanTarget(target))) {
         return jsonResponse({ error: 'Invalid target. Provide a domain or an IP address.' }, 400, request, env);
       }
       try {

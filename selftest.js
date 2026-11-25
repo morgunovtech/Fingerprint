@@ -678,7 +678,7 @@ const waitFor = async (cond, label) => {
   // a pasted address is scanned as its domain. No regex over the query string: a megabyte of
   // slashes is cleaned in linear time.
   {
-    const { cleanTarget, collectFingerprint } = await import(moduleUrl('./worker/src/collector.js'));
+    const { cleanTarget, isScannableHost, collectFingerprint } = await import(moduleUrl('./worker/src/collector.js'));
     // The plain-http scheme is test input for the stripper, never an address the test opens; it is
     // assembled so that code scanners do not read the literals as insecure links.
     const plainHttp = ['http', '//'].join(':');
@@ -690,7 +690,31 @@ const waitFor = async (cond, label) => {
       ['example.com/path', 'example.com'], ['example.com/path/', 'example.com'], ['https://www.example.com/a/b/c.html', 'example.com'],
       ['198.51.100.7/', '198.51.100.7'], [`${plainHttp}198.51.100.7/admin`, '198.51.100.7'], ['2001:db8::1', '2001:db8::1'],
       ['', ''], ['/', ''], ['///', ''], ['https://', ''], ['https:///', ''],
+      // A port is not part of the host.
+      ['example.com:8443', 'example.com'], ['https://example.com:8443/path', 'example.com'], ['www.example.com:443', 'example.com'],
+      ['example.com:', 'example.com'], ['Example.COM:80/', 'example.com'], ['203.0.113.4:443', '203.0.113.4'], [`${plainHttp}198.51.100.7:8080/admin`, '198.51.100.7'],
+      // An IPv6 literal keeps its colons; brackets and a port after them go.
+      ['2001:db8::1'.toUpperCase(), '2001:db8::1'], ['::1', '::1'], ['2001:db8::1:443', '2001:db8::1:443'], ['https://2001:db8::1/', '2001:db8::1'],
+      ['[2001:db8::1]', '2001:db8::1'], ['[2001:db8::1]:443', '2001:db8::1'], ['https://[2001:db8::1]:8443/path?x=1'.toUpperCase(), '2001:db8::1'], ['[::1]:', '::1'],
+      ['[2001:db8::1', ''], ['[2001:db8::1]x', ''], ['[2001:db8::1]:44a', ''], ['[example.com]:443', ''], ['[]', ''], ['[203.0.113.4]', ''],
+      // Userinfo is dropped, password and all.
+      ['user@example.com', 'example.com'], ['user:secret@example.com', 'example.com'], ['https://user:secret@www.example.com:8443/path', 'example.com'],
+      ['a@b@example.com', 'example.com'], ['user:secret@[2001:db8::1]:443', '2001:db8::1'], ['user:secret@', ''], ['https://user:secret@/', ''],
+      ['example.com/?next=user@evil.example', 'example.com'],
+      // A query or a fragment with no slash before it.
+      ['example.com?x=1', 'example.com'], ['example.com#a', 'example.com'], ['example.com:8443?x=1#a', 'example.com'], ['https://example.com#a/b?c', 'example.com'],
+      ['example.com/path?u=https://other.example/', 'example.com'], ['example.com\\path', 'example.com'], ['?x=1', ''], ['#a', ''],
+      // Trailing dots.
+      ['example.com.', 'example.com'], ['example.com.:443', 'example.com'], ['https://www.example.com./path', 'example.com'], ['203.0.113.4.', '203.0.113.4'], ['.', ''], ['...', ''], ['www.', ''],
+      // Any scheme goes, not only http(s); what is not a scheme stays for the validator to refuse.
+      ['ftp://example.com', 'example.com'], ['git+ssh://git@example.com:22/repo.git', 'example.com'], ['://example.com', ''],
+      ['example.com:abc', 'example.com:abc'], ['example.com:80:80', 'example.com:80:80'], [':8443', ''], [':', ''],
     ]) assert.equal(cleanTarget(raw), host, JSON.stringify(raw));
+    for (const [host, ok] of [
+      ['example.com', true], ['xn--e1afmkfd.xn--p1ai', true], ['203.0.113.4', true], ['2001:db8::1', true], ['::1', true],
+      ['', false], [':', false], ['example.com:abc', false], ['example.com:80:80', false], ['dead:beef', false], ['exa mple.com', false],
+      ['user@example.com', false], ['a_b.example.com', false], ['a'.repeat(253), true], ['a'.repeat(254), false],
+    ]) assert.equal(isScannableHost(host), ok, JSON.stringify(host));
     const big = 1_000_000;
     const started = performance.now();
     assert.equal(cleanTarget('example.com' + '/'.repeat(big)), 'example.com');
@@ -698,6 +722,21 @@ const waitFor = async (cond, label) => {
     assert.equal(cleanTarget('https://' + 'a/'.repeat(big)), 'a');
     assert.equal(cleanTarget(' '.repeat(big) + 'example.com/' + ' '.repeat(big)), 'example.com');
     assert.equal(cleanTarget('a'.repeat(big) + '/'.repeat(big) + 'a'), 'a'.repeat(big));
+    assert.equal(cleanTarget('example.com:' + '8'.repeat(big)), 'example.com');
+    assert.equal(cleanTarget('example.com:' + '8'.repeat(big) + 'x'), 'example.com:' + '8'.repeat(big) + 'x');
+    assert.equal(cleanTarget(':'.repeat(big)), ':'.repeat(big));
+    assert.equal(cleanTarget('@'.repeat(big) + 'example.com'), 'example.com');
+    assert.equal(cleanTarget('a:'.repeat(big) + '@example.com:' + '1'.repeat(big)), 'example.com');
+    assert.equal(cleanTarget('['.repeat(big)), '');
+    assert.equal(cleanTarget('[' + ':'.repeat(big) + ']:' + '1'.repeat(big)), ':'.repeat(big));
+    assert.equal(cleanTarget('[' + 'f:'.repeat(big) + ']' + ']'.repeat(big)), '');
+    assert.equal(cleanTarget('example.com' + '.'.repeat(big)), 'example.com');
+    assert.equal(cleanTarget('.'.repeat(big) + ':443'), '');
+    assert.equal(cleanTarget('a'.repeat(big) + '://example.com'), 'example.com');
+    assert.equal(cleanTarget('://'.repeat(big)), '');
+    assert.equal(cleanTarget('example.com' + '?#'.repeat(big)), 'example.com');
+    assert.equal(cleanTarget('www.'.repeat(big)).length, 4 * (big - 1) - 1);
+    assert.equal(isScannableHost(':'.repeat(big)), false);
     const elapsed = performance.now() - started;
     assert.ok(elapsed < 1000, `cleanTarget took ${Math.round(elapsed)} ms on megabyte inputs`);
 
@@ -729,6 +768,38 @@ const waitFor = async (cond, label) => {
       const viaEndpoint = await callScan('example.com/path/');
       assert.equal(viaEndpoint.status, 200);
       assert.equal((await viaEndpoint.json()).target, 'example.com');
+
+      // A port, userinfo, a query and a fragment change nothing: the same host and the same cache
+      // entry as the scan above (so no request goes out), and neither the credentials nor the port
+      // in the report or in a KV key.
+      const kvKeys = [];
+      const kv = { CACHE: { get: async key => { kvKeys.push(key); return null; }, put: async key => { kvKeys.push(key); } } };
+      for (const pasted of ['example.com:8443', 'https://example.com:8443/path', 'https://user:secret@www.Example.com.:8443/path?x=1#a', 'example.com?x=1', 'example.com#a', 'EXAMPLE.COM.']) {
+        pastedUrls.length = 0;
+        kvKeys.length = 0;
+        const answer = await worker.fetch(new Request('https://fprint.morgunov.tech/api/scan?target=' + encodeURIComponent(pasted)), kv, { waitUntil() {} });
+        assert.equal(answer.status, 200, pasted);
+        const text = await answer.text();
+        const report = JSON.parse(text);
+        assert.deepEqual([report.target, report.target_type, report.resolved_ip, report._cached], ['example.com', 'domain', '198.51.100.9', true], pasted);
+        assert.ok(kvKeys.length > 1 && kvKeys.every(key => key === 'report:example.com' || key === 'rl:0.0.0.0'), `${pasted}: ${kvKeys.join(' ')}`);
+        assert.equal(pastedUrls.length, 0, pasted);
+        assert.ok(!/secret|user|8443|x=1/.test(text), pasted);
+      }
+      // IPs with a port or in brackets are scanned as IPs.
+      for (const [pasted, ip] of [['198.51.100.9:443', '198.51.100.9'], ['[2001:db8::1]:443', '2001:db8::1'], ['2001:db8::1', '2001:db8::1']]) {
+        const report = await (await callScan(pasted)).json();
+        assert.deepEqual([report.target, report.target_type, report.resolved_ip], [ip, 'ip', ip], pasted);
+      }
+      // Still 400, with no request sent and nothing of the input in the answer.
+      pastedUrls.length = 0;
+      for (const bad of ['user:secret@', 'https://user:secret@/', ':8443', '?x=1', '#a', '...', 'example.com:abc', 'example.com:80:80', 'dead:beef', '[2001:db8::1', '[example.com]:443', 'exa mple.com', 'a'.repeat(254), 'example.com/' + 'a'.repeat(2048)]) {
+        const answer = await callScan(bad);
+        assert.equal(answer.status, 400, JSON.stringify(bad));
+        assert.ok(!(await answer.text()).includes('secret'), bad);
+      }
+      assert.equal(pastedUrls.length, 0);
+      assert.equal((await callScan('example.com/' + 'a_b?c=%20'.repeat(200))).status, 200, 'a long path with characters no host has');
     } finally {
       setFetch(realFetch);
       console.log = realLog;
