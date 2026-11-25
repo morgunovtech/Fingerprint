@@ -1,10 +1,10 @@
 // Uzbek strings of the page. Keys are the same in ru.js, en.js and uz.js; selftest.js checks that.
-import { PERSONAL_URL, CANONICAL_URL } from '../config.js?v=3.1.2';
+import { CANONICAL_URL } from '../config.js?v=3.2.0';
 
 export default {
-  langButton: 'Til',
-  langLabels: { ru: 'Ruscha', en: 'Inglizcha', uz: 'Oʻzbekcha' },
-  theme: { label: 'Mavzu', modes: { auto: 'Avto', light: 'Yorugʻ', dark: 'Qorongʻi', 'high-contrast': 'Kontrast' } },
+  // The words of the family chrome (the bar's menus, the skip link), as s.morgunov.tech says them.
+  chrome: { skip: 'Asosiy kontentga oʻtish', changeLanguage: 'tilni oʻzgartirish', changeTheme: 'Mavzuni oʻzgartirish' },
+  theme: { modes: { light: 'Yorugʻ', dark: 'Qorongʻi', auto: 'Avto', 'high-contrast': 'Yuqori kontrast' } },
   meta: {
     title: 'Fingerprint — saytni ochguningizcha kim va nimani bilib oladi',
     description: 'Noutbukni ochishdan saytning yuklanishigacha olti qadam: har birida kim va nimani bilib oladi, sizning haqiqiy maʼlumotlaringizda, va nima qilish kerak.'
@@ -220,7 +220,9 @@ export default {
   },
 
   units: { gb: 'GB', yes: 'ha', no: 'yoʻq' },
-  footer: version => `© <a href="${PERSONAL_URL}" target="_blank" rel="noopener">morgunov.tech</a> • Hammasi brauzeringizda hisoblanadi • <button id="versionBtn" class="btn version-btn" title="Oʻzgarishlar tarixi">v${version}</button><br><span class="footer-note">Cloudflare da joylashtirilgan. Cloudflare Web Analytics anonim tashrif statistikasini yigʻadi (cookie va shaxsiy maʼlumotlarsiz).</span><br><span id="footerVisitCount" class="footer-note" style="display:none"></span>`,
+  // The family footer: name · year · version on the left (the version opens the changelog), the
+  // privacy line on the right, then the page's own notes on a row of their own.
+  footer: version => `<span>morgunov.tech / fingerprint · 2026 · <button id="versionBtn" class="version-btn" type="button" title="Oʻzgarishlar tarixi">v${version}</button></span><span class="v4-foot-privacy">Hammasi brauzeringizda hisoblanadi</span><span class="footer-note">Cloudflare da joylashtirilgan. Cloudflare Web Analytics anonim tashrif statistikasini yigʻadi (cookie va shaxsiy maʼlumotlarsiz).</span><span id="footerVisitCount" class="footer-note" style="display:none"></span>`,
   footerVisits: n => `${n} marta tekshirildi`,
   statVisitors: pct => `${pct}% tashrif buyuruvchilarda`,
   changelogTitle: 'Oʻzgarishlar tarixi',

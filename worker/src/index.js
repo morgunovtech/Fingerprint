@@ -22,7 +22,7 @@ import { buildWhoami, whoamiText } from './whoami.js';
 
 // One version for the release: the same number as APP_VERSION in site/src/config.js,
 // worker/package.json and the top entry of CHANGELOG.md.
-const VERSION = '3.1.2';
+const VERSION = '3.2.0';
 
 const RATE_LIMIT_PER_MINUTE = 60;
 

@@ -2,6 +2,27 @@
 // the footer). CHANGELOG.md carries the same entries in English; the top entry's version is APP_VERSION.
 export const CHANGELOG = [
   {
+    version:'3.2.0',
+    date:'2026-11-25',
+    changes:{
+      ru:[
+        'Шапка, меню языка и темы, кнопки и подвал теперь те же, что на s.morgunov.tech и в других сервисах morgunov.tech: слева «MORGUNOV.TECH / FINGERPRINT», справа язык, у самого края тема (значок вместо слова «Тема»). Что страница проверяет и отправляет, не изменилось',
+        'Подписи стали крупнее: ничего мельче 12px',
+        'Карточка ссылки для Telegram и LinkedIn перерисована в общем стиле'
+      ],
+      en:[
+        'The bar, the language and theme menus, the buttons and the footer are now the same as on s.morgunov.tech and the other morgunov.tech services: "MORGUNOV.TECH / FINGERPRINT" on the left, the language on the right, the theme at the very edge (an icon instead of the word "Theme"). What the page checks and sends has not changed',
+        'Captions are larger: nothing is set under 12px',
+        'The link preview card for Telegram and LinkedIn is redrawn in the shared style'
+      ],
+      uz:[
+        'Sarlavha paneli, til va mavzu menyulari, tugmalar va sahifa pasti endi s.morgunov.tech va boshqa morgunov.tech xizmatlaridagi bilan bir xil: chapda «MORGUNOV.TECH / FINGERPRINT», oʻngda til, eng chetda mavzu («Mavzu» soʻzi oʻrniga belgi). Sahifa nimani tekshirishi va yuborishi oʻzgarmadi',
+        'Yozuvlar kattalashdi: 12px dan kichik matn yoʻq',
+        'Telegram va LinkedIn uchun havola kartasi umumiy uslubda qayta chizildi'
+      ]
+    }
+  },
+  {
     version:'3.1.2',
     date:'2026-11-25',
     changes:{
