@@ -1,5 +1,5 @@
 // English strings of the page. Keys are the same in ru.js, en.js and uz.js; selftest.js checks that.
-import { CANONICAL_URL } from '../config.js?v=3.2.0';
+import { CANONICAL_URL, CHANGELOG_URL } from '../config.js?v=3.3.0';
 
 export default {
   // The words of the family chrome (the bar's menus, the skip link), as s.morgunov.tech says them.
@@ -219,12 +219,13 @@ export default {
   },
 
   units: { gb: 'GB', yes: 'yes', no: 'no' },
-  // The family footer: name · year · version on the left (the version opens the changelog), the
-  // privacy line on the right, then the page's own notes on a row of their own.
-  footer: version => `<span>morgunov.tech / fingerprint · 2026 · <button id="versionBtn" class="version-btn" type="button" title="Changelog">v${version}</button></span><span class="v4-foot-privacy">Everything is computed in your browser</span><span class="footer-note">Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics (no cookies, no personal data).</span><span id="footerVisitCount" class="footer-note" style="display:none"></span>`,
+  // The family footer, the same on every morgunov.tech page: name · year · the build mark (the
+  // version, a link to the changelog on GitHub) on the left, the privacy line on the right.
+  footer: version => `<span>morgunov.tech / fingerprint · 2026 · <a class="v4-build" href="${CHANGELOG_URL}" target="_blank" rel="noopener noreferrer">v${version}</a></span><span class="v4-foot-privacy">Everything is computed in your browser</span>`,
+  // What the page says about its own hosting: under the walk, not in the footer.
+  pageNote: 'Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics (no cookies, no personal data).',
   footerVisits: n => `Checked ${n} times`,
   statVisitors: pct => `${pct}% of visitors`,
-  changelogTitle: 'Changelog',
   errorMessage: msg => `Error: ${msg}`,
   shareUrl: CANONICAL_URL
 };

@@ -1,9 +1,12 @@
 // Constants shared by the page modules. One version number names a release: the same string
 // lives in worker/src/index.js (VERSION), worker/package.json and the top entry of CHANGELOG.md.
-export const APP_VERSION = '3.2.0';
+export const APP_VERSION = '3.3.0';
 
 export const PERSONAL_URL = 'https://s.morgunov.tech';
 export const CANONICAL_URL = 'https://fprint.morgunov.tech';
+// The build mark of the family footer leads here: the history of versions on GitHub
+// (ds/v1/USAGE.md in about-me-page, "Build mark").
+export const CHANGELOG_URL = 'https://github.com/morgunovtech/Fingerprint/blob/main/CHANGELOG.md';
 
 // The Worker answers on the site's own host (a route for fprint.morgunov.tech/api/*), so on the
 // live site these calls are same-origin. The address is absolute rather than '/api' so a local
