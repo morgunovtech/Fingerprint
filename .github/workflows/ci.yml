@@ -10,15 +10,17 @@ jobs:
     name: selftest · worker
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: lts/*
           cache: npm
           cache-dependency-path: worker/package-lock.json
       # Imports the page's modules (site/src/*.js) and the Worker's into Node with stub browser APIs.
       - run: node selftest.js
-      - run: npm ci
+      # wrangler runs without its dependencies' install scripts (esbuild and workerd ship
+      # their binaries as optional packages), so none of them gets to run code here.
+      - run: npm ci --ignore-scripts
         working-directory: worker
       # Bundles the Worker exactly as `wrangler deploy` would, without uploading.
       - run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/worker-dist"
@@ -38,9 +40,9 @@ jobs:
       pull-requests: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v3
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -182,7 +182,7 @@ export function initApp() {
       if (!value) return;
       try { localStorage.setItem(LANG_KEY, value); } catch (_) { /* ignore */ }
       syncLangPath(value);
-      render(value);
+      render(value).catch(e => console.error(e));
     });
   });
   // The walk re-renders itself, so its buttons are handled by their data-action, not by element.
@@ -190,13 +190,13 @@ export function initApp() {
     const btn = event.target?.closest?.('[data-action]');
     if (!btn) return;
     const action = btn.dataset.action;
-    if (action === 'check-network') handleNetworkCheck();
+    if (action === 'check-network') handleNetworkCheck().catch(e => console.error(e));
     else if (action === 'share') handleShareClick(btn).catch(() => {});
     else if (action === 'save') handleSaveClick().catch(() => {});
   });
 
   state.lang = lang;
-  render(lang);
+  render(lang).catch(e => console.error(e));
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);

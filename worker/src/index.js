@@ -105,7 +105,7 @@ function randomBytes(size) {
 async function rateLimited(request, env, ctx) {
   if (!env.CACHE) return false;
   const key = `rl:${request.headers.get('cf-connecting-ip') || '0.0.0.0'}`;
-  const count = parseInt((await env.CACHE.get(key)) || '0', 10);
+  const count = Number.parseInt((await env.CACHE.get(key)) || '0', 10);
   if (count >= RATE_LIMIT_PER_MINUTE) return true;
   ctx.waitUntil(env.CACHE.put(key, String(count + 1), { expirationTtl: 60 }));
   return false;
@@ -158,7 +158,7 @@ export default {
       return textResponse('pong', request, env, 'text/plain');
     }
     if (pathname === '/api/speedtest/download' && request.method === 'GET') {
-      const size = Math.min(25_000_000, Math.max(100_000, parseInt(url.searchParams.get('size') || '2000000', 10) || 0));
+      const size = Math.min(25_000_000, Math.max(100_000, Number.parseInt(url.searchParams.get('size') || '2000000', 10) || 0));
       return new Response(randomBytes(size), {
         status: 200,
         headers: {
