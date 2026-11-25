@@ -17,12 +17,12 @@
  *   OPTIONS *                            — CORS preflight
  */
 
-import { collectFingerprint } from './collector.js';
+import { collectFingerprint, cleanTarget } from './collector.js';
 import { buildWhoami, whoamiText } from './whoami.js';
 
 // One version for the release: the same number as APP_VERSION in site/src/config.js,
 // worker/package.json and the top entry of CHANGELOG.md.
-const VERSION = '3.3.0';
+const VERSION = '3.3.1';
 
 const RATE_LIMIT_PER_MINUTE = 60;
 
@@ -182,7 +182,8 @@ export default {
         return jsonResponse({ error: 'Missing "target" parameter. Usage: /api/scan?target=example.com' }, 400, request, env);
       }
       const cleaned = target.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
-      if (cleaned.length > 253 || /[^a-z0-9.:/-]/.test(cleaned)) {
+      // Nothing left once the scheme and the path are gone ("/", "https://"): there is no host to scan.
+      if (cleaned.length > 253 || /[^a-z0-9.:/-]/.test(cleaned) || !cleanTarget(target)) {
         return jsonResponse({ error: 'Invalid target. Provide a domain or an IP address.' }, 400, request, env);
       }
       try {
