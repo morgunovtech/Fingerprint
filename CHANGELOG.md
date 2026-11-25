@@ -1,6 +1,17 @@
 # Changelog
 
-What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
+What changed for the people who use the page or call the Worker. The build mark in the page's footer (the version) links to this file; until 3.3.0 the page had a changelog modal of its own with the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
+
+## 3.3.0 — 2026-11-25
+
+The footer is the family's, to the letter: name · year · the version as a link to this file on GitHub, and the privacy line. What the page checks and sends does not change.
+
+- **Why.** 3.2.0 took the family bar and kept things of its own in the footer: the version was a button that opened a changelog inside the page, and two notes sat under it. The owner's rule (2026-11-25): the footer is one module, the same on every morgunov.tech page, like the bar. The design-system guide has it as "Build mark" and "Composition rules" (`ds/v1/USAGE.md` in about-me-page, v1.5.0).
+- **The build mark.** `v3.3.0` in the footer is a link to `CHANGELOG.md` in this repository on GitHub, in a new tab. The changelog modal is gone, with `site/src/changelog.js`, its strings and its styles: one history of versions, in one place. The cost: that history is in English only; the modal had it in Russian and Uzbek too.
+- **The notes** ("Hosted on Cloudflare. Cloudflare Web Analytics collects anonymous visit statistics…" and "Checked N times") moved from the footer to the end of the page, under "Everything the browser handed over". The wording is the same.
+- **404.** The same footer, with the build mark.
+- **From the layer** (about-me-page v1.5.0): `components.css` at its new hash and a fresh copy of `chrome.js`. In the menus the selected item is a round mark before its name instead of orange text in an orange frame, and a menu button clicked with the mouse no longer gets the keyboard focus ring (it stays for the keyboard).
+- Version 3.3.0 in the page, `CHANGELOG.md`, the Worker (number only) and the asset addresses (`?v=3.3.0`). A release now names its number in four places, not five: `README` says which.
 
 ## 3.2.0 — 2026-11-25
 

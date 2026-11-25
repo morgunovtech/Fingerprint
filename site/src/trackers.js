@@ -1,7 +1,7 @@
 // The ad-blocker check (three bait elements plus the DNT and GPC signals) and the consistency
 // check of the browser's own data.
 
-import { state } from './state.js?v=3.2.0';
+import { state } from './state.js?v=3.3.0';
 
 // Each bait is a hidden element with the class names ad blockers hide; after half a second the
 // element is either still laid out or hidden by a cosmetic filter. Nothing is loaded from anywhere.

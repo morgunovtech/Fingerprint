@@ -1,15 +1,14 @@
 // Entry point: wires the controls, picks the language, and renders the walk.
 
-import { APP_VERSION, LANG_KEY } from './config.js?v=3.2.0';
-import { getEl, esc } from './dom.js?v=3.2.0';
-import { state, snapshot } from './state.js?v=3.2.0';
-import { I18N, textsFor } from './i18n/index.js?v=3.2.0';
-import { CHANGELOG } from './changelog.js?v=3.2.0';
-import { getSnapshot } from './signals.js?v=3.2.0';
-import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.2.0';
-import { runTrackerTests } from './trackers.js?v=3.2.0';
-import { renderWalk } from './walk.js?v=3.2.0';
-import { handleShareClick, handleSaveClick } from './share.js?v=3.2.0';
+import { APP_VERSION, LANG_KEY } from './config.js?v=3.3.0';
+import { getEl, esc } from './dom.js?v=3.3.0';
+import { state, snapshot } from './state.js?v=3.3.0';
+import { I18N, textsFor } from './i18n/index.js?v=3.3.0';
+import { getSnapshot } from './signals.js?v=3.3.0';
+import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.3.0';
+import { runTrackerTests } from './trackers.js?v=3.3.0';
+import { renderWalk } from './walk.js?v=3.3.0';
+import { handleShareClick, handleSaveClick } from './share.js?v=3.3.0';
 
 /* ---- The family chrome ---- */
 
@@ -94,9 +93,9 @@ function startProbes() {
 
 function renderFooter(t) {
   const footerEl = getEl('footerText');
-  if (!footerEl) return;
-  footerEl.innerHTML = typeof t.footer === 'function' ? t.footer(APP_VERSION) : (t.footer || '');
-  document.getElementById('versionBtn')?.addEventListener('click', e => { e.preventDefault(); openChangelog(); });
+  if (footerEl) footerEl.innerHTML = typeof t.footer === 'function' ? t.footer(APP_VERSION) : (t.footer || '');
+  const note = getEl('pageNote');
+  if (note) note.textContent = t.pageNote || '';
   updateFooterVisitCount(t);
 }
 
@@ -105,7 +104,7 @@ function updateFooterVisitCount(t) {
   const el = document.getElementById('footerVisitCount');
   if (!n || !el) return;
   el.textContent = typeof t.footerVisits === 'function' ? t.footerVisits(n) : String(n);
-  el.style.display = '';
+  el.hidden = false;
 }
 
 export async function render(lang) {
@@ -165,56 +164,6 @@ export async function handleNetworkCheck() {
   if (state.networkStatus === 'done') getEl('step-3')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
 }
 
-/* ---- Changelog modal ---- */
-
-function renderChangelog(lang) {
-  const t = textsFor(lang);
-  const content = document.getElementById('changelogContent');
-  const heading = document.getElementById('changelogTitle');
-  if (heading) heading.textContent = t.changelogTitle || '';
-  if (!content) return;
-  const frag = document.createDocumentFragment();
-  for (const entry of CHANGELOG) {
-    const section = document.createElement('div');
-    section.className = 'changelog-entry';
-    const header = document.createElement('div');
-    header.className = 'changelog-header';
-    const ver = document.createElement('strong');
-    ver.textContent = `v${entry.version}`;
-    const date = document.createElement('span');
-    date.textContent = entry.date;
-    header.appendChild(ver);
-    header.appendChild(date);
-    section.appendChild(header);
-    const ul = document.createElement('ul');
-    for (const item of entry.changes[lang] || entry.changes.en || []) {
-      const li = document.createElement('li');
-      li.textContent = item;
-      ul.appendChild(li);
-    }
-    section.appendChild(ul);
-    frag.appendChild(section);
-  }
-  content.innerHTML = '';
-  content.appendChild(frag);
-}
-
-function openChangelog() {
-  const modal = document.getElementById('changelogModal');
-  if (!modal) return;
-  renderChangelog(state.lang);
-  modal.style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  document.getElementById('changelogClose')?.focus();
-}
-
-function closeChangelog() {
-  const modal = document.getElementById('changelogModal');
-  if (!modal) return;
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
 /* ---- Start ---- */
 
 export function initApp() {
@@ -236,12 +185,6 @@ export function initApp() {
       render(value);
     });
   });
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') closeChangelog();
-  });
-  document.getElementById('changelogClose')?.addEventListener('click', closeChangelog);
-  document.getElementById('changelogModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeChangelog(); });
-
   // The walk re-renders itself, so its buttons are handled by their data-action, not by element.
   getEl('walk')?.addEventListener('click', event => {
     const btn = event.target?.closest?.('[data-action]');

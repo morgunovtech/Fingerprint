@@ -67,6 +67,17 @@ for (const dir of ['site/src', 'site/src/i18n', 'worker/src', 'worker/src/provid
   assert.ok(html.includes('<div class="v4-dropdown v4-lang">'), 'the language menu');
   assert.deepEqual([...html.matchAll(/class="v4-menu-item v4-lang-link"[^>]*data-lang="([a-z]+)"/g)].map(m => m[1]), ['ru', 'en', 'uz']);
   assert.ok(html.indexOf('v4-dropdown v4-lang') < html.indexOf('v4-dropdown v4-theme'), 'language, then theme at the edge');
+  // The footer is the family's, to the letter: name · year · the build mark (the version, a link
+  // to CHANGELOG.md on GitHub) on the left, the privacy line on the right, and nothing else.
+  const changelogUrl = 'https://github.com/morgunovtech/Fingerprint/blob/main/CHANGELOG.md';
+  assert.ok(read('site/src/config.js').includes(`export const CHANGELOG_URL = '${changelogUrl}';`));
+  for (const lang of ['ru', 'en', 'uz']) {
+    const line = read(`site/src/i18n/${lang}.js`).split('\n').find(l => l.startsWith('  footer: version =>'));
+    assert.match(line, /^  footer: version => `<span>morgunov\.tech \/ fingerprint · 2026 · <a class="v4-build" href="\$\{CHANGELOG_URL\}" target="_blank" rel="noopener noreferrer">v\$\{version\}<\/a><\/span><span class="v4-foot-privacy">[^<]+<\/span>`,$/, `${lang}: the footer`);
+  }
+  assert.ok(notFound.includes(`<span>morgunov.tech / fingerprint · 2026 · <a class="v4-build" href="${changelogUrl}" target="_blank" rel="noopener noreferrer">v${APP_VERSION}</a></span>`), '404.html: the build mark');
+  for (const gone of ['changelogModal', 'versionBtn', 'footer-note']) assert.ok(!html.includes(gone) && !notFound.includes(gone), gone);
+  assert.ok(!fs.existsSync(path.join(SITE, 'src/changelog.js')), 'the page keeps no changelog of its own');
   const appCss = read('site/assets/app.css');
   for (const own of [/^header\{/m, /^footer\{/m, /^\.btn\{/m, /\.menu-panel/, /\.toolbar/, /\.lang-switcher/, /\.theme-switcher/]) assert.ok(!own.test(appCss), `app.css: ${own.source}`);
   assert.match(head, /<meta name="theme-color" content="#edeae5" media="\(prefers-color-scheme: light\)" \/>/);
@@ -128,7 +139,7 @@ for (const dir of ['site/src', 'site/src/i18n', 'worker/src', 'worker/src/provid
   // Every id the modules look up exists in the markup.
   const srcText = fs.readdirSync(path.join(SITE, 'src')).filter(f => f.endsWith('.js')).map(f => read(`site/src/${f}`)).join('\n');
   const ids = new Set([...srcText.matchAll(/(?:getEl|getElementById)\('([A-Za-z-]+)'\)/g)].map(m => m[1]));
-  const dynamicIds = new Set(['versionBtn', 'footerVisitCount', 'step-3', 'shareBtn', 'printBtn']); // rendered by the footer string and the walk
+  const dynamicIds = new Set(['step-3', 'shareBtn', 'printBtn']); // rendered by the walk
   for (const id of ids) {
     if (dynamicIds.has(id)) continue;
     assert.ok(html.includes(`id="${id}"`), `site/index.html has no element with id="${id}"`);

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <!-- The theme before first paint: data-theme on <html>, the attribute the design system's tokens
        switch on. A plain script, not a module, so it runs before the stylesheets arrive. -->
-  <script src="/src/theme-init.js?v=3.2.0"></script>
+  <script src="/src/theme-init.js?v=3.3.0"></script>
   <title id="pageTitle">Fingerprint — кто и что узнаёт о вас, пока вы открываете сайт — morgunov.tech</title>
   <meta id="metaDescription" name="description" content="Шесть шагов от включения ноутбука до открытого сайта: кто и что узнаёт о вас на каждом, на ваших реальных данных, и что с этим делать." />
   <link rel="canonical" href="https://fprint.morgunov.tech" />
@@ -76,8 +76,8 @@
   <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/fonts.css?v=64eea157" />
   <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/tokens.css?v=5629caeb" />
   <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/base.css?v=0e404315" />
-  <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/components.css?v=4621707b" />
-  <link rel="stylesheet" href="/assets/app.css?v=3.2.0" />
+  <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/components.css?v=52192cae" />
+  <link rel="stylesheet" href="/assets/app.css?v=3.3.0" />
 </head>
 <body class="v4-page">
 <!-- The family chrome of morgunov.tech (ds/v1/USAGE.md, "Service chrome"): the skip link, the bar
@@ -167,23 +167,16 @@
       <div id="detailsBody" class="details-body"></div>
     </details>
   </section>
+    <!-- What the page says about its own hosting, and how many times it has been run. -->
+    <p class="page-note" id="pageNote"></p>
+    <p class="page-note" id="footerVisitCount" hidden></p>
   </main>
   <footer class="v4-foot" id="footerText"></footer>
 </div>
 
-<div id="changelogModal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle" style="display:none">
-  <div class="changelog-content" tabindex="-1">
-    <header>
-      <h2 id="changelogTitle"></h2>
-      <button id="changelogClose" class="changelog-close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
-    </header>
-    <div id="changelogContent"></div>
-  </div>
-</div>
-
 <!-- The family chrome's script: a copy of https://s.morgunov.tech/ds/v1/chrome.js kept on this
      origin (the page runs no script from another one); ?v= is the content hash of the copy. -->
-<script defer src="/src/chrome.js?v=ade46cf8"></script>
-<script type="module" src="/src/app.js?v=3.2.0"></script>
+<script defer src="/src/chrome.js?v=57a9beca"></script>
+<script type="module" src="/src/app.js?v=3.3.0"></script>
 </body>
 </html>
