@@ -1,10 +1,12 @@
-// Cloudflare Pages Function for /en/: the same page as /, with English link-preview tags.
-// LinkedIn, Telegram and other link previews read the og: tags without running the page's
-// script, and site/index.html carries the Russian ones, so this rewrites them on the way out.
-// The page itself picks English from the address (langFromPath in site/src/app.js).
+// Cloudflare Pages Function for /en/: the same page as /, with the English <title> and English
+// link-preview tags. LinkedIn, Telegram and other link previews read the og: tags without running
+// the page's script, search engines and readers without JavaScript read the <title> the same way,
+// and site/index.html carries the Russian ones, so this rewrites them on the way out. The page
+// itself picks English from the address (langFromPath in site/src/app.js) and sets the same title
+// after load (applyMeta there).
 // selftest.js runs englishPage() over site/index.html and fails when a tag it rewrites has
-// changed, and checks that EN matches the English strings the page sets for itself (meta in
-// site/src/i18n/en.js).
+// changed, checks that EN matches the English strings the page sets for itself (meta in
+// site/src/i18n/en.js) and that the <title> is the one the script sets.
 
 const SITE = 'https://fprint.morgunov.tech';
 
@@ -14,11 +16,15 @@ export const EN = {
   imageAlt: 'Fingerprint by morgunov.tech — who learns what about you while you open a website'
 };
 
-const attr = value => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+const text = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const attr = value => text(value).replace(/"/g, '&quot;');
 
 // [what, the tag in site/index.html, the tag on /en/]
 const REWRITES = [
   ['html lang', /<html lang="ru">/, '<html lang="en">'],
+  // The document title the page's script sets for English (applyMeta in site/src/app.js): the
+  // meta title plus the site's name.
+  ['title', /<title id="pageTitle">[^<]*<\/title>/, `<title id="pageTitle">${text(EN.title)} — morgunov.tech</title>`],
   ['description', /<meta id="metaDescription" name="description" content="[^"]*" \/>/, `<meta id="metaDescription" name="description" content="${attr(EN.description)}" />`],
   ['canonical', /<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${SITE}/en/" />`],
   ['og:title', /<meta id="ogTitle" property="og:title" content="[^"]*" \/>/, `<meta id="ogTitle" property="og:title" content="${attr(EN.title)}" />`],

@@ -2,6 +2,14 @@
 
 What changed for the people who use the page or call the Worker. The site's own changelog modal (the version badge in the footer) shows the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.1.2 — 2026-11-25
+
+Search engines and readers without JavaScript got the Russian `<title>` on `/en/`. Fixed; nothing else changes.
+
+- **The cause.** `functions/en/index.js` rewrote the link-preview tags of `/en/` (`og:title`, `twitter:title`, the description, canonical, `og:url`, the image, `og:locale`) but not the `<title>` element: the page's script set the English one after load (`applyMeta` in `site/src/app.js`), so whoever reads the HTML without running it, a search engine, a reader mode, a text browser, saw the Russian title under English tags.
+- **The fix.** The Function rewrites `<title>` too, with the string the script sets for English ("Fingerprint — who learns what about you while you open a website — morgunov.tech"). `selftest.js` checks that the `<title>` served on `/en/` carries no Cyrillic, like the `<meta>` tags, and equals the title the page's script sets after an English render. README (EN/RU) no longer says the title is left alone.
+- Version 3.1.2 in the page, the in-page changelog, `CHANGELOG.md`, the Worker (number only) and the asset addresses (`?v=3.1.2`).
+
 ## 3.1.1 — 2026-11-24
 
 A returning visitor got today's page with yesterday's code. Fixed; nothing else changes.

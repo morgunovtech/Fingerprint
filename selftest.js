@@ -502,6 +502,8 @@ const waitFor = async (cond, label) => {
 };
 
 (async () => {
+  // The <title> /en/ serves; the English render further down must set the same one.
+  let enPageTitle;
   {
     const head = html.slice(0, html.indexOf('</head>'));
     ['og:image', 'twitter:image'].forEach(key => assertPreviewPng(metaContent(head, key.startsWith('og:') ? 'property' : 'name', key)));
@@ -514,6 +516,12 @@ const waitFor = async (cond, label) => {
     assert.deepEqual(missing, [], 'functions/en/index.js could not find these tags in site/index.html');
     const enHead = en.slice(0, en.indexOf('</head>'));
     assert.match(enHead, /<html lang="en">/);
+    // The <title> is rewritten too: search engines and readers without JavaScript never see the
+    // script set the English one.
+    const titleTag = enHead.match(/<title id="pageTitle">([^<]*)<\/title>/);
+    assert.ok(titleTag, '/en/ keeps <title id="pageTitle">');
+    assert.equal(titleTag[1], `${EN.title} — morgunov.tech`);
+    enPageTitle = titleTag[1];
     assert.match(enHead, /<link rel="canonical" href="https:\/\/fprint\.morgunov\.tech\/en\/" \/>/);
     assert.equal(metaContent(enHead, 'property', 'og:url'), 'https://fprint.morgunov.tech/en/');
     assert.equal(metaContent(enHead, 'property', 'og:title'), EN.title);
@@ -526,9 +534,11 @@ const waitFor = async (cond, label) => {
       assert.match(url, /-en\.png$/);
       assertPreviewPng(url);
     });
-    // Only the JSON-LD block and the page body may stay Russian on /en/.
-    const previewTags = enHead.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '').match(/<meta [^>]*>/g);
-    previewTags.forEach(tag => assert.doesNotMatch(tag, /[Ѐ-ӿ]/, tag));
+    // Only the JSON-LD block and the page body may stay Russian on /en/: no Cyrillic in the <title>
+    // or in any <meta> tag.
+    const headTags = enHead.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '').match(/<title\b[^>]*>[^<]*<\/title>|<meta [^>]*>/g);
+    assert.ok(headTags.some(tag => tag.startsWith('<title')), '<title> is among the checked tags');
+    headTags.forEach(tag => assert.doesNotMatch(tag, /[Ѐ-ӿ]/, tag));
     assert.equal(en.slice(enHead.length), html.slice(head.length), 'only the head changes');
     // The tags the page sets for English match the ones /en/ serves to link previews.
     const { I18N } = await import(moduleUrl('./site/src/i18n/index.js'));
@@ -842,6 +852,7 @@ const waitFor = async (cond, label) => {
   await app.render('en');
   await settle();
   assert.equal(documentElement.lang, 'en');
+  assert.equal(documentStub.title, enPageTitle, 'the <title> /en/ serves is the one the script sets for English');
   assert.equal(elements.get('ogTitle').content, I18N.en.meta.title);
   assert.equal(elements.get('ogDescription').content, I18N.en.meta.description);
   assert.equal(elements.get('twTitle').content, I18N.en.meta.title);
