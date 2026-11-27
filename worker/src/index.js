@@ -22,7 +22,7 @@ import { buildWhoami, whoamiText } from './whoami.js';
 
 // One version for the release: the same number as APP_VERSION in site/src/config.js,
 // worker/package.json and the top entry of CHANGELOG.md.
-const VERSION = '3.3.2';
+const VERSION = '3.3.3';
 // The longest ?target= the scan reads: room for a pasted address with its path and query.
 const MAX_TARGET_LENGTH = 2048;
 
@@ -113,7 +113,7 @@ async function rateLimited(request, env, ctx) {
   return false;
 }
 
-export default {
+const api = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const { pathname } = url;
@@ -198,5 +198,17 @@ export default {
     }
 
     return jsonResponse({ error: 'Not found', endpoints: ENDPOINTS }, 404, request, env);
+  },
+};
+
+// The API answers the page and scripts, not search: Google found /api/whoami, /api/stats,
+// /api/speedtest/ping and /api/scan in the page's code and listed them in Search Console
+// (as 404 before the route on this host, 2026-10). Every answer, an error too, says noindex.
+// Not a Disallow in robots.txt: Googlebot renders the page and needs these calls to see it.
+export default {
+  async fetch(request, env, ctx) {
+    const res = await api.fetch(request, env, ctx);
+    res.headers.set('X-Robots-Tag', 'noindex');
+    return res;
   },
 };

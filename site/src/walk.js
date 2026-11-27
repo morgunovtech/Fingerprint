@@ -1,13 +1,13 @@
 // The walk: six steps from opening the device to a loaded site, each on the visitor's real data,
 // then the sum of who learned what and the raw data for the curious.
 
-import { getEl, esc, mkRow } from './dom.js?v=3.3.2';
-import { state, snapshot } from './state.js?v=3.3.2';
-import { guessDevice, deviceDisplayName, deviceKind, osFamilyOf, osVendorKey, browserDisplayName, browserVendorKey, guessOSVersion, formatGpuRenderer, detectBrowserGroup, COUNTRY_NAMES, CITY_NAMES, countryCodeToFlag, langToFlag } from './device.js?v=3.3.2';
-import { resolveCountryCode, getStatPercent } from './network.js?v=3.3.2';
-import { blockerDetected, trackerRows } from './trackers.js?v=3.3.2';
-import { LOCAL_TZ } from './signals.js?v=3.3.2';
-import { resolveShareUrl } from './share.js?v=3.3.2';
+import { getEl, esc, mkRow } from './dom.js?v=3.3.3';
+import { state, snapshot } from './state.js?v=3.3.3';
+import { guessDevice, deviceDisplayName, deviceKind, osFamilyOf, osVendorKey, browserDisplayName, browserVendorKey, guessOSVersion, formatGpuRenderer, detectBrowserGroup, COUNTRY_NAMES, CITY_NAMES, countryCodeToFlag, langToFlag } from './device.js?v=3.3.3';
+import { resolveCountryCode, getStatPercent } from './network.js?v=3.3.3';
+import { blockerDetected, trackerRows } from './trackers.js?v=3.3.3';
+import { LOCAL_TZ } from './signals.js?v=3.3.3';
+import { resolveShareUrl } from './share.js?v=3.3.3';
 
 const browserGroup = detectBrowserGroup();
 // Which <details> the visitor opened, so a re-render keeps them open.

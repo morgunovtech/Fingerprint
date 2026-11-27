@@ -122,12 +122,18 @@ for (const dir of ['site/src', 'site/src/i18n', 'worker/src', 'worker/src/provid
   assert.equal(data.sameAs, 'https://github.com/morgunovtech/Fingerprint');
   assert.equal(data.author['@id'], 'https://s.morgunov.tech/#person');
 
-  // A crawler that matches a named group ignores the * group, so every group carries the signals.
+  // One group for every crawler: the User-agent lines together, `*` first, then one Content-Signal
+  // line. A crawler that matches a group of its own ignores the * group, and Yandex reports every
+  // Content-Signal line as an unknown directive, so the named crawlers share the one group.
   const robots = read('site/robots.txt');
-  const groups = robots.split(/\n(?=User-agent:)/).filter(group => group.startsWith('User-agent:'));
-  assert.ok(groups.length > 1);
-  groups.forEach(group => assert.match(group, /^Content-Signal: search=yes, ai-input=yes, ai-train=yes$/m, group.split('\n')[0]));
-  assert.equal((robots.match(/^Content-Signal:/gm) || []).length, groups.length, 'one Content-Signal line per group');
+  const directives = robots.split('\n').filter(line => line && !line.startsWith('#'));
+  const agents = directives.filter(line => line.startsWith('User-agent:'));
+  assert.deepEqual(directives.slice(0, agents.length), agents, 'the User-agent lines form one group');
+  assert.equal(agents[0], 'User-agent: *');
+  for (const bot of ['GPTBot', 'OAI-SearchBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended']) assert.ok(agents.includes(`User-agent: ${bot}`), bot);
+  assert.deepEqual(robots.match(/^Content-Signal:.*$/gm), ['Content-Signal: search=yes, ai-input=yes, ai-train=yes']);
+  assert.match(robots, /^Allow: \/$/m);
+  assert.match(robots, /^Sitemap: https:\/\/fprint\.morgunov\.tech\/sitemap\.xml$/m);
 
   const llms = read('site/llms.txt');
   assert.match(llms, /^# Fingerprint/);
@@ -768,6 +774,13 @@ const waitFor = async (cond, label) => {
       const viaEndpoint = await callScan('example.com/path/');
       assert.equal(viaEndpoint.status, 200);
       assert.equal((await viaEndpoint.json()).target, 'example.com');
+      // The API is not for search results: every answer, an error and a preflight too, says noindex.
+      assert.equal(viaEndpoint.headers.get('x-robots-tag'), 'noindex');
+      assert.equal((await callScan('/')).headers.get('x-robots-tag'), 'noindex');
+      for (const [method, p] of [['GET', '/api/speedtest/ping'], ['GET', '/api/nope'], ['OPTIONS', '/api/whoami']]) {
+        const answer = await worker.fetch(new Request('https://fprint.morgunov.tech' + p, { method }), {}, { waitUntil() {} });
+        assert.equal(answer.headers.get('x-robots-tag'), 'noindex', `${method} ${p}`);
+      }
 
       // A port, userinfo, a query and a fragment change nothing: the same host and the same cache
       // entry as the scan above (so no request goes out), and neither the credentials nor the port
