@@ -1,6 +1,6 @@
 # Fingerprint
 
-An educational page about online privacy for people who are not technical: six steps from opening your laptop to a loaded website, and at each step, on your real data, who learns what about you and what to do about it.
+What gets learned about you while a website opens: six steps from switching on your laptop to a loaded page, on your real data and in plain words — and what to do at each step.
 
 **Live:** https://fprint.morgunov.tech (in English: https://fprint.morgunov.tech/en/) · **API:** https://fprint.morgunov.tech/api/ · **License:** [MIT](LICENSE) · 🇷🇺 [По-русски](README.ru.md)
 
