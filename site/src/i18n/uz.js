@@ -1,5 +1,5 @@
 // Uzbek strings of the page. Keys are the same in ru.js, en.js and uz.js; selftest.js checks that.
-import { CANONICAL_URL, CHANGELOG_URL } from '../config.js?v=3.3.3';
+import { CANONICAL_URL, CHANGELOG_URL } from '../config.js?v=3.3.4';
 
 export default {
   // The words of the family chrome (the bar's menus, the skip link), as s.morgunov.tech says them.
@@ -11,7 +11,7 @@ export default {
   },
   introTitle: 'Saytni ochguningizcha kim va nimani bilib oladi',
   introRichHtml: /* html */`
-      <section class="fp-section" lang="uz" aria-labelledby="fp-title">
+      <section class="fp-section" lang="uz" aria-labelledby="introTitle">
         <p>
           Noutbukni ochishdan sahifa yuklanishigacha bir nechta kompaniya siz haqingizda nimadir bilib oladi.
           Bu sahifa buni qadam-baqadam, sizning haqiqiy maʼlumotlaringizda koʻrsatadi: quyidagilarning hammasi

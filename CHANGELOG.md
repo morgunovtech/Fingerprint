@@ -2,6 +2,18 @@
 
 What changed for the people who use the page or call the Worker. The build mark in the page's footer (the version) links to this file; until 3.3.0 the page had a changelog modal of its own with the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.3.4 — 2026-11-27
+
+`/en/` is English for a reader that runs no JavaScript. Nothing changes for a visitor with a browser: the page already set the English words after load.
+
+- **Why.** The `/en/` Function rewrote only the `<head>`. AI assistants and text-only crawlers (GPTBot, ClaudeBot, PerplexityBot run no scripts) read the HTML as it is, and got the English title over a Russian heading and a Russian intro under `<html lang="en">` — an English address with Russian content, the twin of `/` for anything that judges a page by its text.
+- **The body of `/en/`.** The Function now rewrites the heading, the intro, the skip link, the language button (`EN`, the English item checked) and the theme menu's labels, and the JSON-LD description. Their words are read from `site/src/i18n/en.js` itself: the Function fetches the module from the site's own assets and reads its plain strings, so there is no second copy of the English text. If the module cannot be read, `/en/` keeps the Russian body rather than a broken one.
+- **The Russian intro on `/en/`** moves into a `<template lang="ru">` at the start of the intro block. The page reads the Russian copy from the markup (`russianIntro` in `site/src/app.js`), so switching to Russian in place still shows it; a `<template>` is never rendered or read as text.
+- **One address in the head.** The canonical link, `og:url` and the JSON-LD `url` of `/` are `https://fprint.morgunov.tech/` with the slash, as in the sitemap and the `hreflang` links (they were the same address without it).
+- The English and Uzbek intros labelled their section by `fp-title`, an id the page does not have; they name `introTitle`, as the Russian one does.
+- `selftest.js`: the Function finds every part it rewrites, reads exactly the strings the module exports, leaves no Russian on `/en/` but the author's name in the JSON-LD and «Русский» in the language menu, and the page takes the Russian intro from the template.
+- Version 3.3.4 in the page, `CHANGELOG.md`, the Worker and the asset addresses (`?v=3.3.4`). The Worker's code did not change: its version string follows the release, and it can be deployed again whenever convenient.
+
 ## 3.3.3 — 2026-11-27
 
 Search engines stop listing the API and the old `/headers` address. Nothing changes in the page or in the API's answers.

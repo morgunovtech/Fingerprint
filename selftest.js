@@ -542,6 +542,8 @@ const waitFor = async (cond, label) => {
 (async () => {
   // The <title> /en/ serves; the English render further down must set the same one.
   let enPageTitle;
+  // The intro block /en/ serves (the English intro after the Russian one in a <template>).
+  let enIntroBlock;
   {
     const head = html.slice(0, html.indexOf('</head>'));
     ['og:image', 'twitter:image'].forEach(key => assertPreviewPng(metaContent(head, key.startsWith('og:') ? 'property' : 'name', key)));
@@ -582,6 +584,38 @@ const waitFor = async (cond, label) => {
     const { I18N } = await import(moduleUrl('./site/src/i18n/index.js'));
     assert.equal(I18N.en.meta.title, EN.title);
     assert.equal(I18N.en.meta.description, EN.description);
+    // The JSON-LD description is the English one; the app keeps its one address.
+    const ld = JSON.parse(en.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+    assert.equal(ld.description, EN.description);
+    assert.equal(ld.url, 'https://fprint.morgunov.tech/');
+
+    // The body of /en/: the words come from site/src/i18n/en.js itself, read as source text by the
+    // Function (it cannot import the module). englishStrings() must read exactly what the module exports.
+    const { englishStrings } = await import(moduleUrl('./functions/en/index.js'));
+    const strings = englishStrings(read('site/src/i18n/en.js'));
+    assert.ok(strings, 'functions/en/index.js could not read the strings of site/src/i18n/en.js');
+    assert.deepEqual(strings, {
+      skip: I18N.en.chrome.skip, changeLanguage: I18N.en.chrome.changeLanguage, changeTheme: I18N.en.chrome.changeTheme,
+      modes: I18N.en.theme.modes, introTitle: I18N.en.introTitle, introRichHtml: I18N.en.introRichHtml
+    });
+    assert.equal(englishStrings('export default {};'), null, 'an unreadable module gives no strings');
+    const { html: full, missing: bodyMissing } = englishPage(html, strings);
+    assert.deepEqual(bodyMissing, [], 'functions/en/index.js could not find these parts of the body in site/index.html');
+    assert.equal(full.slice(0, full.indexOf('</head>')), enHead, 'the head is the same with or without the body strings');
+    assert.ok(full.includes(`<h1 id="introTitle" class="intro-title">${I18N.en.introTitle}</h1>`), 'the English heading');
+    assert.ok(full.includes(`<a href="#main" class="skip-link" id="skipLink">${I18N.en.chrome.skip}</a>`), 'the English skip link');
+    assert.ok(full.includes('<span id="langCode">EN</span>'), 'the language button says EN');
+    assert.match(full, /aria-checked="true" href="\/en\/" hreflang="en"/);
+    assert.match(full, /aria-checked="false" href="\/" hreflang="ru"/);
+    for (const [value, label] of Object.entries(I18N.en.theme.modes)) assert.ok(full.includes(`data-theme-value="${value}" aria-checked="false">${label}</button>`), `theme ${value}`);
+    // A reader without JavaScript reads no Russian on /en/: only the author's name in the JSON-LD,
+    // the language menu's «Русский» (a language named in its own words, lang="ru") and the Russian
+    // intro kept in a <template> for an in-place switch.
+    const visible = full.replace(/<template lang="ru">[\s\S]*?<\/template>/, '').replace(/<!--[\s\S]*?-->/g, '');
+    const russianLines = visible.split('\n').filter(line => /[Ѐ-ӿ]/.test(line)).map(line => line.trim());
+    assert.deepEqual(russianLines, ['"name": "Семён Моргунов",', '<a class="v4-menu-item v4-lang-link" role="menuitemradio" aria-checked="false" href="/" hreflang="ru" lang="ru" data-lang="ru">Русский</a>'], russianLines.join('\n'));
+    enIntroBlock = full.match(/<div id="introText"[^>]*>([\s\S]*?)<\/div>\n  <\/section>/)[1];
+    assert.ok(enIntroBlock.endsWith(I18N.en.introRichHtml), '/en/: the English intro is the visible one');
   }
 
   /* ============ Worker providers ============ */
@@ -927,6 +961,9 @@ const waitFor = async (cond, label) => {
   /* ============ The page: start-up, the walk, controls, languages, the network check ============ */
   const app = await import(moduleUrl('./site/src/app.js'));
   assert.equal(typeof documentStub._domReady, 'function', 'app.js waits for DOMContentLoaded');
+  // The page reads the Russian intro from the <template> on /en/ and from the block itself on /.
+  assert.equal(app.russianIntro(enIntroBlock), introSource, '/en/: the Russian intro survives in the template');
+  assert.equal(app.russianIntro(introSource), introSource, '/: the Russian intro is the block');
   workerStats = { total_visits: 1000, browsers: { 'Safari 17': 300 }, os: { macOS: 500 }, countries: { UZ: 400 }, tls_versions: { 'TLSv1.3': 950 } };
   // A theme saved under the page's old key moves to the shared one before first paint
   // (src/theme-init.js): "contrast" is "high-contrast". The family chrome's script takes it from there.

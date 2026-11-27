@@ -1,10 +1,10 @@
 // The "Share" and "Print / Save" buttons.
 
-import { CANONICAL_URL } from './config.js?v=3.3.3';
-import { copyText } from './dom.js?v=3.3.3';
-import { state } from './state.js?v=3.3.3';
-import { textsFor } from './i18n/index.js?v=3.3.3';
-import { IS_IOS, IS_ANDROID } from './signals.js?v=3.3.3';
+import { CANONICAL_URL } from './config.js?v=3.3.4';
+import { copyText } from './dom.js?v=3.3.4';
+import { state } from './state.js?v=3.3.4';
+import { textsFor } from './i18n/index.js?v=3.3.4';
+import { IS_IOS, IS_ANDROID } from './signals.js?v=3.3.4';
 
 // The page's own address without index.html or a trailing slash, for the share text.
 export function resolveShareUrl() {
