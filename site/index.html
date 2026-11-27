@@ -73,6 +73,13 @@
        fonts → tokens → base → components, ?v= are content hashes. components.css carries the
        family chrome (the bar, the language and theme menus, the buttons, the footer); the page's
        own stylesheet builds on the tokens and lays out the walk. -->
+  <!-- The faces of the first screen, fetched with the stylesheets rather than after them: without
+       these the intro was laid out in the fallback font and rewrapped when IBM Plex arrived (a 22 px
+       layout shift, measured 2026-11-27). The addresses are the ones fonts.css names. -->
+  <link rel="preload" as="font" type="font/woff2" href="https://s.morgunov.tech/fonts/plex-sans-cyr-400.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="https://s.morgunov.tech/fonts/plex-sans-cyr-600.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="https://s.morgunov.tech/fonts/plex-sans-latin-400.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="https://s.morgunov.tech/fonts/plex-sans-latin-600.woff2" crossorigin />
   <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/fonts.css?v=64eea157" />
   <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/tokens.css?v=5629caeb" />
   <link rel="stylesheet" href="https://s.morgunov.tech/ds/v1/base.css?v=0e404315" />
