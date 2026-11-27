@@ -1,0 +1,3 @@
+# /headers was a page of the old version of Fingerprint; Google still asks for it and lists
+# the 404 in Search Console. The headers a site sees are step 6 of the page now.
+/headers / 301

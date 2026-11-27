@@ -1,14 +1,14 @@
 // Entry point: wires the controls, picks the language, and renders the walk.
 
-import { APP_VERSION, LANG_KEY } from './config.js?v=3.3.2';
-import { getEl, esc } from './dom.js?v=3.3.2';
-import { state, snapshot } from './state.js?v=3.3.2';
-import { I18N, textsFor } from './i18n/index.js?v=3.3.2';
-import { getSnapshot } from './signals.js?v=3.3.2';
-import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.3.2';
-import { runTrackerTests } from './trackers.js?v=3.3.2';
-import { renderWalk } from './walk.js?v=3.3.2';
-import { handleShareClick, handleSaveClick } from './share.js?v=3.3.2';
+import { APP_VERSION, LANG_KEY } from './config.js?v=3.3.3';
+import { getEl, esc } from './dom.js?v=3.3.3';
+import { state, snapshot } from './state.js?v=3.3.3';
+import { I18N, textsFor } from './i18n/index.js?v=3.3.3';
+import { getSnapshot } from './signals.js?v=3.3.3';
+import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.3.3';
+import { runTrackerTests } from './trackers.js?v=3.3.3';
+import { renderWalk } from './walk.js?v=3.3.3';
+import { handleShareClick, handleSaveClick } from './share.js?v=3.3.3';
 
 /* ---- The family chrome ---- */
 

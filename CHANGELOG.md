@@ -2,6 +2,14 @@
 
 What changed for the people who use the page or call the Worker. The build mark in the page's footer (the version) links to this file; until 3.3.0 the page had a changelog modal of its own with the same entries in Russian, English and Uzbek. Versions up to 2.1 had two parts and are kept as they were; from 2.2.0 they follow SemVer and every release is tagged `vX.Y.Z`.
 
+## 3.3.3 — 2026-11-27
+
+Search engines stop listing the API and the old `/headers` address. Nothing changes in the page or in the API's answers.
+
+- **The API says `noindex`.** Google found `/api/whoami`, `/api/stats`, `/api/speedtest/ping` and `/api/scan` in the page's code and listed them in Search Console as pages it could not index (404 in October, before the API had a route on this host). Every answer of the Worker — an error and a preflight too — now carries `X-Robots-Tag: noindex`. `/api/` stays allowed in `robots.txt`: Googlebot renders the page and needs those calls to see it.
+- **`/headers` → `/` (301).** A page of the old version that Google still asks for; the headers a site sees are step 6 of the page.
+- **`robots.txt` is one group.** `User-agent: *` and the named AI crawlers (OAI-SearchBot, Claude-SearchBot, Claude-User, Perplexity-User added) share one `Allow: /` and one `Content-Signal` line. The meaning is the same; Yandex Webmaster reports every `Content-Signal` line as an unknown directive, so it shows one notice instead of nine.
+
 ## 3.3.2 — 2026-11-25
 
 A pasted address with a port, a login or a query is scanned as its host too. Nothing changes in the page.

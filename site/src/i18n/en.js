@@ -1,5 +1,5 @@
 // English strings of the page. Keys are the same in ru.js, en.js and uz.js; selftest.js checks that.
-import { CANONICAL_URL, CHANGELOG_URL } from '../config.js?v=3.3.2';
+import { CANONICAL_URL, CHANGELOG_URL } from '../config.js?v=3.3.3';
 
 export default {
   // The words of the family chrome (the bar's menus, the skip link), as s.morgunov.tech says them.
