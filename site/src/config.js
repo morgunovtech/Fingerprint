@@ -1,6 +1,6 @@
 // Constants shared by the page modules. One version number names a release: the same string
 // lives in worker/src/index.js (VERSION), worker/package.json and the top entry of CHANGELOG.md.
-export const APP_VERSION = '3.3.3';
+export const APP_VERSION = '3.3.4';
 
 export const PERSONAL_URL = 'https://s.morgunov.tech';
 export const CANONICAL_URL = 'https://fprint.morgunov.tech';

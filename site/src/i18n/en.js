@@ -1,5 +1,5 @@
 // English strings of the page. Keys are the same in ru.js, en.js and uz.js; selftest.js checks that.
-import { CANONICAL_URL, CHANGELOG_URL } from '../config.js?v=3.3.3';
+import { CANONICAL_URL, CHANGELOG_URL } from '../config.js?v=3.3.4';
 
 export default {
   // The words of the family chrome (the bar's menus, the skip link), as s.morgunov.tech says them.
@@ -11,7 +11,7 @@ export default {
   },
   introTitle: 'Who learns what about you while you open a website',
   introRichHtml: /* html */`
-      <section class="fp-section" lang="en" aria-labelledby="fp-title">
+      <section class="fp-section" lang="en" aria-labelledby="introTitle">
         <p>
           Between opening your laptop and a loaded web page, several companies learn something about you.
           This page walks through it step by step, on your real data: everything below is what your browser

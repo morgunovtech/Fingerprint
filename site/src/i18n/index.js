@@ -1,6 +1,6 @@
-import ru from './ru.js?v=3.3.3';
-import en from './en.js?v=3.3.3';
-import uz from './uz.js?v=3.3.3';
+import ru from './ru.js?v=3.3.4';
+import en from './en.js?v=3.3.4';
+import uz from './uz.js?v=3.3.4';
 
 export const I18N = { ru, en, uz };
 

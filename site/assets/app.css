@@ -62,6 +62,10 @@ details[open]>.intro-more::after{transform:translateY(1px) rotate(225deg)}
 .section-heading{font-size:22px;font-weight:600;letter-spacing:-0.015em;margin:0 0 16px;color:var(--text)}
 
 /* === Steps === */
+/* While the walk is the skeleton it holds a screen's height: the six steps are about 5 000 px, and
+   the blocks under them (the raw data, the note, the footer) were painted on the first screen and
+   then pushed off it, a 0.10 layout shift on every load (measured 2026-11-27). */
+#walk:has(> .step--skeleton){min-height:100vh}
 .step{background:var(--card);border:1px solid var(--border);padding:24px;margin:20px 0;position:relative}
 .step-head{margin-bottom:12px}
 .step-num{font-family:var(--font-mono);font-size:var(--label-size);font-weight:var(--label-weight);letter-spacing:var(--label-tracking);text-transform:uppercase;color:var(--muted);margin-bottom:6px}

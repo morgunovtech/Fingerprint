@@ -22,7 +22,7 @@ import { buildWhoami, whoamiText } from './whoami.js';
 
 // One version for the release: the same number as APP_VERSION in site/src/config.js,
 // worker/package.json and the top entry of CHANGELOG.md.
-const VERSION = '3.3.3';
+const VERSION = '3.3.4';
 // The longest ?target= the scan reads: room for a pasted address with its path and query.
 const MAX_TARGET_LENGTH = 2048;
 

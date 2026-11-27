@@ -1,14 +1,14 @@
 // Entry point: wires the controls, picks the language, and renders the walk.
 
-import { APP_VERSION, LANG_KEY } from './config.js?v=3.3.3';
-import { getEl, esc } from './dom.js?v=3.3.3';
-import { state, snapshot } from './state.js?v=3.3.3';
-import { I18N, textsFor } from './i18n/index.js?v=3.3.3';
-import { getSnapshot } from './signals.js?v=3.3.3';
-import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.3.3';
-import { runTrackerTests } from './trackers.js?v=3.3.3';
-import { renderWalk } from './walk.js?v=3.3.3';
-import { handleShareClick, handleSaveClick } from './share.js?v=3.3.3';
+import { APP_VERSION, LANG_KEY } from './config.js?v=3.3.4';
+import { getEl, esc } from './dom.js?v=3.3.4';
+import { state, snapshot } from './state.js?v=3.3.4';
+import { I18N, textsFor } from './i18n/index.js?v=3.3.4';
+import { getSnapshot } from './signals.js?v=3.3.4';
+import { autoFetchIp, fetchScan, fetchVisitorStats, runWebRtcProbe } from './network.js?v=3.3.4';
+import { runTrackerTests } from './trackers.js?v=3.3.4';
+import { renderWalk } from './walk.js?v=3.3.4';
+import { handleShareClick, handleSaveClick } from './share.js?v=3.3.4';
 
 /* ---- The family chrome ---- */
 
@@ -166,9 +166,17 @@ export async function handleNetworkCheck() {
 
 /* ---- Start ---- */
 
+// The Russian intro as the markup holds it. On / it is the intro block itself; /en/ arrives with the
+// English intro and the Russian one kept in a <template lang="ru"> at the start of the block
+// (functions/en/index.js), so that a reader without JavaScript gets English there.
+export function russianIntro(html) {
+  const kept = String(html || '').match(/^<template lang="ru">([\s\S]*?)<\/template>/);
+  return kept ? kept[1] : String(html || '');
+}
+
 export function initApp() {
   // The Russian intro is the one in the markup; the strings table reads it once from there.
-  I18N.ru.introRichHtml = getEl('introText')?.innerHTML || '';
+  I18N.ru.introRichHtml = russianIntro(getEl('introText')?.innerHTML);
   const lang = detectLang();
   // Opening /en/ is not a choice: the saved language stays for the next visit to /.
   if (!langFromPath()) { try { localStorage.setItem(LANG_KEY, lang); } catch (_) { /* ignore */ } }
